@@ -1,7 +1,5 @@
 <?
 
-	/*error_reporting(E_ALL);
-	ini_set("display_errors", 1);*/
 	error_reporting(E_ERROR);
 
 	/****************
@@ -10,9 +8,8 @@
 	 *  14.03.2015  *
 	 ****************/
 
-//	include_once "base.php";
-	require_once "api-helper.php";
-	include_once "./6.5/framework.v6.5.php";
+	include_once "zero.framework.php";
+	require_once "zero.helper.php";
 
 	date_default_timezone_set ("Europe/Minsk");
 
@@ -37,7 +34,7 @@
 		// Returns settings of current user
 		case "settings.get":
 			if (!CURRENT_USER_ID)
-				new Errors(9);
+				throwError(9);
 
 			$userId = (int) $_REQUEST["userId"];
 
@@ -50,7 +47,7 @@
 			$b = $s["bitmask"];
 			$langId = (int) $s["lang"];
 			$lang = ["ru", "en", "ua", 999 => "gop"][$s["lang"]];
-			output(!$s ? new Errors(30) : [
+			output(!$s ? throwError(30) : [
 				"userId" => (int) $userId,
 				"settings" => !$extended ? [
 					"userId" => $userId,
@@ -90,11 +87,11 @@
 		// Save user's settings
 		case "settings.set":
 			if (!CURRENT_USER_ID) {
-				new Errors(9);
+				throwError(9);
 			};
 
 			if (!isset($_REQUEST["bitmask"]) || !isset($_REQUEST["languageId"])) {
-				new Errors(5);
+				throwError(5);
 			};
 
 			$bitmask = (int) $_REQUEST["bitmask"];
@@ -125,32 +122,7 @@
 			]);
 			break;
 
-		/*case "settings.getSharedData":
-
-			break;
-
-		case "settings.setSharedData":
-
-			break;
-
-		case "settings.setItemSharedData":
-
-			break;
-
-		case "settings.getItemSharedData":
-
-			break;
-
-		case "settings.removeItemSharedData":
-
-			break;
-
-		case "apidog.syncFriends":
-
-			break;*/
-
 		// APIdog internal methods
-
 		case "apidog.authorize":
 
 			$login			= trim($_REQUEST["login"]);
@@ -176,7 +148,7 @@
 			$check = APIdog::checkToken($userAccessToken, $userApplication);
 
 			if (!is_array($check) && $check < 0)
-				new Errors(-$check);
+				throwError(-$check);
 
 			$result = $check;
 
@@ -206,22 +178,22 @@
 		// Returns sessions
 		case "apidog.getSessions":
 			if (!CURRENT_USER_ID)
-				new Errors(9);
+				throwError(9);
 			output(Settings::getSessions());
 			break;
 
 		// Delete session
 		case "apidog.killSession":
 			if (!CURRENT_USER_ID) {
-				new Errors(9);
+				throwError(9);
 			};
 
 			$authId = (int) $_REQUEST["authId"];
 			$session = Settings::getSessionById($authId);
 			if ($session == -1)
-				new Errors(10);
+				throwError(10);
 			if ($session->getUserId() != CURRENT_USER_ID)
-				new Errors(11);
+				throwError(11);
 			output($session->kill());
 			break;
 
@@ -241,21 +213,12 @@
 			print "}}";
 			break;
 
-		case "apidog.ddg":
-			$data = $_REQUEST["d"];
-			$fh = fOpen("denis.txt", "w+");
-			fWrite($fh, $data);
-			fClose($fh);
-			output(0);
-			break;
-
-
 
 
 		// Returns ads block, that will be show in site or platform applications
 		case "apidog.getAds":
 			if (!CURRENT_USER_ID)
-				new Errors(9);
+				throwError(9);
 
 			requireModule("ads");
 
@@ -354,7 +317,7 @@
 			];
 
 			if (!$params["title"] || !$params["description"] || !$params["link"] || !$params["image"] || !$params["dateStart"] || !$params["dateEnd"]) {
-				new Errors(120);
+				throwError(120);
 			};
 
 			$ads = new AdsAPI;
@@ -383,7 +346,7 @@
 			];
 
 			if (!$params["title"] || !$params["description"] || !$params["link"] || !$params["image"] || !$params["dateStart"] || !$params["dateEnd"]) {
-				new Errors(120);
+				throwError(120);
 			};
 
 			$ads = new AdsAPI;
@@ -405,154 +368,8 @@
 
 			break;
 
-		// Users block
-
-		// Sets user online currently on site
-		case "users.setOnline":
-sendDeprecated();
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-			$time = time();
-			$check = APIdog::mysql("SELECT * FROM `online` WHERE `user_id` = '$currentUserId' LIMIT 1");
-			if ($check)
-				APIdog::mysql("UPDATE `online` SET `last_seen` = '$time' WHERE `user_id` = '$currentUserId' LIMIT 1");
-			else
-				APIdog::mysql("INSERT INTO `online` (`user_id`, `last_seen`) VALUES ('$currentUserId', '$time')");
-			output(1);
-			break;
-
-		// Returns list on currently users, which use site
-		case "users.getOnlineList":
-sendDeprecated();
-			$extended = (boolean) $_REQUEST["extended"];
-			$count = (int) (is_numeric($_REQUEST["count"]) ? $_REQUEST["count"] : 20);
-			$offset = (int) $_REQUEST["offset"];
-			$exp = time() - (7 * 60);
-
-			$list = APIdog::mysql("SELECT * FROM `online` WHERE `last_seen` > '$exp' ORDER BY `last_seen` DESC LIMIT $offset,$count", 2);
-			$count = APIdog::mysql("SELECT COUNT(*) FROM `online` WHERE `last_seen` > '$exp'", 3);
-
-			foreach ($list as $i => $user)
-				$list[$i] = [
-					"userId" => (int) $user["user_id"],
-					"time" => (int) $user["last_seen"]
-				];
-			output(["count" => $count, "items" => $list]);
-			break;
-
-		// Returns info user when he use site
-		case "support.ping":
-		case "users.ping":
-new Errors(966);
-			if (!CURRENT_USER_ID)
-			{
-				new Errors(9);
-			};
-
-			$support = (int) APIdog::mysql("SELECT COUNT(*) FROM `support_list` WHERE `creator_id`='" . CURRENT_USER_ID . "' AND `read_state` = 0 LIMIT 1", 3);
-			$t = time();
-			APIdog::mysql("UPDATE `settings` SET `lastSeen` = '" . $t . "' WHERE `userId` = '" . CURRENT_USER_ID . "' LIMIT 1");
-
-			output([
-				"support" =>  $support,
-				"target" => (int) CURRENT_USER_ID,
-//				"site" => [ "online" => $users ],
-				"time" => time()
-			]);
-			break;
-
-		case "users.getOnLineUsers":
-			if (!CURRENT_USER_ID)
-			{
-				new Errors(9);
-			};
-
-			$offset = (int) $_REQUEST["offset"];
-			$count = (int) $_REQUEST["count"];
-
-			$count = $count ? $count : 20;
-
-			$date = time() - (60 * 4);
-
-			$data = APIdog::mysql("SELECT `userId`, `lastSeen` FROM `settings` WHERE `lastSeen` > " . $date . " ORDER BY `lastSeen` DESC LIMIT " . $offset . "," . $count, 2);
-
-			foreach ($data as $i => $j)
-			{
-				foreach ($j as $k => $l)
-				{
-					$data[$i][$k] = (int) $l;
-				};
-			};
-
-			output([
-				"count" => APIdog::mysql("SELECT COUNT(*) FROM `settings` WHERE `lastSeen` > " . $date, 3),
-				"items" => $data
-			]);
-			break;
-
-		case "users.getLastSeenUser":
-			if (!CURRENT_USER_ID)
-			{
-				new Errors(9);
-			};
-
-			$userId = (int) $_REQUEST["userId"];
-
-			if ($userId <= 0 || $userId == 23048942)
-			{
-				new Errors(954);
-			};
-
-			$data = APIdog::mysql("SELECT `lastSeen` FROM `settings` WHERE `userId` = " . $userId, 1);
-
-			output([
-				(int) $data["lastSeen"],
-				(int) $userId
-			]);
-			break;
-
-		case "users.getLastSeenUsers":
-			if (!CURRENT_USER_ID)
-			{
-				new Errors(9);
-			};
-
-			$ids = explode(",", $_REQUEST["userIds"]);
-
-			$userIds = [0];
-
-			foreach ($ids as $v)
-			{
-				$id = (int) $v;
-				if ($id > 0 && $id != 23048942)
-				{
-					$userIds[] = $id;
-				};
-			};
-
-			$data = APIdog::mysql("SELECT `userId`, `lastSeen` FROM `settings` WHERE `userId` IN (" . join(",", $userIds) . ") ORDER BY `lastSeen` DESC", 2);
-
-			$result = [];
-
-			foreach ($data as $i)
-			{
-				if (!$i["lastSeen"] || !$i["userId"])
-				{
-					continue;
-				};
-
-				foreach ($i as $k => $l)
-				{
-					$d[$k] = (int) $l;
-				}
-				$result[] = $d;
-			}
-
-			output($result);
-			break;
 
 		// Support
-
 		// Returns tickets
 		case "support.get":
 			$filter = (int) $_REQUEST["filter"];
@@ -587,7 +404,7 @@ new Errors(966);
 
 			if (!$q)
 			{
-				new Errors(50);
+				throwError(50);
 			};
 
 			switch ($type)
@@ -658,12 +475,12 @@ sendDeprecated();
 		case "support.createTicket":
 //sendDeprecated();
 			if (!CURRENT_USER_ID) {
-				new Errors(9);
+				throwError(9);
 			};
 
 			if (Ticket::isBlocked())
 			{
-				new Errors(51);
+				throwError(51);
 			};
 
 			$title = escape($_REQUEST["title"]);
@@ -677,7 +494,7 @@ sendDeprecated();
 
 			if (!$title || !$text)
 			{
-				new Errors(21);
+				throwError(21);
 			};
 
 			$extime = time() - 5 * 60;
@@ -685,7 +502,7 @@ sendDeprecated();
 
 			if ($last && !getAdmin())
 			{
-				new Errors(22);
+				throwError(22);
 			};
 
 			$ticketId = APIdog::mysql("INSERT INTO `supportTickets` (`title`,`userId`,`date`,`categoryId`,`isRead`,`isPrivate`) VALUES ('$title','" . CURRENT_USER_ID . "','$time','$categoryId',1,'" . ((int) $isPrivate) . "')", 4);
@@ -702,7 +519,7 @@ sendDeprecated();
 		case "support.editTicket":
 //sendDeprecated();
 			if (!CURRENT_USER_ID) {
-				new Errors(9);
+				throwError(9);
 			};
 
 			$ticketId = (int) $_REQUEST["ticketId"];
@@ -711,7 +528,7 @@ sendDeprecated();
 
 			if (!$ticketId || !$title)
 			{
-				new Errors(21);
+				throwError(21);
 			};
 
 			$data = Ticket::getById($ticketId);
@@ -737,13 +554,13 @@ sendDeprecated();
 			$count = (int) $_REQUEST["count"];
 
 			if (!$ticketId)
-				new Errors(21);
+				throwError(21);
 
 			$ticket = Ticket::getById($ticketId);
 
 			if (!$ticket)
 			{
-				new Errors(24);
+				throwError(24);
 			};
 
 			$ticket->checkPrivateAccess();
@@ -765,12 +582,12 @@ sendDeprecated();
 //sendDeprecated();
 			if (!CURRENT_USER_ID)
 			{
-				new Errors(9);
+				throwError(9);
 			};
 
 			if (Ticket::isBlocked())
 			{
-				new Errors(51);
+				throwError(51);
 			};
 
 			$ticketId = (int) $_REQUEST["ticketId"];
@@ -781,7 +598,7 @@ sendDeprecated();
 			$ticket = Ticket::getById($ticketId);
 			if (!$ticket)
 			{
-				new Errors(24);
+				throwError(24);
 			};
 
 			$ticket->checkPrivateAccess();
@@ -791,7 +608,7 @@ sendDeprecated();
 
 			if ($last && !getAdmin())
 			{
-				new Errors(22);
+				throwError(22);
 			};
 
 			if (getAdmin())
@@ -801,19 +618,19 @@ sendDeprecated();
 
 			if (mb_strlen($text) < 10 && !$action)
 			{
-				new Errors(48);
+				throwError(48);
 			};
 
 			if (!getAdmin() && !$text && !$attachmentId || getAdmin() && !$text && !$action)
 			{
-				new Errors(21);
+				throwError(21);
 			};
 
 			$comment = $ticket->addComment($text, $action, $attachmentId);
 
 			if (!$comment)
 			{
-				new Errors(47);
+				throwError(47);
 			};
 
 			$ticket->updateActionId();
@@ -835,7 +652,7 @@ sendDeprecated();
 
 			if (mb_strlen($text) < 10 && !$action)
 			{
-				new Errors(48);
+				throwError(48);
 			};
 
 			$ticket = Ticket::getById($ticketId);
@@ -853,7 +670,7 @@ sendDeprecated();
 
 			if (!$ticketId || !$commentId)
 			{
-				new Errors(24);
+				throwError(24);
 			};
 
 			$ticket = Ticket::getById($ticketId);
@@ -872,7 +689,7 @@ sendDeprecated();
 
 			if (!$ticketId || !$commentId)
 			{
-				new Errors(24);
+				throwError(24);
 			};
 
 			$ticket = Ticket::getById($ticketId);
@@ -897,7 +714,7 @@ sendDeprecated();
 			$file = $_FILES["file"];
 			if ($key != md5($authKey) || $userId != CURRENT_USER_ID || $time > $now || $now - $time > 600)
 			{
-				new Errors(49);
+				throwError(49);
 			};
 
 			$attach = Attachment::uploadImage($file);
@@ -915,7 +732,7 @@ sendDeprecated();
 			$key = escape($_REQUEST["key"]);
 
 			if (!$attachmentId || !$key)
-				new Errors(21);
+				throwError(21);
 			$attach = Attachment::getById($attachmentId);
 
 			$link = $attach->getRealImage();
@@ -941,7 +758,7 @@ sendDeprecated();
 
 			if (!getAdmin())
 			{
-				new Errors(25);
+				throwError(25);
 			};
 
 			$ticket = Ticket::getById($ticketId);
@@ -957,12 +774,12 @@ sendDeprecated();
 
 		case "apidog.uploadAttachmentByURL":
 			if (!CURRENT_USER_ID)
-				new Errors(9);
+				throwError(9);
 
 			$url = trim($_REQUEST["url"]);
 
 			if (!APIdog::isURL($url))
-				new Errors(21);
+				throwError(21);
 
 			$parsed = parse_url($url);
 
@@ -979,13 +796,13 @@ sendDeprecated();
 			else
 				$size = -1;
 			if ($size < 0 || $size > 5 * MB)
-				new Errors(33);
+				throwError(33);
 
 			include_once "uploader.php";
 			$type = exif_imagetype($url);
 
 			if(!in_array($type, [1, 2, 3, 6]))
-				new Errors(32);
+				throwError(32);
 
 			$isGif = $type == 1;
 			$name = time() . "." . (!$isGif ? "jpg" : "gif");
@@ -1021,9 +838,10 @@ sendDeprecated();
 				: $upload->docSave();
 			output($result);
 			break;
+
 		case "apidog.getBitrate":
 			if (!CURRENT_USER_ID)
-				new Errors(9);
+				throwError(9);
 
 			$data = APIdog::api("audio.getById", [
 				"access_token" => $_REQUEST["a"],
@@ -1160,6 +978,7 @@ sendDeprecated();
 			};
 			curl_exec($curl);
 			exit;
+
 		case "apidog.downloadAudio":
 
 			$data = APIdog::api("audio.getById", [
@@ -1234,227 +1053,6 @@ sendDeprecated();
 
 			break;
 
-		case "themes.get":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$sort = (int) $_REQUEST["sort"];
-			$onlyMy = (Boolean) $_REQUEST["onlyMy"];
-			$data = Theme::getList($sort, $onlyMy);
-			$data["canCreate"] = !Theme::floodControl();
-			output($data);
-			break;
-
-		case "themes.recount":
-			if (!CURRENT_USER_ADMIN) {
-				new Errors(9);
-			};
-
-			output(Theme::reCount());
-			break;
-
-		case "themes.getUsers":
-			if (!CURRENT_USER_ID) {
-				new Errors(9);
-			};
-
-			$themeId = (int) $_REQUEST["themeId"];
-
-			$theme = Theme::getById($themeId);
-
-			if (!$theme->isAuthor()) {
-				new Errors(146);
-			};
-
-			output($theme->getUsers());
-			break;
-
-		case "themes.getById":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$_ids = explode(",", trim($_REQUEST["themeIds"]));
-			$ids = [];
-
-			foreach ($_ids as $id) {
-				$ids[] = (int) $id;
-			};
-
-			if (!sizeOf($ids))
-				new Errors(145);
-
-			$result = Theme::getById($ids);
-
-			output(["count" => sizeOf($result), "items" => $result]);
-			break;
-
-		case "themes.set":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$themeId = (int) $_REQUEST["themeId"];
-			if ($themeId < 0)
-				new Errors(144); // TODO
-
-			output(Settings::setTheme($themeId));
-			break;
-
-		case "themes.getCode":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$themeId = (int) $_REQUEST["themeId"];
-
-			$theme = new Theme($themeId);
-
-			output($theme->getContent());
-			break;
-
-		case "themes.create":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$title = escape($_REQUEST["title"]);
-			$content = trim($_REQUEST["content"]);
-			$isPrivate = (int) (boolean) $_REQUEST["isPrivate"];
-			$version = escape($_REQUEST["version"]);
-			$changelog = escape($_REQUEST["changelog"]);
-
-			if (!$title || !$content) {
-				new Errors(142);
-			};
-
-			if (!Theme::isValid($content)) {
-				new Errors(143);
-			};
-
-			if (Theme::floodControl()) {
-				new Errors(141);
-			};
-
-			if (!$version) {
-				$version = "1.0";
-			};
-
-			$result = Theme::create($title, $content, $isPrivate, $version, $changelog);
-
-			output($result);
-			break;
-
-		case "themes.edit":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$themeId = (int) $_REQUEST["themeId"];
-			$title = escape($_REQUEST["title"]);
-			$content = $_REQUEST["content"];
-			$isPrivate = (boolean) $_REQUEST["isPrivate"];
-			$version = escape($_REQUEST["version"]);
-			$changelog = escape($_REQUEST["changelog"]);
-			$theme = new Theme($themeId);
-
-			if (!Theme::isValid($content)) {
-				new Errors(143);
-			};
-
-			if (!$theme->isAuthor()) {
-				new Errors(146); // TODO
-			};
-
-			if (!$version) {
-				$version = "1.0";
-			};
-
-			output($theme->edit($title, $content, $isPrivate, $version, $changelog));
-			break;
-
-		case "themes.delete":
-			if (!CURRENT_USER_ID)
-				new Errors(9);
-
-			$themeId = (int) $_REQUEST["themeId"];
-
-			$theme = new Theme($themeId);
-
-			if (!$theme->isAuthor() && !getAdmin()) {
-				new Errors(146); // TODO
-			};
-
-			output($theme->delete());
-			break;
-
-
-
-
-		case "blog.getTimeline":
-			$blog = new Blog;
-			$offset = (int) $_REQUEST["offset"];
-
-			output($blog->getTimeline($offset));
-			break;
-
-		case "blog.addPost":
-			if (!CURRENT_USER_ADMIN) {
-				new Errors(9);
-			};
-
-			$blog = new Blog;
-			$title = escape($_REQUEST["title"]);
-			$text = escape($_REQUEST["text"]);
-
-			output($blog->addPost($title, $text, CURRENT_USER_ID));
-			break;
-
-		case "blog.editPost":
-			if (!CURRENT_USER_ADMIN) {
-				new Errors(9);
-			};
-
-			$blog = new Blog;
-			$postId = (int) $_REQUEST["postId"];
-			$title = escape($_REQUEST["title"]);
-			$text = escape($_REQUEST["text"]);
-
-			output($blog->editPost($postId, $title, $text, CURRENT_USER_ID));
-			break;
-
-		case "blog.deletePost":
-			if (!CURRENT_USER_ADMIN) {
-				new Errors(9);
-			};
-
-			$blog = new Blog;
-			$postId = (int) $_REQUEST["postId"];
-
-			output($blog->deletePost($postId));
-			break;
-
-		case "blog.getPost":
-			$blog = new Blog;
-
-			$postId = (int) $_REQUEST["postId"];
-			$offset = (int) $_REQUEST["offset"];
-
-			output($blog->getPost($postId, $offset));
-			break;
-
-		case "blog.addComment":
-			$blog = new Blog;
-
-			$postId = (int) $_REQUEST["postId"];
-			$text = escape($_REQUEST["text"]);
-
-			output($blog->addComment($postId, $text, CURRENT_USER_ID));
-			break;
-
-		case "blog.deleteComment":
-			$blog = new Blog;
-
-			$postId = (int) $_REQUEST["postId"];
-			$commentId = (int) $_REQUEST["commentId"];
-
-			output($blog->deleteComment($postId, $commentId));
-			break;
 
 		case "apidog.createOrder":
 
@@ -1469,7 +1067,7 @@ sendDeprecated();
 				case "PC": $fee = $s * (0.005 / (1 + 0.005)); break;
 				case "AC": $fee = $s * 0.02; break;
 				case "MC": $fee = 4; break;
-				default: new Errors(200);
+				default: throwError(200);
 			};
 
 			$orderId = APIdogOrder::create($product);
@@ -1480,19 +1078,8 @@ sendDeprecated();
 			break;
 
 
-		case "system.rebuildClientCode":
-			if (!CURRENT_USER_ADMIN)
-				new Errors(501);
-
-			output(APIdog::rebuildJS());
-			break;
-
-		case "system.getEnv":
-var_dump($_SERVER);
-			break;
-
 		default:
-			new Errors(8);
+			throwError(8);
 	}
 
 	function getQueryStringWithFilter ($filter, $category, $o = [])
