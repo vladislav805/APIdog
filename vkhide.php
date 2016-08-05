@@ -1,16 +1,13 @@
 <?
 
-	include_once "./framework.v6.5.php";
-	include_once "../api-helper.php";
+	$pagePrefix = "vkhide";
+
+	include_once "zero.framework.php";
+	include_once "zero.helper.php";
 
 	if (!defined("CURRENT_USER_ID") || defined("CURRENT_USER_ID") && CURRENT_USER_ID == 0) {
-		exit(header("Location: /auth.php"));
-	}
-
-	function getLabel ($name) {
-		return getLangLabel("vkhide", $name);
+		exit(header("Location: auth.php"));
 	};
-
 
 	template(APIdogTemplateTop);
 

@@ -1,12 +1,9 @@
 <?
 
-	include_once "./framework.v6.5.php";
-	include_once "../api-helper.php";
+	$pagePrefix = "extensions";
 
-	function getLabel ($name) {
-		$name = strPos($name, "_") === 0 ? "extensions" . UCFirst(subStr($name, 1)) : $name;
-		return getLang(-1, "nonstdsite")[$name];
-	};
+	include_once "zero.framework.php";
+	include_once "zero.helper.php";
 
 	template(APIdogTemplateTop);
 ?>
