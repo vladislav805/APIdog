@@ -22,7 +22,7 @@
 					setCookie($key, null, 0);
 				};
 
-				header("Location: /");
+				header("Location: auth.php");
 				break;
 		}
 

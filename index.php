@@ -2,11 +2,6 @@
 
 	include_once "zero.framework.php";
 
-	if (!$_COOKIE["v65granted"]) {
-		exit(header("Location: /6.4/"));
-	};
-
-
 	// если нет authKey, или есть, но нет accessToken
 	if (!getAuthKey() || getAuthKey() && !getAccessToken()) {
 		gotoLogout();

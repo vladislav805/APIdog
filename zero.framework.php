@@ -24,7 +24,7 @@
 	define("KEY_ACCESS_TOKEN", "userAccessToken");
 	define("KEY_AUTH_KEY", "authKey");
 
-	define("userAccessToken", $_COOKIE[KEY_ACCESS_TOKEN] ? $_COOKIE[KEY_ACCESS_TOKEN] : false);
+	define("userAccessToken", $_COOKIE[KEY_ACCESS_TOKEN] ?? false);
 	define("userAuthKey", $_COOKIE[KEY_AUTH_KEY]);
 
 	$mDatabase;
@@ -34,7 +34,7 @@
 	 * @return String access_token
 	 */
 	function getAccessToken() {
-		return userAccessToken ? userAccessToken : false;
+		return userAccessToken ?? false;
 	};
 
 	/**
@@ -42,7 +42,7 @@
 	 * @return String authKey
 	 */
 	function getAuthKey() {
-		return userAuthKey ? userAuthKey : false;
+		return userAuthKey ?? false;
 	};
 
 	/**
@@ -75,7 +75,7 @@
 		 * @param  String &$string Строка, которую нужно экранировать
 		 * @return String          Результат, безопасная строка
 		 */
-		function escape(&$string) {
+		function escape($string) {
 			return getDatabase()->escape_string($string);
 		};
 
@@ -85,7 +85,7 @@
 	 * Логаут
 	 */
 	function gotoLogout () {
-		header("Location: /goto/logout?ts=" . time());
+		header("Location: /auth.php?act=logout&ts=" . time());
 		exit;
 	};
 
@@ -518,7 +518,7 @@
 			: $languageId;
 
 		if (!$GLOBALS["___lang" . $languageId]) {
-			$GLOBALS["___lang" . $languageId] = json_decode(file_get_contents("../lang/" . $languageId . ".json"), true);
+			$GLOBALS["___lang" . $languageId] = json_decode(file_get_contents("lang/" . $languageId . ".json"), true);
 		};
 		return $GLOBALS["___lang" . $languageId][$section];
 	};
