@@ -35,8 +35,12 @@
 	function initDefines() {
 		global $ssAdmins;
 
-		$authKey = escape($_COOKIE[KEY_AUTH_KEY]);
+		$authKey = escape(isset($_COOKIE[KEY_AUTH_KEY]) ? $_COOKIE[KEY_AUTH_KEY] : "");
 		$session = getSessionByAuthKey($authKey);
+
+		if (!$authKey || !$session) {
+			return;
+		};
 
 		define("userAccessToken", escape($_COOKIE[KEY_ACCESS_TOKEN]));
 		define("userAuthKey", $authKey);
@@ -53,7 +57,7 @@
 	 * @return String access_token
 	 */
 	function getAccessToken() {
-		return userAccessToken;
+		return defined("userAccessToken") ? userAccessToken : null;
 	};
 
 	/**
@@ -61,7 +65,7 @@
 	 * @return String authKey
 	 */
 	function getAuthKey() {
-		return userAuthKey;
+		return defined("userAuthKey") ? userAuthKey : null;
 	};
 
 	/**

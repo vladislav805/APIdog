@@ -13,14 +13,14 @@
 			 * Завершение сессии
 			 */
 			case "logout":
-				$hash = escape($_REQUEST["hash"]);
-				SQLquery("DELETE FROM `auth` WHERE `hash` = '$hash' LIMIT 1", 0);
-
-				session_destroy();
+				$authKey = getAuthKey();
+				SQLquery("DELETE FROM `auth` WHERE `hash` = '$authKey' LIMIT 1", 0);
 
 				foreach ($_COOKIE as $key => $value) {
-					setCookie($key, null, 0);
+					setCookie($key, null, -1, "/");
 				};
+
+				@session_destroy();
 
 				header("Location: auth.php");
 				break;
