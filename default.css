@@ -416,6 +416,20 @@ progress {
 	left: 100%;
 }
 
+.head-right {
+	float: right;
+	overflow: hidden;
+}
+
+.head-right > * {
+	float: right;
+	cursor: pointer;
+}
+
+.head-right > *:hover {
+	background-color: rgba(47, 77, 112, .25);
+}
+
 .head-user {
 	width: 170px;
 	cursor: pointer;
@@ -425,9 +439,6 @@ progress {
 	color: #ffffff;
 }
 
-.head-user:hover{
-	background: rgba(47, 77, 112, .25);
-}
 
 .head-user-photo {
 	width: 30px;
@@ -451,8 +462,16 @@ progress {
 	color: #fff;
 }
 
+.head-music {
+	background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 50px;
+	height: 50px;
+}
+
 .head-content {
-	margin: 0 170px 0 50px;
+	margin: 0 170px 0 0;
 }
 
 .head-title {
@@ -5262,6 +5281,10 @@ html.photo-view-full {
 
 	.head-menuIcon {
 		display: none;
+	}
+
+	.head-content {
+		margin: 0 170px 0 50px;
 	}
 
 	.head-logo {

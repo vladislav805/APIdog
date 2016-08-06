@@ -47,10 +47,10 @@
 		<meta name="application-name" content="APIdog" />
 		<meta name="msapplication-tooltip" content="Неофициальный клиент ВКонтакте offline" />
 
-		<link rel="stylesheet" href="/default.css" />
-		<link rel="yandex-tableau-widget" href="/manifest.json?7" />
-		<link rel="icon" href="/favicon.png?1" />
-		<link rel="shortcut icon" href="/favicon.png?1" />
+		<link rel="stylesheet" href="default.css" />
+		<link rel="yandex-tableau-widget" href="manifest.json?7" />
+		<link rel="icon" href="favicon.png?1" />
+		<link rel="shortcut icon" href="favicon.png?1" />
 		<script>
 			var API = <?=json_encode($JavaScriptUserObject, JSON_UNESCAPED_UNICODE);?>;
 			window.adblockEnabled = !1;
@@ -83,13 +83,16 @@
 			<div class="head<?=($isFixedHead ? " head-fixed" : "");?>" id="dog-head">
 				<div class="head-wrap">
 					<div class="head-menuIcon" onclick="menu.toggle();"><div class="head-menuIconInner"></div></div>
-					<a class="head-user" href="#" id="_link">
-						<img class="head-user-photo" src="data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" id="_photo" />
-						<div class="head-user-name" id="_name">Loading...</div>
-					</a>
+					<div class="head-right">
+						<a class="head-user" href="#" id="_link">
+							<img class="head-user-photo" src="data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" id="_photo" />
+							<div class="head-user-name" id="_name">Loading...</div>
+						</a>
+						<div class="head-music"></div>
+					</div>
 					<div class="head-content" id="head-content">
 						<div class="head-title" id="head-title">
-							Test
+							APIdog
 						</div>
 					</div>
 				</div>
