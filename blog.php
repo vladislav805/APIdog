@@ -10,16 +10,16 @@
 	 * @param  int $id Идентификатор пользователя ВК
 	 * @return string  Имя
 	 */
-	function getAdminLink ($id) {
+	function getAdminLink($id) {
 		global $dogAdminBlogName;
 		return $dogAdminBlogName[$id];
 	};
 
 	$blog = new Blog;
 
-	$postId = (int) $_REQUEST["postId"];
-	$offset = (int) $_REQUEST["offset"];
-	$action = (string) $_REQUEST["act"];
+	$postId = (int) (isset($_REQUEST["postId"]) ? $_REQUEST["postId"] : 0);
+	$offset = (int) (isset($_REQUEST["offset"]) ? $_REQUEST["offset"] : 0);
+	$action = isset($_REQUEST["act"]) ? $_REQUEST["act"] : "";
 
 	if (!$postId) {
 

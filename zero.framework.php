@@ -629,7 +629,7 @@ var_dump($user, $authKey);
 			$items[] = '<a href="?offset=' . $i . '">' . (floor($i / $step) + 1) . '</a>';
 		};
 
-		return (sizeOf($items) ? '<div class="pagination-wrap">' . join("", $html) . '</div>' : '');
+		return (sizeOf($items) ? '<div class="pagination-wrap">' . join("", $items) . '</div>' : '');
 	};
 
 	/**

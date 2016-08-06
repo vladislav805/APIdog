@@ -999,53 +999,56 @@
 
 
 
-	class Blog
-	{
-
+	class Blog {
 		public $db;
+		public function __construct() { }
 
-		public function __construct ()
-		{
-			include_once "framework-sql.php";
-
-			$this->db = new XSQL("localhost", "apidog", "apidog14082012", "apidog");
-		}
-
-		public function getTimeline ($offset)
-		{
-			$items = $this->db->select()->from("blog")->orderBy("postId", "DESC")->limit(30, $offset)->execute();
+		/**
+		 * Возвращает записи из блога
+		 * @param  int $offset Сдвиг выборки
+		 * @return array       Массив с count и items
+		 */
+		public function getTimeline($offset = 0) {
+			$offset = (int) $offset;
+			$items = SQLquery("SELECT * FROM `blog` ORDER BY `postId` DESC LIMIT $offset,30", SQL_RESULT_ITEMS);
 
 			return ["count" => sizeOf($items), "items" => $items];
 		}
 
-		public function addPost ($title, $text, $adminId)
-		{
-			$id = $this->db->insert()->into("blog")->params([
-				"date" => time(),
-				"title" => $title,
-				"text" => $text,
-				"adminId" => $adminId
-			])->execute();
+		/**
+		 * Добавление записи в блог
+		 * @param string $title   Заголовок
+		 * @param string $text    Текст
+		 * @param int    $adminId ID пользователя
+		 */
+		public function addPost($title, $text, $adminId) {
+			$id = SQLquery("INSERT INTO `blog` (`date`, `title`, `text`, `adminId`) VALUES ('". time(). "','". escape($title) . "','" . escape($text) . "','" . ((int) $adminId) . "'", SQL_RESULT_INSERTED);
 
 			return $id;
 		}
 
-		public function editPost ($postId, $title, $text)
-		{
+		/*public function editPost ($postId, $title, $text) {
 			return $this->db->update()->table("blog")->set([
 				"title" => $title,
 				"text" => $text
 			])->where(["postId", $postId])->execute();
+		}*/
+
+		/**
+		 * Удаление записи из блога
+		 * @param  int $postId Идентификатор поста
+		 */
+		public function deletePost($postId) {
+			return SQLquery("DELETE FROM `blog` WHERE `postId`='" . ((int) $postId) . "' LIMIT 1");
 		}
 
-		public function deletePost ($postId)
-		{
-			return $this->db->delete()->from("blog")->where(["postId", $postId])->limit(1)->execute();
-		}
-
-		public function getPost ($postId)
-		{
-			$post = $this->db->select()->from("blog")->where([["postId", $postId]])->execute()[0];
+		/**
+		 * Возвращает пост из блога по идентификатору
+		 * @param  int  $postId Идентификатор поста
+		 * @return array        Пост
+		 */
+		public function getPost($postId) {
+			$post = SQLquery("SELECT * FROM `blog` WHERE `postId` = '" . ((int) $postId) . "' LIMIT 1", SQL_RESULT_ITEM);
 
 			if ($post) {
 				$post["views"] = $this->viewPost($postId);
@@ -1054,31 +1057,16 @@
 			return $post ? ["post" => $post] : null;
 		}
 
-		private function viewPost ($postId)
-		{
-			if (!sizeOf($this->db->select()->from("blogViews")->where([["userId", userId], ["postId", $postId]])->limit(1)->execute())) {
+
+		private function viewPost($postId) {
+			/*if (!sizeOf($this->db->select()->from("blogViews")->where([["userId", userId], ["postId", $postId]])->limit(1)->execute())) {
 
 				$this->db->insert()->into("blogViews")->params(["userId" => userId, "postId" => $postId])->execute();
 			};
 			$count = $this->db->executePreparedQuery("SELECT COUNT(*) FROM `blogViews` WHERE `postId`='" . $postId . "' LIMIT 1");
-			return $count->getCount();
+			return $count->getCount();*/
 		}
-
-		public function addComment ($postId, $text, $userId)
-		{
-
-		}
-
-		public function deleteComment ($postId, $commentId)
-		{
-
-		}
-
-		private function checkFlood ($userId)
-		{
-
-		}
-	}
+	};
 
 
 	class Theme

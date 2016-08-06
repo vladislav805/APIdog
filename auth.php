@@ -5,7 +5,7 @@
 	include_once "zero.framework.php";
 	include_once "zero.helper.php";
 
-	if ($_REQUEST["act"]) {
+	if (isset($_REQUEST["act"])) {
 
 		switch ($_REQUEST["act"]) {
 
