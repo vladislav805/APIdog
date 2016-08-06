@@ -6,13 +6,6 @@
 	 *  14.03.2015  *
 	 ****************/
 
-	$authKey = escape($_REQUEST["authKey"] ?? (function_exists("getAuthKey") ? getAuthKey() : false));
-	$currentUserId = User::getByHash($authKey);
-
-	define("CURRENT_USER_ID", $currentUserId);
-	define("CURRENT_USER_ADMIN", in_array($currentUserId, [23048942, 203384908, 3869934, 184870404, 95207619, 18773011, 4366635]));
-
-
 	// ban for themes.*: 315482675
 
 	/**
@@ -20,7 +13,7 @@
 	 * @param  int $userId Идентификатор пользователя
 	 * @return int         Номер агента или false
 	 */
-	function getAdmin ($userId = CURRENT_USER_ID) {
+	function getAdmin ($userId = userId) {
 		global $ssAdmins;
 		return $ssAdmins[$userId] ?? false;
 	};
@@ -42,7 +35,7 @@
 
 		$data = [
 			"errorId" => $errorId,
-			"message" => $message,
+			"message" => getErrorTextById($errorId),
 			"params" => $_REQUEST
 		];
 
@@ -74,23 +67,7 @@
 			$this->online = (boolean) $u["online"];
 		}
 
-		/**
-		 * Получение пользователя по authKey
-		 * @param  string $authKey authKey
-		 * @return [type]       [description]
-		 */
-		static function getByHash($authKey = "") {
 
-			if (!$authKey) {
-				return false;
-			};
-
-			escape($authKey);
-
-			$user = APIdog::mysql("SELECT * FROM `auth` WHERE `hash`='$authKey' LIMIT 1", 1);
-
-			return $user && $user["user_id"] ? $user["user_id"] : false;
-		}
 
 		/**
 		 * Ассоциирование ключа authKey с userId
@@ -356,16 +333,19 @@
 	 */
 	class Request{private $c;private $url;private $userAgent;private $isPost;private $post=[];private $result;public function __construct($url,$isPost=false){$this->c=curl_init($url);$this->url=$url;$this->isPost($isPost);}public function setUserAgent($ua){$this->userAgent=$ua;return $this;}public function isPost($state){if(is_null($state)){return $this->isPost;};$this->isPost=(boolean)$state;return $this;}public function setParams($params){$this->post=$params;return $this;}public function setParam($key,$value){$this->post[$key]=$value;return $this;}public function getParams(){return $this->post;}public function init(){curl_setopt($this->c,CURLOPT_RETURNTRANSFER,1);curl_setopt($this->c, CURLOPT_POST, $this->isPost);if($this->userAgent){curl_setopt($this->c,CURLOPT_USERAGENT,$this->userAgent);};curl_setopt($this->c,CURLOPT_TIMEOUT,10);$params=http_build_query($this->post);if($this->isPost){curl_setopt($this->c,CURLOPT_POSTFIELDS,$params);}else{curl_setopt($this->c,CURLOPT_URL,$this->url=($this->url."?".$params));};}public function send(){$this->init();$this->result=curl_exec($this->c);curl_close($this->c);return $this;}public function getResult(){return $this->result;}public function getJSON(){return json_decode($this->result);}}
 
-	class APIdog
-	{
+	include_once "zero.config.php";
+	global $dbHost, $dbUser, $dbPassword, $dbDatabase;
+
+	class APIdog {
 		static function connect() {
-			return new mysqli("localhost", "apidog", "apidog14082012", "apidog");
+			global $dbHost, $dbUser, $dbPassword, $dbDatabase;
+			return new mysqli($dbHost, $dbUser, $dbPassword, $dbDatabase);
 
 		}
-		static function mysql ($query, $type = 0)
-		{
-			if (!$GLOBALS["bd"]) {
-				$bd = mysqli_connect("localhost", "apidog", "apidog14082012", "apidog");
+
+		static function mysql ($query, $type = 0) {
+			if (!isset($GLOBALS["bd"])) {
+				$bd = mysqli_connect($dbHost, $dbUser, $dbPassword, $dbDatabase);
 				$GLOBALS["bd"] = $bd;
 			} else {
 				$bd = $GLOBALS["bd"];
@@ -395,26 +375,21 @@
 			}
 		}
 
-		static function api ($method, $params, $withoutAccessToken = false)
-		{
-			if (!isset($params))
-			{
+		static function api ($method, $params, $withoutAccessToken = false) {
+			if (!isset($params)) {
 				$params = [];
 			};
 
-			if (!$params["v"])
-			{
+			if (!$params["v"]) {
 				$params["v"] = 4.99;
 			};
 
-			if (defined("access_token") && access_token != null && !$params["access_token"] && !$withoutAccessToken)
-			{
+			if (defined("access_token") && access_token != null && !$params["access_token"] && !$withoutAccessToken) {
 				$params["access_token"] = access_token;
 			};
 
 			$params["timestamp"] = time();
 			$params["lang"] = "ru";
-			//$params .= "&sig=" . md5($params);
 			$curl = curl_init("https://api.vk.com/method/" . $method);
 			curl_setopt($curl, CURLOPT_POST, 1);
 			curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
@@ -427,8 +402,7 @@
 
 
 
-		static function uploadImage ($file)
-		{
+		static function uploadImage ($file) {
 			$sizes = getImageSize($file);
 			$size = fileSize($file);
 			$ch = curl_init("http://ipic.su/api/index.php");
@@ -565,7 +539,7 @@
 		 * @return array Массив сессий
 		 */
 		static function getSessions() {
-			$list = SQLquery("SELECT * FROM `auth` WHERE `user_id` = '" . CURRENT_USER_ID . "' ORDER BY `date` DESC", SQL_RESULT_ITEMS);
+			$list = SQLquery("SELECT * FROM `auth` WHERE `user_id` = '" . userId . "' ORDER BY `date` DESC", SQL_RESULT_ITEMS);
 
 			foreach ($list as $i => $session) {
 				$list[$i] = new AuthSession($session);
@@ -582,7 +556,7 @@
 		 * @param int $themeId Идентификатор темы
 		 */
 		static function setTheme($themeId) {
-			$result = SQLquery("UPDATE `settings` SET `themeId` = '" . ((int) $themeId) . "' WHERE `userId` = '" . CURRENT_USER_ID . "' LIMIT 1", SQL_RESULT_AFFECTED);
+			$result = SQLquery("UPDATE `settings` SET `themeId` = '" . ((int) $themeId) . "' WHERE `userId` = '" . userId . "' LIMIT 1", SQL_RESULT_AFFECTED);
 			return [ "result" => (boolean) $result ];
 		}
 
@@ -713,7 +687,7 @@
 		 */
 		static function isBlocked() {
 			global $ssBlockedUsers;
-			return in_array(CURRENT_USER_ID, $ssBlockedUsers);
+			return in_array(userId, $ssBlockedUsers);
 		}
 
 		public function __construct ($t) {
@@ -729,8 +703,8 @@
 			$this->isBanned = (boolean) Ticket::isBlocked();
 			$this->canReply = (boolean) !$this->isBanned && $this->actionId != 18;
 			$this->canResponse = (boolean) getAdmin();
-			$this->canEdit = (boolean) ((getAdmin(CURRENT_USER_ID) || $this->userId == CURRENT_USER_ID) && time() - $this->date < 3 * 24 * 60 * 60);
-			$this->canDelete = (boolean) (getAdmin(CURRENT_USER_ID) || $this->userId == CURRENT_USER_ID);
+			$this->canEdit = (boolean) ((getAdmin(userId) || $this->userId == userId) && time() - $this->date < 3 * 24 * 60 * 60);
+			$this->canDelete = (boolean) (getAdmin(userId) || $this->userId == userId);
 		}
 
 		static function parse ($data, $isArray = false) {
@@ -813,7 +787,7 @@
 
 		public function getComment ($commentId)
 		{
-			$q = getAdmin() ? "" : " AND `userId`='" . CURRENT_USER_ID . "'";
+			$q = getAdmin() ? "" : " AND `userId`='" . userId . "'";
 			$test = APIdog::mysql("SELECT * FROM `supportComments` WHERE `ticketId` = '{$this->ticketId}' AND `commentId` = '$commentId' $q LIMIT 1", 1);
 			if (!$test)
 				throwError(23);
@@ -824,7 +798,7 @@
 		public function addComment ($text, $actionId, $attachmentId)
 		{
 			$time = time();
-			$commentId = APIdog::mysql("INSERT INTO `supportComments` (`ticketId`, `text`, `userId`, `date`, `actionId`, `attachments`) VALUES ('" . $this->ticketId . "', '" . $text . "', '" . CURRENT_USER_ID . "', '" . $time . "', '" . $actionId . "', '" . $attachmentId . "')", 4);
+			$commentId = APIdog::mysql("INSERT INTO `supportComments` (`ticketId`, `text`, `userId`, `date`, `actionId`, `attachments`) VALUES ('" . $this->ticketId . "', '" . $text . "', '" . userId . "', '" . $time . "', '" . $actionId . "', '" . $attachmentId . "')", 4);
 			$this->setAction($actionId);
 			return $commentId ? Comment::getById($commentId) : false;
 		}
@@ -846,7 +820,7 @@
 
 		public function checkPrivateAccess ()
 		{
-			if (!$this->isPrivate || getAdmin() || $this->isPrivate && $this->userId == CURRENT_USER_ID)
+			if (!$this->isPrivate || getAdmin() || $this->isPrivate && $this->userId == userId)
 				return;
 			throwError(26);
 		}
@@ -894,8 +868,8 @@
 				$this->canMark = true;
 			if ($c["userAgent"])
 				$this->userAgent = $c["userAgent"];
-			$this->canEdit = (($isAdmin && $this->userId < 0) || $this->userId == CURRENT_USER_ID) && time() - $this->date < 5 * 60 * 60;
-			$this->canDelete = ($isAdmin || $this->userId == CURRENT_USER_ID);
+			$this->canEdit = (($isAdmin && $this->userId < 0) || $this->userId == userId) && time() - $this->date < 5 * 60 * 60;
+			$this->canDelete = ($isAdmin || $this->userId == userId);
 		}
 
 		static function parse ($data, $isArray = false)
@@ -1015,8 +989,8 @@
 
 			$link = escape($link);
 			$date = time();
-			$hash = md5($date . CURRENT_USER_ID);
-			$attachmentId = APIdog::mysql("INSERT INTO `supportAttachments` (`userId`, `image`, `key`, `date`) VALUES ('" . CURRENT_USER_ID . "', '" . $link . "', '" . $hash . "', '" . $date . "')", 4);
+			$hash = md5($date . userId);
+			$attachmentId = APIdog::mysql("INSERT INTO `supportAttachments` (`userId`, `image`, `key`, `date`) VALUES ('" . userId . "', '" . $link . "', '" . $hash . "', '" . $date . "')", 4);
 			$attachment = Attachment::getById($attachmentId);
 			return $attachment;
 		}
@@ -1082,9 +1056,9 @@
 
 		private function viewPost ($postId)
 		{
-			if (!sizeOf($this->db->select()->from("blogViews")->where([["userId", CURRENT_USER_ID], ["postId", $postId]])->limit(1)->execute())) {
+			if (!sizeOf($this->db->select()->from("blogViews")->where([["userId", userId], ["postId", $postId]])->limit(1)->execute())) {
 
-				$this->db->insert()->into("blogViews")->params(["userId" => CURRENT_USER_ID, "postId" => $postId])->execute();
+				$this->db->insert()->into("blogViews")->params(["userId" => userId, "postId" => $postId])->execute();
 			};
 			$count = $this->db->executePreparedQuery("SELECT COUNT(*) FROM `blogViews` WHERE `postId`='" . $postId . "' LIMIT 1");
 			return $count->getCount();
@@ -1137,7 +1111,7 @@
 			$this->changelog = $theme["changelog"];
 			$this->isPrivate = (boolean) $theme["isPrivate"];
 
-			if ($theme["authorId"] == CURRENT_USER_ID)
+			if ($theme["authorId"] == userId)
 			{
 				$this->_isAuthor = true;
 			};
@@ -1146,8 +1120,8 @@
 		static function create ($title, $content, $isPrivate = false, $version = "", $changelog = "")
 		{
 			$updated = time();
-			$file = CURRENT_USER_ID . "." . $updated . ".css";
-			$userId = CURRENT_USER_ID;
+			$file = userId . "." . $updated . ".css";
+			$userId = userId;
 
 			$fh = fopen("./styles/" . $file, "w+");
 			fwrite($fh, $content);
@@ -1160,7 +1134,7 @@
 
 		static function floodControl ()
 		{
-			$check = APIdog::mysql("SELECT COUNT(*) FROM `themes` WHERE `authorId` = " . CURRENT_USER_ID, 3);
+			$check = APIdog::mysql("SELECT COUNT(*) FROM `themes` WHERE `authorId` = " . userId, 3);
 			return $check > 5;
 		}
 
@@ -1200,7 +1174,7 @@
 
 		static function getList ($sort = 0, $onlyMe = true)
 		{
-			$condition = !$onlyMe ? "`isPrivate` = 0 OR `authorId` = '" . CURRENT_USER_ID . "'" : "`authorId` = '" . CURRENT_USER_ID . "'";
+			$condition = !$onlyMe ? "`isPrivate` = 0 OR `authorId` = '" . userId . "'" : "`authorId` = '" . userId . "'";
 			$themes = APIdog::mysql("SELECT * FROM `themes` WHERE " . $condition . " ORDER BY `themeId` DESC LIMIT 150", 2);
 			$count = APIdog::mysql("SELECT COUNT(*) FROM `themes` WHERE" . $condition, 3);
 			$items = [];

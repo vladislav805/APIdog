@@ -16,20 +16,35 @@
 	};
 
 	include_once "zero.config.php";
+	include_once "zero.helper.php";
+	include_once "zero.db.php";
+
+	global $dbHost, $dbUser, $dbPassword, $dbDatabase, $ssAdmins;
 
 	session_start();
 
-	error_reporting(E_ERROR | E_PARSE);
+	//error_reporting(E_ERROR | E_PARSE);
 
 	date_default_timezone_set("Europe/Minsk"); // GMT+3
-
 	header("Content-Type: text/html; charset=UTF-8");
+
 
 	define("KEY_ACCESS_TOKEN", "userAccessToken");
 	define("KEY_AUTH_KEY", "authKey");
 
-	define("userAccessToken", $_COOKIE[KEY_ACCESS_TOKEN] ?? false);
-	define("userAuthKey", $_COOKIE[KEY_AUTH_KEY]);
+	function initDefines() {
+		global $ssAdmins;
+
+		$authKey = escape($_COOKIE[KEY_AUTH_KEY]);
+		$session = getSessionByAuthKey($authKey);
+
+		define("userAccessToken", escape($_COOKIE[KEY_ACCESS_TOKEN]));
+		define("userAuthKey", $authKey);
+		define("userId", $session->userId);
+		define("isAdminCurrentUser", in_array($session->userId, $ssAdmins));
+	};
+
+
 
 	$mDatabase;
 
@@ -38,7 +53,7 @@
 	 * @return String access_token
 	 */
 	function getAccessToken() {
-		return userAccessToken ?? false;
+		return userAccessToken;
 	};
 
 	/**
@@ -46,7 +61,7 @@
 	 * @return String authKey
 	 */
 	function getAuthKey() {
-		return userAuthKey ?? false;
+		return userAuthKey;
 	};
 
 	/**
@@ -55,7 +70,8 @@
 	 */
 	function connectDatabase() {
 		global $dbHost, $dbUser, $dbPassword, $dbDatabase;
-		return ($GLOBALS["mDatabase"] = new mysqli($dbHost, $dbUser, $dbPassword, $dbDatabase));
+		$db = new mysqli($dbHost, $dbUser, $dbPassword, $dbDatabase);
+		return $db;
 	};
 
 	/**
@@ -72,75 +88,13 @@
 		return $mDatabase;
 	};
 
-	if (!function_exists("escape")) {
-
-		/**
-		 * Функция для "обезопашивания" строк для записи в БД
-		 * @param  String &$string Строка, которую нужно экранировать
-		 * @return String          Результат, безопасная строка
-		 */
-		function escape($string) {
-			return getDatabase()->escape_string($string);
-		};
-
-	};
-
 	/**
 	 * Логаут
 	 */
 	function gotoLogout () {
+		exit("LOGOUT REQUIRED");
 		header("Location: /auth.php?act=logout&ts=" . time());
 		exit;
-	};
-
-	/**
-	 * Работа с БД
-	 */
-	define("SQL_RESULT_ITEM", 1);
-	define("SQL_RESULT_ITEMS", 2);
-	define("SQL_RESULT_COUNT", 3);
-	define("SQL_RESULT_AFFECTED", 4);
-	define("SQL_RESULT_INSERTED", 5);
-
-	/**
-	 * Функция для запросов к БД
-	 * @param  String $query      Запрос SQL
-	 * @param  int    $resultType В каком типе возвращать результат
-	 * @return Mixed              Результат, в зависимости от $resultType
-	 */
-	function SQLquery ($query, $resultType = SQL_RESULT_ITEM) {
-
-		$db = getDatabase();
-		$db->query("SET NAMES utf8");
-		$db->set_charset("utf8");
-		$result = $db->query($query);
-
-		if (!$result) {
-			return null;
-		};
-
-		switch ($resultType) {
-			case SQL_RESULT_ITEM:
-				return $result->fetch_assoc();
-
-			case SQL_RESULT_ITEMS:
-				$data = [];
-				while ($row = $result->fetch_assoc()) {
-					$data[] = $row;
-				};
-				return $data;
-
-			case SQL_RESULT_COUNT:
-				return (int) $result->fetch_assoc()["COUNT(*)"];
-
-			case SQL_RESULT_INSERTED:
-				return (int) $db->insert_id;
-
-			case SQL_RESULT_AFFECTED:
-				return (int) $db->affected_rows;
-		};
-
-		return null;
 	};
 
 	/**
@@ -149,8 +103,8 @@
 	 * @return APIdogSession   Сессия
 	 */
 	function getSessionByAuthKey ($authKey) {
-
-		$result = SQLquery("SELECT `auth_id` AS `authId`, `user_id` AS `userId`, `date` FROM `auth` WHERE `hash` = '" . escape($authKey) . "' ", SQL_RESULT_ITEM);
+		$authKey = escape($authKey);
+		$result = SQLquery("SELECT `auth_id` AS `authId`, `user_id` AS `userId`, `date` FROM `auth` WHERE `hash` = '" . $authKey . "' ", SQL_RESULT_ITEM);
 		return $result ? new APIdogSession($result) : false;
 
 	};
@@ -194,11 +148,25 @@
 			$this->authId = (int) $result["authId"];
 			$this->userId = (int) $result["userId"];
 			$this->date = (int) $result["date"];
-			if ($this->userId == 33190070) { exit; }; // Попросил Лавр
 		}
 
 		public function getSettings () {
 			return APIdogSettings::getById($this->userId);
+		}
+
+		/**
+		 * Получение пользователя по authKey
+		 * @param  string $authKey authKey
+		 * @return [type]       [description]
+		 */
+		static function getByAuthKey($authKey = "") {
+			if (!$authKey) {
+				return false;
+			};
+
+			$user = SQLquery("SELECT * FROM `auth` WHERE `hash`='" . escape($authKey) . "' LIMIT 1", SQL_RESULT_ITEM);
+var_dump($user, $authKey);
+			return !$user ? false : new APIdogSession($user);
 		}
 
 	};
@@ -401,7 +369,7 @@
 		 */
 		static function getPayed () {
 			$now = time();
-			$payed = SQLquery("SELECT * FROM `paid` WHERE `userId` = '" . CURRENT_USER_ID . "' AND `isActive` = 1 AND (`untilDate` = 0 OR `untilDate` > " . $now . ")", SQL_RESULT_ITEMS);
+			$payed = SQLquery("SELECT * FROM `paid` WHERE `userId` = '" . userId . "' AND `isActive` = 1 AND (`untilDate` = 0 OR `untilDate` > " . $now . ")", SQL_RESULT_ITEMS);
 
 			$payedItems = [];
 
@@ -419,7 +387,7 @@
 		 */
 		static function isPayed($ids) {
 			$now = time();
-			$payed = SQLquery("SELECT `productId` FROM `paid` WHERE `userId` = '" . CURRENT_USER_ID . "' AND `isActive` = 1 AND (`untilDate` = 0 OR `untilDate` > " . $now . ")", SQL_RESULT_ITEMS);
+			$payed = SQLquery("SELECT `productId` FROM `paid` WHERE `userId` = '" . userId . "' AND `isActive` = 1 AND (`untilDate` = 0 OR `untilDate` > " . $now . ")", SQL_RESULT_ITEMS);
 
 			foreach ($payed as $item) {
 				$result[] = $item["productId"];
@@ -458,7 +426,7 @@
 		 * @return int                    Идентификатор заказа
 		 */
 		static function create (APIdogProduct $product) {
-			$orderId = SQLquery("INSERT INTO `paid` (`productId`, `userId`, `date`, `untilDate`, `amount`, `isActive`) VALUES ('" . $product->productId . "','" . CURRENT_USER_ID . "','" . time() . "', '" . $product->getUntilDate() . "','" . $product->amount . "',0)", SQL_RESULT_INSERTED);
+			$orderId = SQLquery("INSERT INTO `paid` (`productId`, `userId`, `date`, `untilDate`, `amount`, `isActive`) VALUES ('" . $product->productId . "','" . userId . "','" . time() . "', '" . $product->getUntilDate() . "','" . $product->amount . "',0)", SQL_RESULT_INSERTED);
 			return $orderId;
 		}
 
@@ -506,6 +474,17 @@
 
 	}
 
+
+	if (!function_exists("escape")) {
+		/**
+		 * Функция для "обезопашивания" строк для записи в БД
+		 * @param  String &$string Строка, которую нужно экранировать
+		 * @return String          Результат, безопасная строка
+		 */
+		function escape($string) {
+			return getDatabase()->escape_string($string);
+		};
+	};
 
 
 
@@ -673,7 +652,9 @@
 	 * @return boolean
 	 */
 	function isNewVersionEnabled() {
-		return (boolean) SQLquery("SELECT `v5` FROM `settings` WHERE `userId` = '" . CURRENT_USER_ID . "' LIMIT 1", SQL_RESULT_ITEM)["v5"];
+		return SQLquery("SELECT `v5` FROM `settings` WHERE `userId` = '" . userId . "' LIMIT 1", SQL_RESULT_ITEM);
 	};
 
 	session_write_close();
+
+	initDefines();

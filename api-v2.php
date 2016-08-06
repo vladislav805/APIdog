@@ -9,7 +9,7 @@
 	 ****************/
 
 	include_once "zero.framework.php";
-	require_once "zero.helper.php";
+	include_once "zero.helper.php";
 
 	date_default_timezone_set ("Europe/Minsk");
 
@@ -19,15 +19,12 @@
 	header("Access-Control-Allow-Headers: Content-Type, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control");
 
 
-	$method = escape($_REQUEST["method"]);
-
 	$usersIgnoreAds = [23048942];
 
 
 	$currentUserId = $currentUserId == "0" ? -1 : $currentUserId;
 
-	switch ($method)
-	{
+	switch ($_REQUEST["method"]) {
 
 		// Settings
 
@@ -98,18 +95,18 @@
 			$lang = (int) $_REQUEST["languageId"];
 			$notifications = (int) $_REQUEST["bitmaskNotifications"];
 			$userId = (int) CURRENT_USER_ID;
-			$test = APIdog::mysql("SELECT `bitmask`, `userId` FROM `settings` WHERE `userId` = '$userId' LIMIT 1", 1);
+			$test = SQLquery("SELECT `bitmask`, `userId` FROM `settings` WHERE `userId` = '$userId' LIMIT 1", SQL_RESULT_ITEM);
 			if ($test["userId"]) {
-				$success = APIdog::mysql("UPDATE `settings` SET `bitmask` = '$bitmask', `notifications` = '$notifications', `lang` = '$lang' WHERE `userId` = '$userId' LIMIT 1", 5) || $test["bitmask"] == $bitmask;
+				$success = SQLquery("UPDATE `settings` SET `bitmask` = '$bitmask', `notifications` = '$notifications', `lang` = '$lang' WHERE `userId` = '$userId' LIMIT 1", SQL_RESULT_AFFECTED) || $test["bitmask"] == $bitmask;
 			} else {
-				$success = APIdog::mysql("INSERT INTO `settings` (`userId`, `bitmask`, `lang`, `notifications`) VALUES ('$userId', '$bitmask', '$lang', '$notifications')", 5);
+				$success = SQLquery("INSERT INTO `settings` (`userId`, `bitmask`, `lang`, `notifications`) VALUES ('$userId', '$bitmask', '$lang', '$notifications')", SQL_RESULT_INSERTED);
 			};
 			$langId = $lang;
 			$lang = [
-				["languageCode" => "ru", "languageId" => 0, "languageFile" => "/lang/ru.json"],
-				["languageCode" => "en", "languageId" => 1, "languageFile" => "/lang/en.json"],
-				["languageCode" => "ua", "languageId" => 2, "languageFile" => "/lang/ua.json"],
-				["languageCode" => "gop", "languageId" => 999, "languageFile" => "/lang/gop.json"]
+				["languageId" => 0, "languageFile" => "/lang/ru.json"],
+				["languageId" => 1, "languageFile" => "/lang/en.json"],
+				["languageId" => 2, "languageFile" => "/lang/ua.json"],
+				["languageId" => 999, "languageFile" => "/lang/gop.json"]
 			][(int) $lang];
 
 			output([
@@ -133,6 +130,8 @@
 			$validationId	= trim($_REQUEST["validationId"]);
 			$validationCode	= trim($_REQUEST["validationCode"]);
 			$auth = new Authorize();
+
+
 			$result = $auth->requestByPairLoginPassword($login, $password, $application, $captchaId, $captchaKey, $validationId, $validationCode);
 
 			output($result);

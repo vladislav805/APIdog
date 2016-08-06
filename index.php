@@ -2,10 +2,11 @@
 
 	include_once "zero.framework.php";
 
-	/*if (!isNewVersionEnabled()) {
+	// если не подключена новая версия, то перекидываем назад
+	if (!isNewVersionEnabled()) {
 		header("Location: /6.4/");
 		exit;
-	};*/
+	};
 
 	// если нет authKey, или есть, но нет accessToken
 	if (!getAuthKey() || getAuthKey() && !getAccessToken()) {
