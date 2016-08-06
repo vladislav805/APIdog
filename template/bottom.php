@@ -7,7 +7,7 @@
 		</div>
 		<script src="lib1.3.0.js"></script>
 		<script src="js/SDK.js"></script>
-		<script src="js/VKUpload.port.v7.js"></script>
+		<script src="js/VKUpload.js"></script>
 		<script src="nondefault.js?1"></script>
 		<script type="text/javascript">var API = <?
 	$user = getUserDataForNonStdPages();
