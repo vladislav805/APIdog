@@ -5,7 +5,7 @@
 	include_once "zero.framework.php";
 	include_once "zero.helper.php";
 
-	if (!defined("CURRENT_USER_ID") || defined("CURRENT_USER_ID") && CURRENT_USER_ID == 0) {
+	if (!defined("userId") || defined("userId") && userId == 0) {
 		exit(header("Location: auth.php"));
 	};
 

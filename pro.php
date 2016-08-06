@@ -2,10 +2,10 @@
 
 	$pagePrefix = "pro";
 
-	include_once "zero.framework.v6.5.php";
+	include_once "zero.framework.php";
 	include_once "zero.helper.php";
 
-	if (!CURRENT_USER_ID && $_REQUEST["act"] != "result") {
+	if (!userId && $_REQUEST["act"] != "result") {
 		exit(header("Location: /"));
 	};
 

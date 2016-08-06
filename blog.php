@@ -54,7 +54,7 @@
 
 				$title = $_REQUEST["title"];
 				$text = $_REQUEST["text"];
-				$adminId = (int) CURRENT_USER_ID;
+				$adminId = (int) userId;
 
 				$postId = $blog->addPost($title, $text, $adminId);
 

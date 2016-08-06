@@ -652,7 +652,7 @@ var_dump($user, $authKey);
 	 * @return boolean
 	 */
 	function isNewVersionEnabled() {
-		return SQLquery("SELECT `v5` FROM `settings` WHERE `userId` = '" . userId . "' LIMIT 1", SQL_RESULT_ITEM);
+		return SQLquery("SELECT `v5` FROM `settings` WHERE `userId` = '" . userId . "' LIMIT 1", SQL_RESULT_ITEM)["v5"];
 	};
 
 	session_write_close();

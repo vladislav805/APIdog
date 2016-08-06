@@ -30,14 +30,14 @@
 
 		// Returns settings of current user
 		case "settings.get":
-			if (!CURRENT_USER_ID)
+			if (!userId)
 				throwError(9);
 
 			$userId = (int) $_REQUEST["userId"];
 
 			$extended = (boolean) $_REQUEST["extended"];
 
-			$userId = !$userId ? CURRENT_USER_ID : ($userId && CURRENT_USER_ADMIN ? $userId : CURRENT_USER_ID);
+			$userId = !$userId ? userId : ($userId && isAdminCurrentUser ? $userId : userId);
 
 			$s = Settings::getBitmask($userId);
 
@@ -83,7 +83,7 @@
 
 		// Save user's settings
 		case "settings.set":
-			if (!CURRENT_USER_ID) {
+			if (!userId) {
 				throwError(9);
 			};
 
@@ -94,7 +94,7 @@
 			$bitmask = (int) $_REQUEST["bitmask"];
 			$lang = (int) $_REQUEST["languageId"];
 			$notifications = (int) $_REQUEST["bitmaskNotifications"];
-			$userId = (int) CURRENT_USER_ID;
+			$userId = (int) userId;
 			$test = SQLquery("SELECT `bitmask`, `userId` FROM `settings` WHERE `userId` = '$userId' LIMIT 1", SQL_RESULT_ITEM);
 			if ($test["userId"]) {
 				$success = SQLquery("UPDATE `settings` SET `bitmask` = '$bitmask', `notifications` = '$notifications', `lang` = '$lang' WHERE `userId` = '$userId' LIMIT 1", SQL_RESULT_AFFECTED) || $test["bitmask"] == $bitmask;
@@ -152,7 +152,7 @@
 			$result = $check;
 
 			if ((boolean) ($_REQUEST["extended"])) {
-				$s = Settings::getBitmask(CURRENT_USER_ID);
+				$s = Settings::getBitmask(userId);
 				$b = $s["bitmask"];
 				$result["user"] = [
 					"settings" => (int) $b
@@ -176,14 +176,14 @@
 
 		// Returns sessions
 		case "apidog.getSessions":
-			if (!CURRENT_USER_ID)
+			if (!userId)
 				throwError(9);
 			output(Settings::getSessions());
 			break;
 
 		// Delete session
 		case "apidog.killSession":
-			if (!CURRENT_USER_ID) {
+			if (!userId) {
 				throwError(9);
 			};
 
@@ -191,14 +191,14 @@
 			$session = Settings::getSessionById($authId);
 			if ($session == -1)
 				throwError(10);
-			if ($session->getUserId() != CURRENT_USER_ID)
+			if ($session->getUserId() != userId)
 				throwError(11);
 			output($session->kill());
 			break;
 
 
 		case "apidog.getLanguageData":
-			$s = Settings::getBitmask(CURRENT_USER_ID);
+			$s = Settings::getBitmask(userId);
 			$langId = $s["lang"];
 
 			if (!in_array($langId, [0, 1, 2, 999])) {
@@ -216,7 +216,7 @@
 
 		// Returns ads block, that will be show in site or platform applications
 		case "apidog.getAds":
-			if (!CURRENT_USER_ID)
+			if (!userId)
 				throwError(9);
 
 			requireModule("ads");
@@ -229,7 +229,7 @@
 
 			$ads = new AdsAPI;
 
-			$data = !in_array(CURRENT_USER_ID, $usersIgnoreAds) ? $ads->getAvailable($count, true, 0, $age) : [];
+			$data = !in_array(userId, $usersIgnoreAds) ? $ads->getAvailable($count, true, 0, $age) : [];
 
 
 			output($data);
@@ -258,7 +258,7 @@
 					continue;
 				};
 
-				if (!AdsAPI::isAdminAPIdog() && CURRENT_USER_ID != $i->ownerId) {
+				if (!AdsAPI::isAdminAPIdog() && userId != $i->ownerId) {
 					continue;
 				} else {
 					$i->canEdit = AdsAPI::isAdminAPIdog();
@@ -308,7 +308,7 @@
 				"link"			=> escape($_REQUEST["link"]),
 				"image"			=> escape($_REQUEST["image"]),
 				"type"			=> (Integer) $_REQUEST["type"],
-				"ownerId"		=> (Integer) CURRENT_USER_ID,
+				"ownerId"		=> (Integer) userId,
 				"dateStart"		=> (Integer) $_REQUEST["dateStart"],
 				"dateEnd"		=> (Integer) $_REQUEST["dateEnd"],
 				"ageFrom"		=> (Integer) $_REQUEST["ageFrom"],
@@ -337,7 +337,7 @@
 				"link"			=> escape($_REQUEST["link"]),
 				"image"			=> escape($_REQUEST["image"]),
 				"type"			=> (Integer) $_REQUEST["type"],
-				"ownerId"		=> (Integer) CURRENT_USER_ID,
+				"ownerId"		=> (Integer) userId,
 				"dateStart"		=> (Integer) $_REQUEST["dateStart"],
 				"dateEnd"		=> (Integer) $_REQUEST["dateEnd"],
 				"ageFrom"		=> (Integer) $_REQUEST["ageFrom"],
@@ -473,7 +473,7 @@ sendDeprecated();
 		// Create new ticket
 		case "support.createTicket":
 //sendDeprecated();
-			if (!CURRENT_USER_ID) {
+			if (!userId) {
 				throwError(9);
 			};
 
@@ -504,8 +504,8 @@ sendDeprecated();
 				throwError(22);
 			};
 
-			$ticketId = APIdog::mysql("INSERT INTO `supportTickets` (`title`,`userId`,`date`,`categoryId`,`isRead`,`isPrivate`) VALUES ('$title','" . CURRENT_USER_ID . "','$time','$categoryId',1,'" . ((int) $isPrivate) . "')", 4);
-			$commentId = APIdog::mysql("INSERT INTO `supportComments` (`ticketId`,`text`,`userId`,`date`,`actionId`,`attachments`,`userAgent`,`isExtension`) VALUES ('$ticketId','$text','" . CURRENT_USER_ID . "','$time','0','$attachments','$userAgent','$isExtension')", 4);
+			$ticketId = APIdog::mysql("INSERT INTO `supportTickets` (`title`,`userId`,`date`,`categoryId`,`isRead`,`isPrivate`) VALUES ('$title','" . userId . "','$time','$categoryId',1,'" . ((int) $isPrivate) . "')", 4);
+			$commentId = APIdog::mysql("INSERT INTO `supportComments` (`ticketId`,`text`,`userId`,`date`,`actionId`,`attachments`,`userAgent`,`isExtension`) VALUES ('$ticketId','$text','" . userId . "','$time','0','$attachments','$userAgent','$isExtension')", 4);
 
 
 			output([
@@ -517,7 +517,7 @@ sendDeprecated();
 		// Edit ticket
 		case "support.editTicket":
 //sendDeprecated();
-			if (!CURRENT_USER_ID) {
+			if (!userId) {
 				throwError(9);
 			};
 
@@ -566,7 +566,7 @@ sendDeprecated();
 
 			$comments = $ticket->getComments($count, $offset);
 
-			if ($ticket->userId == CURRENT_USER_ID)
+			if ($ticket->userId == userId)
 			{
 				$ticket->setRead(true);
 			};
@@ -579,7 +579,7 @@ sendDeprecated();
 		// Add new comment
 		case "support.addComment":
 //sendDeprecated();
-			if (!CURRENT_USER_ID)
+			if (!userId)
 			{
 				throwError(9);
 			};
@@ -603,7 +603,7 @@ sendDeprecated();
 			$ticket->checkPrivateAccess();
 
 			$extime = time() - 1 * 60;
-			$last = APIdog::mysql("SELECT COUNT(*) FROM `supportComments` WHERE `date` > $extime AND `userId` = '" . CURRENT_USER_ID . "' LIMIT 1", 3);
+			$last = APIdog::mysql("SELECT COUNT(*) FROM `supportComments` WHERE `date` > $extime AND `userId` = '" . userId . "' LIMIT 1", 3);
 
 			if ($last && !getAdmin())
 			{
@@ -702,7 +702,7 @@ sendDeprecated();
 
 		// Returns URI for uploading attachment for comment in support
 		case "support.getUploadURL":
-			output(Attachment::getUploadURL(CURRENT_USER_ID));
+			output(Attachment::getUploadURL(userId));
 			break;
 
 		// Upload image
@@ -711,7 +711,7 @@ sendDeprecated();
 			list($userId, $time, $key) = explode(base64_encode($_REQUEST["data"]));
 			$now = time();
 			$file = $_FILES["file"];
-			if ($key != md5($authKey) || $userId != CURRENT_USER_ID || $time > $now || $now - $time > 600)
+			if ($key != md5($authKey) || $userId != userId || $time > $now || $now - $time > 600)
 			{
 				throwError(49);
 			};
@@ -772,7 +772,7 @@ sendDeprecated();
 
 
 		case "apidog.uploadAttachmentByURL":
-			if (!CURRENT_USER_ID)
+			if (!userId)
 				throwError(9);
 
 			$url = trim($_REQUEST["url"]);
@@ -839,7 +839,7 @@ sendDeprecated();
 			break;
 
 		case "apidog.getBitrate":
-			if (!CURRENT_USER_ID)
+			if (!userId)
 				throwError(9);
 
 			$data = APIdog::api("audio.getById", [
@@ -1094,7 +1094,7 @@ sendDeprecated();
 		};
 
 		if ($filter & 2) {
-			$ext[] = "`userId`='" . CURRENT_USER_ID . "'";
+			$ext[] = "`userId`='" . userId . "'";
 		};
 
 		if ($o["userId"] && !($filter & 2)) {
@@ -1106,8 +1106,8 @@ sendDeprecated();
 			$ext[] = "`actionId` = " . $t;
 		};
 
-		if (!getAdmin(CURRENT_USER_ID)) {
-			$ext[] = "(`isPrivate`=0 OR `userId`='" . CURRENT_USER_ID . "')";
+		if (!getAdmin(userId)) {
+			$ext[] = "(`isPrivate`=0 OR `userId`='" . userId . "')";
 		};
 
 		return (sizeof($ext) > 0 ? "WHERE " . implode(" AND ", $ext) : "");
