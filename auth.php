@@ -14,7 +14,7 @@
 			 */
 			case "logout":
 				$hash = escape($_REQUEST["hash"]);
-				SQLquery("DELETE FROM `auth` WHERE `hash` = '$hash' LIMIT 1");
+				SQLquery("DELETE FROM `auth` WHERE `hash` = '$hash' LIMIT 1", 0);
 
 				session_destroy();
 
@@ -29,7 +29,7 @@
 		exit;
 	};
 
-	template("template/auth.php");
+	template("template/auth.html");
 
 exit;
 

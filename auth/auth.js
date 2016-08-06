@@ -139,7 +139,7 @@ function authorize(form, event) {
 					break;
 
 				default:
-					showError("UnexpectedError<" + error.errorId + ">: " + error.message);
+					showError("UnexpectedError<" + error.extra.errorId + ">: " + error.extra.message);
 			};
 		} else {
 			showError("У Вас соединение с Интернетом, случаем, не пропало?");
@@ -154,8 +154,8 @@ function authorize(form, event) {
  * @param {Object} error Объект ошибки
  */
 function setCaptcha(error) {
-	g(ID_CAPTCHA_ID).value = error.captchaId;
-	g(ID_CAPTCHA_IMAGE).src = error.captchaImg;
+	g(ID_CAPTCHA_ID).value = error.extra.captchaId;
+	g(ID_CAPTCHA_IMAGE).src = error.extra.captchaImg;
 	setEmptyCaptchaKey();
 };
 
@@ -242,7 +242,7 @@ function onErrorCaptcha (node)
 	if (node.getAttribute("proxed") || node.src == "about:blank")
 		return;
 	node.setAttribute("proxed", "yes");
-	node.src = "\/api\/v2\/apidog.proxyData?t=png&u=" + encodeURIComponent(node.src);
+	node.src = "api-v2.php?method=apidog.proxyData&t=png&u=" + encodeURIComponent(node.src);
 };
 
 /**
@@ -302,7 +302,7 @@ API.prototype._params = function ()
 };
 API.prototype.send = function ()
 {
-	this.xhr.open("POST", "/api/v2/" + this.method);
+	this.xhr.open("POST", "api-v2.php?method=" + this.method);
 	var body = this._params();
 	this.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	this.xhr.send(body);

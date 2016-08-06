@@ -15,7 +15,11 @@
 		header("X-Frame-Options: SAMEORIGIN");
 	};
 
+	include_once "zero.config.php";
+
 	session_start();
+
+	error_reporting(E_ERROR | E_PARSE);
 
 	date_default_timezone_set("Europe/Minsk"); // GMT+3
 
@@ -59,13 +63,13 @@
 	 * @return MySQLi Дескриптор для работы с БД
 	 */
 	function getDatabase() {
-		global $db;
+		global $mDatabase;
 
-		if (!$db) {
+		if (!$mDatabase) {
 			return connectDatabase();
 		};
 
-		return $db;
+		return $mDatabase;
 	};
 
 	if (!function_exists("escape")) {
@@ -114,6 +118,7 @@
 		if (!$result) {
 			return null;
 		};
+		var_dump($result, $query);
 
 		switch ($resultType) {
 			case SQL_RESULT_ITEM:
@@ -504,7 +509,6 @@
 
 
 
-	$GLOBALS["___lang"] = null;
 
 	/**
 	 * Возвращает языковую фразу из ланг-пака
@@ -517,9 +521,10 @@
 			? getLangId()
 			: $languageId;
 
-		if (!$GLOBALS["___lang" . $languageId]) {
+		if (!isset($GLOBALS["___lang" . $languageId])) {
 			$GLOBALS["___lang" . $languageId] = json_decode(file_get_contents("lang/" . $languageId . ".json"), true);
 		};
+
 		return $GLOBALS["___lang" . $languageId][$section];
 	};
 
@@ -661,6 +666,15 @@
 		};
 
 		return ["usr" => $JavaScriptUserObject, "lng" => getLang(-1, "nonstdsite") ];
+	};
+
+
+	/**
+	 * Включил ли пользователь себе доступ к новой версии?
+	 * @return boolean
+	 */
+	function isNewVersionEnabled() {
+		return (boolean) SQLquery("SELECT `v5` FROM `settings` WHERE `userId` = '" . CURRENT_USER_ID . "' LIMIT 1", SQL_RESULT_ITEM)["v5"];
 	};
 
 	session_write_close();

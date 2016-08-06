@@ -2,6 +2,11 @@
 
 	include_once "zero.framework.php";
 
+	/*if (!isNewVersionEnabled()) {
+		header("Location: /6.4/");
+		exit;
+	};*/
+
 	// если нет authKey, или есть, но нет accessToken
 	if (!getAuthKey() || getAuthKey() && !getAccessToken()) {
 		gotoLogout();

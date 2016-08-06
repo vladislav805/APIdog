@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<?
+	$pagePrefix = "login";
+?><!DOCTYPE html>
 <html lang="ru-RU">
 	<head>
-		<base href="../">
 		<meta charset="utf-8" />
 		<meta name="viewport" content="initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=yes" />
 		<meta name="theme-color" content="#5F7FBA" />
@@ -15,7 +16,7 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="application-name" content="APIdog" />
 		<meta name="msapplication-tooltip" content="Неофициальный клиент ВКонтакте offline" />
-		<title>APIdog | Авторизация</title>
+		<title><?=getLabel("_headTitle");?></title>
 		<link rel="stylesheet" href="auth/auth.css" />
 		<link rel="icon" href="favicon.png?1" />
 		<link rel="shortcut icon" href="favicon.png?1" />
@@ -28,9 +29,9 @@
 			<header>
 				<section class="wrap">
 					<nav>
-						<a href="blog.php">Блог</a>
-						<a href="about.php">О проекте</a>
-						<a href="./">Вход</a>
+						<a href="blog.php"><?=getLabel("menuBlog");?></a>
+						<a href="about.php"><?=getLabel("menuAbout");?></a>
+						<a href="./"><?=getLabel("menuLogin");?></a>
 					</nav>
 					<img src="icons/apidog-logo.svg" class="logo" alt="APIdog" />
 				</section>
@@ -42,36 +43,39 @@
 						onsubmit="authorize(this, event); return false;"
 						action="#"
 						method="post">
-						<h1>Вход</h1>
-						<input
-							type="text"
-							name="username"
-							placeholder="Телефон или email"
-							/>
-						<input
-							type="password"
-							name="password"
-							placeholder="Пароль"
-							/>
-						<div class="fields select-wrap">
-							<select
-								class="select"
-								name="application"
-								onchange="changeApplicationName(this);">
-								<option value="1" selected>Android</option>
-								<option value="2">iPhone</option>
-								<option value="3">iPad</option>
-								<option value="4">Windows Phone</option>
-								<option value="6">Windows</option>
-								<option value="8">BlackBerry (Vika)</option>
-								<option value="9">Snapster Android</option>
-								<option value="10">Kate Mobile</option>
-							</select>
-							<div class="select-arrow">▼</div>
-							<div class="pseudoselect-label" id="applicationName">Android</div>
+						<div id="authSimple">
+							<h1><?=getLabel("_formTitle");?></h1>
+							<input
+								type="text"
+								name="username"
+								placeholder="<?=getLabel("_fieldLogin");?>"
+								/>
+							<input
+								type="password"
+								name="password"
+								placeholder="<?=getLabel("_fieldPassword");?>"
+								/>
+							<div class="fields select-wrap">
+								<select
+									class="select"
+									name="application"
+									onchange="changeApplicationName(this);">
+									<option value="1" selected>Android</option>
+									<option value="2">iPhone</option>
+									<option value="3">iPad</option>
+									<option value="4">Windows Phone</option>
+									<option value="6">Windows</option>
+									<option value="8">BlackBerry (Vika)</option>
+									<option value="9">Snapster Android</option>
+									<option value="10">Kate Mobile</option>
+								</select>
+								<div class="select-arrow">▼</div>
+								<div class="pseudoselect-label" id="applicationName">Android</div>
+							</div>
 						</div>
 
 						<div id="authCaptcha" class="hidden">
+							<h1><?=getLabel("_captchaTitle");?></h1>
 							<input
 								type="hidden"
 								name="captchaId"
@@ -95,8 +99,8 @@
 								/>
 						</div>
 						<div id="authValidation" class="hidden">
-							<h2>Подтверждение входа</h2>
-							<p>На номер <strong id="validationPhone"></strong> <span id="validationTime">будет</span> выслано SMS с кодом, который Вы должны ввести в поле ниже</p>
+							<h1><?=getLabel("_confirmTitle");?></h1>
+							<p><?=getLabel("_confirmText");?></p>
 							<input
 								type="hidden"
 								name="validationId"
@@ -106,7 +110,7 @@
 							<div>
 								<input
 									type="button"
-									value="Отправить SMS"
+									value="<?=getLabel("_confirmSendSMS");?>"
 									id="submitSms"
 									onclick="sendValidationSMS(this);"
 									/>
@@ -126,29 +130,33 @@
 							<input
 								type="submit"
 								id="submitMain"
-								value="Авторизация"
+								value="<?=getLabel("_submit");?>"
 								/>
 							<div class="loader-svg"></div>
 						</div>
 						<div class="hidden" id="errorBlock"></div>
 					</form>
 
-					<div class="text">
+					<div class="text"><?
+
+	$items = getLabel("_tips");
+
+	foreach ($items as $item) {
+		list($title, $text) = explode("|", $item);
+?>
 						<div class="slide">
-							<h1>Альтернативный клиент ВКонтакте</h1>
-							<p>APIdog — многофункциональный неофициальный клиент для социальной сети ВКонтакте, работающий на API ВКонтакте. Сайт использует только официальное API.</p>
+							<h1><?=$title;?></h1>
+							<p><?=$text;?></p>
 						</div>
-						<div class="slide">
-							<h1>Режим offline</h1>
-							<p>Вы можете использовать ВКонтакте через APIdog и быть офлайн. О том, что Вы сейчас в сети никто не узнает!</p>
-						</div>
-					</div>
+<?
+	}
+					?></div>
 				</section>
 			</main>
 
 			<footer>
 				<section>
-					<p>APIdog &copy; 2012-2016</p>
+					<p><?=getLabel("footer");?></p>
 				</section>
 			</footer>
 
