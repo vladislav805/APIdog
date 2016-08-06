@@ -471,7 +471,7 @@ progress {
 }
 
 .head-content {
-	margin: 0 170px 0 0;
+	margin: 0 170px 0 50px;
 }
 
 .head-title {
@@ -5284,7 +5284,7 @@ html.photo-view-full {
 	}
 
 	.head-content {
-		margin: 0 170px 0 50px;
+		margin: 0 170px 0 0;
 	}
 
 	.head-logo {
