@@ -208,7 +208,7 @@
 			// сделано так для большей оптимизации, ибо каждый раз разбирать строку в json, чтобы ее снова собирать в json -- имхо, глупо
 			header("Content-type: application/json; charset=utf-8");
 			print "{\"response\":{\"data\":";
-			readFile("./lang/" . $langId . ".json");
+			readFile("lang/" . $langId . ".json");
 			print "}}";
 			break;
 

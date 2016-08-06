@@ -5,6 +5,29 @@
  * Progress: 20%
  */
 
+
+/**
+ * Диалог
+ * @param {Object} d Элемент ВК
+ */
+function VKDialog(d) {
+	this.unread = d.unread || 0;
+	this.lastReadOut = d.out_read;
+	this.lastReadIn = d.in_read;
+	this.lastMessage = new VKMessage(d.message);
+};
+
+VKDialog.prototype = {
+	getNode: function(o) {
+		return this.lastMessage.getDialogItemNode({unread: this.unread});
+	}
+};
+
+
+/**
+ * Сообщение
+ * @param {Object} m Элемент ВК
+ */
 function VKMessage (m) {
 	m = m.message || m;
 	this.messageId = m.id;
@@ -12,7 +35,7 @@ function VKMessage (m) {
 	this.userId = m.user_id;
 	this.chatId = m.chat_id;
 	this.groupId = m.from_id < 0 ? -m.from_id : false;
-	this.peer = getPeerId(this);
+	this.peer = getPeerByMessage(this); // [type, id]
 	this.userId = m.user_id;
 	this.date = m.date;
 	this.title = m.title;
@@ -42,6 +65,7 @@ VKMessage.prototype = {
 
 	getInfoFrom: function () {
 		var f = this.peer, i = f[1], t;
+		console.log(f);
 		switch (f[0]) {
 			case APIDOG_DIALOG_PEER_USER:
 				t = Local.Users[i];
@@ -62,10 +86,10 @@ VKMessage.prototype = {
 		var e = $.e,
 			unread = o.unread,
 
-			fromId = this.peer.join(""),
+			fromId = getPeerId(this.peer),
 			from = this.getInfoFrom();
 
-		text = Site.Escape(this.text.replace(/\n/g, " "));
+		text = this.text.replace(/\n/g, " ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + "…" : text;
 		text = Mail.Emoji(text);
 
@@ -75,7 +99,6 @@ VKMessage.prototype = {
 
 		var link = e("a", {
 			href: Mail.version && o.type != 3 ? "#im?to=" + fromId : "#mail?act=item&id=" + this.messageId,
-			"data-count": parseInt(this.unread) || 0,
 			"id": Mail.version ? "mail-dialog" + fromId : "mail-message" + this.messageId,
 			"class": "selectfix dialogs-item" + (!this.isOut && !this.isRead ? " dialogs-item-new" : ""),
 			append:
@@ -88,8 +111,8 @@ VKMessage.prototype = {
 						e("img", {"class": "dialogs-left", src: from.photo ? getURL(from.photo) : Mail.defaultChatImage}),
 						e("div", {"class": "dialogs-right", append:
 							e("div", {append: [
-								e("span", {"class": "tip", html: (this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? Lang.get("mail.chat_noun") : "")}),
-								e("strong", { html: Mail.Emoji(Site.Escape(from.name)) }),
+								e("span", {"class": "tip", html: (this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? lg("mail.chatTitle") : "")}),
+								e("strong", { html: Mail.Emoji(from.name) }),
 								e("div", {"class": "n-f dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""), append: [
 									e("div", {append: [
 										e("span", {"class": "dialogs-unread", id: "ml" + fromId, html: unread || ""}),
@@ -123,7 +146,7 @@ VKMessage.prototype = {
 
 };
 
-function getPeerId (msg) {
+function getPeerByMessage(msg) {
 	var id = msg.userId;
 	return isNaN(msg)
 		? id < 0
@@ -138,16 +161,39 @@ function getPeerId (msg) {
 					: ["u", msg];
 };
 
-function parsePeerId (pId) {
+// 123 -> [u, 123], -123 -> [g, 123], 2000000123 => [c, 123]
+function getPeer(id) {
+	return inRange(-APIDOG_DIALOG_PEER_CHAT_MAX_ID, id, 0)
+		? ["g", -id]
+		: inRange(0, id, APIDOG_DIALOG_PEER_CHAT_MAX_ID)
+			? ["u", id]
+			: id > APIDOG_DIALOG_PEER_CHAT_MAX_ID
+				? ["c", id - APIDOG_DIALOG_PEER_CHAT_MAX_ID]
+				: ["e", -(id - APIDOG_DIALOG_PEER_CHAT_MAX_ID)];
+};
+
+// 123 -> u123, -123 -> g123, 2000000123 => c123
+function getPeerId(id) {
+	return getPeer(id).join("");
+};
+
+// u123 -> [u, 123], g123 -> [g, 123], c123 => 123
+function parsePeerId (pId) { // u123 -> [u, 123]
 	return [pId[0], parseInt(pId.substring(1))];
 };
 
-function toPeerId (peer) {
+// [u, 123] -> 123, [g, 123] -> -123, [c, 123] -> 2000000123
+function toPeerId (peer) { // [g, 123] -> -123
 	return {
 		u: peer[1],
 		g: -peer[1],
 		c: 2000000000 + peer[1]
 	}[peer[0]];
+};
+
+// u123 -> 123, g123 -> -123, c123 -> 2000000123
+function toPeer(peer) {
+	return toPeerId(peer.join(""));
 };
 
 function getObjectByPeer (peer) {
@@ -163,78 +209,107 @@ var Mail = {
 
 	version: 1, // 1 - dialogs, 0 - messages
 
-	explain: function () {
+	explain: function() {
 		switch (Site.Get("act")) {
 			case "item":
 				return Mail.getMessageById(+Site.Get("id"));
-				break;
-			case "analyzes":
-				window.location.hash = "#analyzes";
-				break;
-			case "analyzeDialog":
-				window.location.hash = "#analyzes/dialog/" + Site.Get("id");
-				break;
-			case "stat":
-				window.location.hash = "#analyzes/dialogs";
-				break;
+
 			case "search":
-				Mail.search.page();
-				break;
+				return Mail.search.page();
+
 			case "chat":
 				return Mail.createChat();
-				break;
+
 			default:
+
 				Mail.page();
+
 				var type = +Site.Get("type") || 0;
 				if (Mail.version && type != 3)
-					return Mail.getDialogs(0);
+					return Mail.showDialogs(0);
 				else
 					return Mail.getListMessages(type);
 		};
 	},
 
 	page: function () {
-		var parent = document.createElement("div"),
-			list = document.createElement("div");
-		parent.id = "_mail";
-		list.id = "_mail-wrap";
 
-		list.appendChild(Site.Loader(true));
-
-		parent.appendChild(list);
-		Site.Append(parent);
 	},
 
-	// refactored 15.01.2016: added support for dialogs with groups
-	getDialogs: function (offset, node) {
-		Site.API("execute", {
-			code: 'var m=API.messages.getDialogs({count:40,offset:Args.o,preview_length:120,v:5.14}),q=m.items,w,i=0,l=q.length,g=[];while(i<l){w=q[i].message;if(w.user_id<0){g.push(-w.user_id);};i=i+1;};return{counters:API.account.getCounters(),dialogs:m,users:API.users.get({user_ids:m.items@.message@.user_id+m.items@.message@.source_mid,fields:"photo_100,online,sex"}),groups:API.groups.getById({group_ids:g})};',
+	/**
+	 * Загрузка списка сообщений
+	 * 15.01.2016: добавлена поддержка сообщений от групп
+	 * @param  {int}      offset   Сдвиг
+	 * @param  {Function} callback Функция-обработчик
+	 */
+	loadDialogs: function (offset, callback) {
+		new APIRequest("execute", {
+			code: 'var m=API.messages.getDialogs({count:40,offset:Args.o,preview_length:120,v:5.52}),q=m.items,w,i=0,l=q.length,g=[];while(i<l){w=q[i].message;if(w.user_id<0){g.push(-w.user_id);};i=i+1;};return{counters:API.account.getCounters(),dialogs:m,users:API.users.get({user_ids:m.items@.message@.user_id+m.items@.message@.source_mid,fields:"photo_100,online,sex"}),groups:API.groups.getById({group_ids:g})};',
 			o: offset
-		}, function (data) {
-			data = Site.isResponse(data);
-			Mail.showDialogs(data, offset);
-			if (node) {
-				$.elements.remove(node);
-			};
-		});
+		}).setOnCompleteListener(function(data) {
+
+			Local.add(data.users);
+			Local.add(data.groups);
+			Site.setCounters(data.counters);
+
+			callback(data.dialogs.items.map(function(dialog) {
+				return new VKDialog(dialog);
+			}), data.dialogs.count);
+
+		}).execute();
 	},
 
-	// updated 15.01.2016: added listeners onNewMessageReceived and onMessageReaded
-	showDialogs: function (data, offset) {
-		Local.add(data.users);
-		Local.add(data.groups);
-		var wrap = $.element("_mail-wrap"),
-			counters = data.counters,
-			data = data.dialogs,
-			count = data.count,
-			dialogs = data.items,
-			page = document.createElement("div"),
-			list = document.createElement("div");
+	/**
+	 * Функция загрузки и отображения диалогов
+	 * 15.01.2016: добавлены обработчики onNewMessageReceived и onMessageReaded
+	 */
+	showDialogs: function () {
 
-		list.id = "mail-list";
+		var e = $.e,
+			head,
+			headCount = e("span", {html: "Loading..."}),
+			headActions = null, // TODO
+			list,
+			wrap = e("div", { append: [
+				head = Site.getPageHeader(headCount, headActions),
+				list = e("div", { id: "g-mail-list", "class": "g-loading", append: getLoader() })
+			]}),
 
+			currentOffset = 0,
+			isEnd = false,
+			isLoading = false,
+
+			load = function() {
+				isLoading = true;
+				Mail.loadDialogs(currentOffset, function(items, count) {
+
+					if (!currentOffset) {
+						$.elements.clearChild(list);
+					};
+
+					isLoading = false;
+					currentOffset += items.length;
+					isEnd = currentOffset >= count;
+
+					items.forEach(function(dialog) {
+						list.appendChild(dialog.getNode());
+					});
+					headCount.innerHTML = count + " " + lg("mail.dialogs", count);
+				});
+			};
+
+		window.onScrollCallback = function(event) {
+			if (event.needLoading && !isLoading) {
+				load();
+			};
+		};
+
+		load();
+
+		Site.append(wrap).setHeader(lg("mail.headTitle"));
+/*
 		window.onNewMessageReceived = function (message) {
-			var from = getPeerId(message).join(""),
+			var from = getPeer(message).join(""),
 				item = $.element("mail-dialog" + from),
 				unreadCount = $.element("ml" + from) && +$.element("ml" + from).innerHTML || 0,
 				parentNode;
@@ -255,12 +330,12 @@ var Mail = {
 		};
 
 		window.onMessageReaded = function (messageId, peerId) {
-			var p = getPeerId(peerId).join("");
+			var p = getPeer(peerId).join("");
 			$.elements.addClass(document.querySelector("#mail-dialog" + p + " .dialogs-state"), "dialogs-state-readed");
 			$.elements.removeClass($.element("mail-dialog" + p), "dialogs-item-new");
 			$.element("ml" + p).innerHTML = "";
-		};
-
+		};*/
+/*
 		for (var i = 0, l = dialogs.length; i < l; ++i) {
 			list.appendChild(Mail.item(dialogs[i]));
 		};
@@ -291,10 +366,8 @@ var Mail = {
 		};
 
 		wrap.appendChild(page);
-
+*/
 	},
-
-	photosChats: {},
 
 	item: function (i, o) {
 
@@ -464,15 +537,15 @@ var Mail = {
 
 	getActions: function () {
 		var p = {};
-		p[Lang.get("mail.action_read_all")] = function (event) {
+		p[lg("mail.actionReadAll")] = function (event) {
 			var modal = new Modal({
 				width: 395,
-				title: "Подтверждение",
-				content: "Вы уверены, что хотите отметить все сообщения прочитанными?<br/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.</small>",
+				title: lg("mail.readAllConfirmTitle"),
+				content: lg("mail.readAllConfirmText"),
 				footer: [
 					{
 						name: "yes",
-						title: "Да",
+						title: lg("general.yes"),
 						onclick: function () {
 							modal.close();
 							Mail.requestReadAll();
@@ -480,7 +553,7 @@ var Mail = {
 					},
 					{
 						name: "close",
-						title: "Нет",
+						title: lg("general.no"),
 						onclick: function () {
 							modal.close();
 						}
@@ -489,12 +562,12 @@ var Mail = {
 			}).show();
 		};
 
-		p[Lang.get(Mail.version ? "mail.action_switch_to_messages" : "mail.action_switch_to_dialogs")] = function (event) {
+		p[Lang.get(Mail.version ? "mail.actionSwitch2messages" : "mail.actionSwitch2dialogs")] = function (event) {
 			Mail.version = +!Mail.version;
 			Mail.explain();
 		};
 
-		p[Lang.get("mail.action_create_chat")] = function (event) {
+		p[Lang.get("mail.actionCreateChat")] = function (event) {
 			window.location.hash = "#mail?act=chat";
 		};
 
@@ -507,21 +580,25 @@ var Mail = {
 		Settings.fastSaveSettings(API.SettingsBitmask);
 	},
 
+	photosChats: {},
+
 	requestReadAll: function (readed) {
 		Site.API("execute", {
 			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:5.16}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:%r%+i};'.replace(/%r%/ig, readed || 0)
 		}, function (data) {
 			data = data.response;
-			if (data.n > 0)
+			if (data.n > 0) {
 				return Mail.requestReadAll(data.r);
+			};
 
 			data = data.r;
 
-			if (isNaN(data))
+			if (isNaN(data)) {
 				return;
+			};
 
 
-			Site.Alert({text: data + " " + $.textCase(data, Lang.get("mail.dialog_was_readed"))});
+			Site.Alert({text: data + " " + $.textCase(data, lg("mail.readAllReadReady"))});
 		})
 	},
 

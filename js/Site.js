@@ -512,10 +512,11 @@ var Site = {
 		return callback ? Site.API("execute", {code: code}, callback) : code;
 	},
 
-	Append: function (node) {
+	append: function (node) {
 		$.elements.clearChild(g("content")).appendChild(node);
+		return Site;
 	},
-	append: function (node) { Site.Append(node) },
+	Append: function (node) { Site.append(node) },
 	isOnline: function (data, mode) {
 		mode = mode || 0;
 		if (data && data.online) {
@@ -596,6 +597,7 @@ var Site = {
 	setHeader: function (title, backButton) {
 		document.title = "APIdog | " + title;
 		g("head-title").innerHTML = title;
+		return Site;
 	},
 
 	SetHeader: function (title, back) {

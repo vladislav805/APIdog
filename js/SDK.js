@@ -40,7 +40,7 @@ function getFrameDocument (frame) {
 };
 
 function getName (u) {
-	return Site.Escape(u.first_name) + " " + Site.Escape(u.last_name) + Site.isOnline(u);
+	return String(u.first_name).safe() + " " + String(u.last_name).safe() + Site.isOnline(u);
 };
 
 function isEnabled (bit) {
@@ -87,6 +87,22 @@ function formatNumber (n) {
 
 function random (a, b) {
 	return Math.floor(Math.random() * (++b - a) + a);
+};
+
+function getLoader() {
+	return $.e("div", {style: "padding: 90px 0", append: $.e("div", {"class": "loader-svg"})});
+};
+
+function lg(id, extra) {
+	var result = Lang.get(id);
+	if (result && extra) {
+		if (typeof extra === "number") {
+			result = $.textCase(extra, result);
+		} else {
+			result = String(result).setLang(extra || {});
+		};
+	};
+	return result;
 };
 
 function shuffle(array) {
@@ -375,17 +391,24 @@ Number.prototype.getInformationValue = function () {
  * @param {mixed} data  if object, replacing by this key=>value, else - it key for replacing
  * @param {mixed} value if in first arg string: it contain new value
  */
-String.prototype.setLang = function (data, value)
-{
-	if (!$.isObject(data) && value)
-	{
+String.prototype.setLang = function (data, value) {
+	if (!$.isObject(data)) {
 		return this.replace(new RegExp("%" + data, "img"), Lang.get(value));
 	};
 	var s = this, i;
-	for (var k in data)
-	{
+	for (var k in data) {
 		i = data[k];
-		s = s.replace(new RegExp("%" + k, "img"), isNaN(i) ? !i.indexOf("!") ? i.replace("!", "") : Lang.get(i) : i);
+		if (isNaN(i)) {
+			if (!i.indexOf("!")) {
+				i = i.replace("!", "");
+			} else if (!i.indexOf("@")) {
+				i = i.replace("@", "").split(".");
+				i = Lang.get(i[0], i[1], value);
+			} else {
+				i = Lang.get(i);
+			}
+		};
+		s = s.replace(new RegExp("%" + k, "img"), i);
 	};
 	return s;
 };
@@ -441,7 +464,7 @@ String.prototype.bb = function ()
 /* APIdog API request function */
 
 window.APIdogAPIDomain	= "apidog.ru";
-window.APIdogAPIPath	= "/api/v2/";
+window.APIdogAPIPath	= "/6.5/api-v2.php?method=";
 
 function APIdogRequest (method, params, callback, fallback) {
 	params = params || {};
