@@ -323,7 +323,12 @@ API.prototype.onResult = function ()
 
 var APIdogAuthCallback = [];
 
-
+/**
+ * Запрос к API VK
+ * @param {String}   method   Метод
+ * @param {Object}   params   Параметры для запроса
+ * @param {Function} callback Обработчик ответа
+ */
 function VKAPI (method, params, callback) {
 	if (typeof callback === "function") {
 		var now = APIdogAuthCallback.length;
@@ -352,8 +357,7 @@ function VKAPI (method, params, callback) {
  * Показывает ошибку на странице под формой
  * @param  {String} text Текст
  */
-function showError (text)
-{
+function showError (text) {
 	var block = g(ID_ERROR_BLOCK);
 	block.classList.remove(CLASS_ERROR);
 	block.innerHTML = text;
@@ -370,8 +374,8 @@ function showError (text)
 
 /**
  * Возвращает значение из элемента формы
- * @param  {[type]} node [description]
- * @return {[type]}      [description]
+ * @param  {DOMNode} node Элемент формы
+ * @return {String}       Значение
  */
 function getValue (node) {
 	if (typeof node === "string") {

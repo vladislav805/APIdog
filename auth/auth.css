@@ -108,8 +108,6 @@ main {
 
 .text,
 form {
-	background: rgba(0, 0, 0, .3);
-	padding: 16px;
 	color: rgb(255, 255, 255);
 }
 
@@ -118,17 +116,19 @@ form {
     width: 40%;
     max-width: 450px;
     text-align: center;
+    background: rgba(0, 0, 0, .3);
+	padding: 16px;
 }
 
-form input[type=text],
-form input[type=password],
+form input[type="text"],
+form input[type="password"],
 .select-wrap {
 	width: 100%;
 	border: 1px solid rgba(0, 0, 0, .1);
 	background: rgba(255, 255, 255, .7);
 	line-height: 32px;
 	padding: 0 8px;
-	margin-bottom: 12px;
+	margin-bottom: 18px;
 	text-align: center;
 	font-size: 16px;
 	border-radius: 2px;
@@ -170,6 +170,19 @@ h1 {
 	margin-bottom: 12px;
 }
 
+.slide {
+	margin: 20px 0;
+	background: rgba(0, 0, 0, .3);
+	padding: 16px;
+}
+
+.slide:first-child {
+	margin-top: 0;
+}
+
+.slide p {
+	line-height: 1.5;
+}
 
 
 
@@ -184,7 +197,7 @@ h1 {
 
 	.text {
 		width: 70%;
-		margin: 40px auto;
+		margin: 20px auto 0;
 	}
 }
 
