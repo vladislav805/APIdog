@@ -2126,56 +2126,51 @@ strong span{
 
 
 .dialogs-item {
-	display: block;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0);
+	display: table-row;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
 	outline: none;
 	color: #66768F;
 	cursor: pointer;
 }
-.dialogs-item-wrap {
-	padding: 10px 15px;
-	border-bottom: 1px solid #E9ECEE;
-}
-.dialogs-item-swpiped {
-	-webkit-transition: all 300ms ease-in-out;
-	-moz-transition: all 300ms ease-in-out;
-	-ms-transition: all 300ms ease-in-out;
-	-o-transition: all 300ms ease-in-out;
-	transition: all 300ms ease-in-out;
-}
-.dialogs-delete {
-	position: absolute;
-	top: 0px;
-	left: 100%;
-	height: 100%;
-	width: 125px;
-	text-align: center;
-	line-height: 65px;
-	color: #ffffff;
-	font-size: large;
-}
+
 .dialogs-item-new {
 	border-right: 5px solid #6B88B6;
 }
-.dialogs-item-new .dialogs-delete {
-	margin-left: 5px;
+
+.dialogs-item-left,
+.dialogs-item-right {
+	display: table-cell;
 }
-.dialogs-item-new .dialogs-in.dialogs-text {
-/*	margin-right: 40px;*/
+
+.dialogs-item-left {
+	padding: 15px;
 }
-.dialogs-left {
-	float: left;
+
+.dialogs-item-left img {
 	width: 44px;
+	height: 44px;
 	border-radius: 22px;
 }
+
+.dialogs-item-right {
+	padding: 15px 15px 15px 0;
+	vertical-align: middle;
+	border-bottom: 1px solid #6B88B6;
+}
+
+
+
+
+
+
 .dialogs-date {
 	float: right;
 	color: #ADC1C9;
 	font-size: 10px;
 }
 .dialogs-right {
-	margin-left: 55px;
+
 }
 .dialogs-unread {
 	padding: 3px 5px;

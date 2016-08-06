@@ -86,7 +86,7 @@ VKMessage.prototype = {
 		var e = $.e,
 			unread = o.unread,
 
-			fromId = getPeerId(this.peer),
+			fromId = this.peer.join(""),
 			from = this.getInfoFrom();
 
 		text = this.text.replace(/\n/g, " ").safe();
@@ -101,31 +101,72 @@ VKMessage.prototype = {
 			href: Mail.version && o.type != 3 ? "#im?to=" + fromId : "#mail?act=item&id=" + this.messageId,
 			"id": Mail.version ? "mail-dialog" + fromId : "mail-message" + this.messageId,
 			"class": "selectfix dialogs-item" + (!this.isOut && !this.isRead ? " dialogs-item-new" : ""),
-			append:
-				e("div", {"class": "dialogs-item-wrap", append: [
-					e("div", {style: "overflow: hidden;", append: [
-						e("div", {"class": "dialogs-date", append: [
-							this.isOut ? e("div", {"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")}) : null,
-							document.createTextNode($.getDate(this.date, 2))
-						]}),
-						e("img", {"class": "dialogs-left", src: from.photo ? getURL(from.photo) : Mail.defaultChatImage}),
-						e("div", {"class": "dialogs-right", append:
-							e("div", {append: [
-								e("span", {"class": "tip", html: (this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? lg("mail.chatTitle") : "")}),
-								e("strong", { html: Mail.Emoji(from.name) }),
-								e("div", {"class": "n-f dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""), append: [
-									e("div", {append: [
-										e("span", {"class": "dialogs-unread", id: "ml" + fromId, html: unread || ""}),
-										(this.isOut ? e("img", {src: getURL(API.photo_50), "class": "dialogs-miniphoto"}) : null),
-										e("span", {html: (!this.action ? text : IM.getStringActionFromSystemVKMessage(this))})
-									]}),
-									e("div", {"class": "dialogs-attachments tip", html: Mail.getStringAttachments(this)})
-								]})
-							]})
+			append: [
+				e("div", {
+					"class": "dialogs-item-left",
+					append:
+						e("img", {
+							"class": "dialogs-left",
+							src: from.photo ? getURL(from.photo) : Mail.defaultChatImage})
+				}),
+				e("div", {
+					"class": "dialogs-item-right",
+					append: [
+						e("div", {
+							"class": "dialogs-date",
+							append: [
+								this.isOut
+									? e("div", {
+										"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")})
+									: null,
+									document.createTextNode($.getDate(this.date, 2))
+							]
+						}),
+						e("div", {
+							"class": "dialogs-right",
+							append:
+								e("div", {
+									append: [
+										e("span", {
+											"class": "tip",
+											html: (this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? lg("mail.chatTitle") : "")
+										}),
+										e("strong", {
+											html: Mail.Emoji(from.name)
+										}),
+										e("div", {
+											"class": "n-f dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""),
+											append: [
+												e("div", {
+													append: [
+														e("span", {
+															"class": "dialogs-unread",
+															id: "ml" + fromId, html: unread || ""
+														}),
+														this.isOut
+															? e("img", {
+																src: getURL(API.photo_50),
+																"class": "dialogs-miniphoto"
+															  })
+															: null,
+														e("span", {
+															html: !this.action
+																? text
+																: IM.getStringActionFromSystemVKMessage(this)
+														})
+													]
+												}),
+												e("div", {
+													"class": "dialogs-attachments tip",
+													html: this.getAttachmentNamesString()
+												})
+											]
+										})
+									]
+								})
 						})
-					]})
 				]})
-		});
+		]});
 		var attach, fwd;
 		if (attach = Mail.getAttach())
 		{
@@ -141,7 +182,49 @@ VKMessage.prototype = {
 	},
 
 	getAttachmentNamesString: function () {
-		return Mail.getStringAttachments(this);
+		var m = this;
+
+		if (!m.attachments && !m.geo && !m.fwd_messages) {
+			return "";
+		};
+
+		var attachs = {
+			photo: 0,
+			video: 0,
+			audio: 0,
+			doc: 0,
+			sticker: 0,
+			map: 0,
+			link: 0,
+			wall: 0,
+			forwarded: 0,
+			wall_reply: 0,
+			gift: 0
+		},
+		attachments = [];
+
+		if (m.attachments) {
+			m.attachments.forEach(function(item) {
+				attachs[item.type]++;
+			});
+		};
+
+		attachs.map = !!m.geo;
+		attachs.forwarded = m.fwd_messages ? m.fwd_messages.length : 0;
+
+		var c;
+		for (var item in attachs) {
+			c = attachs[item]
+			if (c > 0) {
+				attachments.push(c + " " + lg("mail.attachmentName_" + item, c));
+			};
+		};
+
+		if (attachs.stickers) {
+			attachments = lg("mail.attachmentName_sticker");
+		};
+
+		return attachments.join(", ");
 	}
 
 };
@@ -183,7 +266,7 @@ function parsePeerId (pId) { // u123 -> [u, 123]
 };
 
 // [u, 123] -> 123, [g, 123] -> -123, [c, 123] -> 2000000123
-function toPeerId (peer) { // [g, 123] -> -123
+function toPeerId (peer) {
 	return {
 		u: peer[1],
 		g: -peer[1],
@@ -461,29 +544,6 @@ var Mail = {
 			node = node.parentNode;
 		}
 		return node.firstChild;
-	},
-
-	getStringAttachments: function (msg) {
-		if (msg.attachments && msg.attachments.length > 0 || msg.geo || msg.fwd_messages) {
-			var attachs = {photos: 0, videos: 0, audios: 0, docs: 0, stickers: 0, map: 0, links: 0, walls: 0, fwds: 0, wall_replys: 0, gifts: 0},
-				attachments = [];
-			if (msg.attachments)
-				for (var i = 0, l = msg.attachments.length; i < l; ++i)
-					attachs[msg.attachments[i].type + "s"]++;
-			if (msg.geo)
-				attachs.map = 1;
-			if (msg.fwd_messages)
-				attachs.fwds = msg.fwd_messages.length;
-			var attach_names = Lang.get("mail.attachment_names");
-			for (var item in attach_names) { // какая-то неведомая хуйня. стикеры просто пролетают мимо с undefined.
-				if (attachs[item] > 0)
-					attachments.push((attachs[item] > 1 ? attachs[item] + " " : "") + $.TextCase(attachs[item], attach_names[item]));
-			}
-			if (attachs.stickers)
-				attachments = [attach_names.stickers[0]];
-			return attachments.join(", ");
-		}
-		return "";
 	},
 
 	defaultChatImage: "\/\/static.apidog.ru\/multichat-icon50.png",
