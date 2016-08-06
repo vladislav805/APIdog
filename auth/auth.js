@@ -98,15 +98,13 @@ function authorize(form, event) {
 		isLoad = false;
 		btn.disabled = false;
 
-		// new format
 		setCookie("userAccessToken", data.userAccessToken, expireDays);
 		setCookie("authId", data.authId, expireDays);
-		setCookie("authKey", data.hash, expireDays);
+		setCookie("authKey", data.authKey, expireDays);
 
-		var btn = g(ID_SUBMIT_MAIN);
 		btn.disabled = true;
 		btn.value = "Успех!";
-		window.location.href = "/";
+		window.location.href = "./";
 	},
 	function(type, error) {
 		isLoad = false;

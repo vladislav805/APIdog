@@ -118,7 +118,6 @@
 		if (!$result) {
 			return null;
 		};
-		var_dump($result, $query);
 
 		switch ($resultType) {
 			case SQL_RESULT_ITEM:

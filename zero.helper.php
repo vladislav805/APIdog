@@ -262,7 +262,7 @@
 		 * @param  int    $application     Внутренний идентификатор приложения
 		 * @return array                   Данные с сессией
 		 */
-		public static function checkToken($userAccessToken, $application) {
+		public function checkToken($userAccessToken, $application) {
 
 			if (is_null($application) || !is_int($application)) {
 				throwError(40);
@@ -300,7 +300,7 @@
 			return [
 				"userId" => $userId,
 				"authId" => $q,
-				"hash" => $hash,
+				"authKey" => $hash,
 				"date" => $date
 			];
 		}
