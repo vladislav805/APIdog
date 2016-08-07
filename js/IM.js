@@ -9,20 +9,23 @@ var IM = {
 	storageCount: {},
 
 	explain: function (to) {
-		switch (Site.Get("act")) {
+		switch (Site.get("act")) {
 			case "upload_photo":
 				IM.showUploadFormMessagePhoto(to);
-			break;
+				break;
+
 			case "attachMap":
 				IM.attachMap(to);
-			break;
+				break;
+
 			case "attachments":
 				IM.getAttachmentsDialog(to);
-			break;
+				break;
+
 			default:
 				if (!to)
 					return window.location.hash = "#mail";
-				IM.load(parsePeerId(to), 0);
+				IM.show(to);
 		}
 	},
 
@@ -32,6 +35,13 @@ var IM = {
 	geo: {},
 
 	page: function () {
+
+
+
+
+
+
+
 		var parent = document.createElement("div"),
 			list = document.createElement("div"),
 			attachments = document.createElement("div");
@@ -61,6 +71,242 @@ var IM = {
 		IM.dd.init();
 		Site.Append(parent);
 	},
+
+
+	show: function(peerId, extra) {
+		var e = $.e,
+			form = IM.createSendForm(peerId),
+			list = IM.createListMessages(peerId),
+			listNode = list.node,
+			wrap = e("div", {
+				append: [
+					form.node,
+					listNode
+				]
+			}),
+			peer = parsePeer(peerId), // [type, id]
+			id = toPeerId(peerId), // 1, -1, 200000001
+
+			currentOffset = 0,
+
+			load = function() {
+				new APIRequest("execute", {
+					code: 'var m=API.messages.getHistory({peer_id:Args.p,count:60,offset:Args.o,v:5.52}),c=[],g=[];if(Args.r!=0){API.messages.markAsRead({peer_id:Args.p,v:5.52});};if(Args.c!=0){c=API.messages.getChat({chat_ids:Args.p-2000000000,fields:Args.f});};if(Args.g!=0){g=API.groups.getById({group_id:Args.p});};return{dialog:m,users:API.users.get({user_ids:m.items@.user_id+m.items@.action_mid+c.users@.invited_by,fields:Args.f}),chats:c,groups:g};',
+					p: id,
+					r: isEnabled(2) ? 1 : 0,
+					f: "photo_100,screen_name,can_write_private_message,online,last_seen,sex,blacklisted,first_name_gen,last_name_gen,first_name_acc,last_name_acc,sex,blacklisted",
+					o: parseInt(currentOffset),
+					c: +(peer[0] === APIDOG_DIALOG_PEER_CHAT && !(peerId in Local.Users)),
+					g: +(peer[0] === APIDOG_DIALOG_PEER_GROUP && !(peerId in Local.Users))
+				}).setOnCompleteListener(function(result) {
+					console.log(result);
+					Local.add(result.users);
+					Local.add(result.groups);
+					Local.add(result.chats);
+
+					setPeerInfo();
+
+					result = result.dialog;
+
+					insert(parse(result.items, VKMessage), result.count, Math.max(result.in_read, result.out_read));
+				}).setOnErrorListener(function(e) {
+					console.error(e);
+				}).execute();
+			},
+			setPeerInfo = function() {
+				var t, u = Local.Users[id], l;
+				console.log(id, peer);
+				switch (peer[0]) {
+					case APIDOG_DIALOG_PEER_USER:
+						t = getName(u);
+						l = u.screen_name;
+						break;
+
+					case APIDOG_DIALOG_PEER_GROUP:
+						t = u.name.safe();
+						l = u.screen_name;
+						break;
+
+					case APIDOG_DIALOG_PEER_CHAT:
+						t = u.title.safe();
+						break;
+
+					default: t = "unknown";
+				};
+				form.headName.innerHTML = t;
+				form.headName.onclick = function() {
+					console.log("cliked!");
+					if (l) {
+						nav.go(l);
+					} else {
+						IM.showChatInfo(peer[0]);
+					};
+				}
+			},
+			insert = function(messages, count, readUntil) {
+				console.log(messages);
+				messages.forEach(function(message) {
+					listNode.appendChild(message.getNode());
+				});
+			};
+console.log(id, peer);
+		load();
+		Site.append(wrap).setHeader(lg("im.dialog"), "mail");
+
+	},
+
+	createSendForm: function(peerId) {
+		var e = $.e,
+			send = function(event) {
+				event && event.preventDefault();
+				textarea.value = "";
+				actionspace.cAttach.clear();
+				actionspcae.cSmile.close();
+				VKMessage.send({
+					peerId: peerId,
+					text: textarea.value.trim(),
+					attachments: actionspace.cAttach.getAttachmentString(),
+					geo: actionspace.cAttach.getGeo()
+				});
+				return false;
+			},
+			head,
+			headName = e("span", { html: "peer " + peerId }),
+			headActions = null,
+			form,
+			textarea = IM.createTextarea(peerId, { send: send }),
+			actionspace = IM.createActionspace(peerId, { send: send }),
+			wrap = e("form", {id: "g-form-dialog" + peerId, append: [
+				head = Site.getPageHeader(headName, headActions),
+				form = e("div", {"class": "im-formsend", append: [
+					textarea,
+					actionspace.node
+				]})
+			]});
+
+
+		$.event.add(wrap, "submit", send);
+
+		return {
+			node: wrap,
+			head: head,
+			headName: headName
+		};
+	},
+
+	createTextarea: function(peerId, extra) {
+		var textarea = $.e("textarea", {
+			"class": "sizefix im-textfield",
+			name: "message",
+			placeholder: lg("im.formTextareaPlaceholder"),
+			autofocus: true,
+maxlength: 4096, // TODO chunk
+			html: $.localStorage("im_text_" + peerId) || "",
+			id: "im-sendtext"
+		});
+
+		$.event.add(textarea, "keydown", function(event) {
+
+			var now = Date.now() / 1000;
+
+			if (event.keyCode !== KeyboardCodes.ENTER && (isEnabled(APIDOG_SETTINGS_SEND_TYPING) && !IM.lastTyping || IM.lastTyping + 5 < now)) {
+
+				new APIRequest("messages.setActivity", {type: "typing", peer_id: toPeerId(peerId), v: 5.52}).execute();
+				IM.lastTyping = now;
+				return;
+			};
+
+			if (event.keyCode === KeyboardCodes.ENTER) {
+				if (
+					(isEnabled(APIDOG_SETTINGS_SEND_BY_ENTER) && !event.ctrlKey && !event.metaKey && !event.shiftKey)
+					||
+					(!isEnabled(APIDOG_SETTINGS_SEND_BY_ENTER) && (event.ctrlKey || event.metaKey))
+				) {
+					return extra.send();
+				} else {
+					return true;
+				};
+			};
+
+		});
+
+		$.event.add(textarea, "keyup", function(event) {
+			$.localStorage("im_text_" + peerId, textarea.value);
+		});
+
+		return textarea;
+	},
+
+	createActionspace: function(peerId) {
+		var e = $.e,
+			left = e("div", {"class": "fl im-actionspace-left"}),
+			right = e("div", {"class": "fr im-actionspace-right"}),
+			nAttachments = e("input", {type: "hidden", name: "attachments", value: ""}),
+			wrap = e("div", {"class": "im-actionspace", append: [left, right, nAttachments] }),
+
+			cSmile = new SmileController(),
+			cAttach = new AttachmentController({
+				peerId: toPeerId(peerId),
+				maxCount: 10,
+				onSelect: function(result) {
+					nAttachments.value = nAttachments.value.split(",").filter(function(v) { return !!v; }).concat(result.map(function(v) {
+						return v.getFullId()
+					}));
+				}
+			});
+
+		right.appendChild(e("input", {type: "submit", name:"sendbutton", value: lg("im.formSend")}));
+		left.appendChild(cSmile.getNode());
+		left.appendChild(cAttach.getNode());
+
+		return {
+			node: wrap,
+			cSmile: cSmile,
+			cAttach: cAttach
+		};
+	},
+
+	createListMessages: function(peerId) {
+		var e = $.e,
+			wrap = e("table", {id: "g-messages-list" + peerId});
+
+		return {
+			node: wrap
+		};
+	},
+
+	showChatInfo: function(peerId) {
+
+	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	onResizeFullVersion: function (event) {
 		var w = event.content.width + "px";
 		g("mail-header").style.width = w;
@@ -101,57 +347,9 @@ return; // @todo
 		},
 	},
 
-	// refactored 15.01.2016: added support for dialogs with groups
-	load: function (peer, offset, btn) {
-		if (!offset) {
-			IM.page();
-			IM.createIM(peer);
-		};
 
-		if (Site.Get("force")) {
-			offset = Site.Get("offset");
-		};
-
-
-		Site.API("execute", {
-
-			code: 'var m=API.messages.getHistory({%l:Args.p,count:50,offset:Args.o,v:5.14}),c=null,g=null;if(Args.r){API.messages.markAsRead({%l:Args.p,v:5.14});};if(Args.c){c=API.messages.getChat({chat_id:Args.p,fields:Args.f});};if(Args.g){g=API.groups.getById({group_id:Args.p});};return{dialog:m,users:API.users.get({user_ids:m.items@.user_id+m.items@.action_mid+c.users@.invited_by,fields:Args.f}),chat:c,group:g};'.schema({ l: peer[0] === APIDOG_DIALOG_PEER_CHAT ? "chat_id" : "user_id" }),
-			p: peer[1],
-			r: (API.SettingsBitmask & 2) > 0 ? 1 : 0,
-			f: "photo_100,screen_name,can_write_private_message,online,last_seen,sex,blacklisted,first_name_gen,last_name_gen,first_name_acc,last_name_acc,sex,blacklisted",
-			o: offset,
-			c: peer[0] === APIDOG_DIALOG_PEER_CHAT,
-			g: peer[0] === APIDOG_DIALOG_PEER_GROUP
-
-		}, function (data) {
-
-			data = Site.isResponse(data);
-
-			if (!data) {
-				return Site.Alert({text: "Ошибка какая-то... (API)"});
-			};
-
-			Local.add(data.users);
-			Local.add(data.group);
-
-			if (data.chat) {
-				IM.saveChatData(data.chat);
-				Local.AddUsers(data.chat.users);
-			};
-
-			if (btn) {
-				$.elements.remove(btn.parentNode.parentNode);
-			};
-
-//          IM.saveInStorage(data.dialog);
-			IM.showDialog(peer, data.dialog, offset);
-		});
-	},
 
 	chats: {},
-	saveChatData: function (chat) {
-		return (IM.chats[chat.chat_id || chat.id] = chat);
-	},
 	createIM: function (peer) {
 		var wrap = $.element("_im-wrap"),
 			peerId = peer.join(""),
@@ -504,9 +702,11 @@ return; // @todo
 
 		node.appendChild(parent);
 	},
+
 	getSelectedMessagesCount: function () {
 		return document.querySelectorAll(".imdialog-selected").length;
 	},
+
 	getIdSelectedMessages: function () {
 		var messages = document.querySelectorAll(".imdialog-selected"), message_ids = [];
 		for (var i = 0, l = messages.length; i < l; ++i) {
@@ -519,6 +719,7 @@ return; // @todo
 		$.elements.removeClass($.element("im-typing-wrap"), "hidden");
 		return message_ids;
 	},
+
 	userTyping: null,
 	userTypingDots: null,
 	USER_TYPING_INTERVAL_ANIMATION: 500,
@@ -785,85 +986,7 @@ console.log(p);
 	},
 	n2: function (n) {return n < 10 ? "0" + n : n;},
 	item: function (i, o) {
-		IM.storage[i.id] = i;
-		var from = i.chat_id ? -i.chat_id : i.user_id, isSending = o.sending, uniqueId = o.uniqueId;
-		if (!isSending)
-		{
-			if (IM.dialogsContent[from])
-				IM.dialogsContent[from].unshift(i.id);
-			else
-				IM.dialogsContent[from] = [i.id];
-		};
-		if (i.byLP && IM.isAsVK())
-			setTimeout(function () { IM.requestScroll(true); }, 200);
-		if (i.action)
-			return IM.itemAction(i, o);
-		var e = $.e,
-			u = Local.Users[i.from_id],
-			isSticker = i.attachments && i.attachments[0] && i.attachments[0].type == "sticker",
-			lc;
-		if (o.to == 3869934 || o.to == 23048942) {
-			if (~i.body.indexOf(":обнимаю:"))
-				i.attachments = [{type:"photo",photo:{n:1,photo_604:"http://dynamic.vlad805.ru/Nadia/_" + random(1,4) + ".jpg"}}];
-			if (~i.body.indexOf(":целую:"))
-				i.attachments = [{type:"photo",photo:{n:1,photo_604:"http://dynamic.vlad805.ru/Nadia/_" + random(11,12) + ".jpg"}}];
-			if (~i.body.indexOf(":язык:"))
-				i.attachments = [{type:"photo",photo:{n:1,photo_604:"http://dynamic.vlad805.ru/Nadia/_" + random(21,22) + ".jpg"}}];
-		}
-		return e("tr", {
-			"class": "imdialog-item imdialog-dialog" + o.to + " " + (i.out ? " imdialog-my" : "") + (isSticker ? " imdialog-item-sticker" : "") + (!i.read_state ? " imdialog-unread" : "") + (isSending ? " msgSending" + uniqueId : ""),
-			onmousedown: function (event)
-			{
-				if (!this.getAttribute("data-message-id"))
-					return;
-				lc = +new Date();
-			},
-			onmouseup: function (event)
-			{
-				if (!this.getAttribute("data-message-id"))
-					return;
-				if (event.which == 1 && +new Date() - lc < 250)
-					IM.itemSelect.call(this, event);
-			},
-			"data-message-id": i.id || "",
-			id: "imdialog-message" + i.id || 0,
-			append: [
-			o.to < 0 ? e("td", {"class": "imdialog-photo", append: !i.out ? e("a", {
-				href: "#" + u.screen_name,
-				append: e("img", {src: getURL(u.photo_50)}),
-				title: u.first_name + " " + u.last_name
-			}) : null}) : null,
-			e("td", {append: e("div", {"class": "imdialog-wrap", append: [
-					e("div", {"class": "imdialog-arrow"}),
-					e("div", {"class": "imdialog-content", append: [
-						e("a", {
-							"class": "imdialog-time",
-							href: !isSending ? "#mail?act=item&id=" + i.id : "",
-							append: !isSending ? e("span", {html: IM.getTime(i.date)}) : Mail.getMaterialLoader({wrapClass: "imdialog-sending"}),
-							title: !isSending ? (function (a, b, c, d, e, g) {
-								e = new Date(a * 1000);
-								d.forEach(function (f) {
-									g = b.push(e[c + f]());
-									g === 2 ? (b[--g] += 1) : (g > 3 ? ((b[--g] = IM.n2(b[g]))) : null);
-								});
-								return b.slice(0, 3).join(".") + " " + b.slice(3).join(":");
-							})(i.date, [], "get", ["Date", "Month", "FullYear", "Hours", "Minutes", "Seconds"]) : "",
-							onclick: function (event) {
-								if (isSending || !IM.getSelectedMessagesCount())
-									return;
-								event.preventDefault();
-								event.stopPropagation();
-								return false;
-							}
-						}),
-						e("span", {"class": "n-f", html: Mail.Emoji(Site.Format(i.body))}),
-						!isSending ? e("div", {id: "msg-attach" + i.id, append: IM.getAttachments(i.attachments, i.id)}) : "",
-						IM.forwardedMessages(i.fwd_messages),
-						i.geo ? IM.getMap(i.geo, {map: true, mail: true}) : null
-					]})
-				]})
-			})
-		]});
+		return new VKMessage(i).getNode();
 	},
 	getMap: function (geo, opts) {
 		opts = opts || {};
@@ -953,63 +1076,7 @@ console.log(p);
 			.replace(/%t/img, i.action_text)
 	},
 	itemAction: function (i, o) {
-		var e = $.e,
-			du = {first_name: "DELETED", last_name: "DELETED", first_name_gen: "DELETED", last_name_gen: "DELETED", first_name_acc: "DELETED", last_name_acc: "DELETED"},
-			init = Local.Users[i.from_id] || du,
-			action = Local.Users[i.action_mid] || du,
-			l = Lang.get,
-			parent = e("td", {colspan: 2, "class": "imdialog-item-action"}),
-			t = e("div", {"class": "imdialog-item-action-text"}),
-			basis,
-			act,
-			html;
-		switch (i.action) {
-			case "chat_kick_user":
-				basis = l("im.message_action_kick_source");
-				act = l("im.message_action_kick");
-				if (i.action_mid == (i.from_id || i.user_id)) {
-					basis = l("im.message_action_leave_source");
-					act = l("im.message_action_leave");
-				};
-				break;
-			case "chat_invite_user":
-			case "action_email":
-				basis = l("im.message_action_invite_source");
-				act = l("im.message_action_invite");
-				if (i.action_mid == (i.from_id || i.user_id)) {
-					basis = l("im.message_action_return_source");
-					act = l("im.message_action_return");
-				};
-				break;
-			case "chat_create":
-				basis = l("im.message_action_create_source");
-				act = l("im.message_action_create");
-				break;
-			case "chat_title_update":
-				basis = l("im.message_action_title_update_source");
-				act = l("im.message_action_title_update");
-				break;
-			case "chat_photo_update":
-				basis = l("im.message_action_chat_photo_update_source");
-				act = l("im.message_action_chat_photo_update");
-				break;
-			case "chat_photo_remove":
-				basis = l("im.message_action_chat_photo_remove_source");
-				act = l("im.message_action_chat_photo_remove");
-				break;
-		};
-		html = basis.schema({
-			"if": "<a href='#" + init.screen_name + "'>" + Site.Escape(init.first_name),
-			il: Site.Escape(init.last_name) + "</a>",
-			af: "<a href='#" + action.screen_name + "'>" + Site.Escape(action.first_name_acc),
-			al: Site.Escape(action.last_name_acc) + "</a>",
-			a: act[init.sex],
-			u: "",
-			t: "<strong>" + Mail.Emoji(Site.Escape(i.action_text)) + "</strong>"
-		});
-		t.innerHTML = html;
-		parent.appendChild(t);
-		return e("tr", {append: parent});
+
 	},
 	itemSelect: function (event) {
 		if (this.firstChild && this.firstChild.className == "__mail-deleted")

@@ -1011,7 +1011,7 @@
 		public function getTimeline($offset = 0) {
 			$offset = (int) $offset;
 			$items = SQLquery("SELECT * FROM `blog` ORDER BY `postId` DESC LIMIT $offset,30", SQL_RESULT_ITEMS);
-
+			$items = $items ? $items : [];
 			return ["count" => sizeOf($items), "items" => $items];
 		}
 

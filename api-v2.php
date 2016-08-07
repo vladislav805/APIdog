@@ -227,6 +227,8 @@
 
 			if (!$age) $age = 18;
 
+			output([]);
+
 			$ads = new AdsAPI;
 
 			$data = !in_array(userId, $usersIgnoreAds) ? $ads->getAvailable($count, true, 0, $age) : [];
@@ -786,22 +788,28 @@ sendDeprecated();
 
 			$fp = fsockopen($parsed["host"], 80, $errno, $errstr, 30);
 			fputs($fp, "HEAD " . $parsed["path"] . " HTTP/1.0\nHOST: " . $parsed["host"] . "\n\n");
-			while (!feof($fp))
+			while (!feof($fp)) {
 				$tmp .= fgets($fp, 128);
+			};
+
 			fclose($fp);
 
-			if (ereg("Content-Length: ([0-9]+)", $tmp, $size))
-				$size = (int) $size[1];
-			else
+			if (preg_match_all("/Content-Length: ([0-9]+)/i", $tmp, $size)) {
+				$size = (int) $size[1][0];
+			} else {
 				$size = -1;
-			if ($size < 0 || $size > 5 * MB)
+			}
+
+			if ($size < 0 || $size > 5 * MB) {
 				throwError(33);
+			};
 
 			include_once "uploader.php";
 			$type = exif_imagetype($url);
 
-			if(!in_array($type, [1, 2, 3, 6]))
+			if(!in_array($type, [1, 2, 3, 6])) {
 				throwError(32);
+			};
 
 			$isGif = $type == 1;
 			$name = time() . "." . (!$isGif ? "jpg" : "gif");

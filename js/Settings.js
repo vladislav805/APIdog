@@ -6,7 +6,8 @@
 
 var Settings = {
 	RequestPage: function () {
-		switch (Site.Get("act")) {
+
+		switch (getAct()) {
 			case "blacklist":
 				Site.Loader();
 				return Site.APIv5("account.getBanned",
@@ -26,19 +27,14 @@ var Settings = {
 				};
 				break;
 
-			case "login": return Settings.getLoginForm(); break;
+			case "profile":
+				return Settings.getProfileEditForm();
 
-			case "mobile": return Settings.mobile(); break;
+			case "smiles":
+				return Settings.smiles.showSettings();
 
-			case "profile": return Settings.getProfileEditForm(); break;
-
-			case "themes": return Settings.showSelectThemeCatalog(2, Site.Get("onlyMy"));  break;
-
-			case "customCSS": return Settings.showCustomCSSForm(); break;
-
-			case "smiles": return Settings.smiles.showSettings();
-
-			default: return Settings.showSettings();
+			default:
+				return Settings.showSettings();
 		}
 	},
 	getTabs: function () {
@@ -48,17 +44,20 @@ var Settings = {
 			["settings?act=blacklist", Lang.get("settings.tabs_blacklist")],
 			["settings?act=stickers",  Lang.get("settings.tabs_stickers")],
 			["settings?act=smiles",    Lang.get("settings.tabs_smiles")],
-			["settings?act=themes",    Lang.get("settings.tabs_themes")],
-		])
+		]);
 	},
+
 	languages: [
 		{value: 0, code: "ru", label: "Русский / Russian"},
 		{value: 1, code: "en", label: "English / English"},
 		{value: 2, code: "ua", label: "Українська / Ukrainian"}
 	],
+
 	showSettings: function () {
-		if (API.isExtension && !(API.SettingsBitmask & 8))
-			API.SettingsBitmask += 8;
+		if (API.isExtension && !isEnabled(APIDOG_SETTINGS_LONGPOLL)) {
+			API.settings.bitmask += 8;
+		};
+
 		var form = document.createElement("form"),
 			data = [
 				{
@@ -116,12 +115,6 @@ var Settings = {
 					type: "checkbox"
 				},
 				{
-					bit: 4096,
-					label: Lang.get("settings.param_old_version_messages"),
-					name: "oldversionmessages",
-					type: "checkbox"
-				},
-				{
 					bit: 8192,
 					label: Lang.get("settings.param_send_by_ctrl_enter"),
 					name: "sendbyctrlenter",
@@ -135,11 +128,6 @@ var Settings = {
 					bit: 1,
 					label: Lang.get("settings.param_online"),
 					name: "online",
-					type: "checkbox"
-				},
-				{
-					bit: 256,
-					label: Lang.get("settings.param_fake_online"),
 					type: "checkbox"
 				},
 				{
@@ -161,7 +149,7 @@ var Settings = {
 					type: "checkbox",
 					onchange: function ()
 					{
-						ntf.style.display = this.checked ? "block" : "none";
+//						ntf.style.display = this.checked ? "block" : "none";
 					}
 				},
 				{
@@ -212,64 +200,43 @@ var Settings = {
 					click: function (event) {
 						this.form.onsubmit();
 					}
-				},
-				{
-					type: "button",
-					label: Lang.get("settings.mark_offline"),
-					name: "marker_offline",
-					click: function (event) {
-						Settings.SetMeAsOffline(this);
-						this.disabled = true;
-					}
 				}
 			],
 			params = document.createElement("div");
 		var tabs = Settings.getTabs();
 		form.className = "settings-wrap settings";
 		form.id = "settings";
-		form.onsubmit = function (event)
-		{
+		form.onsubmit = function (event) {
 			var e = form.elements,
 				saver = form.saver,
 				languageId = form.language.options[form.language.selectedIndex].value,
 				bitmask = 0;
 
-			Array.prototype.forEach.call(e, function (i)
-			{
-				if (i.tagName.toLowerCase() == "input" && i.type == "checkbox" && i.checked)
-				{
+			Array.prototype.forEach.call(e, function (i) {
+				if (i.tagName.toLowerCase() == "input" && i.type == "checkbox" && i.checked) {
 					bitmask += parseInt(i.value);
 				};
 			});
 			saver.value = Lang.get("settings.saving");
 			saver.disabled = true;
 
-			if (!API.APIdogAuthUserId)
-			{
-				Settings.applySettings({
-					response:
-					{
-						bitmask: bitmask,
-						bitmaskNotifications: API.bitmaskNotifications,
-						language:
-						{
-							languageCode: {"0": "ru", "1": "en", "2": "ua", "999": "gop"}[languageId]
-						}
-					}
-				});
-				return;
-			};
-
-			Support.Ajax("/api/v2/settings.set",
-			{
+			APIdogRequest("settings.set", {
 				bitmask: bitmask,
 				bitmaskNotifications: API.bitmaskNotifications,
 				languageId: languageId,
-				authKey: API.APIdogAuthKey
-			},
-			function (result)
-			{
-				Site.Alert({text: Lang.get("settings.saved"), time: 1500});
+				authKey: API.authKey
+			}, function (result) {
+				saver.disabled = false;
+				new Snackbar({
+					text: Lang.get("settings.saved"),
+					duration: 1500,
+					onClose: function () {
+
+					},
+					onClick: function (snackbar) {
+						snackbar.close();
+					}
+				}).show();
 				Settings.applySettings(result);
 			});
 			return false;
@@ -281,7 +248,7 @@ var Settings = {
 				case "checkbox":
 					bit = current.bit;
 					p = {type: "checkbox", name: "__ps_" + current.name, value: bit, bit: bit};
-					if (API.SettingsBitmask & bit)
+					if (API.settings.bitmask & bit)
 						p.checked = true;
 					if (current.onchange)
 						p.onchange = current.onchange;
@@ -317,107 +284,29 @@ var Settings = {
 					continue;
 					break;
 				case "header":
-					params.appendChild(Site.CreateHeader(current.label, current.right));
+					params.appendChild(Site.getPageHeader(current.label, current.right));
 					continue;
 					break;
-			}
-		}
-		if (!API.APIdogAuthUserId)
-		{
+			};
+		};
+		if (!API.authId) {
 			form.appendChild(e("div", {"class": "photo-deleted", html: "Сбой на сервере. Настройки синхронизировать не удалось. Вы можете поставить настройки для текущей сессии (пока не перезагрузите страницу). Если ничего не помогает или такое происходит постоянно &mdash; переавторизуйтесь"}));
 		};
 		form.appendChild(params);
-		var ntf = e("form", {id: "ntfst", "class": "settings-wrap settings"}),
-			itemNotificationCheckbox = function (bitmask, title)
-			{
-				var p = {type: "checkbox", value: bitmask};
-				if ((API.bitmaskNotifications & bitmask) > 0)
-					p.checked = true;
-				ntf.appendChild(e("label", {append: [
-					input = e("input", p),
-					e("span", {html: " " + title})
-				]}));
-			},
-			wrap = e("div", {append: [
-				tabs,
-				form,
-				ntf
-			]}),
-			ntfsaver = e("input", {type: "button", value: Lang.get("settings.save"), onclick: function (event)
-			{
-				ntf.onsubmit();
-			}});
-		ntf.appendChild(Site.CreateHeader("Настройка уведомлений"));
-		itemNotificationCheckbox(1, "сообщения (только с LongPoll)");
-		itemNotificationCheckbox(2, "оценки &laquo;Мне нравится&raquo;");
-		itemNotificationCheckbox(4, "репосты");
-		itemNotificationCheckbox(8, "новые комментарии");
-		itemNotificationCheckbox(16, "ответы");
-		itemNotificationCheckbox(32, "новые друзья");
-		itemNotificationCheckbox(64, "активность друзей (online/offline)");
-		ntf.appendChild(ntfsaver);
-		ntf.onsubmit = function (event)
-		{
-			var e = ntf.elements,
-				bitmask = 0;
 
-			Array.prototype.forEach.call(e, function (i)
-			{
-				if (i.tagName.toLowerCase() == "input" && i.type == "checkbox" && i.checked)
-				{
-					bitmask += parseInt(i.value);
-				};
-			});
-			ntfsaver.value = Lang.get("settings.saving");
-			ntfsaver.disabled = true;
 
-			if (!API.APIdogAuthUserId)
-			{
-				Settings.applySettings({
-					response:
-					{
-						bitmask: API.SettingsBitmask,
-						bitmaskNotifications: bitmask,
-						language:
-						{
-							languageCode: {"0": "ru", "1": "en", "2": "ua", "999": "gop"}[languageId]
-						}
-					}
-				});
-				return;
-			};
-
-			Support.Ajax("/api/v2/settings.set",
-			{
-				bitmask: API.SettingsBitmask,
-				bitmaskNotifications: bitmask,
-				languageId: {ru:0,en:1,ua:2,gop:999}[Lang.lang],
-				authKey: API.APIdogAuthKey
-			},
-			function (result)
-			{
-				Site.Alert({text: Lang.get("settings.saved"), time: 1500});
-				Settings.applySettings(result);
-			});
-			return false;
-		};
-
-		if (!(API.SettingsBitmask & 1024))
-			ntf.style.display = "none";
-
-		Site.append(wrap);
-		Site.SetHeader(Lang.get("settings.settings"));
+		Site.append(form);
+		Site.setHeader(Lang.get("settings.settings"));
 
 		for (var i = 0, l = tasked.length; i < l; ++i)
 			(function (n, f) {var q=n;q.f=f;q.f()})(tasked[i][0], tasked[i][1]);
 	},
 	applySettings: function (data, isAI) {
-		data = data.response;
+		console.log(data);
 		var saved = data.bitmask,
 			savedNotifications = data.bitmaskNotifications,
 			lang = data.language.languageCode;
-		API.SettingsBitmask = parseInt(saved);
-		API.bitmaskNotifications = parseInt(savedNotifications);
+		API.settings.bitmask = parseInt(saved);
 
 		(lang != "gop") ? (Lang && (Lang.lang = lang)) : initGopnik();
 
@@ -434,27 +323,15 @@ var Settings = {
 			Settings.showSettings();
 	},
 	fastSaveSettings: function (bitmask) {
+		console.trace();
+		return;
 		var lang = {"ru": 0, "en": 1, "ua": 2, "gop": 999};
-		Support.Ajax("/api/v2/settings.set", {
+		APIdogRequest("settings.set", {
 			bitmask: bitmask,
-			languageId: lang[Lang.lang],
 			authKey: API.APIdogAuthKey
 		}, function (result) {});
 	},
-	SetMeAsOffline: function (button) {
-		button.disabled = true;
-		button.old_value = button.value;
-		button.value = "Запрашиваю...";
-		Site.API("account.setOffline", {}, function (data) {
-			if (data && data.response){
-				button.disabled = false;
-				Site.Alert({
-					text: Lang.get("settings.marked_as_offline")
-				});
-				button.value = button.old_value;
-			}
-		})
-	},
+
 	blacklist: {
 		request: function (data) {
 			data = Site.isResponse(data);
@@ -1299,7 +1176,7 @@ var Settings = {
 		});
 	},
 
-	showSelectThemeCatalog: function (sortBy, onlyMy) {
+	/*showSelectThemeCatalog: function (sortBy, onlyMy) {
 		Site.Loader();
 		APIdogRequest("themes.get", { count: 50, offset: Site.Get("offset"), sort: sortBy, onlyMy: onlyMy }, function (result) {
 			var count = result.count,
@@ -1441,62 +1318,6 @@ var Settings = {
 		return n;
 	},
 
-/*	showCustomCSSForm: function ()
-	{
-		var e = $.e,
-			form,
-			code,
-			saveButton,
-			onKeyPress = function (event)
-			{
-				var n = this.selectionStart || 0, t = this.value;
-				if (event.keyCode == 9) {
-					t = t.substr(0, n) + "	" + t.substr(n);
-					this.value = t;
-					n++;
-					this.setSelectionRange(n, n);
-					event.preventDefault();
-					return false;
-				};
-			},
-			saveCSS = function (event)
-			{
-				event.preventDefault();
-				Settings.setCustomCSS(code.value).apply();
-				return false;
-			},
-			wrap = e("div", {append: [
-				Site.getPageHeader("Пользовательская стилизация сайта"),
-				form = e("form", {"class": "sf-wrap", onsubmit: saveCSS, append: [
-					$.e("div", {style: "padding: 6px 8px; border-left: 2px solid rgb(95, 127, 186); margin: 4px 0 10px;", html: "Здесь Вы можете настроить стили сайта так, как Вам бы хотелось бы его видеть. Всё, что Вам нужно &mdash; знать формальный язык описания внешнего вида документа &ndash; CSS.<br>Если вдруг Вы что-то намудрите со стилями и страница пропадет (нельзя будет никак отредактировать код), то откройте консоль JavaScript в браузере и введите &laquo;Settings.setCustomCSS(\"\").apply()&raquo; (учтите, что в таком случае весь код будет утерян!)"}),
-					code = e("textarea", {
-						name: "code",
-						style: "height: 350px; font-family: Consolas, monospace; font-size: 14px;",
-						onkeypress: onKeyPress,
-						html: Settings.getCustomCSS()
-					}),
-					saveButton = e("input", {
-						type: "submit",
-						value: "Сохранить"
-					})
-				]})
-			]});
-		Site.append(wrap);
-	},
-
-	getCustomCSS: function ()
-	{
-		return $.localStorage("_customCSS") || "";
-	},
-
-
-
-	setCustomCSS: function (newCode)
-	{
-		$.localStorage("_customCSS", Settings.safeCustomCSS(newCode));
-		return { apply: Settings.applyCustomCSS };
-	},*/
-
 	safeCustomCSS: function (code) {
 		var classes = [".avmn-wrap", ".apidog-a", "#_apidv", ".APIdog-ad-item", ".APIdog-ad-item", "ads.php", ".APIdog-ad-img", ".APIdog-ad-extend", ".APIdog-ad-description", ".APIdog-ad-button", ".teaser"];
 		classes.forEach(function (cls) {
@@ -1509,7 +1330,7 @@ var Settings = {
 	{
 		if (API.themeId && API.theme)
 			getHead().appendChild(new APIdogTheme(API.theme).getNodeStyle());
-	},
+	},*/
 
 	smiles: {
 		_key: "__usingSmiles",
@@ -1568,7 +1389,7 @@ if (!Settings.smiles.used) {
 	Settings.smiles.used = Settings.smiles.defaultSet.split(";");
 };
 
-
+/*
 function APIdogTheme (t) {
 	if (!t) {
 		this._isNew = true;
@@ -1796,3 +1617,4 @@ APIdogTheme.prototype = {
 	}
 };
 
+*/

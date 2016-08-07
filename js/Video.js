@@ -4,6 +4,25 @@
  * upd: -1
  */
 
+function VKVideo(v) {
+
+};
+
+VKVideo.prototype = {
+	getAttachId: function() {
+		return this.getType() + this.ownerId + "_" + this.getId();
+	},
+
+	getType: function() {
+		return "video";
+	},
+
+	getId: function() {
+		return this.videoId;
+	}
+
+};
+
 var Video = {
 
 	// deprecated

@@ -43,8 +43,8 @@ function getName (u) {
 	return String(u.first_name).safe() + " " + String(u.last_name).safe() + Site.isOnline(u);
 };
 
-function isEnabled (bit) {
-	return !!(API.SettingsBitmask & bit);
+function isEnabled(bit) {
+	return !!(API.settings.bitmask & bit);
 };
 
 function isNotification (bit) {
@@ -56,8 +56,12 @@ function getUnixTime () {
 };
 
 function getOffset () {
-	return Site.Get("offset");
+	return Site.get("offset");
 };
+
+function getAct() {
+	return Site.get("act");
+}
 
 function isTouch () {
 	return window._isTouch;
@@ -705,9 +709,6 @@ function startFirstRequestAPI () {
 			]
 		}).show();
 	}).setOnCompleteListener(function (data) {
-
-		onInited();
-
 		var user = data.u, friends, isAlreadyStarted = false;
 
 		API.uid         = user.id;
@@ -760,20 +761,22 @@ function startFirstRequestAPI () {
 			Site.associateAuthKey(API.userAuthKey, API.APIdogAuthId, user.id);
 		};
 */
-		if (!getAddress()) {
-			window.location.hash = "#" + user.screen_name;
-			isAlreadyStarted = true;
-		};
 
 		ThemeManager.onInstall();
 
-		if (!isAlreadyStarted) {
-			Site.Go(getAddress());
-		};
 
 		Loader.main.setTitle("Loading language data...");
 		Lang.load(function () {
 			Loader.main.close();
+			onInited();
+			if (!getAddress()) {
+				window.location.hash = "#" + user.screen_name;
+				isAlreadyStarted = true;
+			};
+
+			if (!isAlreadyStarted) {
+				Site.Go(getAddress());
+			};
 		});
 
 		var age = 0;
@@ -970,6 +973,15 @@ var menu = {
 	}
 };
 
+var nav = {
+	replace: function(url) {
+		window.history.replaceState({}, null, url);
+	},
+	go: function(url) {
+		window.history.pushState({}, null, url);
+	}
+}
+
 /*
  *	Вопрос: только вот какого хуя оно не пашет одновременно одним способом и там и там?!
  */
@@ -1092,7 +1104,7 @@ function getBrowserFeatures () {
 
 	return {
 		os: get({ linux: "x11|linux", mac: "mac", windows: "win" }),
-		browser: get({ ie: "msie", firefox: "firefox", opera: "opr|opera", yabrowser: "yabrowser", chrome: "chrome", safari: "applewebkit" }),
+		browser: get({ ie: "msie|edge", firefox: "firefox", opera: "opr|opera", yabrowser: "yabrowser", chrome: "chrome", safari: "applewebkit" }),
 		engine: get({ ie: "trident", gecko: "gecko", presto: "opera|presto", webkit: "webkit" })
 	};
 };
@@ -1126,34 +1138,63 @@ window.onChatUpdated;
 window.vkLastCheckNotifications = getUnixTime();
 window.isMobile = /(mobile?|android|ios|bada|j2me|wp|phone)/ig.test(navigator.userAgent.toLowerCase());
 
+$.elements.addClass(getBody(), isMobile ? "mobile" : "pc");
+
 var Local = {
 	Users: {},
 	AddUsers: function (a) { return Local.add(a); },
+
+	/**
+	 * Сохранение данных о пользователях/группах/чатах и пр.
+	 * 23/09/2014: updated, returns object (v6.3.3.0.1)
+	 * 07/08/2016: добавлена поддержка хранения chat (v6.5)
+	 * @param {Array} users Массив с пользователями
+	 */
 	add: function (users) {
-		if (users == null)
+		if (users == null) {
 			return;
-		if (!$.isArray(users))
+		};
+
+		if (!$.isArray(users)) {
 			users = [users];
+		};
+console.log(users);
 		var j;
 		for (var i = 0; i < users.length; ++i) {
 			j = users[i];
-			if (j) {
-				var id = [(j.uid || j.id), -(j.gid || j.id)][j.type && j.type !== "profile" ? 1 : 0];
-				if (!Local.Users[id])
-					Local.Users[id] = {};
-				if (!Local.Users[id].screen_name && !j.screen_name)
-					Local.Users[id].screen_name = (id > 0 ? "id" + id : "club" + (-id));
-				for (var label in j)
-					Local.Users[id][label] = j[label];
-				if (id < 0 && !(Local.Users[id].photo || Local.Users[id].photo_rec)) {
-					Local.Users[id].photo = Local.Users[id].photo_50;
-					Local.Users[id].photo_rec = Local.Users[id].photo_50;
-					Local.Users[id].photo_50 = Local.Users[id].photo_rec;
-				}
-			}
-		}
-		return Local.Users; // updated 23/09/2014 (v6.3.3.0.1)
+			if (!j) {
+				continue;
+			};
+			var id = {
+				"group": -(j.gid || j.id),
+				"event": -(j.gid || j.id),
+				"public": -(j.gid || j.id),
+				"profile": j.uid || j.id,
+				"chat": APIDOG_DIALOG_PEER_CHAT_MAX_ID + (j.id || j.chat_id)
+			}[j.type || "profile"];
+console.log(id);
+			if (!(id in Local.Users)) {
+				Local.Users[id] = {};
+			};
+
+			if (!("screen_name" in Local.Users[id]) && !("screen_name" in j)) {
+				Local.Users[id].screen_name = (id > 0 ? "id" + id : "club" + -id);
+			};
+
+			for (var label in j) {
+				Local.Users[id][label] = j[label];
+			};
+
+			if (id < 0 && !(("photo" in Local.Users[id]) || ("photo_rec" in Local.Users[id]))) {
+				var p = Local.Users[id].photo_50;
+				Local.Users[id].photo = p;
+				Local.Users[id].photo_rec = p;
+				Local.Users[id].photo_50 = p;
+			};
+		};
+		return Local.Users;
 	},
+
 	getUserByDomain: function (screen_name) {
 		for (var user in Local.Users)
 			if (Local.Users[user].screen_name == screen_name)
@@ -1896,6 +1937,9 @@ APIRequest.prototype = {
 		this.mResult = result;
 		this.mState = APIDOG_REQUEST_STATE_LOADED;
 		if ("response" in result) {
+			if ("execute_errors" in result && window.__debug) {
+				console.error("Execute errors: ", result.execute_errors, "\nParams:", this.params);
+			};
 			this.mCompleteListener && this.mCompleteListener(result.response);
 		} else if ("error" in result) {
 			this._onErrorAPI(result.error);
@@ -1923,13 +1967,15 @@ APIRequest.prototype = {
 				break;
 
 			case APIDOG_REQUEST_API_ERROR_RUNTIME:
-				alert("Runtime error API: debug info\n\nMethod: " + this.method + "\nParams:\n" + (function (a) {
+				var msg = "Runtime error API: debug info\n\nMethod: " + this.method + "\nParams:\n" + (function (a) {
 					var b = [];
 					for (var c in a) {
 						b.push(c + " = " + a[c]);
 					}
 					return b.join("\n");
-				})(this.params));
+				})(this.params);
+				console.error(msg);
+				alert(msg);
 				break;
 
 			default:
@@ -2124,8 +2170,11 @@ function timeInterval (t) {
 };
 
 var
+	APIDOG_SETTINGS_AUTOREAD = 2,
 	APIDOG_SETTINGS_PROXY = 4,
-	APIDOG_SETTINGS_LONGPOLL = 8;
+	APIDOG_SETTINGS_LONGPOLL = 8,
+	APIDOG_SETTINGS_SEND_TYPING = 2048,
+	APIDOG_SETTINGS_SEND_BY_ENTER = 8192;
 
 var
 	APIDOG_SHARE_STEP_CHOOSE_TARGET_TYPE = 1,
@@ -3026,7 +3075,7 @@ console.log(this.reply);
  * Created 12.01.2016
  */
 
-function AttachmentBundle () {
+function AttachmentBundle() {
 
 };
 
@@ -3038,12 +3087,35 @@ AttachmentBundle.prototype = {
 
 	getString: function () {
 		return this.list.map(function (item) {
-			return item.type + item.ownerId + "_" + item.itemId;
+			return item.getAttachId();
 		}).join(",");
 	},
 
 	registerList: function (node) {
 		this.nodeList = node;
+		return this;
+	},
+
+	add: function(item) {
+		this.list.push(item);
+	},
+
+	getCount: function() {
+		return this.list.length;
+	},
+
+	get: function() {
+		return this.list;
+	},
+
+	remove: function(item) {
+		if (typeof item === "object") {
+			item = this.list.indexOf(item);
+			if (!~item) {
+				return this;
+			};
+		};
+		this.list.splice(item, 1);
 		return this;
 	}
 
@@ -3484,18 +3556,18 @@ function uploadFiles (node, o, callbacks) {
 	var upload,
 		index = 0,
 
-		files = node.files,
+		files = node ? node.files : node == null && "url" in o ? [o.url] : null,
 
 		modal,
-		status = $.e("span", {html: "Подключение..."}),
+		status = $.e("span", {html: lg("attacher.uploadModalConnecting")}),
 		progressbar = new ProgressBar(0, 100),
 
 		updateUI = function (event) {
 			if (modal) {
 				status.innerHTML = (
 					event.percent < 99.9
-						? "Загрузка файла..."
-						: "Файл загружен, загрузка на сервер ВКонтакте..."
+						? lg("attacher.uploadModalSending")
+						: lg("attacher.uploadMediaSent")
 				);
 				progressbar.setValue(event.percent);
 			};
@@ -3516,7 +3588,7 @@ function uploadFiles (node, o, callbacks) {
 
 		handleError = function (error) {
 			var f = files[index];
-			Site.Alert({text: "upload file &laquo;" + Site.Escape(f.name) + "&raquo; failure"});
+			Site.Alert({text: "upload file &laquo;" + f.name.safe() + "&raquo; failure"});
 			callbacks && callbacks.onError && callbacks.onError(f);
 			next();
 		},
@@ -3530,11 +3602,11 @@ function uploadFiles (node, o, callbacks) {
 
 		doTask = function (index) {
 			var f = files[index];
-			if (f.size > 26214400) { // 25MB
+			if (typeof f !== "string" && f.size > 26214400) { // 25MB
 				Site.Alert({text: "file &laquo;" + f.name + "&raquo; was passed because size more than 25MB"});
 				return next();
 			}
-			var title = "Загрузка (" + (index + 1) + "/" + files.length + ")";
+			var title = lg("attacher.uploadModalTitle").schema({c: index + 1, a: files.length});
 			if (!modal) {
 				modal = new Modal({
 					title: title,
@@ -4037,14 +4109,315 @@ function PrivacyWindow () {
 };
 
 /**
- * AttachmentSelector
- * Abstract create 29/02/2016
+ * Контроллер для аттачей
+ * 29/02/2016: создан
+ * 07/08/2016: переименован, описан
  */
-function AttachmentSelector () {
+function AttachmentController(options) {
+	var self = this;
+	this.peerId = options.peerId;
+	this.ownerId = options.ownerId || API.userId;
+	this.bundle = new AttachmentBundle();
+	this.content = $.e("div");
+	this._onOpen = options.onOpen;
+	this._onSelect = options.onSelect;
+	this.methods = options.methods;
+	this.allowedTypes = options.allowedTypes || (APIDOG_ATTACHMENT_PHOTO | APIDOG_ATTACHMENT_VIDEO | APIDOG_ATTACHMENT_AUDIO | APIDOG_ATTACHMENT_DOCUMENT);
+	this.maxCount = options.maxCount || 10;
+};
 
+AttachmentController.prototype = {
+
+	open: function() {
+		this.modal = new Modal({
+			title: lg("attacher.modalTitle"),
+			content: this.content,
+			width: "60%",
+			noPadding: true,
+			footer: [
+				{
+					name: "ok",
+					value: lg("attacher.modalOk"),
+					onclick: function(event) {
+						self._onSelect(self.getSelected());
+						this.close();
+					}
+				},
+				{
+					name: "cancel",
+					value: lg("general.cancel"),
+					onclick: function(event) {
+						this.close();
+					}
+				}
+			]
+		});
+		this.modal.show();
+	},
+
+	clear: function() {
+		this.bundle.clear();
+		return this;
+	},
+
+	getNode: function() {
+		var self = this;
+		return this.wrapButton = $.e("div", {"class": "attacher-button-wrap", append: this.button = $.e("div", {
+			"class": "im-actionbutton vkform-comment-button-attachment",
+			onclick: function(event) {
+				self.toggleTypeList();
+			}
+		})});
+	},
+
+	toggleTypeList: function() {
+		if (!this.typeListNode) {
+			this.createTypeList();
+		};
+
+		this.typeListNode.classList.toggle("attacher-typeList-opened");
+		return this;
+	},
+
+	hideTypeList: function() {
+		this.typeListNode.classList.remove("attacher-typeList-opened");
+	},
+
+	createTypeList: function() {
+		var wrap = $.e("div", {"class": "attacher-typeList"}), self = this;
+		for (var i = 0, j; i <= 12; ++i) {
+			j = Math.pow(2, i);
+
+			if (!(this.allowedTypes & j)) {
+				continue;
+			};
+
+			wrap.appendChild($.e("div", {
+				"class": "attacher-typeList-item",
+				html: lg(AttachmentController.langs[j]),
+				onclick: (function(k) {
+					return function(event) { self.openSelectWindow(k); }
+				})(j)
+			}));
+		};
+		this.wrapButton.appendChild(wrap);
+		return this.typeListNode = wrap;
+	},
+
+	getAttachmentString: function() {
+		return this.bundle.getString();
+	},
+
+	getGeo: function() {
+		return [];
+	},
+
+	openSelectWindow: function(typeId) {
+		var self = this;
+		switch (typeId) {
+			case APIDOG_ATTACHMENT_PHOTO:
+				var
+					albums,
+					loadAlbums = function(callback) {
+						if (albums) {
+							return callback(albums);
+						};
+
+						new APIRequest("photos.getAlbums", {ownerId: self.ownerId, extended: 1, needSystem: 1, needCovers: 1, v: 5.52})
+							.setOnCompleteListener(function(result) {
+								callback(albums = parse(result.items, VKPhotoAlbum));
+							})
+							.execute();
+					},
+					albumsListNode,
+					albumContents = {},
+					openAlbum = function(ownerId, albumId) {
+						if (albumContents[ownerId + "_" + albumId]) {
+							showAlbum(ownerId, albumContents[ownerId + "_" + albumId]);
+							return;
+						};
+
+						$.elements.clearChild(albumsListNode).appendChild(getLoader());
+
+						new APIRequest("photos.get", {ownerId: ownerId, albumId: albumId, v: 5.52, count: 1000, extended: 1})
+							.setOnCompleteListener(function(result) {
+								showAlbum(ownerId, albumContents[ownerId + "_" + albumId] = parse(result.items, VKPhoto));
+							})
+							.execute();
+					},
+					showAlbum = function(ownerId, photos) {
+						$.elements.clearChild(albumsListNode);
+						var list = $.e("div", {"class": "attacher-list-photos"});
+						photos.forEach(function(photo) {
+							var item = photo.getNodeItem();
+
+							$.event.add(item, "click", function(event) {
+								self.add(photo).done();
+							});
+
+							item.appendChild($.e("div", {
+								"class": "attacher-photo-checkbox",
+								onclick: function(event) {
+									this.classList.toggle("attacher-photo-checkbox-checked");
+									event.cancelBubble = true;
+									event.stopPropagation();
+								}
+							}));
+							list.appendChild(item);
+						});
+						albumsListNode.appendChild(list);
+					},
+					showAlbums = function(albums) {
+						$.elements.clearChild(albumsListNode);
+						var list = $.e("div", {"class": "attacher-list-albums"});
+						albums.forEach(function(album) {
+							list.appendChild(album.getNodeItem({ onClick: openAlbum }))
+						});
+						albumsListNode.appendChild(list);
+					},
+					tabs = [
+						{
+							name: "album",
+							title: lg("attacher.photoAlbum"),
+							content: albumsListNode = $.e("div", { append: getLoader() }),
+							onOpen: function() {
+								loadAlbums(showAlbums);
+							}
+						},
+						{
+							name: "file",
+							title: lg("attacher.photoFile"),
+							content: this.createFileForm(typeId)
+						},
+						{
+							name: "url",
+							title: lg("attacher.photoURL"),
+							content: this.createURLForm()
+						}
+					],
+					host = new TabHost(tabs, {});
+
+					this.open();
+					this.modal.setContent(host.getNode());
+				break;
+		};
+	},
+
+	createFileForm: function(typeId) {
+		var self = this, input, form = $.e("form", {
+			"class": "attacher-formfile-wrap",
+			append: [
+				$.e("div", {
+					"class": "attacher-formfile-label",
+					html: lg("attacher.fileSelect")
+				}),
+				input = $.e("input", {
+					type: "file",
+					name: "file", "class": "attacher-formfile-field"
+				})
+			]
+		});
+
+		$.event.add(input, "change", function(event) {
+			uploadFiles(input, {
+				maxFiles: self.maxCount - self.bundle.getCount(),
+				method: self.methods[APIDOG_ATTACHMENT_PHOTO == typeId ? "photo" : "document"],
+			}, {
+				onTaskFinished: function(result) {
+					var fx = APIDOG_ATTACHMENT_PHOTO == typeId ? VKPhoto : VKDocument;
+					result.forEach(function(item) {
+						self.add(new fx(item));
+					});
+					self.done();
+				}
+			});
+		});
+
+		return form;
+	},
+
+	createURLForm: function() {
+		var self = this,
+			field,
+			form = $.e("form", {
+				"class": "attacher-url-wrap",
+				append: $.e("span", {html: "В переработке..."}) /*field = $.e("input", {
+					type: "url",
+					autocomplete: "off"
+				})*/
+			}),
+
+			uploadImage = function(url) {
+				uploadFiles(null, {url: url}, {
+					onTaskFinished: function(result) {
+						var fx = APIDOG_ATTACHMENT_PHOTO == typeId ? VKPhoto : VKDocument;
+						self.add(new fx(result[0]));
+						self.done();
+					}
+				})
+			};
+
+		/*$.event.add(field, "keyup", function(event) {
+			var url = this.value.trim(),
+				isCorrect = /^https?:\/\//img.test(url) && url.length > 12,
+				testImage;
+
+			if (!isCorrect) {
+				return;
+			};
+
+			this.disabled = true;
+
+			testImage = new Image();
+			testImage.onerror = function() {
+				alert("invalid link: not image");
+				field.disabled = false;
+			};
+			testImage.onload = function() {
+				uploadImage();
+			};
+		});*/
+
+		$.event.add(form, "submit", function(event) {
+			event.preventDefault();
+			return false;
+		});
+
+		return form;
+	},
+
+	add: function(object) {
+		this.bundle.add(object);
+		return this;
+	},
+
+	done: function() {
+		this._onSelect(this.bundle);
+		this.modal.hide();
+		return this;
+	}
+};
+
+AttachmentController.langs = {
+	"1": "attacher.typePhoto",
+	"2": "attacher.typeVideo",
+	"4": "attacher.typeAudio",
+	"8": "attacher.typeDocument"
+};
+
+/**
+ * Контролер для смайлов и стикеров
+ * 07/08/2016: создан
+ */
+function SmileController(options) {
+
+};
+
+SmileController.prototype = {
+	getNode: function() {
+		return $.e("div");
+	}
 };
 
 var APIdogNoInitPage;
 function blank () {};
-
-// note: Антон пидор // 11/04/2016, 2:46 MSK

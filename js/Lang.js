@@ -9,6 +9,7 @@ var Lang = {
 	data: null,
 
 	load: function (callback) {
+		console.trace();
 		APIdogRequest("apidog.getLanguageData", {}, function (result) {
 			Lang.data = result.data;
 			callback && callback();
@@ -16,9 +17,6 @@ var Lang = {
 	},
 
 	get: function (category, variable, count) {
-		if (!Lang.data) {
-			return Lang.load();
-		};
 		if (category.indexOf(".") >= 0) {
 			category = category.split(".");
 			variable = category[1];

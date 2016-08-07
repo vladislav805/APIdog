@@ -37,15 +37,20 @@ function VKMessage (m) {
 	this.groupId = m.from_id < 0 ? -m.from_id : false;
 	this.peer = getPeerByMessage(this); // [type, id]
 	this.userId = m.user_id;
+	this.fromId = m.chatId ? m.userId : m.groupId ? m.groupId : m.userId;
 	this.date = m.date;
 	this.title = m.title;
 	this.text = m.body;
 	this.geo = m.geo;
 	this.attachments = m.attachments || [];
 	this.forwardedMessages = m.fwd_messages;
+	this.randomId = m.random_id;
 	this.isRead = !!m.read_state;
 	this.isOut = !!m.out;
 	this.isImportant = !!m.important;
+	this.action = m.action;
+	this.actionId = m.action_mid;
+	this.actionText = m.action_text;
 
 	this.photo_50 = m.photo_50;
 	this.photo_100 = m.photo_100;
@@ -117,15 +122,17 @@ VKMessage.prototype = {
 							append: [
 								this.isOut
 									? e("div", {
-										"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")})
+										"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")
+									  })
 									: null,
 									document.createTextNode($.getDate(this.date, 2))
 							]
 						}),
 						e("div", {
-							"class": "dialogs-right",
-							append:
+							"class": "dialogs-content",
+							append: [
 								e("div", {
+									"class": "dialogs-head",
 									append: [
 										e("span", {
 											"class": "tip",
@@ -133,37 +140,39 @@ VKMessage.prototype = {
 										}),
 										e("strong", {
 											html: Mail.Emoji(from.name)
-										}),
+										})
+									]
+								}),
+								e("div", {
+									"class": "n-f clearfix dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""),
+									append: [
 										e("div", {
-											"class": "n-f dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""),
 											append: [
-												e("div", {
-													append: [
-														e("span", {
-															"class": "dialogs-unread",
-															id: "ml" + fromId, html: unread || ""
-														}),
-														this.isOut
-															? e("img", {
-																src: getURL(API.photo_50),
-																"class": "dialogs-miniphoto"
-															  })
-															: null,
-														e("span", {
-															html: !this.action
-																? text
-																: IM.getStringActionFromSystemVKMessage(this)
-														})
-													]
+												e("span", {
+													"class": "dialogs-unread",
+													id: "ml" + fromId, html: unread || ""
 												}),
-												e("div", {
-													"class": "dialogs-attachments tip",
-													html: this.getAttachmentNamesString()
+												this.isOut
+													? e("img", {
+														src: getURL(API.photo_50),
+														"class": "dialogs-miniphoto"
+													  })
+													: null,
+												e("span", {
+													"class": "dialogs-minitext",
+													html: !this.action
+														? text
+														: IM.getStringActionFromSystemVKMessage(this)
 												})
 											]
+										}),
+										e("div", {
+											"class": "dialogs-attachments tip",
+											html: this.getAttachmentNamesString()
 										})
 									]
 								})
+							]
 						})
 				]})
 		]});
@@ -225,8 +234,221 @@ VKMessage.prototype = {
 		};
 
 		return attachments.join(", ");
+	},
+
+	getNode: function(o) {
+		var i = this;
+		IM.storage[this.messageId] = this;
+
+		var peerId = this.peer;
+
+		if (this.action)
+			return this.getNodeAction(o);
+
+		var e = $.e,
+			self = this,
+			u = Local.Users[this.fromId],
+			isSticker = this.attachments && this.attachments[0] && this.attachments[0].type === "sticker",
+			lc,
+
+			node = e("tr", {
+			"class": "imdialog-item imdialog-dialog" + peerId + " " + (this.isOut ? " imdialog-my" : "") + (isSticker ? " imdialog-item-sticker" : "") + (!this.isRead ? " imdialog-unread" : ""),
+			"data-message-id": this.messageId || "",
+			"data-message-random": this.randomId,
+			id: "imdialog-message" + this.messageId || 0,
+			append: [
+				peerId < 0
+					? e("td", {
+						"class": "imdialog-photo",
+						append: !this.isOut
+							? e("a", {
+								href: "#" + u.screen_name,
+								append: e("img", {
+									src: getURL(u.photo_50)
+								}),
+								title: u.first_name + " " + u.last_name
+							  })
+							: null
+						})
+					  : null,
+				e("td", {
+					append: e("div", {
+						"class": "imdialog-wrap",
+						append: [
+							e("div", {"class": "imdialog-arrow"}),
+							e("div", {"class": "imdialog-content", append: [
+								e("a", {
+									"class": "imdialog-time",
+									href: "#mail?act=item&id=" + this.messageId,
+									append: e("span", {html: IM.getTime(this.date)}),
+									/*title: (function (a, b, c, d, e, g) {
+								e = new Date(a * 1000);
+								d.forEach(function (f) {
+									g = b.push(e[c + f]());
+									g === 2 ? (b[--g] += 1) : (g > 3 ? ((b[--g] = IM.n2(b[g]))) : null);
+								});
+								return b.slice(0, 3).join(".") + " " + b.slice(3).join(":");
+							})(i.date, [], "get", ["Date", "Month", "FullYear", "Hours", "Minutes", "Seconds"]) : "",*/
+									onclick: function(event) {
+										if (!IM.getSelectedMessagesCount()) {
+											return true;
+										};
+
+										event.preventDefault();
+										event.stopPropagation();
+										return false;
+									}
+								}),
+								e("span", {
+									"class": "n-f",
+									html: Mail.Emoji(Site.Format(this.text))
+								}),
+								/*e("div", {
+									id: "msg-attach" + this.messageId,
+									append: this.getAttachments(this.attachments, this.messageId)
+								}),*/
+								/*this.getForwardedMessages(this.forwardedMessages),*/
+								this.geo
+									? this.getMap(this.geo)
+									: null
+							]})
+						]
+					})
+				})
+			]
+		});
+
+		$.event.add(node, "mousedown", function() {
+			if (!this.getAttribute("data-message-id")) {
+				return;
+			};
+
+			lc = +new Date();
+		});
+
+		$.event.add(node, "mouseup", function(event) {
+			if (!this.getAttribute("data-message-id")) {
+				return;
+			};
+
+			if (event.which == 1 && +new Date() - lc < 250) {
+				self.select(event);
+			}
+		});
+
+		return this.node = node;
+	},
+
+	getNodeAction: function() {
+		var e = $.e,
+			du = {
+				first_name: "DELETED",
+				last_name: "DELETED",
+				first_name_gen: "DELETED",
+				last_name_gen: "DELETED",
+				first_name_acc: "DELETED",
+				last_name_acc: "DELETED"
+			},
+			init = Local.Users[this.fromId] || du,
+			action = Local.Users[this.actionId] || du,
+			l = Lang.get,
+			parent = e("td", {colspan: 2, "class": "imdialog-item-action"}),
+			t = e("div", {"class": "imdialog-item-action-text"}),
+			basis,
+			act,
+			html;
+		switch (this.action) {
+			case "chat_kick_user":
+				basis = l("im.message_action_kick_source");
+				act = l("im.message_action_kick");
+				if (this.actionId == (this.fromId || this.userId)) {
+					basis = l("im.message_action_leave_source");
+					act = l("im.message_action_leave");
+				};
+				break;
+
+			case "chat_invite_user":
+			case "action_email":
+				basis = l("im.message_action_invite_source");
+				act = l("im.message_action_invite");
+				if (this.actionId == (this.fromId || this.userId)) {
+					basis = l("im.message_action_return_source");
+					act = l("im.message_action_return");
+				};
+				break;
+
+			case "chat_create":
+				basis = l("im.message_action_create_source");
+				act = l("im.message_action_create");
+				break;
+
+			case "chat_title_update":
+				basis = l("im.message_action_title_update_source");
+				act = l("im.message_action_title_update");
+				break;
+
+			case "chat_photo_update":
+				basis = l("im.message_action_chat_photo_update_source");
+				act = l("im.message_action_chat_photo_update");
+				break;
+
+			case "chat_photo_remove":
+				basis = l("im.message_action_chat_photo_remove_source");
+				act = l("im.message_action_chat_photo_remove");
+				break;
+		};
+		html = basis.schema({
+			"if": "<a href='#" + init.screen_name + "'>" + init.first_name.safe(),
+			il: init.last_name.safe() + "</a>",
+			af: "<a href='#" + action.screen_name + "'>" + action.first_name_acc.safe(),
+			al: action.last_name_acc.safe() + "</a>",
+			a: act[init.sex],
+			u: "",
+			t: "<strong>" + Mail.Emoji(this.actionText.safe()) + "</strong>"
+		});
+		t.innerHTML = html;
+		parent.appendChild(t);
+		return e("tr", {append: parent});
+	},
+
+	select: function() {
+		if (this.node.firstChild && this.node.firstChild.className == "__mail-deleted") {
+			return;
+		};
+
+		$.elements.toggleClass(this.node, VKMessage.CLASS_SELECTED);
+		var count = IM.getSelectedMessagesCount();
+		if (count < 100) {
+
+			var actions = $.element("imdialog-actions");
+			if (count > 0) {
+				$.elements.removeClass(actions, "hidden");
+				$.elements.addClass($.element("im-typing-wrap"), "hidden");
+			} else {
+				$.elements.addClass(actions, "hidden");
+				$.elements.removeClass($.element("im-typing-wrap"), "hidden");
+			}
+		} else {
+			$.elements.removeClass(this, VKMessage.CLASS_SELECTED);
+			Site.Alert({text: Lang.get("im.warning_select_no_more_than_100_messages")});
+		};
 	}
 
+};
+
+VKMessage.CLASS_SELECTED = "imdialog-selected";
+
+VKMessage.send = function(options) {
+	new APIRequest("messages.send", {
+		peer_id: toPeerId(options.peerId),
+		message: options.text,
+		attachment: options.attachments,
+		random_id: random(1, 9999999),
+		v: 5.52
+	}).setOnCompleteListener(function(result) {
+		var messageId = result;
+		// TODO: notify about new msg
+	}).execute();
 };
 
 function getPeerByMessage(msg) {
@@ -261,20 +483,23 @@ function getPeerId(id) {
 };
 
 // u123 -> [u, 123], g123 -> [g, 123], c123 => 123
-function parsePeerId (pId) { // u123 -> [u, 123]
+function parsePeer (pId) { // u123 -> [u, 123]
 	return [pId[0], parseInt(pId.substring(1))];
 };
 
 // [u, 123] -> 123, [g, 123] -> -123, [c, 123] -> 2000000123
+// u123 -> 123
 function toPeerId (peer) {
+	var t = peer[0];
+	peer = parseInt(Array.isArray(peer) ? peer[1] : peer.substring(1));
 	return {
-		u: peer[1],
-		g: -peer[1],
-		c: 2000000000 + peer[1]
-	}[peer[0]];
+		u: peer,
+		g: -peer,
+		c: 2000000000 + peer
+	}[t];
 };
 
-// u123 -> 123, g123 -> -123, c123 -> 2000000123
+// [u, 123] -> 123, [g,123] -> -123, [c,123] -> 2000000123
 function toPeer(peer) {
 	return toPeerId(peer.join(""));
 };

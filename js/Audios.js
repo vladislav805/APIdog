@@ -21,6 +21,14 @@ function VKAudio (a) {
 
 VKAudio.prototype = {
 
+	getAttachId: function() {
+		return this.getType() + this.ownerId + "_" + this.getId();
+	},
+
+	getType: function() {
+		return "audio";
+	},
+
 	/**
 	 * Returns string in "VK-style"
 	 */

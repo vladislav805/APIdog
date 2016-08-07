@@ -86,10 +86,18 @@
 		global $mDatabase;
 
 		if (!$mDatabase) {
-			return connectDatabase();
+			return $mDatabase = connectDatabase();
 		};
 
 		return $mDatabase;
+	};
+
+	/**
+	 * Закрытие коннекшена с БД
+	 */
+	function closeDatabase() {
+		global $mDatabase;
+		$mDatabase->close();
 	};
 
 	/**

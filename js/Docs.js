@@ -19,8 +19,12 @@ function VKDocument (d) {
 	this.isImage = !!this.preview100;
 	this.canModify = !!(this.ownerId > 0 && this.ownerId == API.userId || this.ownerId < 0 && Local.Users[this.ownerId] && Local.Users[this.ownerId].is_admin);
 };
-
 VKDocument.prototype = {
+	getAttachId: function() {
+		return this.getType() + this.ownerId + "_" + this.getId();
+	},
+	getId: function() { return this.documentId; },
+	getType: function() { return "doc"; },
 
 	getNode: function (actionBlock) {
 		if (this.node) {
@@ -32,7 +36,7 @@ VKDocument.prototype = {
 			wrap = e("a", {
 				"class": "doc-item",
 				onclick: function () {
-					if (isTouch()) {
+					if (isMobile) {
 						actionBlock.setItemForAction(context).show();
 					};
 				},
@@ -252,7 +256,6 @@ VKDocument.prototype = {
 			]
 		});
 	}
-
 };
 
 

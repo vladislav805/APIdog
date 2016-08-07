@@ -4,7 +4,7 @@
  * upd: -1
  */
 
-var TicketCommentActions = [
+/*var TicketCommentActions = [
 	{actionId: 0,	state: "Нет ответа", description: "Ожидание обработки"},
 	{actionId: 1,	state: "Есть ответ", description: "Отвечено"},
 	{actionId: 4,	state: "Подтверждено", description: "Подтвержденое"},
@@ -856,4 +856,4 @@ var Support = {
 		})($.e)});
 		var modal = new Modal({title: "Помощь по разметке", content: e, footer: [ { name: "close", title: "Закрыть", onclick: function () { modal.close() } } ]}).show();
 	}
-};
+};*/

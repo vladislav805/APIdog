@@ -156,7 +156,7 @@ VKUpload.prototype = {
 
 		if (typeof FormData == "function") {
 			var formData = new FormData();
-			formData.append("file", this.file);
+			formData.append(typeof this.file === "string" ? "url" : "file", this.file);
 			xhr.send(formData);
 		} else {
 			var reader = new FileReader();
@@ -186,7 +186,7 @@ VKUpload.prototype = {
 	},
 
 	getURL: function (method, params) {
-		return "/upload.port.v7.php?target=" + encodeURIComponent(JSON.stringify({
+		return "uploader.php?target=" + encodeURIComponent(JSON.stringify({
 			method: method,
 			params: params
 		})) + "&authKey=" + API.userAuthKey;

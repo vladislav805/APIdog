@@ -597,28 +597,33 @@ var Site = {
 	setHeader: function (title, backButton) {
 		document.title = "APIdog | " + title;
 		g("head-title").innerHTML = title;
+
+		if (backButton !== undefined) {
+			Site.setBackHeader(backButton);
+		};
+
 		return Site;
 	},
 
-	SetHeader: function (title, back) {
-		Site.setHeader(title, back);
-		//Site.SetBackButton(back);
-	},
-	SetBackButton: function (obj) {
-		var link = $.element("miniplayer"),
-			arrow = $.element("_header_arrow");
-		if (!obj) {
-			link.setAttribute("data-url", "");
-			link.onclicked = null;
-			$.elements.addClass(arrow, "hidden");
+	setBackHeader: function(backButton) {
+		var bb = g("head-content");
+		if (backButton) {
+			bb.classList.add("head-back");
+			bb.onclick = function() {
+				if (typeof backButton === "function") {
+					backButton();
+				} else {
+					nav.go(backButton);
+				};
+			};
 		} else {
-			if (obj.link)
-				link.setAttribute("data-url", obj.link);
-			if (obj.fx)
-				link.onclicked = obj.fx;
-			$.elements.removeClass(arrow, "hidden");
-		}
+			bb.classList.remove("head-back");
+			bb.onclick = null;
+		};
 	},
+
+	SetHeader: function (title, back) { Site.setHeader(title, back); },
+	SetBackButton: function (obj) {  },
 
 	EmptyField: function (text) {
 		return $.e("div", {"class": "msg-empty", html: text});

@@ -44,6 +44,7 @@
 
 				print $pagination;
 				template(APIdogTemplateBottom);
+				closeDatabase();
 				break;
 
 			case "create":
@@ -57,6 +58,7 @@
 				$adminId = (int) userId;
 
 				$postId = $blog->addPost($title, $text, $adminId);
+				closeDatabase();
 
 				header("Location: ?postId=" . $postId);
 				exit;
@@ -83,6 +85,7 @@
 
 				print $pagination;
 				template(APIdogTemplateBottom);
+				closeDatabase();
 		};
 
 	} else {
@@ -97,6 +100,7 @@
 				};
 
 				$result = $blog->deletePost($postId);
+				closeDatabase();
 
 				exit(header("Location: ?"));
 				break;
@@ -104,6 +108,8 @@
 			default:
 
 				$post = $blog->getPost($postId);
+
+				closeDatabase();
 
 				if (!$post) {
 					exit(header("Location: ?"));

@@ -4,6 +4,87 @@
  * upd: -1
  */
 
+// from v7.0
+// need refactor and rewrite base
+function VKPhoto (p) {
+	var photo = this;
+	photo.photoId = p.id;
+	photo.albumId = p.album_id;
+	photo.ownerId = p.owner_id;
+	photo.photo75 = p.photo_75;
+	photo.photo130 = p.photo_130;
+	photo.photo604 = p.photo_604;
+	photo.photo807 = p.photo_807;
+	photo.photo1280 = p.photo_1280;
+	photo.photo2560 = p.photo_2560;
+	photo.width = p.width;
+	photo.height = p.height;
+	photo.description = p.text;
+	photo.date = p.date;
+	photo.latitude = p.lat;
+	photo.longitude = p.long;
+	photo.postId = p.post_id;
+	photo.likes = p.likes && p.likes.count;
+};
+VKPhoto.prototype = {
+	getAttachId: function() {
+		return this.getType() + this.getId();
+	},
+	getType: function () { return "photo" },
+	getId: function () { return this.ownerId + "_" + this.photoId },
+
+	/**
+	 * Returns the largest photo (original)
+	 *
+	 * @return   {String}   URL photo
+	 */
+	getMaxSizePhotoURL: function () {
+		return this.photo2560 || this.photo1280 || this.photo807 || this.photo604;
+	},
+
+	getNode: function () {
+		//return $("<a href='/photo" + this.getId() + "' onclick='return go(this, event);'><img src='" + this.photo807 + "' alt='' /></a>");
+	},
+
+	getNodeItem: function() {
+		var e = $.e;
+		return e("div", {"class": "attacher-photo-item", append: e("img", {src: this.photo604})});
+	}
+};
+
+function VKPhotoAlbum(a) {
+	this.ownerId = a.owner_id;
+	this.albumId = a.id || a.album_id;
+	this.title = a.title;
+	this.description = a.description;
+	this.size = a.size;
+	this.thumbnail = a.thumb_src;
+	this.dateCreated = a.created;
+	this.dateUpdated = a.updated;
+};
+
+VKPhotoAlbum.prototype = {
+	getId: function() { return this.ownerId + "_" + this.albumId; },
+	getNodeItem: function(options) {
+		options = options || {};
+		var e = $.e,
+			self = this,
+			node = e("div", {
+				"class": "attacher-album-item",
+				style: "background: url(" + this.thumbnail + ") no-repeat; background-size: cover;",
+				append: e("div", {"class": "attacher-album-title", html: this.title.safe()})
+			});
+
+		if (options.onClick) {
+			$.event.add(node, "click", function(event) {
+				options.onClick(self.ownerId, self.albumId);
+			});
+		};
+
+		return node;
+	}
+};
+
 var Photos = {
 	Resolve: function (url) {
 		var albums = /^photos(-?\d+)?$/img,
