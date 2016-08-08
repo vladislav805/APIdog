@@ -72,14 +72,14 @@
 
 		$json = json_encode($json, JSON_UNESCAPED_UNICODE);
 
-		$fh = fopen("./" . $languageId . ".json", "w+");
+		$fh = fopen($languageId . ".json", "w+");
 		fwrite($fh, $json);
 		fclose($fh);
 		header("Location: ?languageId=" . $languageId);
 		exit;
 	};
 
-	$data = json_decode(file_get_contents("./" . $languageId . ".json"));
+	$data = json_decode(file_get_contents($languageId . ".json"));
 
 ?>
 <style>

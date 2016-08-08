@@ -104,8 +104,7 @@
 	 * Логаут
 	 */
 	function gotoLogout () {
-		exit("LOGOUT REQUIRED");
-		header("Location: /auth.php?act=logout&ts=" . time());
+		header("Location: auth.php?act=logout&ts=" . time());
 		exit;
 	};
 
@@ -490,7 +489,7 @@ var_dump($user, $authKey);
 	if (!function_exists("escape")) {
 		/**
 		 * Функция для "обезопашивания" строк для записи в БД
-		 * @param  String &$string Строка, которую нужно экранировать
+		 * @param  String $string Строка, которую нужно экранировать
 		 * @return String          Результат, безопасная строка
 		 */
 		function escape($string) {

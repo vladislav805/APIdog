@@ -391,6 +391,11 @@ Modal.prototype = {
 		return this;
 	},
 
+	setOnScroll: function(fx) {
+		this._onScrollCallback = fx;
+		return this;
+	},
+
 	_hasCloseButton: function () {
 		var found = false;
 

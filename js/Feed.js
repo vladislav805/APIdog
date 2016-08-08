@@ -8,46 +8,39 @@ var Feed = {
 	Filter: "",
 	GetTabs: function () {
 		return Site.CreateTabPanel([
-			["feed", Lang.get("feed.tabs_feed")],
-			["feed?act=notifications", Lang.get("feed.tabs_notifications")],
-			["feed?act=comments", Lang.get("feed.tabs_comments")],
-			["feed?act=friends", Lang.get("feed.tabs_updates_friends")],
-			["feed?act=search", Lang.get("feed.tabs_search")]
+			["feed", lg("feed.tabFeed")],
+			["feed?act=notifications", lg("feed.tabNotifications")],
+			["feed?act=comments", lg("feed.tabComments")],
+			["feed?act=friends", lg("feed.tabUpdatesFriends")],
+			["feed?act=search", lg("feed.tabSearch")]
 		]);
 	},
+
 	RequestPage: function () {
 		var start = new Date();
 		start.setTime(start.getTime() - 1000 * 60 * 60 * 24 * 14);
 		start = parseInt(start / 1000);
-		switch (Site.Get("act")) {
+
+		switch (getAct()) {
+
 			case "comments":
-				Site.API("execute", {
-					code: "return API.newsfeed.getComments({offset:%o,from:%f,count:30,allow_group_comments:1,last_comments:1,fields:\"photo_50,online,first_name_dat,last_name_dat\",v:5.30});"
-						.replace(/%o/img, Site.Get("offset"))
-						.replace(/%f/img, Site.Get("from"))
-				}, Feed.showComments);
-			break;
+				return new APIRequest("execute", {
+					code: "return API.newsfeed.getComments({offset:Args.o,from:Args.f,count:30,allow_group_comments:1,last_comments:1,fields:\"photo_50,online,first_name_dat,last_name_dat\",v:5.30});",
+						o: getOffset(),
+						f: Site.Get("from")
+				}).setOnCompleteListener(Feed.showComments).execute();
+
 			case "search":
-				return Feed.search({q: Site.Get("q") || "", offset: Site.Get("offset")});
-			break;
+				return Feed.search({q: Site.Get("q") || "", offset: getOffset()});
+
 			case "notifications":
 				Site.Loader();
-				Site.APIExecute([
-					{
-						method: "notifications.get",
-						params: {
-							count: 40,
-							start_time: start,
-							filters: "wall,mentions,comments,likes,reposts,followers,friends",
-							v: 5.14
-						}
-					},
-					{
-						method: "notifications.markAsViewed",
-						params: {}
-					}
-				], Notifications.getItems);
-			break;
+				return new APIRequest("execute", {
+					code: "API.notifications.markAsViewed();return API.notifications.get({count:40,start_time:Args.start,filters:Args.filters,v:5.52});",
+					start_time: start,
+					filters: "wall,mentions,comments,likes,reposts,followers,friends",
+				}).setOnCompleteListener(Notifications.getItems).execute();
+
 			case "friends":
 				Site.APIv5("newsfeed.get", {start_time: start, count: 30, filters: "friend", v: 5.14}, Feed.getFriends);
 			break;
@@ -78,7 +71,8 @@ var Feed = {
 					requests.push({
 						method: "newsfeed.getLists",
 						params: {}
-					})
+					});
+
 				Site.APIExecute(requests, Feed.getFeed);
 		}
 	},
@@ -94,29 +88,30 @@ var Feed = {
 			Site.setCounters(data[0]);
 		if (data[2])
 			Feed.Filters = data[2];
+	console.log(data);
 		var parent = document.createElement("div"),
 			list = document.createElement("div"),
 			count = (data = data[1]).count,
 			next = data.next_from,
-			users = data.profiles.concat(data.groups),
+			users = Local.add(data.profiles.concat(data.groups)),
 			data = data.items;
-		Local.AddUsers(users);
+console.log(data);
 		Feed.getItems(list, data, count, next);
 		parent.appendChild(Feed.GetTabs());
-		parent.appendChild(Site.CreateHeader(Lang.get("feed.newsfeed"), $.e("a", {"class": "fr", html: Lang.get("feed.filter"), onclick: Feed.getBanned})));
+		parent.appendChild(Site.CreateHeader(lg("feed.newsfeed"), $.e("a", {"class": "fr", html: lg("feed.filter"), onclick: Feed.getBanned})));
 		parent.appendChild(Feed.getSelectionsTabs());
 		parent.appendChild(list);
 		Site.Append(parent);
-		Site.SetHeader(Lang.get("feed.header_title"));
+		Site.SetHeader(lg("feed.headTitle"));
 	},
 	getSelectionsTabs: function () {
 		var e = Site.CreateTabPanel([
-			["feed", Lang.get("feed.tabs_feed_selections")],
-			["feed?filter=photos", Lang.get("feed.tabs_photos")],
-			["feed?lists=friends", Lang.get("feed.tabs_friends")],
-			["feed?lists=groups,pages", Lang.get("feed.tabs_groups")],
-			["feed?act=recommends", Lang.get("feed.tabs_recommends")],
-			["feed?act=select_list", Lang.get("feed.tabs_select")]
+			["feed", lg("feed.tabFeedSelections")],
+			["feed?filter=photos", lg("feed.tabPhotos")],
+			["feed?lists=friends", lg("feed.tabFriends")],
+			["feed?lists=groups,pages", lg("feed.tabGroups")],
+			["feed?act=recommends", lg("feed.tabRecommends")],
+			["feed?act=select_list", lg("feed.tabSelect")]
 		]);
 		$.elements.addClass(e, "feed-tabs-selector");
 		return e;
@@ -186,7 +181,7 @@ var Feed = {
 			}));
 			right.appendChild($.elements.create("div", {append: [
 				$.elements.create("a", {href: "#" + user.screen_name, html: (user.name || user.first_name + " " + user.last_name + Site.isOnline(user)), "class": "bold"}),
-				$.elements.create("span", {"class": "tip", html: " " + Lang.get("feed.events_added_photos_verb")[user.sex || 0] + " " + photos.count + " " + Lang.get("feed", "events_added_photos_photos", photos.count)})
+				$.elements.create("span", {"class": "tip", html: " " + lg("feed.eventsAddedPhotosVerb")[user.sex || 0] + " " + photos.count + " " + Lang.get("feed", "eventsAddedPhotosPhotos", photos.count)})
 			]}));
 			for (var i = 0; i < photos.items.length; ++i)
 				list.appendChild(Photos.itemPhoto(Photos.v5normalize(photos.items[i])));
@@ -214,7 +209,7 @@ var Feed = {
 			right.appendChild(e("div", {append: [
 				e("a", {"class": "bold", href: "#" + owner.screen_name, html: owner.first_name + " " + owner.last_name + Site.isOnline(owner)}),
 				document.createTextNode(" "),
-				e("span", {"class": "tip", html: Lang.get("feed.friends_added")[owner.sex] + " " + count + " " + Lang.get("feed", "friends_friends", count) + ": "}),
+				e("span", {"class": "tip", html: lg("feed.friendsAdded")[owner.sex] + " " + count + " " + lg("feed", "friendsFriends", count) + ": "}),
 				nodes[0],
 				nodes[1]
 			]}));
@@ -253,7 +248,7 @@ var Feed = {
 				if (i + 1 == l)
 					break;
 				if (i + 2 == l) {
-					t.appendChild(document.createTextNode(Lang.get("general.and")));
+					t.appendChild(document.createTextNode(lg("general.and")));
 					continue;
 				}
 				t.appendChild(document.createTextNode(", "));
@@ -362,7 +357,7 @@ var Feed = {
 		parent.appendChild(Site.CreateHeader("Списки новостей"));
 		parent.appendChild(Feed.getSelectionsTabs());
 		parent.appendChild(list);
-		parent.appendChild(Site.CreateNextButton({text: Lang.get("feed.lists_recommend"), link: "#groups?act=recommends"}));
+		parent.appendChild(Site.CreateNextButton({text: lg("feed.listsRecommend"), link: "#groups?act=recommends"}));
 		Site.Append(parent);
 		Site.SetHeader("Списки новостей");
 	},

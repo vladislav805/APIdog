@@ -5,6 +5,8 @@
  */
 
 var Groups = {
+	// need refactor
+	// need rewrite
 	RequestPage: function (ownerId) {
 		switch(Site.Get("act")) {
 			case "invites":
@@ -87,6 +89,9 @@ var Groups = {
 		}
 	},
 	Groups:{},
+
+	// need refactor
+	// need rewrite
 	GenerateList: function (ownerId, list){
 		Groups.Groups[ownerId] = list;
 		var elem = document.createElement("div"),
@@ -121,6 +126,9 @@ var Groups = {
 		Site.SetHeader("Список групп");
 		Site.Append(elem);
 	},
+
+	// need refactor
+	// need rewrite
 	Item: function (c, opts) {
 		var current = document.createElement("a");
 		current.href = "#" + c.screen_name;
@@ -260,13 +268,14 @@ var Groups = {
 			]
 		}).show();
 	},
-	GeneratePage:function(data){
+
+	// need refactor
+	// need rewrite
+	display: function(group, wall) {
 		var elem = document.createElement("div"),
 			elem_info = document.createElement("div"),
-			group = data.club,
-			info = group.club,
+			info = group, // for compatible
 			counters = info.counters,
-			wall = group.wall,
 			gid = info.id,
 			infoblock = document.createElement("div"),
 			media = [],
@@ -465,8 +474,8 @@ var Groups = {
 			else
 				elem.appendChild(Site.EmptyField("Доступ к стене ограничен"));
 		};
-		Site.SetHeader({page: "Страница", group: "Группа", event: "Встреча"}[info.type] +" " + Site.Escape(info.name));
-		Site.Append(elem);
+		Site.setHeader({page: "Страница", group: "Группа", event: "Встреча"}[info.type] +" " + Site.Escape(info.name));
+		Site.append(elem);
 	},
 	Join:function(gid,btn,closed){
 		btn.disabled=true;

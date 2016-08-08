@@ -357,8 +357,7 @@ var Site = {
 			Polls:      /^poll(-?\d+)_(\d+)$/ig,
 			Dev:		/^dev(\/([A-Za-z0-9\._]+))?$/ig,
 			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig,
-			Blog:		/^blog$/ig,
-			Profile:    /(.*)/ig
+			Blog:		/^blog$/ig
 		};
 
 		if (/^([^\/]+)\/([^\?]+)/img.test(url)) {
@@ -426,11 +425,40 @@ var Site = {
 				if (!id)
 					id = API.uid;
 				window[current].RequestPage(id);
-				break;
+				return;
 			}
 		}
-		return 0;
+		return Site.requestPageByScreenName(url);
 	},
+
+	requestPageByScreenName: function(screenName) {
+		new APIRequest("execute", {
+			code:'var c=API.account.getCounters({v:5.11}),d=API.utils.resolveScreenName({screen_name:Args.q}),w=d.object_id,o=parseInt(Args.o);if(!d.length)return{t:0};if(d.type=="user"){API.stats.viewUser({user_id:w});var u=API.users.get({user_ids:w,fields:Args.f})[0];return{t:"u",c:c,w:API.wall.get({owner_id:w,extended:1,offset:o,count:25}),u:u,e:{p:API.wall.get({owner_id:w,filter:"postponed"}).count}};}else if(d.type=="group"){API.stats.viewGroup({group_id:w});var c=API.groups.getById({group_id:w,fields:Args.f,extended:1})[0];return{t:"g",c:c,w:API.wall.get({owner_id:-w,extended:1,offset:o,count:25}),g:c,e:{s:API.wall.get({owner_id:-w,filter:"suggests"}).count,p:API.wall.get({owner_id:-w,filter:"postponed"}).count},r:API.groups.getRequests({group_id:w}).count};}else return{t:"a",a:API.apps.get({app_id:w})};',
+
+			q: screenName,
+			o: getOffset(),
+			f: "description,wiki_page,members_count,links,activity,place,ban_info,start_date,finish_date,sex,photo_rec,friend_status,photo_id,maiden_name,online,last_seen,counters,activites,bdate,can_write_private_message,status,can_post,city,country,exports,screen_name,blacklisted,blacklisted_by_me,are_friends,first_name_gen,first_name_ins,site,common_count,contacts,relation,nickname,home_town,verified,can_see_gifts,is_favorite,friend_status,crop_photo"
+		}).setOnErrorListener(function(e) {
+			console.error(e);
+		}).setOnCompleteListener(function(result) {
+			Site.setCounters(result.c);
+			console.log(result);
+			switch (result.t) {
+				case "u":
+					return Profile.display(result.u, result.w);
+
+				case "g":
+					return Groups.display(result.g, result.w);
+
+				case "a":
+					return Apps.display(result.a);
+
+				default:
+					new Snackbar({text: "О_о", duration: 1000}).show();
+			};
+		}).execute();
+	},
+
 	queue: [],
 	queueTimer: null,
 	queueUser: function (userId) {
@@ -598,9 +626,7 @@ var Site = {
 		document.title = "APIdog | " + title;
 		g("head-title").innerHTML = title;
 
-		if (backButton !== undefined) {
-			Site.setBackHeader(backButton);
-		};
+		Site.setBackHeader(backButton);
 
 		return Site;
 	},
@@ -1056,6 +1082,9 @@ var Site = {
 		}
 	},
 	CreateHeader: function (left, right, opts) {
+
+		return Site.getPageHeader(left, right, opts);
+
 		if (!opts) opts = {};
 		var head = document.createElement("div");
 		head.className = (!opts.className ? "hider-title" : opts.className) + " sizefix";

@@ -5,284 +5,200 @@
  */
 
 var Profile = {
-	RequestPage: function (screen_name) {
+	RequestPage: function (screenName) {
 		switch(Site.Get("act")) {
+
+			// deprecated
 			case "info":
-				return Profile.ShowFullInfo(screen_name);
+				return Profile.ShowFullInfo(screenName);
 
 			case "requests":
-				return Groups.getRequests(screen_name);
+				return Groups.getRequests(screenName);
 
+			// deprecated
 			case "members":
-				return Groups.Members(screen_name, getOffset());
+				return Groups.Members(screenName, getOffset());
 
+			// deprecated
 			case "blacklist":
-				return Groups.Blacklist.Request(screen_name, getOffset());
+				return Groups.Blacklist.Request(screenName, getOffset());
 
+			// deprecated
 			case "stat":
-				return Groups.Stat.Request(screen_name);
+				return Groups.Stat.Request(screenName);
 
+			// deprecated
 			case "followers":
-				return Profile.Followers(screen_name);
+				return Profile.Followers(screenName);
 
+			// deprecated
 			case "subscriptions":
-				return Profile.Subscriptions(screen_name, (Site.Get("type") ? 1 : 0));
+				return Profile.Subscriptions(screenName, (Site.Get("type") ? 1 : 0));
 
+			// deprecated
 			case "links":
-				return Groups.ShowLinks(screen_name);
+				return Groups.ShowLinks(screenName);
 
+			// deprecated
 			case "contacts":
-				return Groups.ShowContacts(screen_name);
+				return Groups.ShowContacts(screenName);
 
+			// deprecated
 			case "search":
-				return Feed.searchByOwner(screen_name, Site.Get("q"), getOffset());
+				return Feed.searchByOwner(screenName, Site.Get("q"), getOffset());
 
+			// deprecated
 			case "report":
-				return Profile.ShowReportPage(screen_name);
+				return Profile.ShowReportPage(screenName);
 
+			// deprecated
 			case "photo":
-				var group = Local.getUserByDomain(screen_name);
+				var group = Local.getUserByDomain(screenName);
 				if (!group || group && !group.is_admin)
-					return setLocation(screen_name);
+					return setLocation(screenName);
 				return Groups.showChangerPhoto(group.id || group.gid);
 
 			default:
-				var offset=0;
-				Site.Loader();
-				Site.API("execute",{
-					code:'var q="' + screen_name + '",c=API.account.getCounters({v:5.11}),d=API.utils.resolveScreenName({screen_name:q}),w=d.object_id;if(!d.length)return{type:0};if(d.type=="user"){API.stats.viewUser({user_id:w});var u=API.users.get({user_ids:w,fields:"sex,photo_rec,photo_id,maiden_name,online,last_seen,counters,activites,bdate,can_write_private_message,status,can_post,city,country,exports,screen_name,blacklisted,blacklisted_by_me,are_friends,first_name_gen,first_name_ins,site,common_count,contacts,relation,nickname,home_town,verified,can_see_gifts,is_favorite,friend_status,crop_photo"})[0];return{type:d.type,c:c,user:{user:u,wall:API.wall.get({owner_id:w,extended:1,offset:%offset%,count:25}),e:{p:API.wall.get({owner_id:w,filter:"postponed"}).count}}};}else if(d.type=="group"){API.stats.viewGroup({group_id:w});var c=API.groups.getById({group_id:w,fields:"photo_pec,description,wiki_page,contacts,members_count,links,verified,counters,can_post,status,activity,city,country,site,place,ban_info,start_date,finish_date,is_favorite",extended:1})[0];return{type:d.type,c:c,club:{club:c,wall:API.wall.get({owner_id:-w,extended:1,offset:%offset%,count:25}),e:{s:API.wall.get({owner_id:-w,filter:"suggests"}).count,p:API.wall.get({owner_id:-w,filter:"postponed"}).count},r:API.groups.getRequests({group_id:w}).count}};}else return API.apps.get({app_id:w});'
-						.replace(/%offset%/img, Site.Get("offset"))
-				}, Profile.GeneratePage);
+
+
+
 		}
 	},
-	GeneratePage:function(data){
-		data=Site.isResponse(data);
-		console.log("APIdog->getDataByScreenName: ", data);
-		if (!data.type) {
-			Site.SetHeader("Не найдено");
-			Site.Alert({text: "Такой страницы не существует"});
-			Site.Append(Site.EmptyField("Такой страницы не существует.<br><a href='\/\/vk.com\/" + window.location.hash.replace("#", "") + "' target='_blank'>Открыть эту страницу на vk.com<\/a>"));
-			return;
-		}
-		if (data.error&&data.error.error_code)
-			return alert("Ошибка!");
-		if (data.type=="group")
-			return Groups.GeneratePage(data);
-		else if (data.type != "user")
-			return Apps.showItem(data);
-		Site.setCounters(data.c);
-		var elem = document.createElement("div"),
-			elem_info = document.createElement("div"),
-			elem_media = document.createElement("div"),
-			user = data.user,
-			info = user.user,
-			areFriends = info.friend_status,
-			counters = info.counters || {},
-			wall = user.wall,
-			uid = info.id,
-			f = user.friends,
-			deleted = info.deactivated,
-			active = !deleted,
-			isFav = info.is_favorite,
-			bl = info.blacklisted,
-			thumb = info.crop_photo && info.crop_photo.photo && (info.crop_photo.photo.owner_id + "_" + info.crop_photo.photo.id) || info.photo_id;
-		if (info.deactivated)
-			areFriends = 3;
-		elem.appendChild(
-			Site.CreateHeader(
-				"<strong>" + Site.Escape(info.first_name + " " + info.last_name + (info.maiden_name ? " (" + info.maiden_name + ")" : "")) + "<\/strong>",
-				Site.CreateDropDownMenu(Lang.get("general.actions"), (function () {
-					var opts = {},
-						_uid = uid;
-					if (uid != API.uid) {
-						switch (areFriends) {
-							case 0:
-							case 2:
-								opts[areFriends == 0 ? Lang.get("profiles.acts_add_friend") : Lang.get("profiles.acts_accept_request")] = function (event) {
-									Friends.Add(uid, function (data) {
-										data = Site.isResponse(data);
-										Site.Alert({
-											text: [Lang.get("profiles.acts_friend_sent"), Lang.get("profiles.acts_friend_agreed"), null, Lang.get("profiles.acts_friend_secondarary")][data - 1]
-										});
-										Site.Go(window.location.hash.replace("#", ""));
-									});
-								};
-								if (areFriends == 2) {
-									opts[Lang.get("profiles.acts_friend_cancel_friend")] = function (event) {
-										Friends.Delete(uid, function (data) {
-											if (!data.response)
-												return Site.Alert({text: data.error && data.error.error_msg});
-											data = Site.isResponse(data);
-											Site.Alert({
-												text: Lang.get("profiles.request_cancelled")
-											});
-											Site.Go(window.location.hash.replace("#", ""));
-										})
-									}
-								}
-							break;
-							case 1:
-							case 3:
-								opts[areFriends == 1 ? Lang.get("profiles.acts_friend_cancel_request") : Lang.get("profiles.acts_friend_delete")] = function (event) {
-									Friends.Delete(uid, function (data) {
-										data = Site.isResponse(data);
-										Site.Alert({
-											text: [Lang.get("profiles.acts_friend_deleted"), Lang.get("profiles.acts_friend_request_deleted"), Lang.get("profiles.reccomendation_deleted")][data - 1]
-										});
-										Site.Go(window.location.hash);
-									});
-								}
-							break;
-						};
-						if (active) {
-							opts[Lang.get("profiles.acts_report")] = function (event) {
-								window.location.hash = "#" + info.screen_name + "?act=report";
-							};
-							opts[!info.blacklisted_by_me ? Lang.get("profiles.acts_block") : Lang.get("profiles.acts_unblock")] = function (event) {
-								Site.API("account." + (!info.blacklisted_by_me ? "" : "un") + "banUser", {
-									user_id: _uid
-								}, function (data) {
-									data = Site.isResponse(data);
-									if (data === 1) {
-										var user = Local.Users[_uid], prefix = ("оа ".split("")[user.sex]);
-										Site.Alert({
-											text: Site.Escape(user.first_name) + " " + (!info.blacklisted_by_me ? ("занесен" + prefix + " в черный список") : "удален" + prefix + " из черного списка") // TODO Lang
-										});
-									}
-								});
-							}
-						};
-					};
-					if (active) {
-						opts[Lang.get("profiles.acts_date_registration")] = function () {
-							APIdogRequest("apidog.getUserDateRegistration", { userDomain: uid }, Profile.Registered);
-						};
-						opts[Lang.get("profiles.acts_last_activity")] = function () {
-							Site.API("execute", {
-								code: "var u=API.users.get({user_ids:%u,fields:\"last_seen,sex,online\",v:5.28})[0],a,t=API.utils.getServerTime()-u.last_seen.time;if(!u)return 0;if(u.online_app)a=API.apps.get({app_id:u.online_app});return{u:u,t:t,a:a};".replace(/%u/img, uid)
-							}, function (data) {
-								data = Site.isResponse(data);
-								var user = data.u,
-									a = data.a,
-									left = data.t,
-									str = user.first_name + " " + Lang.get("general.was_sex")[user.sex] + " ",
-									pl = user.last_seen.platform;
 
-								if (pl === 1) {pl = false; user.online_mobile = true;};
-								if (pl === 7) {pl = false; user.online = true;};
 
-								Site.Alert({
-									text:
-										str +
-										(left > 3600
-											? $.getDate(user.last_seen && user.last_seen.time || 0)
-											: function (d) {
-												var t = [Math.floor(left / 60 % 60), Math.floor(left % 60)];
-												return (
-													t[0] > 0
-														? t[0] + " " + $.textCase(t[0], ["минуту", "минуты", "минут"]) + " и "
-														: ""
-												) +
-												t[1] +
-												" " +
-												$.textCase(t[1], ["секунду", "секунды", "секунд"]) + " назад";
-											}(left)
-										) + (
-											a || pl
-												? " через приложение &laquo;" + (a && a.title || ["мобильный", "iPhone", "iPad", "Android", "Windows Phone", "Windows 8", "ПК"][pl - 1]) + "&raquo;"
-												: (user.online_mobile
-													? " через мобильный"
-													: " через ПК"
-												)
-										)
-								});
-							});
-						};
-					} else
-						opts[Lang.get("profiles.counters_photos")] = function (event) { setLocation("photos" + uid); };
-					if (API.uid != uid)
-						opts[isFav ? "Удалить из закладок" : "Добавить в закладки"] = function (event) {
-							Site.API("fave." + (isFav ? "remove": "add") + "User", {
-								user_id: uid,
-							}, function (data) {
-								if (data.response)
-									Site.Go(window.location.hash);
-							});
-						};
-					opts[Lang.get("questions.head_list")] = function (event) {
-						setLocation("questions?id=" + uid);
-					};
-					opts[Lang.get("profiles.acts_update")] = function () {
-						Site.Go(window.location.hash.substring(1));
-					};
-/*					if (Site.Get("_slsu") || API.isAdmin)
-						opts["Последнее использование APIdog"] = function () {
-							Profile.showLastSeenAPIdog(uid);
-						};
-*/					return opts;
-				})())
-			)
-		);
-		var ava = $.e("img", {src: getURL(info.photo_rec), alt: ""}),
-			isPhoto = info.photo_id,
-			location = [];
-		if (info.country && info.country.title)
-			location.push(info.country.title);
-		if (info.city && info.city.title)
-			location.push(info.city.title);
-		elem_info.appendChild($.elements.create("div", {"class": "profile-info", append: [
-			$.elements.create("div", {"class": "profile-left", append: isPhoto ? $.elements.create("a", {
-				href: "#photo" + thumb,
-				append: ava
-			}) : ava}),
-			$.elements.create("div", {"class": "profile-right", append: [
-				$.elements.create("strong", {html: info.first_name + (info.nickname ? " " + info.nickname : "") + " " + info.last_name + Site.isVerify(info) + Site.isOnline(info, 1)}),
-				(!info.status_audio ? $.elements.create("div", {"class": (API.uid == uid ? "profile-status" : "") + (!info.status ? " tip" : ""), "data-status": info.status, onclick: (function (a) {return (a ? function (event) {Profile.EditStatus(this);} : function ( ) {});})(API.uid == uid), html: (Mail.Emoji(Site.Escape(info.status) || "") || (API.uid == uid ? Lang.get("profiles.status_change") : ""))}) : (function (a) {return Audios.Item(a, {from: 2, set: 32, lid: Audios.createList(a).lid, removeBroadcast: (API.uid == info.id), uid: info.id});
-				})(info.status_audio)),
-				$.elements.create("div", {"class": "tip", html: location.join(", ")}),
-				(info.can_write_private_message && API.uid != uid ? $.elements.create("a", {"class": "btn", href: "#im?to=" + uid, html: Lang.get("profiles.write_message"), style: "margin: 4px 0 2px; text-align: center;"}) : null)
+	display: function (user, wall) {
+		console.log("APIdog Profile", user, wall);
+
+		var e = $.e,
+			wrap = e("div", {"class": "profile"}),
+			nodeInfo = document.createElement("div"),
+			nodeMedia = document.createElement("div"),
+
+			info = user, // for compatible
+
+			friendStatus = info.friend_status,
+			counters = user.counters || {},
+			userId = user.id,
+			isDeleted = user.deactivated,
+			isActive = !isDeleted,
+			isFav = user.is_favorite,
+			bl = user.blacklisted,
+			thumb = user.crop_photo && user.crop_photo.photo && (user.crop_photo.photo.owner_id + "_" + user.crop_photo.photo.id) || user.photo_id;
+
+		if (user.deactivated) {
+			friendStatus = 3;
+		};
+
+
+		var photo = e("img", {src: getURL(user.photo_rec), alt: ""}),
+			isPhoto = user.photo_id,
+			location = [],
+			status = Profile.getStatusNode(user);
+
+		if (user.country && user.country.title) {
+			location.push(user.country.title);
+		};
+
+		if (user.city && user.city.title) {
+			location.push(user.city.title);
+		};
+
+		nodeInfo.appendChild(e("div", {
+			"class": "profile-info",
+			append: [
+				e("div", {
+					"class": "profile-left",
+					append: isPhoto
+						? e("a", { href: "#photo" + thumb, append: photo})
+						: photo
+				}),
+				e("div", {
+					"class": "profile-right",
+					append: [
+						e("strong", {
+							html: user.first_name.safe() + " " + user.last_name.safe() + Site.isOnline(user, 1) + Site.isVerify(user)
+						}),
+						status,
+				e("div", {"class": "tip", html: location.join(", ")}),
+				(user.can_write_private_message && API.userId != userId ? e("a", {"class": "btn", href: "#im?to=" + userId, html: Lang.get("profiles.write_message"), style: "margin: 4px 0 2px; text-align: center;"}) : null)
 			]})
 		]}));
-		if (active && !bl) {
-			elem_info.appendChild(Site.CreateHeader(Lang.get("profiles.info"), API.uid == uid ? $.elements.create("a", {"class": "fr", href: "#settings?act=profile", html: Lang.get("profiles.info_edit")}) : null ));
+
+		wrap.appendChild(Site.getPageHeader(
+			e("strong", {html: user.first_name.safe() + " " + user.last_name.safe() + (user.maiden_name ? " (" + user.maiden_name + ")" : "")}),
+			null //Site.CreateDropDownMenu(Lang.get("general.actions"), null)
+		));
+
+		if (isActive && !bl) {
+			nodeInfo.appendChild(Site.getPageHeader(
+				lg("profiles.info"),
+				API.userId == userId
+					? $.e("a", {
+						"class": "fr",
+						href: "#settings?act=profile",
+						html: lg("profiles.info_edit")
+					  })
+					: null
+			));
+
 			var infoRow = function (name, value, format) {
-				return $.elements.create("div", {"class": "group-info-item", append: [
-					$.elements.create("div", {"class": "group-info-name", html: name}),
-					$.elements.create("div", {"class": "group-info-value", html: (typeof value === "string" ? (format ? Site.Format(value) : value) : ""), append: (typeof value === "string" ? [] : [value])})
+				return e("div", {
+					"class": "group-info-item",
+					append: [
+						e("div", {
+							"class": "group-info-name",
+							html: name
+						}),
+						e("div", {
+							"class": "group-info-value",
+							html: typeof value === "string"
+								? format
+									? Site.Format(value)
+									: value
+								: "",
+							append: typeof value === "string" ? [] : [value]
+						})
 				]});
 			};
-			if (info.mobile_phone)
-				elem_info.appendChild(infoRow(Lang.get("profiles.mobile_phone"), info.mobile_phone));
-			if (info.home_phone)
-				elem_info.appendChild(infoRow(Lang.get("profiles.home_phone"), info.home_phone));
-			if (info.home_town)
-				elem_info.appendChild(infoRow(Lang.get("profiles.home_city"), info.home_town));
-			if (info.bdate) {
+
+			if (user.mobile_phone) {
+				nodeInfo.appendChild(infoRow(lg("profiles.infoMobilePhone"), user.mobile_phone));
+			};
+
+			if (user.home_phone) {
+				nodeInfo.appendChild(infoRow(lg("profiles.infoHomePhone"), user.home_phone));
+			};
+
+			if (user.home_town) {
+				nodeInfo.appendChild(infoRow(lg("profiles.infoHomeCity"), user.home_town));
+			};
+// точка конца рефакторинга
+			if (user.bdate) {
 				var b = info.bdate.split("."),
 					months = Lang.get("general.months"),
 					birthday = b[0] + " " + months[b[1] - 1] + (b[2] ? " " + b[2] : "");
-				elem_info.appendChild(infoRow(Lang.get("profiles.birthday"), birthday));
+				nodeInfo.appendChild(infoRow(Lang.get("profiles.birthday"), birthday));
 			}
-			elem_info.appendChild($.e("a", {
+			nodeInfo.appendChild($.e("a", {
 				html: Lang.get("profiles.full_info"),
 				href: "#" + info.screen_name + "?act=info",
 				"class": "profile-gotofullinfo"
 			}));
-			elem_media.className="profile-media";
-			if (API.uid == uid) info.common_count = 0;
+			nodeMedia.className="profile-media";
+			if (API.userId == userId) info.common_count = 0;
 			var csg = info.can_see_gifts;
 			var q = {
-				friends:        ["friends?id=" + uid,                       Lang.get("profiles.counters_friends")],
-//              online_friends: ["friends" + uid + "?section=online",       "Друзья онлайн"],
-				common_count:   ["friends?id=" + uid + "&act=mutual",       Lang.get("profiles.counters_common_friends")],
-				groups:         ["groups?user_id=" + uid,                   Lang.get("profiles.counters_groups")],
-				albums:         ["photos"+uid,                              Lang.get("profiles.counters_albums")],
-//              user_photos:    ["photos" + uid + "?act=tagged",            "Фотографии с " + info.first_name_ins],
-				photos:         ["photos"+uid+"?act=all",                   Lang.get("profiles.counters_photos")],
-				videos:         ["videos"+uid,                              Lang.get("profiles.counters_videos")],
-//              user_videos:    ["videos" + uid + "?act=tagged",            "Видео с " + info.first_name_ins],
-				audios:         ["audio?oid="+uid,                          Lang.get("profiles.counters_audios")],
-				notes:          ["notes" + uid,                             Lang.get("profiles.counters_notes")],
+				friends:        ["friends?id=" + userId,                       Lang.get("profiles.counters_friends")],
+//              online_friends: ["friends" + userId + "?section=online",       "Друзья онлайн"],
+				common_count:   ["friends?id=" + userId + "&act=mutual",       Lang.get("profiles.counters_common_friends")],
+				groups:         ["groups?user_id=" + userId,                   Lang.get("profiles.counters_groups")],
+				albums:         ["photos"+userId,                              Lang.get("profiles.counters_albums")],
+//              user_photos:    ["photos" + userId + "?act=tagged",            "Фотографии с " + info.first_name_ins],
+				photos:         ["photos"+userId+"?act=all",                   Lang.get("profiles.counters_photos")],
+				videos:         ["videos"+userId,                              Lang.get("profiles.counters_videos")],
+//              user_videos:    ["videos" + userId + "?act=tagged",            "Видео с " + info.first_name_ins],
+				audios:         ["audio?oid="+userId,                          Lang.get("profiles.counters_audios")],
+				notes:          ["notes" + userId,                             Lang.get("profiles.counters_notes")],
 				followers:      [info.screen_name + "?act=followers",       Lang.get("profiles.counters_followers")],
 				subscriptions:  [info.screen_name + "?act=subscriptions",   Lang.get("profiles.counters_subscriptions"), counters.subscriptions + counters.pages],
 			},
@@ -295,37 +211,65 @@ var Profile = {
 					}))
 
 			d.push($.e("a", {
-				href:"#" + (csg ? "gifts?userId="+uid : "gifts?act=send&toId="+uid),
+				href:"#" + (csg ? "gifts?userId="+userId : "gifts?act=send&toId="+userId),
 				html: csg ? Lang.get("profiles.counters_gifts") + " <i class=count>" + formatNumber(counters.gifts) + "<\/i>" : Lang.get("profiles.counters_gifts_send")
 			}));
-			if (active && wall && wall.count)
+			if (isActive && wall && wall.count)
 				d.push($.e("a", {
 					href:"#" + info.screen_name + "?act=search",
 					html: "Поиск по стене " + info.first_name_gen
 				}));
-			elem_media.appendChild($.elements.create("div",{
+			nodeMedia.appendChild(e("div",{
 				"class":"profile-last",
 				append: $.e("div", {"class":"hider profile-lists", append: d})
 			}));
-			elem.appendChild(elem_info);
-			elem.appendChild(elem_media);
+			wrap.appendChild(nodeInfo);
+			wrap.appendChild(nodeMedia);
 			console.log(user.e);
 			if (wall.count > 0 || info.can_post)
-				elem.appendChild(Wall.RequestWall(uid, {data:wall,can_post:info.can_post,extra:user.e}));
-		} else if (!active) {
-			elem_info.appendChild($.elements.create("div", {"class": "msg-empty", html: {
+				wrap.appendChild(Wall.RequestWall(userId, {data:wall,can_post:info.can_post,extra:user.e}));
+		} else if (!isActive) {
+			nodeInfo.appendChild(e("div", {"class": "msg-empty", html: {
 				deleted: Lang.get("profiles.profile_deleted"),
 				banned: Lang.get("profiles.profile_banned")
-			}[deleted]}));
-			elem.appendChild(elem_info);
+			}[isDeleted]}));
+			wrap.appendChild(nodeInfo);
 		} else {
-			elem_info.appendChild($.elements.create("div", {"class": "msg-empty", html: info.first_name + " " + info.last_name + " Вас заблокировал" + (info.sex === 1 ? "а" : "")}));
-			elem.appendChild(elem_info);
+			nodeInfo.appendChild(e("div", {"class": "msg-empty", html: info.first_name + " " + info.last_name + " Вас заблокировал" + (info.sex === 1 ? "а" : "")}));
+			wrap.appendChild(nodeInfo);
 		}
-		Site.SetHeader(Lang.get("profiles.profile_head_MASK").replace(/%n%/ig, info.first_name_gen));
-		Site.Append(elem);
+		Site.setHeader(lg("profiles.pageHead").schema({n: info.first_name_gen}));
+		Site.append(wrap);
 	},
-	EditStatus:function(elem){
+
+	/**
+	 * Возвращает DOMNode для статуса
+	 * @param  {Object} user Объект пользователя
+	 * @return {DOMNode}     DOM-объект
+	 */
+	getStatusNode: function(user) {
+		var e = $.e, i = API.userId === user.id, s = (user.status || ""), a = user.status_audio;
+		return !user.status_audio
+			? e("div", {
+				"class": (i ? "profile-status" : "") + (!s ? " tip" : ""),
+				"data-status": s,
+				onclick: API.userId == user.id
+					? function(event) {
+						Profile.editStatus(this);
+					  }
+					: null,
+				html: Mail.Emoji(s.safe()) || (i ? lg("profiles.statusChange") : "")
+			  })
+			: Audios.Item(a, {
+				from: 2,
+				set: 32,
+				lid: Audios.createList(a).lid,
+				removeBroadcast: i,
+				userId: user.id
+			  });
+	},
+
+	editStatus: function(elem){
 		if (elem.opened)
 			return;
 		elem.opened = 1;
@@ -363,7 +307,7 @@ var Profile = {
 			prefix,
 			nameCase,
 			cases = [null, "ins", "abl", "acc"],
-			e = $.elements.create;
+			e = e;
 
 		switch (relation) {
 			case 1: str = sex ? "не замужем" : "не женат"; break;
@@ -403,7 +347,7 @@ var Profile = {
 				photo.src = getURL(u.photo_rec);
 				photo.className = "profile-left";
 				info.className = "profile-right";
-				info.appendChild($.elements.create("strong", {
+				info.appendChild(e("strong", {
 					innerHTML: Site.Escape(u.first_name + " " + u.last_name) + " <span class=\"tip\">" + Site.isOnline(u) + "<\/span>"
 				}));
 				parent.appendChild(photo);
@@ -436,8 +380,8 @@ var Profile = {
 						[location, Lang.get("profiles.info_location")],
 						[user.mobile_phone, Lang.get("profiles.mobile_phone")],
 						[user.home_phone, Lang.get("profiles.home_phone")],
-						[user.twitter ? $.elements.create("a", {href: "https:\/\/twitter.com\/" + user.twitter, html: user.twitter, target: "_blank"}): null, "Twitter"],
-						[user.facebook ? $.elements.create("a", {href: "https:\/\/facebook.com\/profile.php?id=" + user.facebook, html: user.facebook_name, target: "_blank"}) : null, "Facebook"],
+						[user.twitter ? e("a", {href: "https:\/\/twitter.com\/" + user.twitter, html: user.twitter, target: "_blank"}): null, "Twitter"],
+						[user.facebook ? e("a", {href: "https:\/\/facebook.com\/profile.php?id=" + user.facebook, html: user.facebook_name, target: "_blank"}) : null, "Facebook"],
 						[user.site ? (function (l) {
 							l = l.split(" ");
 							var links = document.createElement("div");
@@ -445,13 +389,13 @@ var Profile = {
 								l[i] = $.trim(l[i]);
 								if (!/^https?:\/\//i.test(l[i]))
 									l[i] = "http://" + l[i];
-								links.appendChild($.elements.create("a", {href: l[i], html: l[i], target: "_blank"}));
+								links.appendChild(e("a", {href: l[i], html: l[i], target: "_blank"}));
 							}
 							return links;
 						})(user.site) : null, Lang.get("profiles.info_site")],
-						[user.skype ? $.elements.create("a", {href: "skype:" + user.skype + "?call", html: user.skype, target: "_blank"}): null, "Skype"],
-						[user.instagram ? $.elements.create("a", {href: "https:\/\/instagram.com\/" + user.instagram, html: user.instagram, target: "_blank"}): null, "Instagram"],
-						[user.livejournal ? $.elements.create("a", {href: "https:\/\/" + user.livejournal + ".livejournal.com\/", html: user.livejournal, target: "_blank"}): null, "LiveJournal"]
+						[user.skype ? e("a", {href: "skype:" + user.skype + "?call", html: user.skype, target: "_blank"}): null, "Skype"],
+						[user.instagram ? e("a", {href: "https:\/\/instagram.com\/" + user.instagram, html: user.instagram, target: "_blank"}): null, "Instagram"],
+						[user.livejournal ? e("a", {href: "https:\/\/" + user.livejournal + ".livejournal.com\/", html: user.livejournal, target: "_blank"}): null, "LiveJournal"]
 					]
 				},
 				{},
@@ -496,9 +440,9 @@ var Profile = {
 				var cat, field, row = function (name, value, format) {
 					if (!format && typeof value === "string")
 						value = Site.Escape(value);
-					return $.elements.create("div", {"class": "group-info-item", append: [
-						$.elements.create("div", {"class": "group-info-name", html: name}),
-						$.elements.create("div", {
+					return e("div", {"class": "group-info-item", append: [
+						e("div", {"class": "group-info-name", html: name}),
+						e("div", {
 							"class": "group-info-value",
 							html: (
 								typeof value === "string" ?
@@ -534,7 +478,7 @@ var Profile = {
 						r[type].push(rel);
 				}
 				var getLink = function (obj) {
-					return $.elements.create("span", {html: obj.id > 0 ? "<a href='#id" + obj.id + "'>" + obj.name + "</a>" : "<span>" + obj.name + "</span>"});
+					return e("span", {html: obj.id > 0 ? "<a href='#id" + obj.id + "'>" + obj.name + "</a>" : "<span>" + obj.name + "</span>"});
 				}, parent;
 				if (r.parent) {
 					if (r.parent.length > 1)
@@ -607,19 +551,27 @@ var Profile = {
 		else
 			for (var current in Local.Users)
 				if(Local.Users[current].screen_name == screen_name)
-					return (Local.Users[current].uid || -Local.Users[current].gid || (Local.Users[current].name ? -Local.Users[current].id : Local.Users[current].id));
+					return (Local.Users[current].userId || -Local.Users[current].gid || (Local.Users[current].name ? -Local.Users[current].id : Local.Users[current].id));
 		return 0;
 	},
+
+
+
+
+
+
+
+
 	ItemListProfile: function (user) {
 		var parent = document.createElement("a");
 		parent.className = "friends-item a";
-		parent.href = "#" + (user.screen_name || "id" + (user.uid || user.id));
-		parent.appendChild($.elements.create("img", {
+		parent.href = "#" + (user.screen_name || "id" + (user.userId || user.id));
+		parent.appendChild(e("img", {
 			"class": "friends-left",
 			src: getURL(user.photo_rec || user.photo_50 || user.photo),
 			alt: ""
 		}));
-		parent.appendChild($.elements.create("div", {
+		parent.appendChild(e("div", {
 			"class": "friends-right",
 			html: (user.name ? user.name : user.first_name + " " + user.last_name + Site.isOnline(user) + Site.isVerify(user))
 		}))
@@ -639,7 +591,7 @@ var Profile = {
 			list.items.push(user);
 			Local.AddUsers(list.items);
 			parent.appendChild(Site.PagebarV2(Site.Get("offset"), list.count, 30));
-			Site.SetHeader(Lang.get("profiles.followers_head") + " " + user.first_name_gen, {link: Local.Users[user.uid || user.id].screen_name});
+			Site.SetHeader(Lang.get("profiles.followers_head") + " " + user.first_name_gen, {link: Local.Users[user.userId || user.id].screen_name});
 			Site.Append(parent);
 		})
 	},
@@ -658,18 +610,76 @@ var Profile = {
 			list.items.push(user);
 			Local.AddUsers(list.items);
 			parent.appendChild(Site.PagebarV2(Site.Get("offset"), list.count, 30));
-			Site.SetHeader("Кумиры " + user.first_name_gen, {link: Local.Users[user.uid || user.id].screen_name});
+			Site.SetHeader("Кумиры " + user.first_name_gen, {link: Local.Users[user.userId || user.id].screen_name});
 			Site.Append(parent);
 		})
 	},
 
+	/**
+	 * Показывает дату регистрации пользователя
+	 * @param  {int} userId Идентификатор пользователя
+	 */
+	showDateOfRegister: function(userId) {
+		APIdogRequest("apidog.getUserDateRegistration", {
+			userDomain: userId
+		}, function (data) {
 
-	Registered: function (data) {
-		if (data.error)
-			return Site.Alert({text: "Ошибка запроса"});
-		var user = data.user;
-		return Site.Alert({
-			text: user.firstName + " " + user.lastName + " зарегистрировал" + "ось,ась,ся".split(",")[user.sex] + " " + data.date + " в " + data.time + " (" + formatNumber(data.days) + " " + $.TextCase(data.days, "день,дня,дней".split(","))+ ")"
+			if (data.error) {
+				return new Snackbar({text: "Ошибка запроса"}).show();
+			};
+
+			var user = data.user,
+
+				text = user.firstName + " " + user.lastName + lg("profile.registeredVerb")[user.sex] + lg("general.at") + data.time + " (" + formatNumber(data.days) + " " + Lang.get("profile.registeredAgo") + ")";
+
+			return new Snackbar({text: text}).show();
+		});
+	},
+
+	/**
+	 * Показывает дату последнего посещения
+	 * @param  {int} userId Идентификатор пользователя
+	 */
+	showLastActivity: function(userId) {
+		new APIRequest("execute", {
+			code: "var u=API.users.get({user_ids:Args.u,fields:\"last_seen,sex,online\",v:5.28})[0],a,t=API.utils.getServerTime()-u.last_seen.time;if(!u)return 0;if(u.online_app)a=API.apps.get({app_id:u.online_app});return{u:u,t:t,a:a};",
+			u: userId
+		}).setOnContentListener(function(data) {
+			var user = data.u,
+				app = data.a,
+				left = data.t,
+				startString = user.first_name + " " + Lang.get("general.was_sex")[user.sex] + " ",
+				platformId = user.last_seen.platform,
+
+				computeDifferentTime = function(d) {
+					var t = [Math.floor(d / 60 % 60), Math.floor(d % 60)];
+					return (
+						t[0] > 0
+							? t[0] + " " + Lang.get("profiles", "wasMinutesAgo", t[0]) + lg("general.and")
+							: ""
+					) +
+					t[1] +
+					" " +
+					Lang.get("profiles", "wasSecondsAgo", t[1]) + lg("profiles.wasAgo");
+				};
+
+			platformId = platformId === 1 || platformId === 7 ? false : platformId;
+
+			user.online_mobile = user.online_mobile || platformId === 1;
+			user.online = user.online || platformId === 7;
+
+			new Snackbar({
+				text:
+					startString +
+					(left > 3600
+						? $.getDate(user.last_seen && user.last_seen.time || 0)
+						: computeDifferentTime(left)
+					) + (
+						app || platformId
+							? lg("wasViaApp").schema({n: (app && app.title || ["мобильный", "iPhone", "iPad", "Android", "Windows Phone", "Windows 8", "ПК"][platformId - 1])})
+							: lg(user.online_mobile ? "wasViaMobile" : "wasViaPC")
+					)
+			}).show();
 		});
 	},
 
@@ -686,31 +696,31 @@ var Profile = {
 			Form.appendChild(Site.CreateHeader(Lang.get("profiles.report_head")));
 			var page = document.createElement("div");
 			page.className = "sf-wrap";
-			page.appendChild($.elements.create("input", {type: "hidden", name: "user_id", value: user.uid}));
-			page.appendChild($.elements.create("div", {html: Lang.get("profiles.report_tip"), "class":"tip"}));
+			page.appendChild(e("input", {type: "hidden", name: "user_id", value: user.userId}));
+			page.appendChild(e("div", {html: Lang.get("profiles.report_tip"), "class":"tip"}));
 			var types = Lang.get("profiles.report_types");
-			page.appendChild($.elements.create("select", {
+			page.appendChild(e("select", {
 				name: "reason",
-				append: (function (a,b,c,d,e,f,g,h){for(;b<g;++b)f.push(h(e,{value:a[b][c],html:a[b][d]}));return f;})(types,0,0,1,"option",[],types.length,$.elements.create)
+				append: (function (a,b,c,d,e,f,g,h){for(;b<g;++b)f.push(h(e,{value:a[b][c],html:a[b][d]}));return f;})(types,0,0,1,"option",[],types.length,e)
 			}));
-			page.appendChild($.elements.create("div", {html: Lang.get("profiles.report_comment"), "class": "tip"}));
-			page.appendChild($.elements.create("textarea", {name: "comment"}));
-			page.appendChild($.elements.create("input", {type: "submit", value: Lang.get("profiles.report_submit")}));
+			page.appendChild(e("div", {html: Lang.get("profiles.report_comment"), "class": "tip"}));
+			page.appendChild(e("textarea", {name: "comment"}));
+			page.appendChild(e("input", {type: "submit", value: Lang.get("profiles.report_submit")}));
 			Form.appendChild(page);
 			Form.onsubmit = function (event) {
 				if (this.reason.options[this.reason.selectedIndex].value == "0") {
 					Site.Alert({text: Lang.get("profiles.report_error_reason")});
 					return false;
 				}
-				var uid = this.user_id.value;
+				var userId = this.user_id.value;
 				Site.API("users.report", {
-					user_id: uid,
+					user_id: userId,
 					type: this.reason.options[this.reason.selectedIndex].value,
 					comment: $.trim(this.comment.value)
 				}, function (data) {
 					console.log(data);
 					if (data.response == 1) {
-						window.location.href = "#id" + uid;
+						window.location.href = "#id" + userId;
 						Site.Alert({text: Lang.get("profiles.report_success")});
 					}
 				});
@@ -720,17 +730,90 @@ var Profile = {
 			Site.SetHeader(Lang.get("profiles.report_head"), {link: user.screen_name});
 		});
 	}
-	/*
-	showLastSeenAPIdog: function (userId) {
-		APIdogRequest("users.getLastSeenUser", {userId: userId}, function (data) {
-			var user = Local.Users[userId];
-			Site.Alert({
-				text: data[0]
-					? user.first_name + " " + user.last_name + " " + ([0, "была", "был"][user.sex || 2]) + " в последний раз на APIdog " + $.getDate(data[0])
-					: user.first_name + " " + user.last_name + " ещё не " + ([0, "была", "был"][user.sex || 2]) + " на APIdog с момента ввода статистики",
-				time: 7000
-			});
-		});
-	}
-	*/
 };
+
+
+/*(function () {
+					var opts = {},
+						_userId = userId;
+					if (userId != API.userId) {
+						switch (friendStatus) {
+							case 0:
+							case 2:
+								opts[friendStatus == 0 ? Lang.get("profiles.acts_add_friend") : Lang.get("profiles.acts_accept_request")] = function (event) {
+									Friends.Add(userId, function (data) {
+										data = Site.isResponse(data);
+										Site.Alert({
+											text: [Lang.get("profiles.acts_friend_sent"), Lang.get("profiles.acts_friend_agreed"), null, Lang.get("profiles.acts_friend_secondarary")][data - 1]
+										});
+										Site.Go(window.location.hash.replace("#", ""));
+									});
+								};
+								if (friendStatus == 2) {
+									opts[Lang.get("profiles.acts_friend_cancel_friend")] = function (event) {
+										Friends.Delete(userId, function (data) {
+											if (!data.response)
+												return Site.Alert({text: data.error && data.error.error_msg});
+											data = Site.isResponse(data);
+											Site.Alert({
+												text: Lang.get("profiles.request_cancelled")
+											});
+											Site.Go(window.location.hash.replace("#", ""));
+										})
+									}
+								}
+							break;
+							case 1:
+							case 3:
+								opts[friendStatus == 1 ? Lang.get("profiles.acts_friend_cancel_request") : Lang.get("profiles.acts_friend_delete")] = function (event) {
+									Friends.Delete(userId, function (data) {
+										data = Site.isResponse(data);
+										Site.Alert({
+											text: [Lang.get("profiles.acts_friend_deleted"), Lang.get("profiles.acts_friend_request_deleted"), Lang.get("profiles.reccomendation_deleted")][data - 1]
+										});
+										Site.Go(window.location.hash);
+									});
+								}
+							break;
+						};
+						if (active) {
+							opts[Lang.get("profiles.acts_report")] = function (event) {
+								window.location.hash = "#" + info.screen_name + "?act=report";
+							};
+							opts[!info.blacklisted_by_me ? Lang.get("profiles.acts_block") : Lang.get("profiles.acts_unblock")] = function (event) {
+								Site.API("account." + (!info.blacklisted_by_me ? "" : "un") + "banUser", {
+									user_id: _userId
+								}, function (data) {
+									data = Site.isResponse(data);
+									if (data === 1) {
+										var user = Local.Users[_userId], prefix = ("оа ".split("")[user.sex]);
+										Site.Alert({
+											text: Site.Escape(user.first_name) + " " + (!info.blacklisted_by_me ? ("занесен" + prefix + " в черный список") : "удален" + prefix + " из черного списка") // TODO Lang
+										});
+									}
+								});
+							}
+						};
+					};
+					if (active) {
+						opts[Lang.get("profiles.actionDateRegistration")] = function() {
+							Profile.showDateOfRegister(userId);
+						};
+						opts[Lang.get("profiles.acts_last_activity")] = function () {
+							Profile.showLastActivity(userId);
+						};
+					} else
+						opts[Lang.get("profiles.counters_photos")] = function (event) { setLocation("photos" + userId); };
+					if (API.userId != userId)
+						opts[isFav ? "Удалить из закладок" : "Добавить в закладки"] = function (event) {
+							Site.API("fave." + (isFav ? "remove": "add") + "User", {
+								user_id: userId,
+							}, function (data) {
+								if (data.response)
+									Site.Go(window.location.hash);
+							});
+						};
+					opts[Lang.get("profiles.acts_update")] = function () {
+						Site.Go(window.location.hash.substring(1));
+					return opts;
+				})()*/

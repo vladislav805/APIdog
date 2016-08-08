@@ -6,6 +6,7 @@
  * +-----------------------------------------------+
  * | Library v1.3.0 / 17 july 2014                 |
  * |         v1.3.1 / 13 january 2016 (compatable) |
+ * |         v1.3.2 / 8 august 2016 (compatable)   |
  * +-----------------------------------------------+
  */
 
@@ -202,7 +203,8 @@ window.$ = {
 				};
 			} else {
 				if (modern) {
-					return elem.classList.add(className);
+					elem.classList.add(className);
+					return elem;
 				};
 
 				if ($.elements.hasClass(elem, className)) {

@@ -56,7 +56,7 @@ function getUnixTime () {
 };
 
 function getOffset () {
-	return Site.get("offset");
+	return Site.get("offset") || 0;
 };
 
 function getAct() {
@@ -147,6 +147,36 @@ function includeScripts (scripts, onLoad) {
 					onLoad();
 			}
 		}));
+	});
+};
+
+function setSelectionRange(input, start, end) {
+	if (input.setSelectionRange) {
+		input.setSelectionRange(start, end);
+	} else {
+		var range = input.createTextRange();
+		range.collapse(true);
+		range.moveStart("character", start);
+		range.moveEnd("character", end - start);
+		range.select();
+	};
+};
+
+function setSmartScrollListener(node, callback, isReverse) {
+	var fired = false, reset = function() { fired = false; };
+	node.addEventListener("scroll", function(event) {
+		var scrolled = this.scrollTop,
+			blockHeight = this.offsetHeight,
+			contentHeight = Array.prototype.reduce.call(this.children, function(prev, cur) {
+				return prev + cur.offsetHeight;
+			}, 0),
+			needLoading = !isReverse ? contentHeight - scrolled - (blockHeight * 1.5) < 0 : scrolled < blockHeight * 1.5;
+
+		if (needLoading && !fired) {
+			fired = true;
+			callback(reset);
+		};
+
 	});
 };
 
@@ -521,12 +551,7 @@ window.addEventListener("load", function (event) {
 
 	(function (d,w,c){(w[c]=w[c]||[]).push(function(){try{w.yaCounter19029880=new Ya.Metrika({id:19029880,trackHash:!0})}catch(e){}});var n=d.getElementsByTagName("script")[0],s=d.createElement("script"),f=function(){n.parentNode.insertBefore(s,n);};s.type="text/javascript";s.async=!0;s.src=(d.location.protocol=="https:"?"https:":"http:")+"//mc.yandex.ru/metrika/watch.js";if(w.opera=="[object Opera]")d.addEventListener("DOMContentLoaded",f,!1);else f()})(document,window,"yandex_metrika_callbacks");
 
-	if (API.SettingsBitmask & 32) {
-
-	};
-
 	menu.initTouchEvents();
-
 
 	startFirstRequestAPI();
 
@@ -540,10 +565,13 @@ window.addEventListener("load", function (event) {
 			needLoading: top + (document.documentElement.clientHeight * 2) > document.documentElement.offsetHeight
 		});
 	});
-	window.addEventListener("resize", reWriteWidthToTopLeftButton);
+	//window.addEventListener("resize", reWriteWidthToTopLeftButton);
 	window.addEventListener("resize", function (event) {
-		if (!window.onResizeCallback)
+
+		if (!window.onResizeCallback) {
 			return;
+		};
+
 		var c  = $.element("content"),
 			cp = $.getPosition(c),
 			p  = $.element("page"),
@@ -975,10 +1003,13 @@ var menu = {
 
 var nav = {
 	replace: function(url) {
-		window.history.replaceState({}, null, url);
+		url = url.replace(/^#/img, "");
+		window.history.replaceState({}, null, "#" + url);
 	},
 	go: function(url) {
-		window.history.pushState({}, null, url);
+		url = url.replace(/^#/img, "");
+		window.history.pushState({}, null, "#" + url);
+		Site.Go(url);
 	}
 }
 
@@ -1158,7 +1189,6 @@ var Local = {
 		if (!$.isArray(users)) {
 			users = [users];
 		};
-console.log(users);
 		var j;
 		for (var i = 0; i < users.length; ++i) {
 			j = users[i];
@@ -1168,11 +1198,10 @@ console.log(users);
 			var id = {
 				"group": -(j.gid || j.id),
 				"event": -(j.gid || j.id),
-				"public": -(j.gid || j.id),
+				"page": -(j.gid || j.id),
 				"profile": j.uid || j.id,
 				"chat": APIDOG_DIALOG_PEER_CHAT_MAX_ID + (j.id || j.chat_id)
 			}[j.type || "profile"];
-console.log(id);
 			if (!(id in Local.Users)) {
 				Local.Users[id] = {};
 			};
@@ -2174,7 +2203,8 @@ var
 	APIDOG_SETTINGS_PROXY = 4,
 	APIDOG_SETTINGS_LONGPOLL = 8,
 	APIDOG_SETTINGS_SEND_TYPING = 2048,
-	APIDOG_SETTINGS_SEND_BY_ENTER = 8192;
+	APIDOG_SETTINGS_SEND_BY_ENTER = 8192,
+	APIDOG_SETTINGS_DIALOGS_REVERSE = 32768;
 
 var
 	APIDOG_SHARE_STEP_CHOOSE_TARGET_TYPE = 1,
@@ -2458,12 +2488,14 @@ function Comments (objectId, comments, api, callbacks, options) {
 	this.nodeWrap = e("div", {"class": "vkcomments-wrap", append: [
 		this.nodeHead = e("div", {
 			"class": "vkcomments-header",
-			append: this.nodeTitle = e("h3", {
-				"class": "vkcomments-header-title",
-				html: this.getHeaderText()
-			})
+			append: [
+				this.nodePaginationBefore = e("div", {"class": "vkcomments-pagination"}),
+				this.nodeTitle = e("h3", {
+					"class": "vkcomments-header-title",
+					html: this.getHeaderText()
+				})
+			]
 		}),
-		this.nodePaginationBefore = e("div", {"class": "vkcomments-pagination"}),
 		this.nodeList = e("div", {"class": "vkcomments-list"}),
 		this.nodePaginationAfter = e("div", {"class": "vkcomments-pagination"}),
 		this.nodeWriteForm = this.getWriteForm()
@@ -2586,12 +2618,13 @@ Comments.prototype = {
 
 		new APIRequest("execute", {code: code}).setOnCompleteListener(function (result) {
 			that.loadCommentsDone.call(that, result);
-		});
+		}).execute();
 	},
 
 	loadCommentsDone: function (result) {
 		$.elements.clearChild(this.nodeList);
 
+		nav.replace("wall" + this.object.ownerId + "_" + this.object.itemId + "?offset=" + this.offset);
 
 		this.parseComments(result);
 
@@ -2848,6 +2881,7 @@ VKComment.prototype = {
 				onclick: function (event) {
 					event.preventDefault();
 
+niy();
 // TODO: make
 
 					return false;
@@ -2994,10 +3028,12 @@ WriteForm.prototype = {
 
 	snapReply: function (replyCommentId, replyUserId) {
 		console.log(replyCommentId, replyUserId)
-		this.reply = replyCommentId ? {
-			commentId: replyCommentId,
-			userId: replyUserId
-		} : null;
+		this.reply = replyCommentId
+			? {
+				commentId: replyCommentId,
+				userId: replyUserId
+			  }
+			: null;
 		this.updateReplyString();
 		return this;
 	},
@@ -3023,8 +3059,9 @@ WriteForm.prototype = {
 
 		if (!this.nodeText.value) {
 			this.nodeText.value = "[" + u.screen_name + "|" + (u.name || u.first_name) + "], ";
-			var l = this.nodeText.value.length - 1;
-			this.nodeText.setSelectionRange(l, l);
+			var l = this.nodeText.value.length;
+			this.nodeText.focus();
+			setSelectionRange(this.nodeText, l, l);
 		};
 	},
 
@@ -3098,6 +3135,7 @@ AttachmentBundle.prototype = {
 
 	add: function(item) {
 		this.list.push(item);
+		return this;
 	},
 
 	getCount: function() {
@@ -3116,6 +3154,11 @@ AttachmentBundle.prototype = {
 			};
 		};
 		this.list.splice(item, 1);
+		return this;
+	},
+
+	clear: function() {
+		this.list = [];
 		return this;
 	}
 
@@ -4129,6 +4172,7 @@ function AttachmentController(options) {
 AttachmentController.prototype = {
 
 	open: function() {
+		this.chunk = [];
 		this.modal = new Modal({
 			title: lg("attacher.modalTitle"),
 			content: this.content,
@@ -4163,7 +4207,7 @@ AttachmentController.prototype = {
 	getNode: function() {
 		var self = this;
 		return this.wrapButton = $.e("div", {"class": "attacher-button-wrap", append: this.button = $.e("div", {
-			"class": "im-actionbutton vkform-comment-button-attachment",
+			"class": "vkform-comment-button-attachment",
 			onclick: function(event) {
 				self.toggleTypeList();
 			}
@@ -4201,7 +4245,7 @@ AttachmentController.prototype = {
 			}));
 		};
 		this.wrapButton.appendChild(wrap);
-		return this.typeListNode = wrap;
+		return (this.typeListNode = wrap);
 	},
 
 	getAttachmentString: function() {
@@ -4297,8 +4341,63 @@ AttachmentController.prototype = {
 					],
 					host = new TabHost(tabs, {});
 
-					this.open();
-					this.modal.setContent(host.getNode());
+				this.open();
+				this.modal.setContent(host.getNode());
+				break;
+
+			case APIDOG_ATTACHMENT_DOCUMENT:
+				var
+					documentListNode,
+					documents,
+					loadDocuments = function(callback) {
+						if (documents) {
+							return callback(documents);
+						};
+
+						new APIRequest("docs.get", {ownerId: self.ownerId, v: 5.52})
+							.setOnCompleteListener(function(result) {
+								callback(documents = parse(result.items, VKDocument));
+							})
+							.execute();
+					},
+
+					showDocuments = function(documents) {
+						$.elements.clearChild(documentListNode);
+						var list = $.e("div", {"class": "attacher-list-documents"});
+						documents.forEach(function(doc) {
+							list.appendChild(doc.getNodeItem({
+								onClick: function(event) {
+									self.add(doc).done();
+								}
+							}));
+						});
+						documentListNode.appendChild(list);
+					},
+
+					tabs = [
+						{
+							name: "list",
+							title: lg("attacher.documentList"),
+							content: documentListNode = $.e("div", { append: getLoader() }),
+							onOpen: function() {
+								loadDocuments(showDocuments);
+							}
+						},
+						{
+							name: "file",
+							title: lg("attacher.documentFile"),
+							content: this.createFileForm(typeId)
+						},
+						{
+							name: "url",
+							title: lg("attacher.documentURL"),
+							content: this.createURLForm()
+						}
+					],
+					host = new TabHost(tabs, {});
+
+				this.open();
+				this.modal.setContent(host.getNode());
 				break;
 		};
 	},
@@ -4336,6 +4435,8 @@ AttachmentController.prototype = {
 		return form;
 	},
 
+	chunk: [],
+
 	createURLForm: function() {
 		var self = this,
 			field,
@@ -4351,8 +4452,7 @@ AttachmentController.prototype = {
 				uploadFiles(null, {url: url}, {
 					onTaskFinished: function(result) {
 						var fx = APIDOG_ATTACHMENT_PHOTO == typeId ? VKPhoto : VKDocument;
-						self.add(new fx(result[0]));
-						self.done();
+						self.add(new fx(result[0])).done();
 					}
 				})
 			};
@@ -4387,13 +4487,16 @@ AttachmentController.prototype = {
 	},
 
 	add: function(object) {
+		console.log("controller.add", object);
 		this.bundle.add(object);
+		this.chunk.push(object);
 		return this;
 	},
 
 	done: function() {
-		this._onSelect(this.bundle);
-		this.modal.hide();
+		this._onSelect(this.chunk);
+		this.chunk = [];
+		this.modal.close();
 		return this;
 	}
 };
@@ -4402,7 +4505,8 @@ AttachmentController.langs = {
 	"1": "attacher.typePhoto",
 	"2": "attacher.typeVideo",
 	"4": "attacher.typeAudio",
-	"8": "attacher.typeDocument"
+	"8": "attacher.typeDocument",
+	"16": "attacher.typeMap"
 };
 
 /**

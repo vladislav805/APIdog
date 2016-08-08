@@ -105,7 +105,11 @@ VKMessage.prototype = {
 		var link = e("a", {
 			href: Mail.version && o.type != 3 ? "#im?to=" + fromId : "#mail?act=item&id=" + this.messageId,
 			"id": Mail.version ? "mail-dialog" + fromId : "mail-message" + this.messageId,
-			"class": "selectfix dialogs-item" + (!this.isOut && !this.isRead ? " dialogs-item-new" : ""),
+			"class": [
+				"selectfix dialogs-item",
+				(!this.isOut && !this.isRead ? "dialogs-item-new" : ""),
+				(this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? "dialogs-chat" : "")
+			].join(" "),
 			append: [
 				e("div", {
 					"class": "dialogs-item-left",
@@ -134,10 +138,6 @@ VKMessage.prototype = {
 								e("div", {
 									"class": "dialogs-head",
 									append: [
-										e("span", {
-											"class": "tip",
-											html: (this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? lg("mail.chatTitle") : "")
-										}),
 										e("strong", {
 											html: Mail.Emoji(from.name)
 										})
@@ -303,10 +303,10 @@ VKMessage.prototype = {
 									"class": "n-f",
 									html: Mail.Emoji(Site.Format(this.text))
 								}),
-								/*e("div", {
+								e("div", {
 									id: "msg-attach" + this.messageId,
 									append: this.getAttachments(this.attachments, this.messageId)
-								}),*/
+								}),
 								/*this.getForwardedMessages(this.forwardedMessages),*/
 								this.geo
 									? this.getMap(this.geo)
@@ -411,6 +411,109 @@ VKMessage.prototype = {
 		return e("tr", {append: parent});
 	},
 
+	getAttachments: function() {
+		var objects = this.attachments,
+			msgId = this.messageId,
+			parent = $.e("div"),
+			item,
+			o,
+			datas = {
+				p: [],
+				v: [],
+				a: [],
+				d: [],
+				l: null,
+				g: null,
+				s: null,
+				w: [],
+				r: null,
+				c: null
+			};
+		parent.className = "imdialog-item-attachments";
+
+		var audioIdList = (+new Date());
+		Audios.Lists[audioIdList] = [];
+
+		for (item in objects) {
+			item = objects[item];
+			o = item[item.type];
+
+			switch (item.type) {
+				case "photo":
+					datas.p.push(IM.getDynamicPhotoAttachment(o, msgId));
+					break;
+				case "video":
+					datas.v.push(Video.getAttachment(o, {from: true}));
+					break;
+				case "audio":
+					datas.a.push(Audios.Item(o, {lid: Audios.createList([o])}));
+					break;
+				case "doc":
+					datas.d.push(Docs.getAttachment(o));
+					break;
+				case "link":
+					datas.l = Site.getLinkAttachment(o);
+					break;
+				case "gift":
+					datas.g = Gifts.getAttachment(o);
+					break;
+				case "sticker":
+					datas.s = Site.getStickerAttachment(o);
+					break;
+				case "wall":
+					datas.w.push(Wall.getMessageAttachment(o));
+					break;
+				case "wall_reply":
+					datas.r = Wall.getAttachmentReply(o.owner_id, o.post_id, o.id);
+					break;
+				case "chronicle":
+					datas.c = IM.getChronicleItem(o);
+					break;
+				default:
+					continue;
+			}
+
+		}
+
+		/*if (datas.p.length) {
+			Photos.lists["mail" + msgId] = (function (a) {
+				for (var b = 0, c = a.length, d = []; b < c; ++b)
+					if (a[b].type == "photo") {
+						a[b].photo.list = "mail" + msgId;
+						d.push(a[b].photo);
+					}
+				return d;
+			})(objects);
+		}
+
+		datas.p = datas.p.length ? (function (e, p) {
+			for (var i = 0, l = p.length; i < l; ++i)
+				e.appendChild(p[i]);
+			return e;
+		})($.e("div", {"class": "__dynamic_photo_wrap"}), datas.p) : [];*/
+		var attachments = (function (a, b) {
+			for (var c in a) {
+				if ($.isArray(a[c]))
+					for (var d = 0, e = a[c].length; d < e; ++d)
+						b.push(a[c][d]);
+				else
+					b.push(a[c]);
+			}
+			return b;
+		})(datas, []);
+		attachments.forEach(function (item) {
+			if (!item) return;
+			$.event.add(item, "mouseup", function (event) {
+				event.cancelBubble = true;
+				event.stopPropagation();
+			});
+		});
+		/*if (datas.p && datas.p.children && datas.p.children.length === 1)
+			datas.p.style.width = "100%";*/
+		$.elements.append(parent, attachments);
+		return parent;
+	},
+
 	select: function() {
 		if (this.node.firstChild && this.node.firstChild.className == "__mail-deleted") {
 			return;
@@ -439,15 +542,20 @@ VKMessage.prototype = {
 VKMessage.CLASS_SELECTED = "imdialog-selected";
 
 VKMessage.send = function(options) {
+	$.localStorage("im_text_" + options.peerId, "");
+	console.log(options)
 	new APIRequest("messages.send", {
-		peer_id: toPeerId(options.peerId),
+		peerId: toPeerId(options.peerId),
 		message: options.text,
 		attachment: options.attachments,
 		random_id: random(1, 9999999),
 		v: 5.52
 	}).setOnCompleteListener(function(result) {
 		var messageId = result;
+		console.log("SENT MESSAGE: " + messageId);
 		// TODO: notify about new msg
+	}).setOnErrorListener(function(error) {
+		console.log("ERROR WHILE SENDING MESSAGE: ", error);
 	}).execute();
 };
 

@@ -1,7 +1,8 @@
 /**
  * APIdog v6.5
  *
- * upd: -1
+ * Last update: 08/08/2016
+ * Branch: release
  */
 
 var _initqueue = [];
@@ -13,94 +14,77 @@ function onInited (fx) {
 
 
 var Apps = {
-	RequestPage: function ()
-	{
-		switch (Site.Get("act"))
-		{
-			/* case "requests":
-				return Apps.getRequests();
-			break; */
+	RequestPage: function() {
+		switch (getAct()) {
 			default:
 				return Apps.getActivity();
 		};
 	},
-	getActivity: function (startFrom)
-	{
-		Site.APIv5("apps.getActivity",
-		{
+
+	getActivity: function(startFrom) {
+		Site.APIv5("apps.getActivity", {
 			fields: "photo_50,screen_name,online,sex",
 			v: 5.18,
 			count: 30,
 			start_from: startFrom || "",
 			platform: Site.Get("platform") || "web"
 		},
-		function (data)
-		{
-			if (!startFrom)
-				Apps.pageActivity();
-			Apps.writeActivity(Site.isResponse(data), {created: !startFrom});
+		function(data) {
+			!startFrom ? Apps.pageActivity() : Apps.writeActivity(Site.isResponse(data), {created: !startFrom});
 		});
 	},
-	getTabs: function ()
-	{
-		return Site.CreateTabPanel([
-			["apps", "Активность"]
-		]);
-	},
-	pageActivity: function ()
-	{
-		var page = document.createElement("div"),
-			list = document.createElement("div");
-		list.id = "apps-activity";
 
-		//page.appendChild(Apps.getTabs());
-		page.appendChild(Site.CreateHeader("Активность друзей"));
+	pageActivity: function() {
+		var e = $.e,
+			page = e("div"),
+			list = e("div", {id: "apps-activity"});
 
+		page.appendChild(Site.getPageHeader("Активность друзей"));
 		list.appendChild(Site.EmptyField("Загрузка активности друзей.."));
 
 		page.appendChild(list);
-		Site.Append(page);
+		Site.append(page);
 	},
+
 	apps: {},
-	addApps: function (apps) {
+
+	addApps: function(apps) {
 		for (var app in apps) {
 			app = apps[app];
 			Apps.apps[app.id] = app;
-		}
+		};
+
 		return Apps.apps;
 	},
-	writeActivity: function (data, options)
-	{
+
+	writeActivity: function(data, options) {
 		options = options || {};
 
 		var list = $.element("apps-activity");
 
-		if (options.created)
+		if (options.created) {
 			$.elements.clearChild(list);
+		};
 
-		if (!data.count)
-		{
+		if (!data.count) {
 			list.appendChild(Site.EmptyField("Ваши друзья не совершали никаких действий в последнее время"));
 			return;
 		};
 
-		var users = Local.AddUsers(data.profiles),
+		var users = Local.add(data.profiles),
 			apps = Apps.addApps(data.apps),
 			items = data.items;
 
-		for (var i = 0, l = items.length; i < l; ++i)
-		{
-			list.appendChild(Apps.getItemActivity(items[i], users[items[i].user_id], apps[items[i].app_id]));
-		};
+		items.forEach(function(i) {
+			list.appendChild(Apps.getItemActivity(i, users[i.user_id], apps[i.app_id]));
+		});
 	},
-	getItemActivity: function (item, user, application)
-	{
-		var e = $.elements.create,
-			getActivity = function ()
-			{
+
+	getItemActivity: function(item, user, application) {
+		var e = $.e,
+			getActivity = function() {
 				var string = [];
-				switch (item.type)
-				{
+				switch (item.type) {
 					case "install":
 						string.push(["установило", "установила", "установил"][user.sex]);
 						string.push({game: "игру", app: "приложение", standalone: "приложение", site: "приложение"}[user.type]);
@@ -112,6 +96,7 @@ var Apps = {
 						string.push("уровня в игре");
 						break;
 				};
+
 				return e("span", {html: string.join(" ") + " "});
 			};
 
@@ -125,10 +110,9 @@ var Apps = {
 			]})
 		]});
 	},
-	showItem: function (app)
-	{
-		var e = $.e,
-			wrap;
+
+	display: function(app) {
+		var e = $.e, wrap;
 		wrap = e("div", {"class": "profile-info", append: [
 			e("div", {"class": "profile-left", append: e("img", {src: getURL(app.icon_50)})}),
 			e("div", {"class": "profile-right", append: [
@@ -145,9 +129,9 @@ var Apps = {
 				}})
 			]})
 		]});
-		Site.SetHeader("Приложение");
-		Site.Append(e("div", {append: [
-			Site.CreateHeader("Приложение"),
+		Site.setHeader("Приложение");
+		Site.append(e("div", {append: [
+			Site.getPageHeader("Приложение"),
 			wrap
 		]}));
 	}

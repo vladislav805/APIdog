@@ -6,13 +6,12 @@
 
 var Notifications = {
 	getItems: function (data, noglobal) {
-		data = Site.isResponse(data)[0];
 		Local.AddUsers(data.profiles.concat(data.groups));
 		var count = data.count;
 		if (!noglobal || noglobal.toString() == "[object XMLHttpRequest]") {
 			var parent = document.createElement("div");
 			parent.appendChild(Feed.GetTabs());
-			parent.appendChild(Site.CreateHeader(Lang.get("feed.tabs_notifications")));
+			parent.appendChild(Site.CreateHeader(Lang.get("feed.tabNotifications")));
 			parent.id = "feed-notifications";
 		} else {
 			var parent = $.element("feed-notifications");
@@ -41,7 +40,7 @@ var Notifications = {
 				});
 			}}));
 		Site.Append(parent);
-		Site.SetHeader("Ответы", {link: "feed"});
+		Site.setHeader("Ответы", "feed");
 	},
 	getWriteForm: function (opts) {
 		opts = opts || {};

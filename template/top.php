@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru-RU">
 	<head>
+		<base href="/6.5/" />
 		<meta charset="utf-8" />
 		<meta name="viewport" content="initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=yes" />
 		<meta name="theme-color" content="#5F7FBA" />
@@ -36,9 +37,9 @@
 			<div class="dog-page dog-page-fixed" id="wrap-content">
 				<div class="dog-menu" id="dog-menu">
 					<aside>
-						<a href="auth.php"><?=getLabel("menuAuthorize");?></a>
+						<!--a href="auth.php"><?=getLabel("menuAuthorize");?></a-->
 						<a href="blog.php"><?=getLabel("menuBlog");?></a>
-						<a href="faq"><?=getLabel("menuFaq");?></a>
+						<!--a href="faq"><?=getLabel("menuFaq");?></a-->
 						<a href="about.php"><?=getLabel("menuAbout");?></a>
 						<a href="donate.php"><?=getLabel("menuDonate");?></a>
 					</aside>

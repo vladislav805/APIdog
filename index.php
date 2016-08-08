@@ -3,7 +3,7 @@
 	include_once "zero.framework.php";
 
 	// если не подключена новая версия, то перекидываем назад
-	if (!isNewVersionEnabled()) {
+	if (getAuthKey() && !isNewVersionEnabled()) {
 		header("Location: /6.4/");
 		exit;
 	};
@@ -187,8 +187,8 @@
 				</section>
 			</div>
 		</div>
-		<script src="/lib1.3.0.js"></script>
-		<script src="/hammer.js"></script>
+		<script src="lib1.3.0.js"></script>
+		<script src="//apidog.ru/hammer.js"></script>
 		<script src="/minify.php?file=jsDebug"></script>
 		<audio id="Player" class="hidden"></audio>
 		<noscript>

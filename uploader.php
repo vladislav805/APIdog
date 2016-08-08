@@ -7,6 +7,8 @@
 	 * Last update: 01/11/2015
 	 */
 
+	session_start();
+
 	error_reporting(E_ERROR);
 	$data = json_decode(trim($_REQUEST["target"]));
 
@@ -31,51 +33,61 @@
 		"photos.getUploadServer" => [
 			"param" => "file1",
 			"name" => "p.jpg",
-			"method" => "photos.save"
+			"method" => "photos.save",
+			"object" => "VKPhoto"
 		],
 		"photos.getWallUploadServer" => [
 			"param" => "photo",
 			"name" => "p.jpg",
-			"method" => "photos.saveWallPhoto"
+			"method" => "photos.saveWallPhoto",
+			"object" => "VKPhoto"
 		],
 		"photos.getChatUploadServer" => [
 			"param" => "photo",
 			"name" => "p.jpg",
-			"method" => "messages.setChatPhoto"
+			"method" => "messages.setChatPhoto",
+			"object" => "VKPhoto"
 		],
 		"photos.getMessagesUploadServer" => [
 			"param" => "photo",
 			"name" => "p.jpg",
-			"method" => "photos.saveMessagesPhoto"
+			"method" => "photos.saveMessagesPhoto",
+			"object" => "VKPhoto"
 		],
 		"photos.getOwnerPhotoUploadServer" => [
 			"param" => "photo",
 			"name" => "p.jpg",
-			"method" => "photos.saveOwnerPhoto"
+			"method" => "photos.saveOwnerPhoto",
+			"object" => "VKPhoto"
 		],
 		"video.save" => [
 			"param" => "file",
-			"name" => "v.mp4"
+			"name" => "v.mp4",
+			"object" => "VKVideo"
 		],
 		"audio.getUploadServer" => [
 			"param" => "file",
 			"name" => "a.mp3",
-			"method" => "audio.save"
+			"method" => "audio.save",
+			"object" => "VKAudio"
 		],
 		"docs.getUploadServer" => [
 			"param" => "file",
 			"name" => $file["name"],
-			"method" => "docs.save"
+			"method" => "docs.save",
+			"object" => "VKDocument"
 		],
 		"docs.getWallUploadServer" => [
 			"param" => "file",
 			"name" => $file["name"],
-			"method" => "docs.save"
+			"method" => "docs.save",
+			"object" => "VKDocument"
 		],
 		"chronicle.getUploadServer" => [
 			"param" => "photo",
 			"name" => "p.jpg",
-			"method" => "chronicle.save"
+			"method" => "chronicle.save",
+			"object" => "VKPhoto"
 		]
 	];
 
@@ -118,32 +130,12 @@
 	// Get options to download from our configuration
 	$p = $methodParams[$method];
 
-	if ($p["isAPIdog"]) {
-		switch ($method) {
-			case "support.uploadImage":
-				include_once "api-helper.php";
-				$result = Attachment::uploadImage($file);
-				break;
-
-			case "apidog.uploadAdImage":
-				include_once "ads-engine.php";
-				$api = new AdsAPI;
-				$result = $api->uploadImage($file);
-				break;
-
-			default:
-				outError(-4);
-				break;
-		};
-		outJSON($result);
-		exit;
-	};
 
 	/**
 	 * Requesting address for upload
 	 */
 
-	$API = new VKAPI($params["access_token"], 4.99);
+	$API = new VKAPI($_COOKIE["userAccessToken"], 4.99);
 
 	// The requested URL to download the file
 	$server = $API->request($method, $params)->send();
@@ -205,6 +197,50 @@
 	// check whether the response element zero of the array.
 	if (is_array($response) && isset($response[0])) {
 		$response = $response[0];
+	};
+
+	function convert($data, $schema) {
+		$result = [];
+		foreach ($schema as $old => $will) {
+			$result[$will] = $data->{$old};
+		};
+		return $result;
+	};
+
+	switch ($p["object"]) {
+		case "VKPhoto":
+			$item = [
+				"owner_id" => "owner_id",
+				"aid" => "album_id",
+				"pid" => "id",
+				"src_small" => "photo_75",
+				"src" => "photo_130",
+				"src_big" => "photo_604",
+				"src_xbig" => "photo_807",
+				"src_xxbig" => "photo_1280",
+				"src_xxxbig" => "photo_2560",
+				"width" => "width",
+				"height" => "height"
+			];
+			break;
+
+		case "VKDocument":
+			$item = [
+				"owner_id" => "owner_id",
+				"did" => "id",
+				"title" => "title",
+				"size" => "size",
+				"ext" => "ext",
+				"url" => "url",
+				"thumb" => "photo_100",
+				"thumb_s" => "photo_130",
+				"date" => "date"
+			];
+			break;
+	};
+
+	if (isset($item)) {
+		$response = convert($response, $item);
 	};
 
 	// ... and return answer to user (frontend)

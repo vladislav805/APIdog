@@ -195,6 +195,7 @@ var Wall = {
 	RequestWall: function (ownerId, opts) {
 		opts = opts || {};
 		var callback = function (data) {
+			console.log(data);
 			var e = $.e,
 				parent = e("div", {
 					"class": "wall-profile-wrap",
@@ -305,7 +306,7 @@ var Wall = {
 					});
 					SelectAttachments.RemoveSelector();
 					SelectAttachments.ClearAttachments();
-				};
+				d};
 				if (ownerId > 0 && ownerId == API.uid)
 					params.friends_only = true;
 				if (ownerId < 0 && Local.Users[ownerId] && Local.Users[ownerId].is_admin){
@@ -335,22 +336,10 @@ var Wall = {
 		};
 		if (opts.data)
 			return callback(
-				{ response: opts.data },
+				opts.data,
 				{ ownerId: ownerId }
 			);
-		else
-			Site.APIv5("wall.get", {
-				owner_id: ownerId,
-				extended: 1,
-				count: 25,
-				offset: getOffset(),
-				v: 5.29
-			}, function (data) {
-				callback(
-					data,
-					{ ownerId: ownerId }
-				);
-			});
+
 	},
 
 	choosePublishDate: function (form) {
@@ -450,14 +439,13 @@ var Wall = {
 	posts: {},
 
 	getItem: function(ownerId, postId) {
-		Site.API("execute", {
-			code: "var o=%h,p=%p,i=o+\"_\"+p,w,c,l,a,s,p,g,z=[],f=\"online,screen_name,first_name_dat,last_name_dat\";w=API.wall.getById({posts:i,extended:1,copy_history_depth:4,v:5.29});i=w.items[0];if(!i){i={errorId:1,id:0};};c=API.wall.getComments({owner_id:o,post_id:p,count:50,offset:%o,extended:1,sort:\"asc\",need_likes:1,v:5.29});l=API.likes.getList({type:\"post\",owner_id:o,item_id:p,filter:\"likes\",fields:f,friends_only:1,extended:1,count:4,skip_own:1,v:5.29});a=API.wall.get({owner_id:o,count:1}).items[0];i.can_pin=parseInt(a.can_pin?a.can_pin:i.id!=a.id);i.is_pinned=parseInt(a.id==i.id&&a.is_pinned);s=API.users.get({user_ids:c.items@.reply_to_user+c.items@.from_id,fields:f});p=(w.profiles?w.profiles:z)+(c.profiles?c.profiles:z)+(l.items?l.items:z)+(s?s:z);g=(w.groups?w.groups:z)+(c.groups?c.groups:z);return{post:i,profiles:p?p:[],groups:g?g:[],comments:c,likes:{all:{count:i.likes.count},friends:{count:l.count,items:l.items@.id}},a:API.account.getCounters()};".schema({
-					h: ownerId,
-					p: postId,
-					o: getOffset()
-				})
-		}, function (data) {
-			data = Site.isResponse(data);
+		new APIRequest("execute", {
+			code: "var o=Args.h,p=Args.p,i=o+\"_\"+p,w,c,l,a,s,p,g,z=[],f=\"online,screen_name,first_name_dat,last_name_dat\";w=API.wall.getById({posts:i,extended:1,copy_history_depth:4,v:5.29});i=w.items[0];if(!i){i={errorId:1,id:0};};c=API.wall.getComments({owner_id:o,post_id:p,count:50,offset:Args.o,extended:1,sort:\"asc\",need_likes:1,v:5.29});l=API.likes.getList({type:\"post\",owner_id:o,item_id:p,filter:\"likes\",fields:f,friends_only:1,extended:1,count:4,skip_own:1,v:5.29});a=API.wall.get({owner_id:o,count:1}).items[0];i.can_pin=parseInt(a.can_pin?a.can_pin:i.id!=a.id);i.is_pinned=parseInt(a.id==i.id&&a.is_pinned);s=API.users.get({user_ids:c.items@.reply_to_user+c.items@.from_id,fields:f});p=(w.profiles?w.profiles:z)+(c.profiles?c.profiles:z)+(l.items?l.items:z)+(s?s:z);g=(w.groups?w.groups:z)+(c.groups?c.groups:z);return{post:i,profiles:p?p:[],groups:g?g:[],comments:c,likes:{all:{count:i.likes.count},friends:{count:l.count,items:l.items@.id}},a:API.account.getCounters()};",
+			h: ownerId,
+			p: postId,
+			o: getOffset()
+		}).setOnCompleteListener(function(data) {
+			console.log(data);
 			Site.setCounters(data.a);
 			Local.AddUsers(data.profiles);
 			Local.AddUsers(data.groups);
@@ -476,7 +464,7 @@ var Wall = {
 					canComment: post.comments && post.comments.can_post,
 					isAdmin: Local.Users[ownerId] && Local.Users[ownerId].is_admin
 				}),
-				head = Site.CreateHeader("Пост на стене", (function () {
+				head = Site.getPageHeader("Пост на стене", (function () {
 					var obj = {};
 					if (post.can_edit)
 						obj["Редактировать"] = function (event) {
@@ -503,74 +491,25 @@ var Wall = {
 			wrap.appendChild(comments);
 
 			var from = decodeURIComponent(Site.Get("from"));
-			Site.SetHeader("Запись на стене", {
-				link: (
-					from != "0" ? from : (
-						Local.Users[ownerId]
-							? Local.Users[ownerId].screen_name
-							: (ownerId > 0 ? "id" + ownerId : "club" + (-ownerId))
-					)
-				)
-			});
-			Site.Append(wrap);
-			if (Site.Get("reply"))
-				Wall.scrollToComment(ownerId, postId, Site.Get("reply"));
-		});
+
+			Site.setHeader(
+				"Запись на стене",
+				from != "0"
+					? from
+					: ownerId in Local.Users
+						? Local.Users[ownerId].screen_name
+						: (ownerId > 0 ? "id" + ownerId : "club" + (-ownerId))
+			);
+
+			Site.append(wrap);
+
+			var reply;
+			if (reply = Site.Get("reply")) {
+				Wall.scrollToComment(ownerId, postId, reply);
+			};
+		}).execute();
 	},
 
-/*	getLikesPanel: function (likes, ownerId, postId) {
-		var e = $.e,
-			wrap = e("div", {
-				"class": "wall-likes-list",
-				onclick: function (event) {
-if (API.uid == 23048942) {
-	return likers("post", ownerId, postId);
-};
-					window.location.hash = "#wall" + ownerId + "_" + postId + "?act=likes";
-					return false;
-				}
-			}),
-			all = likes.all && likes.all.count || 0,
-			friends = likes.friends && likes.friends.count || 0,
-			length = likes.friends && likes.friends.items && likes.friends.items.length || 0,
-			text = function (text) {
-				if (!text)
-					return;
-				list.appendChild(document.createTextNode(text));
-			},
-			list = all ? e("span", {
-				"class": "tip a",
-				html:
-				(all
-					? "Понравилось " + all + " " + $.textCase(all, ["пользователю", "пользователям", "пользователям"]) +
-						(friends
-							? ", в том числе "
-							: ""
-						)
-					: "Никому не понравилось"
-				)
-			}) : e("div");
-
-		var friendsOutputted = 0;
-		Array.prototype.forEach.call(likes.friends && likes.friends.items || [], function (f, i, a) {
-			f = Local.Users[f];
-			list.appendChild(e("a", {
-				href: "#" + f.screen_name,
-				html: f.first_name_dat + " " + f.last_name_dat,
-				onclick: function (event) {
-					event.cancelBubble = true;
-					event.stopPropagation();
-				}
-			}));
-			text(i < length - 2 || friends > 4 && i < length - 1 ? ", " : i == length - 2 ? " и " : "");
-			friendsOutputted++;
-		});
-		var left = friends - friendsOutputted;
-		if (left)
-			text(" и еще " + left + " " + $.textCase(left, ["другу", "друзьям", "друзьям"]));
-		wrap.appendChild(list);
-		return wrap;
-	},*/
 
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! v6.4 оставить

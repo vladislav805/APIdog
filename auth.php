@@ -5,6 +5,11 @@
 	include_once "zero.framework.php";
 	include_once "zero.helper.php";
 
+	if (getAuthKey()) {
+		header("Location: ./");
+		exit;
+	};
+
 	if (isset($_REQUEST["act"])) {
 
 		switch ($_REQUEST["act"]) {

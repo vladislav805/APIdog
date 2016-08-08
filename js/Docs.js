@@ -19,6 +19,7 @@ function VKDocument (d) {
 	this.isImage = !!this.preview100;
 	this.canModify = !!(this.ownerId > 0 && this.ownerId == API.userId || this.ownerId < 0 && Local.Users[this.ownerId] && Local.Users[this.ownerId].is_admin);
 };
+
 VKDocument.prototype = {
 	getAttachId: function() {
 		return this.getType() + this.ownerId + "_" + this.getId();
@@ -26,8 +27,8 @@ VKDocument.prototype = {
 	getId: function() { return this.documentId; },
 	getType: function() { return "doc"; },
 
-	getNode: function (actionBlock) {
-		if (this.node) {
+	getNode: function (actionBlock, forceCreate) {
+		if (this.node && !forceCreate) {
 			return this.node;
 		};
 
@@ -36,7 +37,7 @@ VKDocument.prototype = {
 			wrap = e("a", {
 				"class": "doc-item",
 				onclick: function () {
-					if (isMobile) {
+					if (isMobile && actionBlock) {
 						actionBlock.setItemForAction(context).show();
 					};
 				},
@@ -90,8 +91,25 @@ VKDocument.prototype = {
 						]})
 					]
 			});
-		this.node = wrap;
+
+		if (!forceCreate) {
+			this.node = wrap;
+		};
+
 		return wrap;
+	},
+
+	getNodeItem: function(options) {
+		options = options || {};
+		var node = this.getNode(null, true);
+		if (options.onClick) {
+			$.event.add(node, "click", function(event) {
+				event.preventDefault();
+				options.onClick(event);
+				return false;
+			});
+		};
+		return node;
 	},
 
 	edit: function () {

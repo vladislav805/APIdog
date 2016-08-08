@@ -26,7 +26,7 @@
 		switch ($action) {
 
 			case "add":
-				if (!CURRENT_USER_ADMIN) {
+				if (!isAdminCurrentUser) {
 					header("Location: ?");
 					exit;
 				};
@@ -48,7 +48,7 @@
 				break;
 
 			case "create":
-				if (!CURRENT_USER_ADMIN) {
+				if (!isAdminCurrentUser) {
 					header("Location: ?");
 					exit;
 				};
@@ -65,12 +65,12 @@
 				break;
 
 			default:
+				template(APIdogTemplateTop);
 
 				$list = $blog->getTimeline($offset);
 
 				$pagination = pagination($offset, $list["count"], 40);
 
-				template(APIdogTemplateTop);
 				print $pagination;
 
 				foreach ($list["items"] as $item) {
@@ -94,13 +94,13 @@
 
 			case "delete":
 
-				if (!CURRENT_USER_ADMIN) {
+				/*if (!isAdminCurrentUser) {
 					header("Location: ?");
 					exit;
 				};
 
 				$result = $blog->deletePost($postId);
-				closeDatabase();
+				closeDatabase();*/
 
 				exit(header("Location: ?"));
 				break;
@@ -109,7 +109,6 @@
 
 				$post = $blog->getPost($postId);
 
-				closeDatabase();
 
 				if (!$post) {
 					exit(header("Location: ?"));
@@ -127,7 +126,7 @@
 	<div></div>
 	<div class="info"><a href="./#id<?=$post["adminId"];?>"><?=getAdminLink($post["adminId"]);?></a> | <?=date("d.m.Y H:i", $post["date"]);?></div>
 <?
-				if (CURRENT_USER_ADMIN) {
+				if (isAdminCurrentUser) {
 ?>
 	<div class="blog-actions">
 		<a href="blog.php?act=delete&amp;postId=<?=$postId;?>">Удалить</a>
@@ -139,6 +138,7 @@
 <?
 
 				template(APIdogTemplateBottom);
+				closeDatabase();
 
 		};
 

@@ -78,20 +78,25 @@ var IM = {
 			form = IM.createSendForm(peerId),
 			list = IM.createListMessages(peerId),
 			listNode = list.node,
+			listWrap,
 			wrap = e("div", {
+				"class": "im-wrapper",
 				append: [
 					form.node,
-					listNode
+					listWrap = $.e("div", {"class": "imdialog-list-wrapper", append: listNode})
 				]
 			}),
 			peer = parsePeer(peerId), // [type, id]
 			id = toPeerId(peerId), // 1, -1, 200000001
 
+			isFull = isEnabled(APIDOG_SETTINGS_DIALOGS_REVERSE),
+
 			currentOffset = 0,
+			isFirst = true,
 
 			load = function() {
 				new APIRequest("execute", {
-					code: 'var m=API.messages.getHistory({peer_id:Args.p,count:60,offset:Args.o,v:5.52}),c=[],g=[];if(Args.r!=0){API.messages.markAsRead({peer_id:Args.p,v:5.52});};if(Args.c!=0){c=API.messages.getChat({chat_ids:Args.p-2000000000,fields:Args.f});};if(Args.g!=0){g=API.groups.getById({group_id:Args.p});};return{dialog:m,users:API.users.get({user_ids:m.items@.user_id+m.items@.action_mid+c.users@.invited_by,fields:Args.f}),chats:c,groups:g};',
+					code: 'var p=Args.p,m=API.messages.getHistory({peer_id:p,count:60,offset:Args.o,v:5.52}),c=[],g=[];if(Args.r!=0){API.messages.markAsRead({peer_id:p,v:5.52});};if(Args.c!=0){c=API.messages.getChat({chat_ids:p-2000000000,fields:Args.f});};if(Args.g!=0){g=API.groups.getById({group_id:p});};return{dialog:m,users:API.users.get({user_ids:m.items@.user_id+m.items@.action_mid+c.users@.invited_by+p,fields:Args.f}),chats:c,groups:g};',
 					p: id,
 					r: isEnabled(2) ? 1 : 0,
 					f: "photo_100,screen_name,can_write_private_message,online,last_seen,sex,blacklisted,first_name_gen,last_name_gen,first_name_acc,last_name_acc,sex,blacklisted",
@@ -99,7 +104,6 @@ var IM = {
 					c: +(peer[0] === APIDOG_DIALOG_PEER_CHAT && !(peerId in Local.Users)),
 					g: +(peer[0] === APIDOG_DIALOG_PEER_GROUP && !(peerId in Local.Users))
 				}).setOnCompleteListener(function(result) {
-					console.log(result);
 					Local.add(result.users);
 					Local.add(result.groups);
 					Local.add(result.chats);
@@ -108,7 +112,14 @@ var IM = {
 
 					result = result.dialog;
 
+					currentOffset += result.items.length;
 					insert(parse(result.items, VKMessage), result.count, Math.max(result.in_read, result.out_read));
+
+					if (isFirst) {
+						listWrap.scrollTo(0, 999999);
+						isFirst = false;
+					};
+
 				}).setOnErrorListener(function(e) {
 					console.error(e);
 				}).execute();
@@ -135,7 +146,6 @@ var IM = {
 				};
 				form.headName.innerHTML = t;
 				form.headName.onclick = function() {
-					console.log("cliked!");
 					if (l) {
 						nav.go(l);
 					} else {
@@ -144,39 +154,84 @@ var IM = {
 				}
 			},
 			insert = function(messages, count, readUntil) {
-				console.log(messages);
 				messages.forEach(function(message) {
-					listNode.appendChild(message.getNode());
+					if (!isFull) {
+						listNode.appendChild(message.getNode());
+					} else {
+						listNode.insertBefore(message.getNode(), listNode.firstChild);
+					};
 				});
 			};
-console.log(id, peer);
+
+
 		load();
 		Site.append(wrap).setHeader(lg("im.dialog"), "mail");
+		IM.setHandlers(isFull, form, list, listWrap, load);
+	},
 
+	setHandlers: function(isFull, form, list, listWrap, load) {
+		var menu = $.element("dog-menu");
+		if (!isFull) {
+			(window.onResizeCallback = function(event) {
+				var vh = document.documentElement.clientHeight,
+					fs = $.getPosition(form.node),
+					fh = fs.top + fs.height;
+
+				listWrap.style.height = (vh - fh) + "px";
+				menu.style.height = (vh - 50) + "px";
+			})();
+		} else {
+			(window.onResizeCallback = function(event) {
+				var vh = document.documentElement.clientHeight,
+					fh = form.node.clientHeight;
+
+				form.node.parentNode.style.height = (vh - 50) + "px";
+				listWrap.style.height = (vh - 50 - fh) + "px";
+				form.node.style.position = "absolute";
+				form.node.style.bottom = "0";
+				form.node.style.width = "100%";
+				form.node.style.left = "0";
+				form.node.style.right = "0";
+				menu.style.height = (vh - 50) + "px";
+			})();
+		};
+
+		setSmartScrollListener(listWrap, function(reset) {
+			load();
+			reset();
+		}, isFull);
+
+		window.onLeavePage = function() {
+			menu.style.height = "auto";
+		};
 	},
 
 	createSendForm: function(peerId) {
 		var e = $.e,
 			send = function(event) {
 				event && event.preventDefault();
-				textarea.value = "";
 				actionspace.cAttach.clear();
-				actionspcae.cSmile.close();
+				//actionspace.cSmile.close();
 				VKMessage.send({
 					peerId: peerId,
 					text: textarea.value.trim(),
 					attachments: actionspace.cAttach.getAttachmentString(),
 					geo: actionspace.cAttach.getGeo()
 				});
+				textarea.value = "";
 				return false;
 			},
 			head,
 			headName = e("span", { html: "peer " + peerId }),
 			headActions = null,
 			form,
-			textarea = IM.createTextarea(peerId, { send: send }),
-			actionspace = IM.createActionspace(peerId, { send: send }),
-			wrap = e("form", {id: "g-form-dialog" + peerId, append: [
+			textarea = IM.createTextarea(peerId, {
+				send: send
+			}),
+			actionspace = IM.createActionspace(peerId, {
+				send: send
+			}),
+			wrap = e("form", {id: "g-form-dialog-" + peerId, append: [
 				head = Site.getPageHeader(headName, headActions),
 				form = e("div", {"class": "im-formsend", append: [
 					textarea,
@@ -242,22 +297,30 @@ maxlength: 4096, // TODO chunk
 			left = e("div", {"class": "fl im-actionspace-left"}),
 			right = e("div", {"class": "fr im-actionspace-right"}),
 			nAttachments = e("input", {type: "hidden", name: "attachments", value: ""}),
-			wrap = e("div", {"class": "im-actionspace", append: [left, right, nAttachments] }),
+			wrap = e("div", {"class": "im-actionspace clearfix", append: [left, right, nAttachments] }),
 
 			cSmile = new SmileController(),
 			cAttach = new AttachmentController({
 				peerId: toPeerId(peerId),
 				maxCount: 10,
+				methods: {
+					photo: "photos.getMessagesUploadServer",
+					document: "docs.getWallUploadServer"
+				},
 				onSelect: function(result) {
 					nAttachments.value = nAttachments.value.split(",").filter(function(v) { return !!v; }).concat(result.map(function(v) {
-						return v.getFullId()
+						return v.getAttachId();
 					}));
 				}
-			});
+			}),
+
+			attachNode = cAttach.getNode();
+
+		$.elements.addClass(attachNode.firstChild, "im-actionbutton");
 
 		right.appendChild(e("input", {type: "submit", name:"sendbutton", value: lg("im.formSend")}));
 		left.appendChild(cSmile.getNode());
-		left.appendChild(cAttach.getNode());
+		left.appendChild(attachNode);
 
 		return {
 			node: wrap,
@@ -276,7 +339,7 @@ maxlength: 4096, // TODO chunk
 	},
 
 	showChatInfo: function(peerId) {
-
+		console.log(peerId);
 	},
 
 
