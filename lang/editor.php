@@ -7,16 +7,7 @@
 		["id" => 2, "title" => "Украинский"]
 	];
 
-	function getKeys() {
-		$d = json_decode(file_get_contents("./0.json"));
-		foreach ($d as $section => $inner) {
-			foreach ($inner as $key => $value) {
-				$keys[] = $section . "!" . $key;
-			};
-		};
-		return $keys;
-	};
-
+	
 	function prepareItems($data) {
 		foreach ($data as $section => $inner) {
 			foreach ($inner as $key => $value) {
@@ -46,31 +37,9 @@
 		exit;
 	}
 
-	if ($_REQUEST["save"]) {
+	if (isset($_REQUEST["save"])) {
 
-		$json = [];
-
-		foreach ($_POST as $key => $value) {
-			list($section, $label) = explode("!", $key);
-
-			if (strPos($value, "|;|") !== false) { // object
-				$items = explode("|;|", $value);
-				$value = [];
-				foreach ($items as $item) {
-					list($k, $v) = explode("=", $item);
-					$value[$k] = $v;
-				};
-			} elseif (strPos($value, "|") !== false) { // array
-				$value = explode("|", $value);
-				if (sizeOf($value) == 2 && !$value[0] && $value[1]) {
-					$value = [$value[1]];
-				}
-			};
-
-			$json[$section][$label] = $value;
-		};
-
-		$json = json_encode($json, JSON_UNESCAPED_UNICODE);
+		$json = json_encode($_POST["data"], JSON_UNESCAPED_UNICODE);
 
 		$fh = fopen($languageId . ".json", "w+");
 		fwrite($fh, $json);
@@ -100,7 +69,7 @@
 		text-align: left;
 	}
 
-	td {
+	body > form > table > tbody > tr > td {
 		width: 100%;
 	}
 
@@ -113,16 +82,39 @@
 <form action="./editor.php?languageId=<?=$languageId;?>&amp;save=1" method="post">
 <table>
 <?
-	$items = prepareItems($data);
+	$fields = json_decode(file_get_contents("./0.json"), true);
+	$data = json_decode(file_get_contents("./" . $languageId . ".json"), true);
 
-	foreach (getKeys() as $key) {
-//		$placeholder = isset($items[$key]) ? "" : $
+	foreach ($fields as $section => $s) {
+		foreach ($s as $key => $value) {
+
+			$item = isset($data[$section][$key]) ? $data[$section][$key] : null;
 ?>
 	<tr>
-		<th><?=$key;?></th>
-		<td><input type="text" name="<?=$key;?>" value="<?=htmlspecialchars($items[$key]);?>" /></td>
+		<th><?=$section.".".$key;?></th>
+		<td><?
+			if (is_array($value)) {
+?>
+			<table>
+<?
+				foreach ($value as $i => $v) {
+?>
+				<tr>
+					<td><?=$i;?></td>
+					<td><input type="text" name="data[<?=$section;?>][<?=$key?>][<?=$i;?>]" value="<?=(isset($item[$i]) ? htmlspecialchars($item[$i]) : "");?>" placeholder="<?=htmlspecialchars($v)?>" /></td>
+				</tr>
+<?
+				}
+?>
+			</table>
+<?
+			} else {
+?><input type="text" name="data[<?=$section;?>][<?=$key?>]" value="<?=htmlspecialchars($item);?>" placeholder="<?=htmlspecialchars($value)?>" /><?
+			}
+?></td>
 	</tr>
 <?
+		}
 	}
 
 ?>

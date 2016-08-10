@@ -1992,7 +1992,8 @@ APIRequest.prototype = {
 				break;
 
 			case APIDOG_REQUEST_API_ERROR_INVALID_TOKEN:
-				alert("INVALID TOKEN\n\n" + error.toString());
+
+				window.location.href = "/authorize.php?act=logout&from=v6.5";
 				break;
 
 			case APIDOG_REQUEST_API_ERROR_RUNTIME:
