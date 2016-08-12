@@ -647,7 +647,7 @@ var_dump($user, $authKey);
 			$items[] = '<a href="?offset=' . $i . '">' . (floor($i / $step) + 1) . '</a>';
 		};
 
-		return (sizeOf($items) ? '<div class="pagination-wrap">' . join("", $items) . '</div>' : '');
+		return (sizeOf($items) > 1 ? '<div class="pagination-wrap">' . join("", $items) . '</div>' : '');
 	};
 
 	/**
