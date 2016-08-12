@@ -39,13 +39,20 @@
 		$session = getSessionByAuthKey($authKey);
 
 		if (!$authKey || !$session) {
-			return;
+			$userAccessToken = "";
+			$authKey = "";
+			$userId = 0;
+			$isAdmin = false;
+		} else {
+			$userAccessToken = escape($_COOKIE[KEY_ACCESS_TOKEN]);
+			$userId = $session->userId;
+			$isAdmin = isset($ssAdmins[$session->userId]);
 		};
 
-		define("userAccessToken", escape($_COOKIE[KEY_ACCESS_TOKEN]));
+		define("userAccessToken", $userAccessToken);
 		define("userAuthKey", $authKey);
-		define("userId", $session->userId);
-		define("isAdminCurrentUser", in_array($session->userId, $ssAdmins));
+		define("userId", $userId);
+		define("isAdminCurrentUser", $isAdmin);
 	};
 
 
