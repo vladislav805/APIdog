@@ -638,13 +638,15 @@ var_dump($user, $authKey);
 	 * @return String            HTML-код
 	 */
 	function pagination ($offset, $count, $step, $limitRadius = 3) {
+		$url = preg_replace("/(?|&)offset=(\d+)/i", "", $_SERVER['REQUEST_URI']);
+		$concat = !~strpos($url, "?") ? "?" : "&";
 
 		$items = [];
 		for ($i = $offset - ($step * $limitRadius), $l = $offset + ($step * $limitRadius); $i < $l; $i += $step) {
 			if ($i < 0 || $i >= $count) {
 				continue;
 			};
-			$items[] = '<a href="?offset=' . $i . '">' . (floor($i / $step) + 1) . '</a>';
+			$items[] = '<a href="' . $url . $concat . 'offset=' . $i . '">' . (floor($i / $step) + 1) . '</a>';
 		};
 
 		return (sizeOf($items) > 1 ? '<div class="pagination-wrap">' . join("", $items) . '</div>' : '');
