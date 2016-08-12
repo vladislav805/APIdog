@@ -646,10 +646,10 @@ var_dump($user, $authKey);
 			if ($i < 0 || $i >= $count) {
 				continue;
 			};
-			$items[] = '<a href="' . $url . $concat . 'offset=' . $i . '">' . (floor($i / $step) + 1) . '</a>';
+			$items[] = '<a href="' . htmlspecialchars($url . $concat . 'offset=' . $i) . '"' . ($offset == $i ? " data-current" : "") . '>' . (floor($i / $step) + 1) . '</a>';
 		};
 
-		return (sizeOf($items) > 1 ? '<div class="pagination-wrap">' . join("", $items) . '</div>' : '');
+		return (sizeOf($items) > 1 ? '<div class="pagination-wrap" data-links="' . sizeOf($items) .'" data-pages="' . ceil($count / $step) . '">' . join("", $items) . '</div>' : '');
 	};
 
 	/**
