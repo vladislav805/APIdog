@@ -639,7 +639,7 @@ var_dump($user, $authKey);
 	 */
 	function pagination ($offset, $count, $step, $limitRadius = 3) {
 		$url = preg_replace("/(?|&)offset=(\d+)/i", "", $_SERVER['REQUEST_URI']);
-		$concat = !~strpos($url, "?") ? "?" : "&";
+		$concat = !(strpos($url, "?") >= 0) ? "?" : "&";
 
 		$items = [];
 		for ($i = $offset - ($step * $limitRadius), $l = $offset + ($step * $limitRadius); $i < $l; $i += $step) {
