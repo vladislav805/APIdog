@@ -53,10 +53,10 @@ Work with LongPoll: file longpoll.js
 
 Team project:
 ========
-* [Veluga Vladislav](https://github.com/vladislav805) (developer)
+* [Vladislav Veluga](https://github.com/vladislav805) (developer)
 * [Anton Karpovich](https://github.com/longpoll) (financial director)
 * Alexander Tkachuk (system administrator)
-* [Taras Dacuk](https://github.com/who0ps) (support)
+* [Taras Datsyuk](https://github.com/who0ps) (support)
 * [Ilya Vorchuk](https://github.com/wityaz) (designer)
 * Oksana Erickson (support)
 * Nadia Ivanova (support)
