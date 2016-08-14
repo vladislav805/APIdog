@@ -5,11 +5,17 @@
 	include_once "zero.framework.php";
 	include_once "zero.helper.php";
 
-	if (!userId && $_REQUEST["act"] != "result") {
+	$act = "";
+
+	if (isset($_REQUEST["act"])) {
+		$act = trim($_REQUEST["act"]);
+	};
+
+	if (!userId && $act != "result") {
 		exit(header("Location: /"));
 	};
 
-	switch ($_REQUEST["act"]) {
+	switch ($act) {
 
 		case "result":
 			$amount = $_REQUEST["withdraw_amount"]; // снятые деньги, а не перечисленные. позже доделать
@@ -52,7 +58,8 @@
 	<p><?=$p->description;?></p>
 	<p><?=getLabel("_amountName");?>: <?=$p->amount;?> <?=getLabel("_amountCurrency");?> (<?=getLabel("_periods")[$p->period];?>)</p>
 <?
-				if (!$paid[$p->productId] && !($analog = $p->getAnalogBought($paid))) {
+				$analog = $p->getAnalogBought($paid);
+				if (!isset($paid[$p->productId]) && !$analog) {
 ?>
 	<div class="btn" onclick="Pro.goToPay(<?=$p->productId;?>, this)" data-product="<?=htmlSpecialChars(json_encode($p, JSON_UNESCAPED_UNICODE))?>"><?=getLabel("_buy");?></div>
 <?

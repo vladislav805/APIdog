@@ -553,7 +553,8 @@ var_dump($user, $authKey);
 	function getLabel ($name) {
 		global $pagePrefix;
 		$name = strPos($name, "_") === 0 ? $pagePrefix . UCFirst(subStr($name, 1)) : $name;
-		return getLang(-1, "nonstdsite")[$name];
+		$section = getLang(-1, "nonstdsite");
+		return isset($section[$name]) ? $section[$name] : "%nonstdsite." . $name . "%";
 	};
 
 	/**

@@ -87,6 +87,7 @@
 		"vkhideWentWrong":"Что-то пошло не так - дата последнего захода изменилась!",
 		"vkhideFirstRequestTitle":"Процесс",
 		"vkhideFirstRequestContent":"Отправка первого запроса<br\/>Пожалуйста, подождите...",
+		"proTitle": "Платные услуги",
 		"proHeadTitle": "Платные услуги",
 		"proModalPaymentMethodTitle": "Выбор способа оплаты",
 		"proPaymentMethodYM": "Яндекс.Деньги",
