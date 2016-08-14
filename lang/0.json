@@ -1347,9 +1347,17 @@
 		"typeDocument": "Документ",
 		"typeMap": "Карту",
 		"typePoll": "Опрос",
+
 		"photoAlbum": "Из альбома",
 		"photoFile": "Из файла",
 		"photoURL": "По ссылке",
+
+		"documentList": "Из документов",
+		"documentFile": "Из файла",
+		"documentURL": "По ссылке",
+
+		"modalOk": "Готово",
+		"modalCancel": "Отмена",
 
 		"fileSelect": "Нажмите сюда для выбора или перетащите сюда файлы",
 

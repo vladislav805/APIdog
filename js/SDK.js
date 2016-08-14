@@ -4182,7 +4182,7 @@ AttachmentController.prototype = {
 			footer: [
 				{
 					name: "ok",
-					value: lg("attacher.modalOk"),
+					title: lg("attacher.modalOk"),
 					onclick: function(event) {
 						self._onSelect(self.getSelected());
 						this.close();
@@ -4190,7 +4190,7 @@ AttachmentController.prototype = {
 				},
 				{
 					name: "cancel",
-					value: lg("general.cancel"),
+					title: lg("attacher.modalCancel"),
 					onclick: function(event) {
 						this.close();
 					}

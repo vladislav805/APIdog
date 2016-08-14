@@ -9,7 +9,6 @@ var Lang = {
 	data: null,
 
 	load: function (callback) {
-		console.trace();
 		APIdogRequest("apidog.getLanguageData", {}, function (result) {
 			Lang.data = result.data;
 			callback && callback();
