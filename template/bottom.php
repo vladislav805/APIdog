@@ -10,18 +10,20 @@
 		<script src="js/VKUpload.js"></script>
 		<script src="nondefault.js?1"></script>
 		<script type="text/javascript">var API = <?
-	$user = getUserDataForNonStdPages();
-	print json_encode($user["usr"] ? $user["usr"] : [
-		"userAccessToken" => "",
-		"userId" => 0,
-		"authKey" => "",
-		"settings" => [
-			"bitmask" => 0,
-			"languageId" => USER_LANGUAGE_ID
-		]
-	]);
-	if ($user["lng"]) {
-		print (";var Lang = {\"data\":" . json_encode($user["lng"], JSON_UNESCAPED_UNICODE) . ",\"get\":function(a){return Lang.data[a] || \"%\"+a+\"%\";}};");
+	if (defined("_installed")) {
+		$user = getUserDataForNonStdPages();
+		print json_encode($user["usr"] ? $user["usr"] : [
+			"userAccessToken" => "",
+			"userId" => 0,
+			"authKey" => "",
+			"settings" => [
+				"bitmask" => 0,
+				"languageId" => USER_LANGUAGE_ID
+			]
+		]);
+		if ($user["lng"]) {
+			print (";var Lang = {\"data\":" . json_encode($user["lng"], JSON_UNESCAPED_UNICODE) . ",\"get\":function(a){return Lang.data[a] || \"%\"+a+\"%\";}};");
+		};
 	};
 ?></script>
 		<noscript>

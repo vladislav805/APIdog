@@ -19,6 +19,10 @@
 	include_once "zero.helper.php";
 	include_once "zero.db.php";
 
+	if (!defined("_install")) {
+		exit("not configured. please, configure zero-module before using site");
+	};
+
 	global $dbHost, $dbUser, $dbPassword, $dbDatabase, $ssAdmins;
 
 	session_start();
