@@ -126,7 +126,7 @@ var Profile = {
 
 		wrap.appendChild(Site.getPageHeader(
 			e("strong", {html: user.first_name.safe() + " " + user.last_name.safe() + (user.maiden_name ? " (" + user.maiden_name + ")" : "")}),
-			null //Site.CreateDropDownMenu(Lang.get("general.actions"), null)
+			Site.CreateDropDownMenu(lg("general.actions"), Profile.getDisplayActions(user))
 		));
 
 		if (isActive && !bl) {
@@ -240,6 +240,103 @@ var Profile = {
 		}
 		Site.setHeader(lg("profiles.pageHead").schema({n: info.first_name_gen}));
 		Site.append(wrap);
+	},
+
+	getDisplayActions: function(user) {
+		var result = {}, isActive = !user.deactivated, status = user.friend_status;
+
+		if (API.userId != user.id) {
+
+			switch (status) {
+				case 0:
+				case 2:
+					result[lg(!status == 0 ? "profiles.actionFriendAdd" : "profiles.actionFriendAccept")] = function (event) {
+						// friends.add
+						// result: [
+						// Lang.get("profiles.acts_friend_sent"),
+						// Lang.get("profiles.acts_friend_agreed"),
+						// null,
+						// Lang.get("profiles.acts_friend_secondarary")
+						// ][data - 1]
+					};
+					if (status == 2) {
+						result[lg("profiles.actionFriendReject")] = function (event) {
+							// friends.delete
+							// Lang.get("profiles.request_cancelled")
+						};
+					};
+					break;
+
+				case 1:
+				case 3:
+					result[lg(!(status - 1) ? "profiles.actionFriendCancel" : "profiles.actionFriendDelete")] = function (event) {
+						// friends.delete
+						// [
+						// Lang.get("profiles.acts_friend_deleted"),
+						// Lang.get("profiles.acts_friend_request_deleted"),
+						// Lang.get("profiles.reccomendation_deleted")
+						// ][data - 1]
+					};
+					break;
+			};
+
+			if (isActive) {
+				result[lg("profiles.actionReport")] = function(event) {
+					Profile.showReportWindow(user);
+				};
+
+				result[lg(!user.blacklisted_by_me ? "profiles.actionBlock" : "profiles.actionUnblock")] = function(event) {
+						Profile.toggleBlock(user.blacklisted_by_me);
+				};
+			};
+		};
+
+		if (isActive) {
+			result[lg("profiles.actionDateRegistration")] = function() {
+				Profile.showDateOfRegister(user.id);
+			};
+
+			result[lg("profiles.acts_last_activity")] = function () {
+				Profile.showLastActivity(user.id);
+			};
+		};
+
+		if (API.userId != user.id) {
+			result[lg(!user.is_favorite ? "profiles.actionFavoritesAdd" : "profiles.actionFavoritesRemove")] = function (event) {
+				Profile.toggleFavorite(user);
+			};
+		};
+
+		return result;
+	},
+
+	toggleBlock: function(user, callback) {
+		var toBlock = !!user.blacklisted_by_me;
+		new APIRequest(toBlock ? "account.banUser" : "account.unbanUser", {
+			userId: user.id
+		}).setOnCompleteListener(function(data) {
+			new Snackbar({
+				title: lg(toBlock ? "profiles.blockInfoAdded" : "profiles.blockInfoRemoved").schema({
+					n: user.first_name.safe() + " " + user.last_name.safe(),
+					a: lg(toBlock ? "profiles.blockInfoAddedVerb" : "profiles.blockInfoRemvoedVerb")[user.sex]
+				})
+			}).show();
+			callback && callback();
+		}).execute();
+	},
+
+	toggleFavorite: function(user, callback) {
+		new APIRequest(!user.is_favorite ? "fave.add" : "fave.remove", {
+			userId: user.id
+		}).setOnCompleteListener(function(result) {
+			new Snackbar({
+				title: lg(toBlock ? "profiles.favoriteAdded" : "profiles.favoriteRemoved").schema({
+					n: user.first_name.safe() + " " + user.last_name.safe(),
+					a: lg(toBlock ? "profiles.favoriteAddedVerb" : "profiles.favoriteRemvoedVerb")[user.sex]
+				})
+			}).show();
+			callback && callback();
+		}).execute();
 	},
 
 	/**
@@ -545,74 +642,125 @@ var Profile = {
 			Site.SetHeader(Site.Escape(user.first_name + " " + user.last_name), {link: user.screen_name});
 		});
 	},
-	FindIDByScreenName: function (screen_name) {
-		if (/^(id|club)\d+$/img.test(screen_name))
-			return (/^(id|club)(\d+)$/img.exec(screen_name))[2];
-		else
-			for (var current in Local.Users)
-				if(Local.Users[current].screen_name == screen_name)
-					return (Local.Users[current].userId || -Local.Users[current].gid || (Local.Users[current].name ? -Local.Users[current].id : Local.Users[current].id));
-		return 0;
-	},
 
+	// fallback
+	FindIDByScreenName:function(a,c){c=Local.Users;if(/^(id|club)\d+$/img.test(a)){return(/^(id|club)(\d+)$/img.exec(a))[2];}else{for(var b in c){if(c[b].a == a){return(c[b].userId || -c[b].gid || (c[b].name ? -c[b].id : c[b].id))}}};return 0;},
 
-
-
-
-
-
-
+	// fallback
 	ItemListProfile: function (user) {
-		var parent = document.createElement("a");
-		parent.className = "friends-item a";
-		parent.href = "#" + (user.screen_name || "id" + (user.userId || user.id));
-		parent.appendChild(e("img", {
-			"class": "friends-left",
-			src: getURL(user.photo_rec || user.photo_50 || user.photo),
-			alt: ""
-		}));
-		parent.appendChild(e("div", {
-			"class": "friends-right",
-			html: (user.name ? user.name : user.first_name + " " + user.last_name + Site.isOnline(user) + Site.isVerify(user))
-		}))
-		return parent;
+		return Templates.getMiniUser(user);
 	},
-	Followers: function (screen_name) {
-		Site.API("execute",{
-			code: 'var id=API.utils.resolveScreenName({screen_name:"' + screen_name + '"}).object_id;return [API.users.get({user_id:id,fields:"screen_name,first_name_gen,first_name_gen"})[0],API.users.getFollowers({user_id:id,count:30,fields:"screen_name,online,photo_rec,verified",offset:' + Site.Get("offset") + '})];'
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				user = data[0],
-				list = data[1];
-			parent.appendChild(Site.CreateHeader("У " + user.first_name_gen + " " + formatNumber(list.count) + " " + Lang.get("profiles", "followers", list.count)));
-			for (var i = 0; i < list.items.length; ++i)
-				parent.appendChild(Profile.ItemListProfile(list.items[i]));
-			list.items.push(user);
-			Local.AddUsers(list.items);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), list.count, 30));
-			Site.SetHeader(Lang.get("profiles.followers_head") + " " + user.first_name_gen, {link: Local.Users[user.userId || user.id].screen_name});
-			Site.Append(parent);
-		})
+
+	/**
+	 * Открывает модальное окно, загружает и выводит информацию о подписчиках юзера screenName
+	 * @param  {String} screenName Скрин нейм пользователя
+	 */
+	showFollowers: function(screenName) {
+		var
+			e = $.e,
+			offset = 0,
+			step = 100,
+			allLoaded = false,
+			wrap = e("div", {"class": "listView-wrap", append: getLoader()}),
+			modal = new Modal({
+				title: lg("profiles.modalFollowersTitleLoading"),
+				content: wrap,
+				noPadding: true,
+				footer: [{
+					name: "close",
+					title: lg("general.close"),
+					onclick: function() { this.close() }
+				}]
+			}).show(),
+			load = function(callback) {
+				new APIRequest("execute", {
+					code: "var i=API.utils.resolveScreenName({screen_name:Args.d}).object_id;return{u:API.users.get({user_id:i,fields:Args.f,name_case:\"gen\",v:5.52})[0],d:API.users.getFollowers({user_id:i,count:Args.c,fields:Args.f,offset:parseInt(Args.o),v:5.52})};",
+					d: screenName,
+					c: step,
+					f: "screen_name,first_name_gen,first_name_gen,photo_50,verified,online",
+					o: offset
+				}).setOnCompleteListener(function(data) {
+					if (!offset) {
+						$.elements.clearChild(wrap);
+					};
+
+					modal.setTitle(lg("profiles.modalFollowersTitle").schema({n: data.u.first_name}));
+					(data.d.items || []).map(function(u) {
+						wrap.appendChild(Templates.getMiniUser(u));
+					});
+
+					if (wrap.children.length >= data.d.count) {
+						allLoaded = true;
+					};
+
+					offset += data.d.items.length;
+
+					callback && callback();
+
+				}).execute();
+			};
+
+		setSmartScrollListener(wrap.parentNode, function(reset) {
+			!allLoaded && load(reset);
+		});
+
+		load();
 	},
-	Subscriptions: function (screen_name) {
-		Site.API("execute", {
-			code: 'var id=API.utils.resolveScreenName({screen_name:"' + screen_name + '"}).object_id;return [API.users.get({user_id:id,fields:"screen_name,sex,first_name_gen"})[0],API.users.getSubscriptions({user_id:id,count:30,extended:1,fields:"screen_name,online,photo_rec,verified",v:5.2,offset:' + Site.Get("offset") + '})];'
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				list = data[1],
-				user = data[0],
-				verb = Lang.get("profiles.subscriptions_sex")[user.sex];
-			parent.appendChild(Site.CreateHeader(user.first_name + " " + verb + Lang.get("general._on") + formatNumber(list.count) + " " + Lang.get("profiles", "subscriptions", list.count)));
-			for (var i = 0; i < list.items.length; ++i)
-				parent.appendChild(Profile.ItemListProfile(list.items[i]));
-			list.items.push(user);
-			Local.AddUsers(list.items);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), list.count, 30));
-			Site.SetHeader("Кумиры " + user.first_name_gen, {link: Local.Users[user.userId || user.id].screen_name});
-			Site.Append(parent);
-		})
+
+	/**
+	 * Открывает модальное окно, загружает и выводит информацию о подписках юзера screenName
+	 * @param  {String} screenName Скрин нейм пользователя
+	 */
+	showSubscriptions: function(screenName) {
+		var
+			e = $.e,
+			offset = 0,
+			step = 100,
+			allLoaded = false,
+			wrap = e("div", {"class": "listView-wrap", append: getLoader()}),
+			modal = new Modal({
+				title: lg("profiles.modalSubscriptionsTitleLoading"),
+				content: wrap,
+				noPadding: true,
+				footer: [{
+					name: "close",
+					title: lg("general.close"),
+					onclick: function() { this.close() }
+				}]
+			}).show(),
+			load = function(callback) {
+				new APIRequest("execute", {
+					code: "var i=API.utils.resolveScreenName({screen_name:Args.d}).object_id;return{u:API.users.get({user_id:i,fields:Args.f,name_case:\"gen\",v:5.52})[0],d:API.users.getSubscriptions({user_id:i,count:Args.c,extended:1,fields:Args.f,offset:parseInt(Args.o),v:5.52})};",
+					d: screenName,
+					c: step,
+					f: "screen_name,first_name_gen,first_name_gen,photo_50,verified,online,sex",
+					o: offset
+				}).setOnCompleteListener(function(data) {
+					if (!offset) {
+						$.elements.clearChild(wrap);
+					};
+
+					modal.setTitle(lg("profiles.modalSubscriptonsTitle").schema({n: data.u.first_name}));
+					(data.d.items || []).map(function(u) {
+						wrap.appendChild(Templates.getMiniUser(u));
+					});
+
+					if (wrap.children.length >= data.d.count) {
+						allLoaded = true;
+					};
+
+					offset += data.d.items.length;
+
+					callback && callback();
+
+				}).execute();
+			};
+
+		setSmartScrollListener(wrap.parentNode, function(reset) {
+			!allLoaded && load(reset);
+		});
+
+		load();
 	},
 
 	/**
@@ -630,7 +778,7 @@ var Profile = {
 
 			var user = data.user,
 
-				text = user.firstName + " " + user.lastName + lg("profile.registeredVerb")[user.sex] + lg("general.at") + data.time + " (" + formatNumber(data.days) + " " + Lang.get("profile.registeredAgo") + ")";
+				text = user.firstName + " " + user.lastName + " " + lg("profiles.registeredVerb")[user.sex] + " " + lg("general.dateAt") + data.time + " (" + formatNumber(data.days) + " " + lg("profiles.registeredAgo", data.days) + ")";
 
 			return new Snackbar({text: text}).show();
 		});
@@ -644,7 +792,7 @@ var Profile = {
 		new APIRequest("execute", {
 			code: "var u=API.users.get({user_ids:Args.u,fields:\"last_seen,sex,online\",v:5.28})[0],a,t=API.utils.getServerTime()-u.last_seen.time;if(!u)return 0;if(u.online_app)a=API.apps.get({app_id:u.online_app});return{u:u,t:t,a:a};",
 			u: userId
-		}).setOnContentListener(function(data) {
+		}).setOnCompleteListener(function(data) {
 			var user = data.u,
 				app = data.a,
 				left = data.t,
@@ -731,89 +879,3 @@ var Profile = {
 		});
 	}
 };
-
-
-/*(function () {
-					var opts = {},
-						_userId = userId;
-					if (userId != API.userId) {
-						switch (friendStatus) {
-							case 0:
-							case 2:
-								opts[friendStatus == 0 ? Lang.get("profiles.acts_add_friend") : Lang.get("profiles.acts_accept_request")] = function (event) {
-									Friends.Add(userId, function (data) {
-										data = Site.isResponse(data);
-										Site.Alert({
-											text: [Lang.get("profiles.acts_friend_sent"), Lang.get("profiles.acts_friend_agreed"), null, Lang.get("profiles.acts_friend_secondarary")][data - 1]
-										});
-										Site.Go(window.location.hash.replace("#", ""));
-									});
-								};
-								if (friendStatus == 2) {
-									opts[Lang.get("profiles.acts_friend_cancel_friend")] = function (event) {
-										Friends.Delete(userId, function (data) {
-											if (!data.response)
-												return Site.Alert({text: data.error && data.error.error_msg});
-											data = Site.isResponse(data);
-											Site.Alert({
-												text: Lang.get("profiles.request_cancelled")
-											});
-											Site.Go(window.location.hash.replace("#", ""));
-										})
-									}
-								}
-							break;
-							case 1:
-							case 3:
-								opts[friendStatus == 1 ? Lang.get("profiles.acts_friend_cancel_request") : Lang.get("profiles.acts_friend_delete")] = function (event) {
-									Friends.Delete(userId, function (data) {
-										data = Site.isResponse(data);
-										Site.Alert({
-											text: [Lang.get("profiles.acts_friend_deleted"), Lang.get("profiles.acts_friend_request_deleted"), Lang.get("profiles.reccomendation_deleted")][data - 1]
-										});
-										Site.Go(window.location.hash);
-									});
-								}
-							break;
-						};
-						if (active) {
-							opts[Lang.get("profiles.acts_report")] = function (event) {
-								window.location.hash = "#" + info.screen_name + "?act=report";
-							};
-							opts[!info.blacklisted_by_me ? Lang.get("profiles.acts_block") : Lang.get("profiles.acts_unblock")] = function (event) {
-								Site.API("account." + (!info.blacklisted_by_me ? "" : "un") + "banUser", {
-									user_id: _userId
-								}, function (data) {
-									data = Site.isResponse(data);
-									if (data === 1) {
-										var user = Local.Users[_userId], prefix = ("оа ".split("")[user.sex]);
-										Site.Alert({
-											text: Site.Escape(user.first_name) + " " + (!info.blacklisted_by_me ? ("занесен" + prefix + " в черный список") : "удален" + prefix + " из черного списка") // TODO Lang
-										});
-									}
-								});
-							}
-						};
-					};
-					if (active) {
-						opts[Lang.get("profiles.actionDateRegistration")] = function() {
-							Profile.showDateOfRegister(userId);
-						};
-						opts[Lang.get("profiles.acts_last_activity")] = function () {
-							Profile.showLastActivity(userId);
-						};
-					} else
-						opts[Lang.get("profiles.counters_photos")] = function (event) { setLocation("photos" + userId); };
-					if (API.userId != userId)
-						opts[isFav ? "Удалить из закладок" : "Добавить в закладки"] = function (event) {
-							Site.API("fave." + (isFav ? "remove": "add") + "User", {
-								user_id: userId,
-							}, function (data) {
-								if (data.response)
-									Site.Go(window.location.hash);
-							});
-						};
-					opts[Lang.get("profiles.acts_update")] = function () {
-						Site.Go(window.location.hash.substring(1));
-					return opts;
-				})()*/

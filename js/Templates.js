@@ -34,47 +34,38 @@ var Templates = {
 		wrap.appendChild(right);
 		return wrap;
 	},
-	getMiniUser: function (user, options) {
+
+	getMiniUser: function(user, options) {
 		options = options || {};
 		var e = $.e,
 			a = options.action,
 			link = "#" + (user.screen_name || "id" + (user.id || user.uid));
 
-		return e(!a ? "a" : "div",
-		{
+		return e(!a ? "a" : "div", {
 			"class": "miniprofiles-item",
 			href: link,
 			append: [
-				a
+				a ? a.node
 					? a.node
-						? a.node
-						: e(a.link ? "a" : "span", {"class": "a", html: a.action, href: a.link, onclick: a.click})
-					: null,
-				e(a ? "a" : "div",
-				{
-					append: e("img",
-					{
-						"class": "miniprofiles-left",
-						src: getURL(user.photo_50 || user.photo_rec || user.photo)
-					})
-				}),
-				e(a ? "a" : "div",
-				{
+					: e(a.link ? "a" : "span", {"class": "a", html: a.action, href: a.link, onclick: a.click})
+				  : null,
+				e(a ? "a" : "div", { append: e("img", {
+					"class": "miniprofiles-left",
+					src: getURL(user.photo_50 || user.photo_rec || user.photo)
+				}) }),
+				e(a ? "a" : "div", {
 					"class": "miniprofiles-right",
-					append: e(!a ? "div" : "a",
-					{
+					append: e(!a ? "div" : "a", {
 						href: link,
-						html: Site.Escape(user.name) || Site.Escape(user.first_name + " " + user.last_name) + Site.isOnline(user)
+						html: getName(user)
 					})
 				})
 			]
 		});
-
-		return wrap;
 	},
 
 	// added 09.01.2016
-	getListItemUserRow: function (u, e) {
+	getListItemUserRow: function(u, e) {
 		e = $.e;
 		return e("a", {
 			"class": "listItem",
