@@ -19,10 +19,10 @@ APIdog v6.5
 
 Команда проекта:
 ========
-* [Велюга Владислав](https://github.com/vladislav805) (разработчик)
+* [Владислав Велюга](https://github.com/vladislav805) (разработчик)
 * [Антон Карпович](https://github.com/longpoll) (финансовый директор)
 * Александр Ткачук (системный администратор)
-* [Тарас Дацюк](https://github.com/who0ps) (техподдержка)
+* [Тарас Дацюк](https://github.com/who0ps) (техподдержка, тестировщик)
 * [Илья Ворчук](https://github.com/wityaz) (дизайнер)
 * Оксана Эриксон (агент поддержки)
 * Надя Иванова (агент поддержки)
@@ -56,7 +56,7 @@ Team project:
 * [Vladislav Veluga](https://github.com/vladislav805) (developer)
 * [Anton Karpovich](https://github.com/longpoll) (financial director)
 * Alexander Tkachuk (system administrator)
-* [Taras Datsyuk](https://github.com/who0ps) (support)
+* [Taras Datsyuk](https://github.com/who0ps) (support, QA)
 * [Ilya Vorchuk](https://github.com/wityaz) (designer)
 * Oksana Erickson (support)
 * Nadia Ivanova (support)
