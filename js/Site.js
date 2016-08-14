@@ -1106,7 +1106,7 @@ var Site = {
 		right = typeof right === "string" ? e("h2", {html: right}) : right;
 		if (right)
 			$.elements.addClass(right, "hider-right");
-		return e("div", {"class": "hider", append: [
+		return e("div", {"class": "hider clearfix", append: [
 			right,
 			typeof left === "string" ? e("h2", {"class": "hider-title-content", html: left}) : left
 		]});
