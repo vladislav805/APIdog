@@ -115,7 +115,7 @@ var IM = {
 					currentOffset += result.items.length;
 					insert(parse(result.items, VKMessage), result.count, Math.max(result.in_read, result.out_read));
 
-					if (isFirst) {
+					if (isFirst && isFull) {
 						listWrap.scrollTo(0, 999999);
 						isFirst = false;
 					};
