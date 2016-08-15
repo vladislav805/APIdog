@@ -1059,12 +1059,11 @@
 
 
 		private function viewPost($postId) {
-			/*if (!sizeOf($this->db->select()->from("blogViews")->where([["userId", userId], ["postId", $postId]])->limit(1)->execute())) {
+			$postId = (int) $postId;
+			SQLquery("INSERT INTO `blogViews` (`postId`, `userId`) VALUES ('" . $postId . "', '" . userId . "')", 0);
+			$count = SQLquery("SELECT COUNT(*) FROM `blogViews` WHERE `postId`='" . $postId . "' LIMIT 1", SQL_RESULT_COUNT);
 
-				$this->db->insert()->into("blogViews")->params(["userId" => userId, "postId" => $postId])->execute();
-			};
-			$count = $this->db->executePreparedQuery("SELECT COUNT(*) FROM `blogViews` WHERE `postId`='" . $postId . "' LIMIT 1");
-			return $count->getCount();*/
+			return $count;
 		}
 	};
 
