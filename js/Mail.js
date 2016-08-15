@@ -880,26 +880,8 @@ var Mail = {
 	},
 
 	defaultChatImage: "\/\/static.apidog.ru\/multichat-icon50.png",
-	defaultEmojiTemplate: "<img src=\"\/\/vk.com\/images\/emoji\/%c_2x.png\" alt=\"%s\" class=\"emoji\" \/>",
-	defaultEmojiTemplateProxy: "<img src=\"\/\/static.apidog.ru\/proxed\/smiles\/%c.png\" alt=\"%s\" class=\"emoji\" \/>",
 
-	Emoji: function (s) {
-		if (~navigator.userAgent.toLowerCase().indexOf("iphone"))
-			return s;
-		return s.replace(Mail.emojiRegEx, Mail.EmojiNewVK).replace(/\uFE0F/g, '');
-	},
-
-	EmojiNewVK: function(s){var i=0,b="",a="",n,y=[],c=[],d,l,o="",j=!1,f=!1;while(n=s.charCodeAt(i++)){d=n.toString(16).toUpperCase();l=s.charAt(i-1);if(i==2&&n==8419){c.push("003"+s.charAt(0)+"20E3");y.push(s.charAt(0));b='';a='';continue};b+=d;a+=l;if(!l.match(Mail.emojiCharSeq)){c.push(b);y.push(a);b='';a=''}};if(b){c.push(b);y.push(a)};b="";a="";for(var i in c){d=c[i];l=y[i];if(l.match(/\uD83C[\uDFFB-\uDFFF]/)){b+=d;a+=l;continue};if(j){b+=d;a+=l;j=!1;continue};if(d=="200C"||d=="200D"){if(b){j=!0;continue}else o+=l};if(l.match(/\uD83C[\uDDE6-\uDDFF]/)){if(f){b+=d;a+=l;f=!1;continue};f=!0;}else if(f)f=!1;if(b)o+=Mail.getEmojiHTML(b,a,!0);b=d;a=l};if(b)o+=Mail.getEmojiHTML(b,a,!0);return o},
-
-	getEmojiHTML: function (code, symbol) {
-		return (isEnabled(4) ? Mail.defaultEmojiTemplateProxy : Mail.defaultEmojiTemplate)
-			.replace(/%c/g, code)
-			.replace(/%s/g, symbol);
-	},
-
-	emojiCharSeq: /[0-9\uD83D\uD83C\uD83E]/,
-	emojiRegEx: /((?:[\u2122\u231B\u2328\u25C0\u2601\u260E\u261d\u2626\u262A\u2638\u2639\u263a\u267B\u267F\u2702\u2708]|[\u2600\u26C4\u26BE\u2705\u2764]|[\u25FB-\u25FE]|[\u2602-\u2618]|[\u2648-\u2653]|[\u2660-\u2668]|[\u26A0-\u26FA]|[\u270A-\u2764]|[\uE000-\uF8FF]|[\u2692-\u269C]|[\u262E-\u262F]|[\u2622-\u2623]|[\u23ED-\u23EF]|[\u23F8-\u23FA]|[\u23F1-\u23F4]|[\uD83D\uD83C\uD83E]|[\uDC00-\uDFFF]|[0-9]\u20e3|[\u200C\u200D])+)/g,
-	emojiFlagRegEx: /\uD83C\uDDE8\uD83C\uDDF3|\uD83C\uDDE9\uD83C\uDDEA|\uD83C\uDDEA\uD83C\uDDF8|\uD83C\uDDEB\uD83C\uDDF7|\uD83C\uDDEC\uD83C\uDDE7|\uD83C\uDDEE\uD83C\uDDF9|\uD83C\uDDEF\uD83C\uDDF5|\uD83C\uDDF0\uD83C\uDDF7|\uD83C\uDDF7\uD83C\uDDFA|\uD83C\uDDFA\uD83C\uDDF8/,
+	Emoji: function(a){return String(a).emoji()},
 
 
 

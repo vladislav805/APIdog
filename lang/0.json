@@ -20,7 +20,7 @@
 		"menuBlog":"Блог",
 		"menuAbout":"О проекте",
 		"pageGoToUp":"Наверх",
-		"footer":"APIdog v6.5 &copy; 2012&ndash;2016",
+		"footer":"APIdog v6.5 &copy; 2012&ndash;2016<br>ver.20160815 night build",
 		"loadingSite":"Загрузка...",
 		"loadingAuthors":"Владислав Велюга, Антон Карпович, Александр Ткачук, Тарас Дацюк, Оксана Эриксон, Илья Ворчук, Надя Иванова"
 	},
@@ -145,6 +145,7 @@
 		"yes":"Да",
 		"retry":"Повторить",
 		"cancel":"Отмена",
+		"close": "Закрыть",
 		"no":"Нет",
 		"was_sex":["было","была","был"],
 		"back":"назад",
@@ -437,6 +438,13 @@
 		"dialog":"Диалог",
 		"formTextareaPlaceholder":"Введите сообщение...",
 		"formSend":"Отправить",
+
+
+
+		"chatInfoTitle": "Беседа &laquo;%t&raquo;",
+		"chatInfoUsers": "Участники",
+		"chatInfoSettings": "Настройки",
+
 "forwarded_messages":["пересланное сообщение","пересланных сообщений","пересланных сообщений"],
 "action_mark_readed":"Отметить прочитанным",
 "action_attachments":"Материалы беседы",

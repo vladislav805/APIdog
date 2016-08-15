@@ -145,11 +145,11 @@ var IM = {
 					default: t = "unknown";
 				};
 				form.headName.innerHTML = t;
-				form.headName.onclick = function() {
+				form.head.onclick = function() {
 					if (l) {
 						nav.go(l);
 					} else {
-						IM.showChatInfo(peer[0]);
+						IM.showChatInfo(peer[1]);
 					};
 				}
 			},
@@ -238,6 +238,8 @@ var IM = {
 					actionspace.node
 				]})
 			]});
+
+		$.elements.addClass(head, "im-formsend-title");
 
 
 		$.event.add(wrap, "submit", send);
@@ -340,6 +342,67 @@ maxlength: 4096, // TODO chunk
 
 	showChatInfo: function(peerId) {
 		console.log(peerId);
+		var
+			e = $.e,
+			uiUsers = e("div", {"class": "im-dialog-users", append: getLoader()}),
+			uiSettings = e("div", {"class": "im-dialog-settings", append: getLoader()}),
+			wrap = new TabHost([
+				{
+					name: "users",
+					title: lg("im.chatInfoUsers"),
+					content: uiUsers
+				},
+				{
+					name: "settings",
+					title: lg("im.chatInfoSettings"),
+					content: uiSettings
+				},
+			]),
+
+			modal = new Modal({
+				title: lg("im.chatInfoTitle").schema({t:"..."}),
+				content: wrap.getNode(),
+				noPadding: true,
+				footer: [{
+					name: "close",
+					title: lg("general.close"),
+					onclick: function() {
+						this.close();
+					}
+				}]
+			}),
+
+			load = function() {
+				new APIRequest("execute", {
+					code: "var i=parseInt(Args.c),c=API.messages.getChat({chat_id:i,v:5.52,fields:\"online\"});return{c:c,u:API.users.get({user_ids:c.users@.id+c.users@.invited_by,fields:Args.f})};",
+					c: peerId,
+					f: "online,photo_100,photo_50,screen_name,first_name_gen,last_name_gen"
+				}).setOnCompleteListener(function(result) {
+					Local.add(result.u);
+
+					showUsers(result.c.users);
+					showSettings(result.c);
+					modal.setTitle(lg("im.chatInfoTitle").schema({t: result.c.title.safe().emoji()}));
+				}).execute();
+			},
+
+			showUsers = function(users) {
+				$.elements.clearChild(uiUsers);
+				users.forEach(function(user) {
+					// TODO!
+					// There will be multiline item with name of inviter and button for kick
+					// from chat for admins
+					uiUsers.appendChild(Templates.getMiniUser(user));
+				});
+			},
+
+			showSettings = function(chat) {
+				$.elements.clearChild(uiSettings);
+				console.log(chat);
+			};
+
+		modal.show();
+		load();
 	},
 
 
@@ -819,7 +882,7 @@ return; // @todo
 			if (peer[0] != APIDOG_DIALOG_PEER_CHAT) {
 				window.location.hash = "#" + (target.screen_name || "id" + target.id)
 			} else {
-				IM.showChatInfo();
+			//	IM.showChatInfoOld();
 			};
 		};
 
@@ -1599,7 +1662,7 @@ console.log(p);
 			}
 		});
 	},
-	showChatInfo: function () {
+	showChatInfoOld: function () {
 		var chat = $.element("_im_chatinfo"), dialog = $.element("_im");
 		if ($.elements.hasClass(chat, "hidden")) {
 			$.elements.addClass(dialog, "hidden");

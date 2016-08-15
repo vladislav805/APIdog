@@ -51,7 +51,7 @@ var Templates = {
 				  : null,
 				e(a ? "a" : "div", { append: e("img", {
 					"class": "miniprofiles-left",
-					src: getURL(user.photo_50 || user.photo_rec || user.photo)
+					src: getURL(user.photo_100 || user.photo_50 || user.photo_rec || user.photo)
 				}) }),
 				e(a ? "a" : "div", {
 					"class": "miniprofiles-right",

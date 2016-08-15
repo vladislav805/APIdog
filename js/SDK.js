@@ -40,7 +40,7 @@ function getFrameDocument (frame) {
 };
 
 function getName (u) {
-	return String(u.first_name).safe() + " " + String(u.last_name).safe() + Site.isOnline(u);
+	return u.name ? u.name.safe() : String(u.first_name).safe() + " " + String(u.last_name).safe() + Site.isOnline(u);
 };
 
 function isEnabled(bit) {
@@ -464,7 +464,7 @@ String.prototype.schema = function (data)
  * @param  {Number} b Maximum value of returning number
  * @return {Number}   Result random number
  */
-Number.random = function (a, b) {
+Number.random = function(a, b) {
 	return Math.floor(Math.random() * (++b - a) + a);
 };
 
@@ -472,8 +472,7 @@ Number.random = function (a, b) {
  * Replace html-tags for safe inserting in page
  * @return {String} safe string
  */
-String.prototype.safe = function ()
-{
+String.prototype.safe = function() {
 	var s = this, i;
 	for (i in ds)
 		s = s.replace(i, ds[i]);
@@ -484,13 +483,25 @@ String.prototype.safe = function ()
  * Return HTML-code from pseudo-BB-code
  * @return {String} result html-code
  */
-String.prototype.bb = function ()
-{
+String.prototype.bb = function() {
 	return String(this)
 		.replace(/\[(s|b|u|i|big|small|h1|h2|h3|pre|center|(h|b)r)\](.*?)\[\/\1\]/igm, "<$1>$3</$1>")
 		.replace(/\[(red|gray)\](.*?)\[\/\1\]/igm, "<span class='bb-color-$1'>$2</$1>")
 		.replace(/\[li\](.*?)\[\/li\]/igm, "<div class='bb-li'>$1</div>")
 		.replace(/\[url=(.*?)\](.*?)\[\/url\]/img, "<a href='$1'>$2<\/a>");
+};
+
+var emojiNeedReplace = !~navigator.userAgent.toLowerCase().indexOf("iphone"),
+	emojiRegExp = /((?:[\u2122\u231B\u2328\u25C0\u2601\u260E\u261d\u2626\u262A\u2638\u2639\u263a\u267B\u267F\u2702\u2708]|[\u2600\u26C4\u26BE\u2705\u2764]|[\u25FB-\u25FE]|[\u2602-\u2618]|[\u2648-\u2653]|[\u2660-\u2668]|[\u26A0-\u26FA]|[\u270A-\u2764]|[\uE000-\uF8FF]|[\u2692-\u269C]|[\u262E-\u262F]|[\u2622-\u2623]|[\u23ED-\u23EF]|[\u23F8-\u23FA]|[\u23F1-\u23F4]|[\uD83D\uD83C\uD83E]|[\uDC00-\uDFFF]|[0-9]\u20e3|[\u200C\u200D])+)/g,
+	emojiCharSequence = /[0-9\uD83D\uD83C\uD83E]/,
+	emojiFlagRegExp = /\uD83C\uDDE8\uD83C\uDDF3|\uD83C\uDDE9\uD83C\uDDEA|\uD83C\uDDEA\uD83C\uDDF8|\uD83C\uDDEB\uD83C\uDDF7|\uD83C\uDDEC\uD83C\uDDE7|\uD83C\uDDEE\uD83C\uDDF9|\uD83C\uDDEF\uD83C\uDDF5|\uD83C\uDDF0\uD83C\uDDF7|\uD83C\uDDF7\uD83C\uDDFA|\uD83C\uDDFA\uD83C\uDDF8/,
+	emojiImageTemplate = "<img src=\"\/\/vk.com\/images\/emoji\/%c_2x.png\" alt=\"%s\" class=\"emoji\" \/>",
+	emojiImageTemplateProxy = "<img src=\"\/\/static.apidog.ru\/proxed\/smiles\/%c.png\" alt=\"%s\" class=\"emoji\" \/>",
+	emojiHandler = function(s){var i=0,b="",a="",n,y=[],c=[],d,l,o="",j=!1,f=!1;while(n=s.charCodeAt(i++)){d=n.toString(16).toUpperCase();l=s.charAt(i-1);if(i==2&&n==8419){c.push("003"+s.charAt(0)+"20E3");y.push(s.charAt(0));b='';a='';continue};b+=d;a+=l;if(!l.match(emojiCharSequence)){c.push(b);y.push(a);b='';a=''}};if(b){c.push(b);y.push(a)};b="";a="";for(var i in c){d=c[i];l=y[i];if(l.match(/\uD83C[\uDFFB-\uDFFF]/)){b+=d;a+=l;continue};if(j){b+=d;a+=l;j=!1;continue};if(d=="200C"||d=="200D"){if(b){j=!0;continue}else o+=l};if(l.match(/\uD83C[\uDDE6-\uDDFF]/)){if(f){b+=d;a+=l;f=!1;continue};f=!0;}else if(f)f=!1;if(b)o+=emojiRender(b,a,!0);b=d;a=l};if(b)o+=emojiRender(b,a,!0);return o},
+	emojiRender = function(a,b){return(isEnabled(4)?emojiImageTemplateProxy:emojiImageTemplate).schema({c:a,s:b})};
+
+String.prototype.emoji = function() {
+	return emojiNeedReplace ? this.replace(emojiRegExp, emojiHandler).replace(/\uFE0F/g, '') : this;
 };
 
 

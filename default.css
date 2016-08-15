@@ -1363,15 +1363,18 @@ input[type=search].sf
 	float: left;
 	width: 50px;
 }
-.profile-left img,
-img.profile-left {
+.profile-left img {
 	border-radius: 4px;
 }
+
 .profile-left img {
 	max-width: 100%;
 }
-.profile-right{
-	margin-left:58px;
+
+.profile-right {
+	margin-left: 58px;
+	line-height: 18px;
+	margin-top: -2px;
 }
 .profile-img{
 	width:20%;
@@ -1424,35 +1427,43 @@ img.profile-left {
 	position:absolute;
 	left:-4px;
 }
-.groups-item{
+
+/* groups list */
+
+.groups-item {
 	overflow: hidden;
 	display: block;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0) !important;
-	outline: none !important;
-	margin: 0 15px;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
 	border-bottom: 1px solid #E9ECEE;
-	padding: 10px 0;
+	padding: 10px 15px;
 }
+
 .groups-item:hover{
 	background: rgb(242, 244, 247);
-	margin: 0 0px;
-	border-top: 1px solid #E9EBEC;
-	padding: 10px 15px;
-	margin-top: -1px;
 }
-.groups-left{
-	float:left;
-	width:40px;
-	border-radius:3px;
+
+.groups-left {
+	float: left;
+	width: 45px;
+	border-radius: 3px;
 }
-.groups-right{
-	margin-left:52px;
-	margin-top:-2px;
+
+.groups-right {
+	margin-left: 52px;
 }
-.groups-right .tip{
-	font-size:12px;
+
+.groups-right .tip {
+	font-size: 12px;
 }
+
+.groups-right {
+	line-height: 15px;
+}
+
+/* group page */
+
 .group-left {
 	float: left;
 	width: 50px;
@@ -1833,6 +1844,10 @@ strong span{
 	display: block;
 	content: "";
 	clear: both;
+}
+
+.im-formsend-title {
+	cursor: pointer;
 }
 
 .im-actionspace-right input {
