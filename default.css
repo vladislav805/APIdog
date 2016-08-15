@@ -3999,23 +3999,21 @@ img.wall-left {
 
 /* ----- Photos.js ----- */
 
-.albums-item{
+.albums-item {
 	overflow: hidden;
 	display: block;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0) !important;
-	outline: none !important;
-	margin: 0 15px;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
 	border-bottom: 1px solid #E9ECEE;
-	padding: 10px 0;
+	padding: 10px 15px;
 }
-.albums-item:hover{
+
+.albums-item:hover {
 	background: rgb(242, 244, 247);
 	margin: 0 0px;
-	border-top: 1px solid #E9EBEC;
-	padding: 10px 15px;
-	margin-top: -1px;
 }
+
 .albums-left{
 	float: left;
 	height: 45px;
@@ -4381,13 +4379,11 @@ html.photo-view-full {
 	padding: 10px 15px;
 	border-bottom: 1px solid #E9ECEE;
 }
-.videos-item:hover{
+
+.videos-item:hover {
 	background: rgb(242, 244, 247);
-	margin: 0;
-	border-top: 1px solid #E9EBEC;
-	padding: 10px 15px;
-	margin-top: -1px;
 }
+
 .videos-left,
 .attachments-video-wrap {
 	position: relative;
