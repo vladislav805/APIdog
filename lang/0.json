@@ -531,12 +531,14 @@
 
 },
 "groups":{
-"search_founded":["Нашлась",
-"Нашлось",
-"Нашлось"],
-"search_groups":["группа",
-"группы",
-"групп"],
+
+	"modalLinksTitle": "Ссылки",
+	"modalContactsTitle": "Контакты",
+
+
+
+"search_founded":["Нашлась","Нашлось","Нашлось"],
+"search_groups":["группа","группы","групп"],
 "requests_join_success":"Вы успешно в группу",
 "requests_decline":"Вы отклонили приглашение",
 "request_you_have":"Вас приглашают в ",

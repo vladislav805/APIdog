@@ -645,96 +645,110 @@ var Groups = {
 
 
 
-	showLinks: function (screen_name) {
-		var fx = function (data) {
-			var links = data.response,
-				list = document.createElement("div"), isVK, link;
+	showLinks: function(groupId) {
 
-			modal.setContent($.e("div", {append: links.map(function (item) {
-				link = item.url;
-				isVK = /^https?:\/\/(m\.)?vk\.com\//ig.test(link);
-				if (isVK)
-					link = link.replace(/^https?:\/\/(m\.)?vk\.com\//ig, "#");
-				return $.e("a", {
-					href: link,
-					target: "_blank",
-					"class": "friends-item",
-					append: [
-						item.photo_50 ? $.e("img", {src: getURL(item.photo_50), alt: "", "class": "friends-left"}) : $.e("div"),
-						$.e("div", {"class": "friends-right", append: [
-							$.e("div", {html:"<strong>" + item.name + "</strong>"}),
-							$.e("div", {"class": "tip", html: item.desc || ""})
-						]})
-					]
-				});
-			})}));
-		};
-		var modal = new Modal({
-			title: "Ссылки",
-			noPadding: true,
-			content: Site.Loader(true),
-			footer: [
-				{
-					name: "close",
-					title: "Закрыть",
-					onclick: function () {
-						modal.close();
+
+		var e = $.e,
+
+			showContent = function(links) {
+				var list = e("div"), isVK, link;
+
+				modal.setContent(e("div", {append: links.map(function(item) {
+					link = item.url;
+					isVK = /^https?:\/\/(new\.|m\.)?vk\.com\//ig.test(link);
+
+					if (isVK) {
+						link = link.replace(/^https?:\/\/(new\.|m\.)?vk\.com\//ig, "#");
+					};
+
+					return e("a", {
+						href: link,
+						target: "_blank",
+						"class": "friends-item",
+						append: [
+							item.photo_50
+								? e("img", {src: getURL(item.photo_50), alt: "", "class": "friends-left"})
+								: null,
+							e("div", {"class": "friends-right", append: [
+								e("div", {append: e("strong", {html: item.name.safe() }) }),
+								e("div", {"class": "tip", html: (item.desc || "").safe() })
+							]})
+						]
+					});
+				}) }));
+			},
+
+			modal = new Modal({
+				title: lg("groups.modalLinksTitle"),
+				noPadding: true,
+				content: getLoader(),
+				footer: [
+					{
+						name: "close",
+						title: lg("general.close"),
+						onclick: function () {
+							modal.close();
+						}
 					}
-				}
-			]
-		}).show();
-		Site.API("execute", {
-			code: "return API.groups.getById({group_id:\"" + screen_name + "\",fields:\"links\"})[0].links;"
-		}, fx);
-	},
-	showContacts: function (screen_name) {
-		var fx = function (data) {
-			data = data.response;
-			Local.add(data[1]);
-			var contacts = data[0],
-				list = document.createElement("div");
+				]
+			}).show();
 
-			modal.setContent($.e("div", {append: contacts.map(function (item) {
-				user = Local.Users[item.user_id];
-				var id = user.user_id;
-				return $.e(user ? "a" : "div", {
-					href: user && "#" + user.screen_name,
-					onclick: function (event) {
-						this.tagName == "A" && modal.close();
-					},
-					"class": "friends-item",
-					append: [
-						$.e("img", {src: user ? getURL(user.photo_50) : "", alt: "", "class": "friends-left"}),
-						$.e("div", {"class": "friends-right", append: [
-							$.e("div", {html: user ? "<strong>" + user.first_name + " " + user.last_name + "</strong>" : ""}),
-							$.e("div", {"class": "tip", html: item.desc ? item.desc : ""}),
-							$.e("div", {"class": "tip", html: item.email ? item.email : ""}),
-							$.e("div", {"class": "tip", html: item.phone ? item.phone : ""})
-						]})
-					]
+		new APIRequest("execute", {
+			code: "return API.groups.getById({group_id:Args.g,fields:\"links\",v:5.52})[0].links;",
+			g: groupId
+		}).setOnCompleteListener(showContent).execute();
+	},
+
+	showContacts: function (groupId) {
+
+
+		var e = $.e,
+
+			showContent = function (data) {
+				Local.add(data.u);
+				data = data.l;
+				var list = data.map(function(item) {
+					var id = item.user_id,
+						user = Local.Users[id];
+					return e(user ? "a" : "div", {
+						"class": "friends-item",
+						href: user && "#" + user.screen_name,
+						onclick: function (event) {
+							this.tagName == "A" && modal.close();
+						},
+						append: [
+							e("img", {src: user ? getURL(user.photo_50) : Mail.defaultChatImage, alt: "", "class": "friends-left"}),
+							e("div", {"class": "friends-right", append: [
+								e("div", {append: user ? e("strong", {html: getName(user)}) : null}),
+								e("div", {"class": "tip", html: item.desc ? item.desc.safe() : ""}),
+								e("div", {"class": "tip", html: item.email ? item.email.safe() : ""}),
+								e("div", {"class": "tip", html: item.phone ? item.phone.safe() : ""})
+							]})
+						]
+					});
 				});
-			})}));
 
-
-		};
-		var modal = new Modal({
-			title: "Контакты",
-			noPadding: true,
-			content: Site.Loader(true),
-			footer: [
-				{
+				modal.setContent(e("div", {append: list}));
+			},
+			modal = new Modal({
+				title: lg("groups.modalContactsTitle"),
+				noPadding: true,
+				content: getLoader(),
+				footer: [{
 					name: "close",
-					title: "Закрыть",
+					title: lg("general.close"),
 					onclick: function () {
-						modal.close();
+						this.close();
 					}
-				}
-			]
-		}).show();
-		Site.API("execute", {
-			code: "var u=API.groups.getById({group_id:\"" + screen_name + "\",fields:\"contacts\"})[0].contacts;return[u,API.users.get({user_ids:u@.user_id,fields:\"photo_50,online,screen_name\"})];"
-		}, fx);
+				}]
+			}).show();
+
+		new APIRequest("execute", {
+			code: "var u=API.groups.getById({group_id:Args.g,fields:\"contacts\",v:5.52})[0].contacts;return{l:u,u:API.users.get({user_ids:u@.user_id,fields:\"photo_50,online,screen_name\"})};",
+			g: groupId
+		}).setOnCompleteListener(showContent).execute();
 	},
+
 	getRequests: function (screenName) {
 		Site.API("execute", {
 			code: "var g=API.utils.resolveScreenName({screen_name:\"%s\",v:5.28}),i;if(g.type!=\"group\")return{};i=g.object_id;return{i:i,g:API.groups.getById({group_id:i,v:5.28}),r:API.groups.getRequests({group_id:i,count:50,offset:%o,fields:\"photo_50,sex,screen_name\",v:5.28})};"
