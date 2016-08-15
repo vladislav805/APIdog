@@ -319,7 +319,7 @@ progress {
 	display: block;
 	font: arial 13px;
 	color: #576881;
-	line-height: 34px;
+	line-height: 40px;
 	padding: 0 8px;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
@@ -329,7 +329,7 @@ progress {
 }
 
 .dog-menu aside a:hover {
-	background:rgba(91, 111, 139, .08);
+	background: rgba(91, 111, 139, .08);
 }
 
 .dog-menu aside a:active {
@@ -342,7 +342,7 @@ progress {
 	float: right;
 	padding: 3px 5px;
 	margin-top: -3px;
-	background: #D5DDE5;
+	background: rgba(213, 221, 229, 1);
 	border-radius: 2px;
 }
 
@@ -372,7 +372,7 @@ progress {
 	width: 24px;
 	height: 24px;
 	right: 8px;
-	top: 5px;
+	top: 8px;
 	border-radius: 50%;
 	background: #567CA4;
 	color: #ffffff;
