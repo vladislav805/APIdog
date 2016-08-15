@@ -575,6 +575,30 @@
 		}
 	};
 
+	class AuthSession {
+		public $authId;
+		public $authKey;
+		private $userId;
+		public $date;
+		public $appId;
+
+		public function __construct($q) {
+			$this->authId = (int) $q["auth_id"];
+			$this->authKey = $q["hash"];
+			$this->userId = $q["user_id"];
+			$this->date = (int) $q["date"];
+			$this->appId = (int) $q["appId"];
+		}
+
+		public function getUserId() {
+			return $this->userId;
+		}
+
+		public function kill() {
+			return (boolean) SQLquery("DELETE FROM `auth` WHERE `auth_id` = '" . $this->authId . "' LIMIT 1", SQL_RESULT_AFFECTED);
+		}
+	};
+
 
 	/**
 	 * Вывод данных в формате JSON

@@ -1099,7 +1099,7 @@ var Settings = {
 			load = function ()
 			{
 				wrap.removeChild(placeholder);
-				wrap.appendChild(loader = e("div", {style: "padding: 65.5px 0", append: Mail.getMaterialLoader()}));
+				wrap.appendChild(loader = e("div", {style: "padding: 65.5px 0", append: getLoader()}));
 				APIdogRequest("apidog.getSessions", {}, function (result)
 				{
 					var count = result.count,
@@ -1132,7 +1132,7 @@ var Settings = {
 					row.style.opacity = .5;
 					button.className = "";
 					button.innerHTML = "Завершена";
-					if (auth.authKey == API.APIdogAuthKey)
+					if (auth.authKey == API.authKey)
 						window.location.href = "\/login.php?act=logout";
 				});
 			};
