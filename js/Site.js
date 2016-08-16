@@ -1030,54 +1030,15 @@ var Site = {
 	},
 
 	// 29/02/2016 removed computing position on click
-	CreateDropDownMenu: function (name, menu, options) {
+	CreateDropDownMenu: function (z, y, x) {
 
-		return new DropDownMenu(name, DDMconvert2new(menu), options).getNode();
+		return new DropDownMenu(z, DDMconvert2new(y), x).getNode();
 
 		/**
 		 * @deprecated
 		 */
 
-		options = options || {};
-		var parent = document.createElement("div"),
-			title = document.createElement("div"),
-			titlefake = document.createElement("div"),
-			e=document.createElement("div");
-		if (!Object.keys(menu).length)
-			return parent;
-		parent.className = "dd-wrap";
-		title.className = "dd-title";
-		titlefake.className = "dd-titlefake";
-		title.innerHTML = name;
-		titlefake.innerHTML = name;
-		$.event.add(title, "click", function (event) {
-
-			Site.DropDown(e, titlefake, options.toTop);
-			return $.event.cancel(event);
-		});
-		$.event.add(titlefake, "click", function (event) {
-			Site.DropDown(e, titlefake, options.toTop);
-			return $.event.cancel(event);
-		});
-		e.className = "dd";
-		if (!options.toTop)
-			e.appendChild(titlefake);
-		for (var current in menu) {
-			var c = document.createElement(current[0] == "!" ? "label" : "div");
-			c.className = "dd-item";
-			c.onclick = menu[current];
-			c.innerHTML = current.replace(/^!/i, "");
-			e.appendChild(c);
-		}
-		if (options.toTop)
-			e.appendChild(titlefake);
-		parent.appendChild(title);
-		parent.appendChild(e);
-		$.event.add(parent, "click", function (event) {
-			if (event.target != this && event.srcElement != this)
-				Site.DropDown(e, this, options.toTop);
-		});
-		return parent;
+		//o=o||{};var a=$.e("div"),b=$.e("div"),c=$.e("div"),e=$.e("div");if (!Object.keys(y).length)return a;a.className="dd-wrap";b.className="dd-title";c.className="dd-titlefake";b.innerHTML=z;c.innerHTML=z;$.event.add(b,"click",function(e){Site.DropDown(e,c,o.toTop);return $.event.cancel(e)});$.event.add(c,"click",function(e){Site.DropDown(e,c,o.toTop);return $.event.cancel(e)});e.className="dd";if(!o.toTop)e.appendChild(c);for(var d in y){var c=document.createElement(d[0]=="!"?"label":"div");c.className="dd-item";c.onclick=y[d];c.innerHTML=d.replace(/^!/i,"");e.appendChild(c)};if(o.toTop)e.appendChild(c);a.appendChild(b);a.appendChild(e);$.event.add(a,"click",function(e){if(e.target!=this&&e.srcElement!=this)Site.DropDown(e,this,o.toTop)});return a;
 	},
 	DropDown: function (node, button, isTop){
 		$.elements.toggleClass(node, "dd-open");
