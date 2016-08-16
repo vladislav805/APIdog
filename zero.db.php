@@ -1,5 +1,7 @@
 <?
 
+	$mDatabase;
+
 	/**
 	 * Работа с БД
 	 */
@@ -48,4 +50,39 @@
 		};
 
 		return null;
+	};
+
+	/**
+	 * Подключение к БД
+	 * @return [type] [description]
+	 */
+	function connectDatabase() {
+		if (!defined("dbHost") || !defined("dbUser") || !defined("dbPassword") || !defined("dbDatabase")) {
+			exit("db data not set");
+		};
+
+		$db = new mysqli(dbHost, dbUser, dbPassword, dbDatabase);
+		return $db;
+	};
+
+	/**
+	 * Возвращает объект MySQLi для работы с БД
+	 * @return MySQLi Дескриптор для работы с БД
+	 */
+	function getDatabase() {
+		global $mDatabase;
+
+		if (!$mDatabase) {
+			return $mDatabase = connectDatabase();
+		};
+
+		return $mDatabase;
+	};
+
+	/**
+	 * Закрытие коннекшена с БД
+	 */
+	function closeDatabase() {
+		global $mDatabase;
+		$mDatabase->close();
 	};

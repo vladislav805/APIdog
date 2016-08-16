@@ -24,358 +24,41 @@
 	define("GB", 1024 * 1024 * 1024);
 
 
-	/**
-	 * Выкинуть ошибку и остановить выполнение
-	 * @param  int  $errorId Идентификатор ошибки
-	 * @param  mixed $extra   Дополнительные данные, если нужны
-	 */
-	function throwError($errorId, $extra = false) {
 
-		include_once "zero.errors.php";
-
-		$data = [
-			"errorId" => $errorId,
-			"message" => getErrorTextById($errorId),
-			"params" => $_REQUEST
-		];
-
-		if ($extra) {
-			$data["extra"] = [];
-			foreach ($extra as $key => $value) {
-				$data["extra"][$key] = $value;
-			};
-		};
-
-		output($data);
-	};
-
-	/**
-	 * Класс пользователя
-	 */
-	class User {
-		public $userId;
-		public $firstName;
-		public $lastName;
-		public $photo50;
-		public $online;
-
-		public function __construct ($u) {
-			$this->userId = (int) ($u["id"] ? $u["id"] : $u["uid"]);
-			$this->firstName = $u["first_name"];
-			$this->lastName = $u["last_name"];
-			$this->photo50 = $u["photo_50"] ? $u["photo_50"] : $u["photo_rec"];
-			$this->online = (boolean) $u["online"];
-		}
-
-
-
-		/**
-		 * Ассоциирование ключа authKey с userId
-		 * @param  string $authKey Авторизационный ключ сайта
-		 * @param  int    $authId  Идентификатор авторизации
-		 * @param  int    $userId  Идентификатор пользователя
-		 * @return array           Данные
-		 */
-		static function associateAuthKey($authKey, $authId, $userId) {
-			if (!$authKey || !$authId || !$userId || $userId < 0) {
-				throwError(53);
-			};
-
-			$user = SQLquery("SELECT * FROM `auth` WHERE `hash`='$authKey' LIMIT 1", SQL_RESULT_ITEM);
-
-			if (!$user) {
-				throwError(54);
-			};
-
-			if ($user["auth_id"] != $authId || $user["user_id"] != 0) {
-				throwError(55);
-			};
-
-			$user = SQLquery("UPDATE `auth` SET `user_id`='$userId' WHERE `hash`='$authKey' LIMIT 1", SQL_RESULT_AFFECTED);
-
-			$settings = Settings::getBitmask($userId);
-
-			$lang = getLangNameById($settings["lang"]);
-			return [
-				"userId" => $userId,
-				"authKey" => $authKey,
-				"authId" => $authId,
-				"user" => [
-					"settings" => [
-						"userId" => $userId,
-						"bitmask" => (int) $settings["bitmask"],
-						"language" => [
-							"languageId" => $settings["lang"],
-							"languageCode" => $lang,
-							"languageFile" => "/lang/" . $lang . ".json"
-						]
-					]
-				]
-			];
-		}
-	};
-
-
-	define("VK_AUTH_ERROR_INVALID_CLIENT", "invalid_client");
-	define("VK_AUTH_ERROR_NEED_VALIDATION", "need_validation");
-	define("VK_AUTH_ERROR_NEED_CAPTCHA", "need_captcha");
-
-	class Authorize {
-
-		/**
-		 * Возвращает данные приложения по его внутреннему id
-		 * @param  int $appId Внутренний идентификатор приложения
-		 * @return array      Данные приложения
-		 */
-		public static function getApplicationById($appId) {
-
-			global $authApps;
-
-			if (!($data = $authApps[$appId])) {
-				return false;
-			};
-
-			return $data;
-		}
-
-		/**
-		 * Авторизация пользователя по прямой авторизации, используя прямую авторизацию
-		 *
-		 * @see https://new.vk.com/dev/auth_direct
-		 * @param  string  $login          Логин/e-mail/телефон
-		 * @param  string  $password       Пароль
-		 * @param  int     $application    Внутренний идентификатор приложения
-		 * @param  int     $captchaId      Идентификатор капчи (если есть)
-		 * @param  string  $captchaKey     Введенный код капчи (если есть)
-		 * @param  string  $validationId   Идентификатор валидации (если есть)
-		 * @param  string  $validationCode Введенные код валидации (если есть)
-		 * @return array                   Данные сессии
-		 */
-		public function requestByPairLoginPassword (
-			$login,
-			$password,
-			$application = null,
-			$captchaId = 0,
-			$captchaKey = null,
-			$validationId = null,
-			$validationCode = null
-		)
-		{
-			if (!$login || !$password || is_null($application)) {
-				throwError(70);
-			};
-
-			$applicationInfo = $this->getApplicationById($application);
-
-			$request = [];
-//			$request->setUserAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/41.0");
-//			$request->setUserAgent("VKAndroidApp/4.38-816 (Android 6.0; SDK 23; x86;  Google Nexus 5X; ru)");
-			$request["grant_type"] = "password";
-			$request["client_id"] = $applicationInfo[0];
-			$request["client_secret"] = $applicationInfo[1];
-			$request["username"] = $login;
-			$request["password"] = $password;
-			$request["v"] = 4.99;
-
-			/*
-			 * Данные для валидации
-			 */
-			if ($validationId && $validationCode) {
-				$request["validation_sid"] = $validationId;
-				$request["code"] = $validationCode;
-			};
-
-			/*
-			 * Для приложений Android, iPhone scope передавать не нужно!
-			 */
-			if (in_array($application, [0, 3, 4, 6, 7, 8, 10])) {
-				$request["scope"] = 2064127;
-			};
-
-			/*
-			 * Если есть капча
-			 */
-			if ($captchaId && $captchaKey) {
-				$request["captcha_sid"] = $captchaId;
-				$request["captcha_key"] = $captchaKey;
-			};
-
-			$url = "https://oauth.vk.com/token?" . http_build_query($request);
-
-			$ch = curl_init($url);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-//			curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0");
-			$result = curl_exec($ch);
-			$data = json_decode($result);
-			curl_close($ch);
-
-			/*
-			 * Если произошла ошибка, разбираем её
-			 */
-			if ($data->error) {
-				return $this->resolveError($data);
-			};
-
-			return $this->saveAuthorize($data->access_token, $application);
-		}
-
-		/**
-		 * Проверка валидности токена и создание авторизации на сайте
-		 * @param  string  $userAccessToken Токен
-		 * @param  int     $application     Внутренний идентификатор выбранного приложения
-		 * @return array                    Сессия
-		 */
-		public function saveAuthorize($userAccessToken, $application = 0) {
-			$session = $this->checkToken($userAccessToken, $application);
-			$session["userAccessToken"] = $userAccessToken;
-			$session["application"] = $application;
-			return $session;
-		}
-
-		/**
-		 * Проверка токена на валидность
-		 * В случае успеха, создание авторизации/сессии и её возврат
-		 * @param  string $userAccessToken Пользовательский токен
-		 * @param  int    $application     Внутренний идентификатор приложения
-		 * @return array                   Данные с сессией
-		 */
-		public function checkToken($userAccessToken, $application) {
-
-			if (is_null($application) || !is_int($application)) {
-				throwError(40);
-			};
-
-			if (!$userAccessToken) {
-				throwError(42);
-			};
-
-			$app = $this->getApplicationById($application);
-
-			if (!$app) {
-				return throwError(71);
-			};
-
-			$accessToken = json_decode(file_get_contents("https://oauth.vk.com/access_token?client_id=" . $app[0] . "&client_secret=" . $app[1] . "&v=5.24&grant_type=client_credentials"))->access_token;
-			$test = APIdog::api("secure.checkToken", [
-				"access_token" => $accessToken,
-				"v" => 5.0,
-				"token" => $userAccessToken,
-				"client_secret" => $app[1]
-			], true);
-
-			if ($test->error) {
-				return throwError(41);
-			};
-
-			$test = $test->response;
-			$userId = (int) $test->user_id;
-			$date = (int) time();
-			$hash = APIdog::getHash(32);
-
-			$q = SQLquery("INSERT INTO `auth` (`user_id`, `date`, `hash`, `appId`) VALUES ('" . $userId . "', '" . $date . "', '" . $hash . "','" . $application . "')", SQL_RESULT_INSERTED);
-
-			return [
-				"userId" => $userId,
-				"authId" => $q,
-				"authKey" => $hash,
-				"date" => $date
-			];
-		}
-
-		/**
-		 * Разбор ошибок при авторизации
-		 * @param  array $error Ошибка
-		 */
-		public function resolveError ($error)
-		{
-			switch ($error->error)
-			{
-				/*
-				 * Неверный лог/пасс
-				 */
-				case VK_AUTH_ERROR_INVALID_CLIENT:
-					throwError(72, $error);
-					break;
-
-				/*
-				 * Капча
-				 */
-				case VK_AUTH_ERROR_NEED_CAPTCHA:
-					throwError(73, [
-						"captchaId" => $error->captcha_sid,
-						"captchaImg" => $error->captcha_img,
-						"o" => $error
-					]);
-					break;
-
-				/*
-				 * Валидация
-				 */
-				case VK_AUTH_ERROR_NEED_VALIDATION:
-					throwError(74, [
-						"validationId" => $error->validation_sid,
-						"phone" => $error->phone_mask,
-						"o" => $error
-					]);
-					break;
-
-				/*
-				 * Что-то другое О_о
-				 */
-				default:
-					throwError(69, $error);
-			}
-		}
-	}
-
-	/**
-	 * @deprecated
-	 */
-	class Request{private $c;private $url;private $userAgent;private $isPost;private $post=[];private $result;public function __construct($url,$isPost=false){$this->c=curl_init($url);$this->url=$url;$this->isPost($isPost);}public function setUserAgent($ua){$this->userAgent=$ua;return $this;}public function isPost($state){if(is_null($state)){return $this->isPost;};$this->isPost=(boolean)$state;return $this;}public function setParams($params){$this->post=$params;return $this;}public function setParam($key,$value){$this->post[$key]=$value;return $this;}public function getParams(){return $this->post;}public function init(){curl_setopt($this->c,CURLOPT_RETURNTRANSFER,1);curl_setopt($this->c, CURLOPT_POST, $this->isPost);if($this->userAgent){curl_setopt($this->c,CURLOPT_USERAGENT,$this->userAgent);};curl_setopt($this->c,CURLOPT_TIMEOUT,10);$params=http_build_query($this->post);if($this->isPost){curl_setopt($this->c,CURLOPT_POSTFIELDS,$params);}else{curl_setopt($this->c,CURLOPT_URL,$this->url=($this->url."?".$params));};}public function send(){$this->init();$this->result=curl_exec($this->c);curl_close($this->c);return $this;}public function getResult(){return $this->result;}public function getJSON(){return json_decode($this->result);}}
-
-	include_once "zero.config.php";
-	global $dbHost, $dbUser, $dbPassword, $dbDatabase;
 
 	class APIdog {
-		static function connect() {
-			global $dbHost, $dbUser, $dbPassword, $dbDatabase;
-			return new mysqli($dbHost, $dbUser, $dbPassword, $dbDatabase);
 
+		/**
+		 * @deprecated
+		 * @return MySQLi
+		 */
+		static function connect() { return getDatabase(); }
+
+		/**
+		 * @deprecated
+		 * @return Mixed
+		 */
+		static function mysql($query, $type = 0) {
+			$type = [
+				1 => SQL_RESULT_ITEM,
+				2 => SQL_RESULT_ITEMS,
+				3 => SQL_RESULT_COUNT,
+				4 => SQL_RESULT_INSERTED,
+				5 => SQL_RESULT_AFFECTED,
+				0 => 0
+			][$type];
+
+			return SQLquery($query, $type);
 		}
 
-		static function mysql ($query, $type = 0) {
-			if (!isset($GLOBALS["bd"])) {
-				$bd = mysqli_connect($dbHost, $dbUser, $dbPassword, $dbDatabase);
-				$GLOBALS["bd"] = $bd;
-			} else {
-				$bd = $GLOBALS["bd"];
-			}
-
-
-			mysqli_set_charset($bd, "utf8");
-			// КОСТЫЫЫЫЫЫЫЫЛЬ
-			// кот, тебя за такое убить надо
-
-
-			$response = @mysqli_query($bd, $query);
-
-			switch ($type) {
-				case 1: return @mysqli_fetch_assoc($response); break;
-				case 2:
-					$data = [];
-					while ($item = @mysqli_fetch_assoc($response))
-						$data[] = $item;
-					return $data;
-				break;
-				case 3: return (int) mysqli_fetch_array($response)["COUNT(*)"]; break;
-				case 4: return (int) mysqli_insert_id($bd); break;
-				case 5: return (int) mysqli_affected_rows($bd); break;
-				default:
-					return $response;
-			}
-		}
-
-		static function api ($method, $params, $withoutAccessToken = false) {
+		/**
+		 * API VK request
+		 * @param  String  $method             Метод
+		 * @param  Object  $params             Параметры
+		 * @param  boolean $withoutAccessToken Отправить запрос без токена
+		 * @return Object                      Ответ от ВК
+		 */
+		static function api($method, $params, $withoutAccessToken = false) {
 			if (!isset($params)) {
 				$params = [];
 			};
@@ -384,12 +67,13 @@
 				$params["v"] = 4.99;
 			};
 
-			if (defined("access_token") && access_token != null && !$params["access_token"] && !$withoutAccessToken) {
-				$params["access_token"] = access_token;
+			if ($token = getAccessToken() && !$params["access_token"] && !$withoutAccessToken) {
+				$params["access_token"] = $token;
 			};
 
 			$params["timestamp"] = time();
 			$params["lang"] = "ru";
+
 			$curl = curl_init("https://api.vk.com/method/" . $method);
 			curl_setopt($curl, CURLOPT_POST, 1);
 			curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
@@ -401,7 +85,11 @@
 		}
 
 
-
+		/**
+		 * Загрузка изображения на ipic.su
+		 * @param  String $file Путь к изображению
+		 * @return Object
+		 */
 		static function uploadImage ($file) {
 			$sizes = getImageSize($file);
 			$size = fileSize($file);
@@ -429,6 +117,7 @@
 
 		/**
 		 * Создание рандомной строки
+		 * @deprecated
 		 * @param  int $length Длина требуемой строки
 		 * @return string      Строка
 		 */
@@ -455,34 +144,31 @@
 		 * Минификация JS
 		 * @return array Результат
 		 */
-		static function rebuildJS ()
-		{
+		static function rebuildJS() {
 			$url = "http://closure-compiler.appspot.com/compile";
 
 			$files = [];
-			$dir = scandir("./js/");
+			$dir = scandir("js/");
 
-			foreach ($dir as $file)
-			{
-				if (strpos($file, "js") && $file != "Snapster.js" && $file != "A.js")
+			foreach ($dir as $file){
+				if (strPos($file, "js")) {
 					$files[] = file_get_contents("./js/" . $file);
+				};
 			};
 
-			$fh = fopen("./default.auto.js", "w+");
-			$f = join("\n", $files);
-			fwrite($fh, $f);
-			fclose($fh);
+			$fileTemp = "default.temp.js";
+			$fileTarget = "default.min.js";
 
-			$js = curl($url, "output_format=json&output_info=compiled_code&output_info=warnings&output_info=errors&output_info=statistics&compilation_level=SIMPLE_OPTIMIZATIONS&warning_level=default&language=ECMASCRIPT5&output_file_name=default.js&code_url=http%3A%2F%2Fapidog.ru%2Flib1.3.0.js&code_url=http%3A%2F%2Fapidog.ru%2Fdefault.auto.js&code_url=http%3A%2F%2Fapidog.ru%2Fhammer.js&code_url=http%3A%2F%2Fstatic.apidog.ru%2Fexternal.min.js&js_code=");
+			file_put_contents($fileTemp, join("\n", $files));
+
+			$js = curl($url, "output_format=json&output_info=compiled_code&output_info=warnings&output_info=errors&output_info=statistics&compilation_level=SIMPLE_OPTIMIZATIONS&warning_level=default&language=ECMASCRIPT5&output_file_name=default.min.js&code_url=http%3A%2F%2Fapidog.ru%2Flib1.3.0.js&code_url=http%3A%2F%2Fapidog.ru%2F6.5%2F" . $fileTemp . "&code_url=http%3A%2F%2Fapidog.ru%2F6.5%2Fhammer.js&code_url=http%3A%2F%2Fstatic.apidog.ru%2Fexternal.min.js&js_code=");
 
 			$result = json_decode($js);
 			$code = $result->compiledCode;
 
-			if (sizeof($result->errors) || !$code)
-			{
+			if (sizeof($result->errors) || !$code) {
 				$errors = [];
-				foreach ($result->errors as $i => $error)
-				{
+				foreach ($result->errors as $i => $error) {
 					$errors[] = [
 						"type" => $error->type,
 						"message" => $error->error,
@@ -490,18 +176,12 @@
 						"col" => $error->charno
 					];
 				};
-				throwError(502, [
-					"errors" => $errors
-				]);
+				throwError(502, [ "errors" => $errors ]);
 			};
 
-			$fh = fopen("default.min.js", "w+");
-			$q = fwrite($fh, $code);
-			fclose($fh);
+			file_put_contents($fileTarget, $code);
 
 			$s = $result->statistics;
-
-			file_get_contents("http://api.vlad805.ru/apidog.notify?e=20");
 
 			return [
 				"result" => true,
@@ -562,40 +242,12 @@
 
 		/**
 		 * Получить сессию по идентификатору авторизации
+		 * @deprecated
 		 * @param  int $authId Идентификатор авторизации
 		 * @return AuthSession Сессия
 		 */
 		static function getSessionById($authId) {
-			$test = SQLquery("SELECT * FROM `auth` WHERE `auth_id` = '" . escape($authId) . "' LIMIT 1", SQL_RESULT_ITEM);
-			if (!$test) {
-				return -1;
-			};
-
-			return new AuthSession($test);
-		}
-	};
-
-	class AuthSession {
-		public $authId;
-		public $authKey;
-		private $userId;
-		public $date;
-		public $appId;
-
-		public function __construct($q) {
-			$this->authId = (int) $q["auth_id"];
-			$this->authKey = $q["hash"];
-			$this->userId = $q["user_id"];
-			$this->date = (int) $q["date"];
-			$this->appId = (int) $q["appId"];
-		}
-
-		public function getUserId() {
-			return $this->userId;
-		}
-
-		public function kill() {
-			return (boolean) SQLquery("DELETE FROM `auth` WHERE `auth_id` = '" . $this->authId . "' LIMIT 1", SQL_RESULT_AFFECTED);
+			return APIdogSession::getByAuthKey();
 		}
 	};
 
@@ -613,10 +265,13 @@
 
 	/**
 	 * Вывод ошибки о том, что метод отключен
-	 * @return [type] [description]
 	 */
 	function sendDeprecated() { return throwError(101); };
 
+	/**
+	 * Подключает модуль
+	 * @deprecated
+	 */
 	function requireModule ($name) { include_once "./" . $name . "-engine.php"; };
 
 	/**

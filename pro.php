@@ -3,9 +3,11 @@
 	$pagePrefix = "pro";
 
 	include_once "zero.framework.php";
+	include_once "zero.paid.php";
 	include_once "zero.helper.php";
 
 	$act = "";
+
 
 	if (isset($_REQUEST["act"])) {
 		$act = trim($_REQUEST["act"]);
@@ -49,7 +51,6 @@
 
 			$paid = APIdogProduct::getPayed();
 			$items = APIdogProduct::getAll();
-
 
 			foreach ($items as $p) {
 ?>
