@@ -126,7 +126,7 @@ var Profile = {
 
 		wrap.appendChild(Site.getPageHeader(
 			e("strong", {html: user.first_name.safe() + " " + user.last_name.safe() + (user.maiden_name ? " (" + user.maiden_name + ")" : "")}),
-			Site.CreateDropDownMenu(lg("general.actions"), Profile.getDisplayActions(user))
+			new DropDownMenu(lg("general.actions"), Profile.getDisplayActions(user)).getNode()
 		));
 
 		if (isActive && !bl) {
@@ -250,60 +250,102 @@ var Profile = {
 			switch (status) {
 				case 0:
 				case 2:
-					result[lg(!status == 0 ? "profiles.actionFriendAdd" : "profiles.actionFriendAccept")] = function (event) {
-						// friends.add
-						// result: [
-						// Lang.get("profiles.acts_friend_sent"),
-						// Lang.get("profiles.acts_friend_agreed"),
-						// null,
-						// Lang.get("profiles.acts_friend_secondarary")
-						// ][data - 1]
+					result["friendButton"] = {
+						label: lg(!status == 0 ? "profiles.actionFriendAdd" : "profiles.actionFriendAccept"),
+						onclick: function (item) {
+							// friends.add
+							// result: [
+							// Lang.get("profiles.acts_friend_sent"),
+							// Lang.get("profiles.acts_friend_agreed"),
+							// null,
+							// Lang.get("profiles.acts_friend_secondarary")
+							// ][data - 1]
+						}
 					};
 					if (status == 2) {
-						result[lg("profiles.actionFriendReject")] = function (event) {
-							// friends.delete
-							// Lang.get("profiles.request_cancelled")
+						result["friendReject"] = {
+							label: lg("profiles.actionFriendReject"),
+							onclick: function (item) {
+								// friends.delete
+								// Lang.get("profiles.request_cancelled")
+							}
 						};
 					};
 					break;
 
 				case 1:
 				case 3:
-					result[lg(!(status - 1) ? "profiles.actionFriendCancel" : "profiles.actionFriendDelete")] = function (event) {
-						// friends.delete
-						// [
-						// Lang.get("profiles.acts_friend_deleted"),
-						// Lang.get("profiles.acts_friend_request_deleted"),
-						// Lang.get("profiles.reccomendation_deleted")
-						// ][data - 1]
+					result["friendButton"] = {
+						label: lg(!(status - 1) ? "profiles.actionFriendCancel" : "profiles.actionFriendDelete"),
+						onclick: function (item) {
+							// friends.delete
+							// [
+							// Lang.get("profiles.acts_friend_deleted"),
+							// Lang.get("profiles.acts_friend_request_deleted"),
+							// Lang.get("profiles.reccomendation_deleted")
+							// ][data - 1]
+						}
 					};
 					break;
 			};
 
 			if (isActive) {
-				result[lg("profiles.actionReport")] = function(event) {
-					Profile.showReportWindow(user);
+				result["report"] = {
+					label: lg("profiles.actionReport"),
+					onclick: function(item) {
+						Profile.showReportWindow(user);
+					}
 				};
 
-				result[lg(!user.blacklisted_by_me ? "profiles.actionBlock" : "profiles.actionUnblock")] = function(event) {
-						Profile.toggleBlock(user.blacklisted_by_me);
+				result["block"] = {
+					label: lg(!user.blacklisted_by_me ? "profiles.actionBlock" : "profiles.actionUnblock"),
+					onclick: function(item) {
+						item
+							.disable()
+							.commit();
+
+						Profile.toggleBlock(user, function() {
+							item
+								.label(lg(!user.blacklisted_by_me ? "profiles.actionBlock" : "profiles.actionUnblock"))
+								.enable()
+								.commit();
+						});
+					}
 				};
 			};
 		};
 
 		if (isActive) {
-			result[lg("profiles.actionDateRegistration")] = function() {
-				Profile.showDateOfRegister(user.id);
+			result["registration"] = {
+				label: lg("profiles.actionDateRegistration"),
+				onclick: function(item) {
+					Profile.showDateOfRegister(user.id);
+				}
 			};
 
-			result[lg("profiles.acts_last_activity")] = function () {
-				Profile.showLastActivity(user.id);
+			result["lastActivity"] = {
+				label: lg("profiles.actionLastActivity"),
+				onclick: function(item) {
+					Profile.showLastActivity(user.id);
+				}
 			};
 		};
 
 		if (API.userId != user.id) {
-			result[lg(!user.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove")] = function (event) {
-				Profile.toggleFavorite(user);
+			result["favorite"] = {
+				label: lg(!user.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove"),
+				onclick: function(item) {
+					item
+						.disable()
+						.commit();
+
+					Profile.toggleFavorite(user, function() {
+						item
+							.label(lg(!user.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove"))
+							.enable()
+							.commit();
+					});
+				}
 			};
 		};
 
@@ -311,16 +353,17 @@ var Profile = {
 	},
 
 	toggleBlock: function(user, callback) {
-		var toBlock = !!user.blacklisted_by_me;
+		var toBlock = !user.blacklisted_by_me;
 		new APIRequest(toBlock ? "account.banUser" : "account.unbanUser", {
 			userId: user.id
-		}).setOnCompleteListener(function(data) {
+		}).debug().setOnCompleteListener(function(data) {
 			new Snackbar({
 				text: lg(toBlock ? "profiles.blockInfoAdded" : "profiles.blockInfoRemoved").schema({
 					n: user.first_name.safe() + " " + user.last_name.safe(),
 					a: lg(toBlock ? "profiles.blockInfoAddedVerb" : "profiles.blockInfoRemvoedVerb")[user.sex]
 				})
 			}).show();
+			user.blacklisted_by_me = toBlock;
 			callback && callback();
 		}).execute();
 	},
@@ -336,6 +379,7 @@ var Profile = {
 					a: lg(toFavorite ? "profiles.favoriteAddedVerb" : "profiles.favoriteRemvoedVerb")[user.sex]
 				})
 			}).show();
+			user.is_favorite = toFavorite;
 			callback && callback();
 		}).execute();
 	},
