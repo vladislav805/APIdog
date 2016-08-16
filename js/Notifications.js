@@ -6,7 +6,7 @@
 
 var Notifications = {
 	getItems: function (data, noglobal) {
-		Local.AddUsers(data.profiles.concat(data.groups));
+		Local.add(data.profiles.concat(data.groups));
 		var count = data.count;
 		if (!noglobal || noglobal.toString() == "[object XMLHttpRequest]") {
 			var parent = document.createElement("div");
@@ -16,11 +16,10 @@ var Notifications = {
 		} else {
 			var parent = $.element("feed-notifications");
 		}
-		var from = data.new_from,
-			offset = data.new_offset;
+		var next = data.next_from;
 		parent.appendChild(Notifications.getNodeData(data.items, document.createElement("div"), data.last_viewed));
 		if (data.count > 20)
-			parent.appendChild($.elements.create("div", {"class": "notifications-more", html: Lang.get("notifications.load_more"), onclick: function (event) {
+			parent.appendChild($.e("div", {"class": "notifications-more", html: Lang.get("notifications.load_more"), onclick: function (event) {
 				if (this.disabled)
 					return;
 				var start = new Date(), button = this;
@@ -28,16 +27,16 @@ var Notifications = {
 				$.elements.addClass(button, "msg-loader");
 				button.disabled = true;
 				start.setTime(start.getTime() - 1000 * 60 * 60 * 24 * 14);
-				Site.APIv5("notifications.get", {
+				new APIRequest("notifications.get", {
+					count: 40,
+					filters: "wall,mentions,comments,likes,reposts,followers,friends",
 					start_time: parseInt(start / 1000),
-					count: 20,
-					from: from,
-					offset: offset,
-					v: 5.14
-				}, function (data) {
-					Notifications.getItems({response: [Site.isResponse(data)]}, true);
-					$.elements.remove(button)
-				});
+					start_from: next,
+					v: 5.52
+				}).debug().setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function (data) {
+					Notifications.getItems(data, true);
+					$.elements.remove(button);
+				}).execute();
 			}}));
 		Site.Append(parent);
 		Site.setHeader("Ответы", "feed");
