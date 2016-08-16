@@ -257,7 +257,6 @@ var IM = {
 			name: "message",
 			placeholder: lg("im.formTextareaPlaceholder"),
 			autofocus: true,
-maxlength: 4096, // TODO chunk
 			html: $.localStorage("im_text_" + peerId) || "",
 			id: "im-sendtext"
 		});
@@ -279,7 +278,9 @@ maxlength: 4096, // TODO chunk
 					||
 					(!isEnabled(APIDOG_SETTINGS_SEND_BY_ENTER) && (event.ctrlKey || event.metaKey))
 				) {
-					return extra.send();
+					extra.send();
+					event.preventDefault();
+					return false;
 				} else {
 					return true;
 				};
