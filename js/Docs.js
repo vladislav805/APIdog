@@ -166,7 +166,8 @@ VKDocument.prototype = {
 	},
 
 	fixHeight: function () {
-		var height = $.getPosition(this.node).height - 20;
+		var height = $.getPosition(this.node).height;
+		console.log(this.node.clientHeight, this.node.offsetHeight, this.node.scrollHeight)
 		this.node.style.height = height + "px";
 		return height;
 	},
@@ -195,7 +196,9 @@ VKDocument.prototype = {
 				}
 			}
 		}).show();
-		$.elements.addClass(this.node, "doc-deleted");
+		setTimeout(function() {
+			$.elements.addClass(self.node, "doc-deleted");
+		}, 10);
 	},
 
 	getFooter: function () {
