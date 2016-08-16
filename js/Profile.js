@@ -67,8 +67,6 @@ var Profile = {
 
 
 	display: function (user, wall) {
-		console.log("APIdog Profile", user, wall);
-
 		var e = $.e,
 			wrap = e("div", {"class": "profile"}),
 			nodeInfo = document.createElement("div"),

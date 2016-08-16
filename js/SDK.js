@@ -3727,13 +3727,14 @@ DropDownMenu.prototype = {
 
 	update: function() {
 		var item;
+		console.log(this, this.mItemsNodes);
 		$.elements.clearChild(this.mNodeList);
 		for (var label in this.mActions) {
 			item = this.mActions[label];
 
-			if (!this.mItemsNodes[label]) {
+//			if (!this.mItemsNodes[label]) {
 				this.mItemsNodes[label] = this._createItem(item, label);
-			};
+//			};
 
 			this.mNodeList.appendChild(this.mItemsNodes[label]);
 		};
@@ -3805,6 +3806,7 @@ DropDownMenu.prototype = {
 
 	_createItem: function(i, key) {
 		var self = this;
+		console.log("created", i, key);
 		return $.e("div", {
 			"class": [
 				"xdd-item",
@@ -3820,7 +3822,7 @@ DropDownMenu.prototype = {
 				if (i.isDisabled) {
 					return;
 				};
-
+console.log(self);
 				self.close();
 				i.onclick(self.get(key));
 			}

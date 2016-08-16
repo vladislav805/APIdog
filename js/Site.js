@@ -1031,6 +1031,13 @@ var Site = {
 
 	// 29/02/2016 removed computing position on click
 	CreateDropDownMenu: function (name, menu, options) {
+
+		return new DropDownMenu(name, DDMconvert2new(menu), options).getNode();
+
+		/**
+		 * @deprecated
+		 */
+
 		options = options || {};
 		var parent = document.createElement("div"),
 			title = document.createElement("div"),
