@@ -302,7 +302,7 @@ var Profile = {
 		};
 
 		if (API.userId != user.id) {
-			result[lg(!user.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove")] = function (event) {
+			result[lg(!user.is_favorite ? "profiles.actionFavoritesAdd" : "profiles.actionFavoritesRemove")] = function (event) {
 				Profile.toggleFavorite(user);
 			};
 		};
@@ -345,19 +345,21 @@ var Profile = {
 	 * @return {DOMNode}     DOM-объект
 	 */
 	getStatusNode: function(user) {
-		var e = $.e, i = API.userId === user.id, s = (user.status || ""), a = user.status_audio;
+		var e = $.e,
+			i = API.userId === user.id,
+			s = (user.status || ""),
+			a = user.status_audio;
+
 		return !user.status_audio
 			? e("div", {
-				"class": (i ? "profile-status" : "") + (!s ? " tip" : ""),
+				"class": (s ? "profile-status" : "") + (!s && i ? " tip" : ""),
 				"data-status": s,
-				onclick: API.userId == user.id
-					? function(event) {
-						Profile.editStatus(this);
-					  }
+				onclick: i
+					? Profile.editStatus
 					: null,
-				html: Mail.Emoji(s.safe()) || (i ? lg("profiles.statusChange") : "")
+				html: s.safe().emoji() || (i ? lg("profiles.statusChange") : "")
 			  })
-			: Audios.Item(a, {
+			  : Audios.Item(a, {
 				from: 2,
 				set: 32,
 				lid: Audios.createList(a).lid,
@@ -366,35 +368,49 @@ var Profile = {
 			  });
 	},
 
-	editStatus: function(elem){
-		if (elem.opened)
+	editStatus: function(){
+		if (this.dataset.opened === "opened") {
 			return;
-		elem.opened = 1;
-		var text = elem.getAttribute("data-status");
-		//if (elem.innerHTML == "изменить статус" && /tip/ig.test(elem.className))
-			elem.innerHTML = "";
-		elem.appendChild(Site.CreateInlineForm({
+		};
+
+
+		var text = this.dataset.status, node = this;
+		this.dataset.opened = "opened";
+
+		this.innerHTML = "";
+		this.appendChild(Site.CreateInlineForm({
 			name: "text",
 			value: text,
 			onsubmit: function (event) {
-				elem.setAttribute("data-status", $.trim(this.text.value));
-				return Profile.SetStatus(this);
+				event.preventDefault();
+				var text = this.text.value.trim(),
+					fText = this.text,
+					fButton = this.submitbtninline;console.log(text);
+				Profile.setStatus(text, function() {
+					node.dataset.opened = ""
+					node.dataset.status = text;
+					node.innerHTML = text ? text.safe().emoji() : lg("profiles.statusChange");
+
+					if (!text) {
+						node.className = 'profile-status tip';
+					};
+				});
+				return false;
 			},
-			title: Lang.get("profiles.status_changer_complete")
+			title: lg("profiles.statusChangeSubmit")
 		}));
-		elem.firstChild.text.focus();
+		this.firstChild.text.focus();
 	},
-	SetStatus:function(elem){
-		var status = $.trim(elem.text.value);
-		elem.parentNode.opened = 0;
-		if (!status){
-			elem.parentNode.className = 'profile-status tip';
-			elem.parentNode.innerHTML = Lang.get("profiles.status_change");
-		} else
-			elem.parentNode.innerHTML = Mail.Emoji(Site.Escape(status));
-		Site.API("status.set", {text: status}, "blank");
-		return false;
+
+	/**
+	 * Запрос на изменение статуса
+	 * @param {String}   text     Текст
+	 * @param {Function} callback Обработка ответа
+	 */
+	setStatus: function(text, callback){
+		new APIRequest("status.set", {text: text}).setOnCompleteListener(callback).execute();
 	},
+
 	getRelationship: function (user) {
 		var relation = user.relation,
 			sex = user.sex == 1,
