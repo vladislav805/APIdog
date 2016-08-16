@@ -209,7 +209,7 @@ console.log(data);
 			right.appendChild(e("div", {append: [
 				e("a", {"class": "bold", href: "#" + owner.screen_name, html: owner.first_name + " " + owner.last_name + Site.isOnline(owner)}),
 				document.createTextNode(" "),
-				e("span", {"class": "tip", html: lg("feed.friendsAdded")[owner.sex] + " " + count + " " + lg("feed", "friendsFriends", count) + ": "}),
+				e("span", {"class": "tip", html: lg("feed.friendsAdded")[owner.sex] + " " + count + " " + Lang.get("feed", "friendsFriends", count) + ": "}),
 				nodes[0],
 				nodes[1]
 			]}));
