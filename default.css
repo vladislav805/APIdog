@@ -906,6 +906,7 @@ input[type=reset]:disabled,
 	margin:0 2px;
 	line-height:1.45;
 	cursor:default !important;
+	color: white !important;
 }
 textarea,
 textarea:focus,
