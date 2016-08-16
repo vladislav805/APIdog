@@ -316,7 +316,7 @@ var Profile = {
 			userId: user.id
 		}).setOnCompleteListener(function(data) {
 			new Snackbar({
-				title: lg(toBlock ? "profiles.blockInfoAdded" : "profiles.blockInfoRemoved").schema({
+				text: lg(toBlock ? "profiles.blockInfoAdded" : "profiles.blockInfoRemoved").schema({
 					n: user.first_name.safe() + " " + user.last_name.safe(),
 					a: lg(toBlock ? "profiles.blockInfoAddedVerb" : "profiles.blockInfoRemvoedVerb")[user.sex]
 				})
@@ -326,13 +326,14 @@ var Profile = {
 	},
 
 	toggleFavorite: function(user, callback) {
-		new APIRequest(!user.is_favorite ? "fave.add" : "fave.remove", {
+		var toFavorite = !user.is_favorite;
+		new APIRequest(toFavorite ? "fave.addUser" : "fave.removeUser", {
 			userId: user.id
 		}).setOnCompleteListener(function(result) {
 			new Snackbar({
-				title: lg(toBlock ? "profiles.favoriteAdded" : "profiles.favoriteRemoved").schema({
+				text: lg(toFavorite ? "profiles.favoriteAdded" : "profiles.favoriteRemoved").schema({
 					n: user.first_name.safe() + " " + user.last_name.safe(),
-					a: lg(toBlock ? "profiles.favoriteAddedVerb" : "profiles.favoriteRemvoedVerb")[user.sex]
+					a: lg(toFavorite ? "profiles.favoriteAddedVerb" : "profiles.favoriteRemvoedVerb")[user.sex]
 				})
 			}).show();
 			callback && callback();
