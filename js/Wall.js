@@ -694,7 +694,7 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 					]
 				}) : null,
 				e("div", {"class": "fr", append: [
-					getRepostButton("post", ownerId, postId, null, post.reposts.count, post.reposts.user_reposted, {
+					getRepostButton("post", ownerId, postId, null, post.reposts && post.reposts.count || 0, post.reposts && post.reposts.user_reposted || false, {
 						wall: (post.likes && post.likes.can_publish) && (post.reposts && !post.reposts.user_reposted) && !owner.is_closed,
 						user: true,
 						group: !owner.is_closed
@@ -1063,22 +1063,9 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 
 
 	// deprecated 10.01.2016
-	LikeButton: function (type, ownerId, postId, likes, reposts, accessKey)
-	{
+	LikeButton: function(type, ownerId, postId, likes, reposts, accessKey) {
 
-if (API.uid == 23048942) {
-	return getLikeButton(type, ownerId, postId, null, likes.count, likes.user_likes, reposts, accessKey);
-};
-		var elem = document.createElement("span");
-		elem.addEventListener("click", function (event)
-		{
-			return Likes.Like(this, type, ownerId, postId, accessKey);
-		});
-		if (likes && likes.user_likes) {
-			elem.className += " likebutton-active";
-		};
-		elem.innerHTML = Lang.get("general.like") +" <div class=\"wall-icons likes-icon" + (likes && likes.user_likes ? " likes-icon-on" : "") + "\"><\/div> " + (likes && likes.count > 0 ? "<strong>" + formatNumber(likes.count) + "<\/strong>" : "");
-		return elem;
+		return getLikeButton(type, ownerId, postId, null, likes.count, likes.user_likes, reposts, accessKey);
 	},
 
 
@@ -1263,10 +1250,10 @@ if (API.uid == 23048942) {
 			from = Local.Users[fromId],
 
 			userId = comment.user_id || fromId,
-			user = Local.Users[userId],
+			user = Local.Users[userId] || {},
 
 			replyId = comment.reply_to_user,
-			reply = Local.Users[replyId],
+			reply = Local.Users[replyId] || {},
 
 			canEdit = comment.can_edit,
 			canDelete = canEdit || ownerId === API.uid || fromId === API.uid || (Local.Users[ownerId] && Local.Users[ownerId].is_admin) || (Local.Users[fromId] && Local.Users[fromId].is_admin);
@@ -1358,7 +1345,7 @@ if (API.uid == 23048942) {
 								e("div", {
 									"class":"wall-likes likes",
 									id: "like_comment_" + ownerId + "_" + commentId,
-									append: Wall.LikeButton("comment", ownerId, commentId, comment.likes)
+									append: Wall.LikeButton("comment", ownerId, commentId, comment.likes || {})
 								})
 							]
 						})
