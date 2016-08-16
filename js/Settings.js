@@ -719,7 +719,7 @@ var Settings = {
 			bdate = [
 				s.d = getSelect("bdate_day", 1, 31, {}),
 				s.m = getSelect("bdate_month", 1, 12, {data: Lang.get("settings.profile_months")}),
-				s.y = getSelect("bdate_year", 1901, 2012)
+				s.y = getSelect("bdate_year", 1901, (function(a) { return a.getFullYear() - 14 })(new Date()))
 			],
 			birthday = u.bdate.split("."), bdate_visibility,
 			relative;
