@@ -69,8 +69,8 @@ var Profile = {
 	display: function (user, wall) {
 		var e = $.e,
 			wrap = e("div", {"class": "profile"}),
-			nodeInfo = document.createElement("div"),
-			nodeMedia = document.createElement("div"),
+			nodeInfo = e("div"),
+			nodeMedia = e("div", {"class": "profile-media"}),
 
 			info = user, // for compatible
 
@@ -118,7 +118,7 @@ var Profile = {
 						}),
 						status,
 				e("div", {"class": "tip", html: location.join(", ")}),
-				(user.can_write_private_message && API.userId != userId ? e("a", {"class": "btn", href: "#im?to=" + userId, html: Lang.get("profiles.write_message"), style: "margin: 4px 0 2px; text-align: center;"}) : null)
+				(user.can_write_private_message && API.userId != userId ? e("a", {"class": "btn", href: "#im?to=u" + userId, html: Lang.get("profiles.actionWriteMessage"), style: "margin: 4px 0 2px; text-align: center;"}) : null)
 			]})
 		]}));
 
@@ -170,20 +170,28 @@ var Profile = {
 			if (user.home_town) {
 				nodeInfo.appendChild(infoRow(lg("profiles.infoHomeCity"), user.home_town));
 			};
-// точка конца рефакторинга
+
 			if (user.bdate) {
 				var b = info.bdate.split("."),
-					months = Lang.get("general.months"),
+					months = lg("general.months"),
 					birthday = b[0] + " " + months[b[1] - 1] + (b[2] ? " " + b[2] : "");
-				nodeInfo.appendChild(infoRow(Lang.get("profiles.birthday"), birthday));
-			}
+
+				nodeInfo.appendChild(infoRow(lg("profiles.birthday"), birthday));
+			};
+
 			nodeInfo.appendChild($.e("a", {
 				html: Lang.get("profiles.full_info"),
 				href: "#" + info.screen_name + "?act=info",
 				"class": "profile-gotofullinfo"
 			}));
-			nodeMedia.className="profile-media";
-			if (API.userId == userId) info.common_count = 0;
+
+// точка конца рефакторинга
+
+
+			if (API.userId == userId) {
+				info.common_count = 0;
+			};
+
 			var csg = info.can_see_gifts;
 			var q = {
 				friends:        ["friends?id=" + userId,                       Lang.get("profiles.counters_friends")],
@@ -217,23 +225,37 @@ var Profile = {
 					href:"#" + info.screen_name + "?act=search",
 					html: "Поиск по стене " + info.first_name_gen
 				}));
-			nodeMedia.appendChild(e("div",{
-				"class":"profile-last",
-				append: $.e("div", {"class":"hider profile-lists", append: d})
+
+			// начало рефакторинга
+
+			nodeMedia.appendChild(e("div", {
+				"class": "profile-last profile-lists", append: d
 			}));
+
 			wrap.appendChild(nodeInfo);
 			wrap.appendChild(nodeMedia);
-			console.log(user.e);
-			if (wall.count > 0 || info.can_post)
-				wrap.appendChild(Wall.RequestWall(userId, {data:wall,can_post:info.can_post,extra:user.e}));
+
+			if (wall.count > 0 || user.can_post) { // TODO: rename
+				wrap.appendChild(Wall.RequestWall(userId, {
+					data: wall,
+					can_post: info.can_post,
+					extra:user.e
+				}));
+			};
+
 		} else if (!isActive) {
-			nodeInfo.appendChild(e("div", {"class": "msg-empty", html: {
-				deleted: Lang.get("profiles.profile_deleted"),
-				banned: Lang.get("profiles.profile_banned")
-			}[isDeleted]}));
+
+			nodeInfo.appendChild(getEmptyField({
+				deleted: Lang.get("profiles.profileDeleted"),
+				banned: Lang.get("profiles.profileBanned")
+			}[isDeleted]));
 			wrap.appendChild(nodeInfo);
+
 		} else {
-			nodeInfo.appendChild(e("div", {"class": "msg-empty", html: info.first_name + " " + info.last_name + " Вас заблокировал" + (info.sex === 1 ? "а" : "")}));
+
+			nodeInfo.appendChild(getEmptyField(lg("profiles.blocked").schema({
+				n: getName(user), a: lg("profiles.blockedVerb")[user.sex]
+			})));
 			wrap.appendChild(nodeInfo);
 		}
 		Site.setHeader(lg("profiles.pageHead").schema({n: info.first_name_gen}));
@@ -884,10 +906,10 @@ var Profile = {
 					) + (
 						app || platformId
 							? lg("wasViaApp").schema({n: (app && app.title || ["мобильный", "iPhone", "iPad", "Android", "Windows Phone", "Windows 8", "ПК"][platformId - 1])})
-							: lg(user.online_mobile ? "wasViaMobile" : "wasViaPC")
+							: lg(user.online_mobile ? "profiles.wasViaMobile" : "profiles.wasViaPC")
 					)
 			}).show();
-		});
+		}).execute();
 	},
 
 
