@@ -302,7 +302,7 @@ var Profile = {
 		};
 
 		if (API.userId != user.id) {
-			result[lg(!user.is_favorite ? "profiles.actionFavoritesAdd" : "profiles.actionFavoritesRemove")] = function (event) {
+			result[lg(!user.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove")] = function (event) {
 				Profile.toggleFavorite(user);
 			};
 		};
