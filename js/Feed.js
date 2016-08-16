@@ -37,8 +37,8 @@ var Feed = {
 				Site.Loader();
 				return new APIRequest("execute", {
 					code: "API.notifications.markAsViewed();return API.notifications.get({count:40,start_time:Args.start,filters:Args.filters,v:5.52});",
-					start_time: start,
-					filters: "wall,mentions,comments,likes,reposts,followers,friends",
+					start: start,
+					filters: "wall,mentions,comments,likes,reposts,followers,friends"
 				}).setOnCompleteListener(Notifications.getItems).execute();
 
 			case "friends":
@@ -76,26 +76,24 @@ var Feed = {
 				Site.APIExecute(requests, Feed.getFeed);
 		}
 	},
-	convert: function (data) {
-		return Feed.getFeed({response: [null, Site.isResponse(data)]});
+	convert: function (data) {console.log(data);
+		return Feed.getFeed({response: [null, data]});
 	},
 	Cache:{},
 	CacheDate:0,
 	Filters: [],
 	getFeed: function (data) {
-		data = Site.isResponse(data);
+		data = data.response || data;
 		if (data[0])
 			Site.setCounters(data[0]);
 		if (data[2])
 			Feed.Filters = data[2];
-	console.log(data);
 		var parent = document.createElement("div"),
 			list = document.createElement("div"),
-			count = (data = data[1]).count,
+			count = (data = data[1]).count || 0,
 			next = data.next_from,
 			users = Local.add(data.profiles.concat(data.groups)),
 			data = data.items;
-console.log(data);
 		Feed.getItems(list, data, count, next);
 		parent.appendChild(Feed.GetTabs());
 		parent.appendChild(Site.CreateHeader(lg("feed.newsfeed"), $.e("a", {"class": "fr", html: lg("feed.filter"), onclick: Feed.getBanned})));
