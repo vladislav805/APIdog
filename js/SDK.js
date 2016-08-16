@@ -3643,8 +3643,215 @@ EditWindow.prototype = {
 
 };
 
+/**
+ * Выпадающее меню
+ * @param {String}                                label   Название меню, то, на что кликают
+ * @param {Object<String, Object<String, Mixed>>} actions Элементы меню в формате, описанном ниже
+ * @param {Object<String, Mixed>}                 options Опции
+ *
+ * actions = {
+ *     key: {                  key = ключ
+ *         string   label      название
+ *         function onclick    функция, вызываемая
+ *         boolean  isDisabled true, если заблокирован
+ *         boolean  isHidden   true, если элемент нужно скрыть
+ *     }
+ * }
+ *
+ * options = {
+ *     boolean  animation = true          нужна ли анимация?
+ *     int      animationDuration = 300   длительность анимации
+ * }
+ */
+function DropDownMenu(label, actions, options) {
+	if (typeof label === "object") {
+		options = actions;
+		actions = label;
+		label = lg("general.actions");
+	};
+
+	options = options || {};
+
+	this.mLabel = label;
+	this.mActions = actions;
+	this.mOptions = options;
+
+	this.init();
+	this.update();
+};
+
+DropDownMenu.prototype = {
+
+	mLabel: "",
+	mActions: {},
+	mOptions: {},
+
+	mNodeWrap: null,
+	mNodeTitle: null,
+	mNodeList: null,
+	mItemsNodes: {},
+
+	init: function() {
+		var self = this;
+		this.mNodeWrap = $.e("div", {"class": "xdd-wrap", append: [
+			this.mNodeTitle = $.e("div", {"class": "xdd-title", html: this.mLabel, onclick: function(event) {
+				self.toggle();
+			}}),
+			this.mNodeList = $.e("div", {"class": "xdd-items"})
+		]});
+		return this;
+	},
+
+	toggle: function() {
+		var isOpened = $.elements.hasClass(this.mNodeList, DropDownMenu.CLASS_OPENED),
+			lh = parseInt($.getStyle(this.mNodeList).lineHeight),
+			count = this.mNodeList.children.length;
+
+		$.elements.toggleClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
+
+		this.mNodeList.style.height = !isOpened ? (count * lh) + "px" : 0;
+	},
+
+	open: function() {
+		var lh = parseInt($.getStyle(this.mNodeList).lineHeight),
+			count = this.mNodeList.children.length;
+
+		$.elements.addClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
+		this.mNodeList.style.height = (count * lh) + "px";
+	},
+
+	close: function() {
+		$.elements.removeClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
+		this.mNodeList.style.height = 0;
+	},
+
+	update: function() {
+		var item;
+		$.elements.clearChild(this.mNodeList);
+		for (var label in this.mActions) {
+			item = this.mActions[label];
+
+			if (!this.mItemsNodes[label]) {
+				this.mItemsNodes[label] = this._createItem(item, label);
+			};
+
+			this.mNodeList.appendChild(this.mItemsNodes[label]);
+		};
+	},
+
+	add: function(label, options) {
+		this.mActions[label] = options;
+		this.update();
+		return this;
+	},
+
+	set: function(label, options) {
+		if (!this.mActions[label]) {
+			return this;
+		};
+
+		for (var key in options) {
+			this.mActions[label][key] = options[key];
+		};
+
+		return this;
+	},
+
+	remove: function(label) {
+		delete this.mActions[label];
+		this.update();
+		return this;
+	},
+
+	get: function(label) {
+		var i = this.mActions[label], s = this, f = {
+			show: function() {
+				s.set(label, { isHidden: false });
+				return f;
+			},
+
+			hide: function() {
+				s.set(label, { isHidden: true });
+				return f;
+			},
+
+			enable: function() {
+				s.set(label, { isDisabled: false });
+				return f;
+			},
+
+			disable: function() {
+				s.set(label, { isDisabled: true });
+				return f;
+			},
+
+			label: function(text) {
+				s.mItemsNodes[label].innerHTML = text;
+				return f;
+			},
+
+			remove: function() {
+				s.remove(label);
+				return f;
+			},
+
+			commit: function() {
+				s.update();
+				return f;
+			}
+		};
+		return f;
+	},
+
+	_createItem: function(i, key) {
+		var self = this;
+		return $.e("div", {
+			"class": [
+				"xdd-item",
+				i.isDisabled ? "xdd-item-disabled" : "",
+				i.isHidden ? "hidden" : ""
+			].join(" "),
+			"data-label": key,
+			html: i.label,
+			onclick: function(event) {
+				event.stopPropagation();
+				event.cancelBubble = true;
+
+				if (i.isDisabled) {
+					return;
+				};
+
+				self.close();
+				i.onclick(self.get(key));
+			}
+		})
+	},
+
+	getNode: function() {
+		return this.mNodeWrap;
+	}
+};
+DropDownMenu.CLASS_OPENED = "xdd-opened";
+
+function DDMconvert2new(options) {
+	var res = {}, item, i = 0;
+	for (var key in options) {
+		res["item" + i++] = {
+			label: key,
+			onclick: options[key]
+		};
+	};
+	return res;
+};
+
+/**
+ * Возвращает пустое поле с текстом
+ * @param  {String}  text Текст
+ * @param  {Boolean} lang Брать ли текст из языковых данных или просто использовать текст
+ * @return {DOMNode}      Объект поля
+ */
 function getEmptyField (text, lang) {
-	return $.e("div", {"class": "msg-empty", html: lang ? Lang.get(text) : text});
+	return $.e("div", {"class": "msg-empty", html: lang ? lg(text) : text});
 };
 
 // created 10.01.2016

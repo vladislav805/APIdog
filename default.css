@@ -1017,6 +1017,68 @@ table{
 	display: none;
 }
 
+
+
+/* DropDownMenu */
+
+.xdd-wrap {
+	float: right;
+	position: relative;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+	cursor: pointer;
+}
+
+.hider-right.xdd-wrap {
+	margin-right: -12px;
+}
+
+.hider-right .xdd-title {
+	padding: 0 12px;
+}
+
+.xdd-items {
+	position: absolute;
+	background: rgba(255, 255, 255, 1);
+	height: 0;
+	right: 0;
+	opacity: 0;
+	top: 100%;
+	border-radius: 0 3px 3px 0;
+	z-index: 99999;
+	overflow: hidden;
+	color: #576881;
+	-webkit-transition: all ease-in-out .3s;
+	-o-transition: all ease-in-out .3s;
+	transition: all ease-in-out .3s;
+	line-height: 34px;
+}
+
+.xdd-item {
+	padding: 0 14px;
+	font-weight: normal;
+	white-space: nowrap;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
+	display: block;
+}
+
+.xdd-item:hover {
+	background: rgba(86, 124, 164, .05);
+}
+
+.xdd-items.xdd-opened {
+	box-shadow: 0 0 2px 1px rgba(0, 0, 0, .1);
+	height: auto;
+	opacity: 1;
+}
+
+
+
 .center,
 .center *{
 	text-align:center;
