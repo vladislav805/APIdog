@@ -1701,8 +1701,9 @@ var APIQueue = {
 function APIRequest (method, params) {
 	this.method = method;
 	this.params = params || {};
-	this._init();
 	this.queueId = APIQueue.add(this);
+	this.mTime = Date.now();
+	this._init();
 };
 
 APIRequest.createExecute = function (code, params) {
@@ -1776,6 +1777,16 @@ APIRequest.prototype = {
 	mWrapper: null,
 
 	/**
+	 * If need loggin all changes of request
+	 */
+	mDebug: false,
+
+	/**
+	 * Time of creating request
+	 */
+	mTime: 0,
+
+	/**
 	 * Initializate object
 	 * Do not call manually!
 	 */
@@ -1788,6 +1799,24 @@ APIRequest.prototype = {
 		if (API.settings.bitmask & APIDOG_SETTINGS_PROXY) {
 			this.mSendVia = APIDOG_REQUEST_VIA_PROXY;
 		};
+
+		this._debug("inited", this);
+	},
+
+	/**
+	 * Logging to console, if mDebug = true
+	 */
+	_debug: function() {
+		Array.prototype.splice.call(arguments, 0, 0, "Request<" + this.method + ">#" + this.getQueueId() + " (" + (this._time() / 1000).toFixed(3) + "s): ");
+		this.mDebug && console.log.apply(console, arguments);
+	},
+
+	/**
+	 * Returns time until start request
+	 * @return {Number} Period in ms
+	 */
+	_time: function() {
+		return Date.now() - this.mTime;
 	},
 
 	/**
@@ -1821,6 +1850,7 @@ APIRequest.prototype = {
 	 */
 	cancel: function () {
 		this.mRequest && this.mRequest.cancel();
+		this._debug("cancelled", this);
 	},
 
 	/**
@@ -1837,7 +1867,6 @@ APIRequest.prototype = {
 	/**
 	 * Change value of paramether of request
 	 * Can be invoked only before calling .execute()
-	 * If
 	 */
 	setParam: function (key, value) {
 		if (this.mState >= APIDOG_REQUEST_STATE_REQUESTED) {
@@ -1845,6 +1874,14 @@ APIRequest.prototype = {
 		};
 
 		this.params[key] = value;
+		return this;
+	},
+
+	/**
+	 * Enable debug-logiing
+	 */
+	debug: function() {
+		this.mDebug = true;
 		return this;
 	},
 
@@ -1867,6 +1904,7 @@ APIRequest.prototype = {
 		};
 
 		this.params = params;
+		this._debug("converted params");
 		return params;
 	},
 
@@ -1918,7 +1956,7 @@ APIRequest.prototype = {
 	 * Preparing params for sending request
 	 */
 	_prepareRequest: function () {
-
+		this._debug("preparing request");
 		/**
 		 * Sometimes we need wrap request in execute with version 4.x for getting info in version 5.x: in param code
 		 * we change version yo 5.x
@@ -1939,10 +1977,12 @@ APIRequest.prototype = {
 		 * with error 400 bad request
 		 */
 		if (httpBuildQuery(this.params).length > 4096 - 5 - 32) {
+			this._debug("enabled transport: proxy");
 			this.mSendVia = APIDOG_REQUEST_VIA_PROXY;
 		};
 
 		if (API.extension && API.extension.versionSDK >= 2.0 && !isEnabled(APIDOG_SETTINGS_PROXY)) {
+			this._debug("enabled transport: extension");
 			this.mSendVia = APIDOG_REQUEST_VIA_EXTENSION;
 		};
 
@@ -1976,20 +2016,22 @@ APIRequest.prototype = {
 	_onCompleteLoad: function (result) {
 		this.mResult = result;
 		this.mState = APIDOG_REQUEST_STATE_LOADED;
+		this._debug("completed", this);
 		if ("response" in result) {
-			if ("execute_errors" in result && window.__debug) {
-				console.error("Execute errors: ", result.execute_errors, "\nParams:", this.params);
+			if ("execute_errors" in result) {
+				this._debug("\nExecute errors:", result.execute_errors, "\n\nParams:", this.params);
 			};
 			this.mCompleteListener && this.mCompleteListener(result.response);
 		} else if ("error" in result) {
 			this._onErrorAPI(result.error);
-		}
+		};
 	},
 
 	/**
 	 * Calling when while requesting was ocurred error
 	 */
 	_onError: function (reason) {
+		this._debug("error is unknown, go to custom error listener");
 		this.mErrorListener && this.mErrorListener({reason: reason}, APIDOG_REQUEST_ERROR_INTERNAL);
 	},
 
@@ -1997,6 +2039,7 @@ APIRequest.prototype = {
 	 *
 	 */
 	_onErrorAPI: function (error) {
+		this._debug("error in response vk occured", error);
 		switch (error.error_code) {
 			case APIDOG_REQUEST_API_ERROR_CAPTCHA:
 				Site.showCaptcha(error);
