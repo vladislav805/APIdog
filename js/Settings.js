@@ -736,12 +736,14 @@ var Settings = {
 		})(bdate[2].options, birthday[2]);
 
 		var validateDate = function () {
-			s.d.options[s.d.options.length - 1].disabled = +!(
+			s.d.options[s.d.options.length - 1].hidden = +!(
 				(s.m.selectedIndex <= 6 && (s.m.selectedIndex + 1) % 2) ||
 				(s.m.selectedIndex > 6 && !((s.m.selectedIndex + 1) % 2))
 			);
-			s.d.options[s.d.options.length - 2].disabled = +(s.m.selectedIndex == 1);
-			s.d.options[s.d.options.length - 3].disabled = +(s.m.selectedIndex == 1 && (s.y.options[s.y.selectedIndex].value % 4) != 0);
+			s.d.options[s.d.options.length - 2].hidden = +(s.m.selectedIndex == 1);
+			s.d.options[s.d.options.length - 3].hidden = +(s.m.selectedIndex == 1 && (s.y.options[s.y.selectedIndex].value % 4) != 0);
+
+			s.d.options[s.d.selectedIndex].hidden && (s.d.selectedIndex = 0);
 		};
 
 		s.d.onchange = validateDate;
