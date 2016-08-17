@@ -12,7 +12,8 @@
 	$languages = [
 		["id" => 0, "title" => "Русский"],
 		["id" => 1, "title" => "Английский"],
-		["id" => 2, "title" => "Украинский"]
+		["id" => 2, "title" => "Украинский"],
+		["id" => 999, "title" => "Русский просторечный"]
 	];
 
 
@@ -100,14 +101,11 @@
 		box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, .5);
 	}
 
-	.pagination-wrap[data-links="1"] a { width: 100%; }
-	.pagination-wrap[data-links="2"] a { width: 50%; }
-	.pagination-wrap[data-links="3"] a { width: 33.3333%; }
-	.pagination-wrap[data-links="4"] a { width: 25%; }
-	.pagination-wrap[data-links="5"] a { width: 20%; }
-	.pagination-wrap[data-links="6"] a { width: 16.6666%; }
-	.pagination-wrap[data-links="7"] a { width: 14.2857%; }
-	.pagination-wrap[data-links="8"] a { width: 12,5%; }
+<?
+	for ($i = 1; $i < 15; ++$i) {
+		print ".pagination-wrap[data-links=\"" . $i . "\"] a { width: " . (100 / $i) . "%; }\n";
+	}
+?>
 </style>
 <form action="./editor.php?languageId=<?=$languageId;?>&amp;save=1" method="post" enctype="multipart/form-data">
 <?
@@ -172,5 +170,8 @@
 
 ?>
 </table>
+<?
+	print $pages;
+?>
 <input type="submit" value="Save" />
 </form>
