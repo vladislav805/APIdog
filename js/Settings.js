@@ -9,14 +9,7 @@ var Settings = {
 
 		switch (getAct()) {
 			case "blacklist":
-				Site.Loader();
-				return Site.APIv5("account.getBanned",
-				{
-					count: 30,
-					fields: "photo_50,online,screen_name",
-					offset: Site.Get("offset"),
-					v: 5.14
-				}, Settings.blacklist.request);
+				Settings.blacklist.load();
 				break;
 
 			case "stickers":
@@ -48,9 +41,10 @@ var Settings = {
 	},
 
 	languages: [
-		{value: 0, code: "ru", label: "Русский / Russian"},
-		{value: 1, code: "en", label: "English / English"},
-		{value: 2, code: "ua", label: "Українська / Ukrainian"}
+		{value: 0, code: "ru", label: "RU | Русский"},
+		{value: 1, code: "en", label: "EN | English"},
+		{value: 2, code: "ua", label: "UA | Українська"},
+//		{value: 999, code: "gop", label: "RUG | Русский просторечие"}
 	],
 
 	showSettings: function () {
@@ -333,81 +327,134 @@ var Settings = {
 	},
 
 	blacklist: {
-		request: function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				list = document.createElement("div"), form;
-			form = Site.CreateInlineForm({
-				name: "userId",
-				placeholder: Lang.get("settings.blacklist_field_placeholder"),
-				title: Lang.get("settings.blacklist_button"),
-				onsubmit: function (event) {
-					event.preventDefault();
-					var form = this,
-						user = form.userId.value.trim();
 
-					if (user.indexOf("apidog.ru/") || user.indexOf("vk.com")) {
-						user = /(https?:\/\/)?((m\.)?vk\.com|apidog\.ru)\/#?([^?]+)\??/igm.exec(user)[4];
+		load: function() {
+			var bundle = Settings.blacklist.page();
+			new APIRequest("account.getBanned", {
+					v: 5.52,
+					count: 200,
+					fields: "photo_100,online,first_name_gen,last_name_gen"
+				})
+				.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+				.setOnCompleteListener(function(data) {
+					Settings.blacklist.show(data, bundle);
+				})
+				.execute();
+			bundle.list.appendChild(getLoader());
+			Site.append(bundle.node);
+			Site.setHeader(lg("settings.blacklistTitle"));
+		},
+
+		page: function() {
+			var e = $.e,
+				tabs = Settings.getTabs(),
+				head = Site.getPageHeader(lg("settings.blacklistHeadTitleLoading")),
+				list = e("div"),
+				bundle,
+				form = Site.getInlineForm({
+					name: "user",
+					placeholder: lg("settings.blacklistFormInputPlaceholder"),
+					title: lg("settings.blacklistFormButton"),
+					onsubmit: function (event) {
+						event.preventDefault();
+
+						Settings.blacklist.add(this.user.value, bundle);
+
+						return false;
+					}
+				}),
+				wrap = e("div", {append: [tabs, head, form, list]});
+			return bundle = {
+				node: wrap,
+				form: form,
+				list: list,
+				head: {
+					node: head,
+					set: function(t) {
+						head.firstChild.innerHTML = t;
+					}
+				}
+			};
+		},
+
+		show: function (data, bundle) {
+
+			bundle.head.set(lg("settings.blacklistHeadTitle").schema({
+				n: data.count,
+				m: lg("settings.blacklistUsers", data.count)
+			}));
+
+			$.elements.clearChild(bundle.list);
+
+			if (data.count) {
+				for (var i = 0, l = data.items.length; i < l; ++i) {
+					bundle.list.appendChild(Settings.blacklist.item(data.items[i]));
+				};
+			} else {
+				bundle.list.appendChild(getEmptyField(lg("settings.blacklistNobody")));
+			};
+		},
+
+		item: function (c, animation) {
+			var node;
+			return node = Templates.getUser(c, { fulllink: true, actions: [
+				$.e("div", {"class": "icon icon-delete", html: "%удалить%", onclick: function(event) {
+					event.preventDefault();
+					Settings.blacklist.remove(c.id, node);
+					return false;
+				}})
+			]});
+		},
+
+		add: function(user, bundle) {
+
+			var regexp = /(apidog\.ru\/6\.\d\/#|(new\.|m\.)?vk\.com\/)([A-Za-z0-9_.]+)($|\?)/img,
+				test = /(apidog\.ru\/6\.\d\/#|(new\.|m\.)?vk\.com\/)([A-Za-z0-9_.]+)($|\?)/img.test(user),
+
+				domain = test ? /(apidog\.ru\/6\.\d\/#|(new\.|m\.)?vk\.com\/)([A-Za-z0-9_.]+)($|\?)/img.exec(user) : false;
+
+			if (!test && !domain) {
+				new Snackbar({text: lg("settings.blacklistFormErrorIncorrectLink")}).show();
+				return;
+			};
+			domain = domain[3];
+			new APIRequest("execute", {
+					code: "var u=API.utils.resolveScreenName({screen_name:Args.d});return u.type!=\"user\"?{t:u,s:!1}:{s:!!API.account.banUser({user_id:u.object_id}),u:API.users.get({user_ids:u.object_id,fields:\"photo_100,online,screen_name\",v:5.52})[0]};",
+					d: domain
+				}).setOnCompleteListener(function(result) {
+					if (!result.s) {
+						Site.Alert({text: "hrmmm.."});
+						return;
 					};
 
-					if (user) {
-						Site.API("execute", {
-							code:"var u=API.utils.resolveScreenName({screen_name:\"%s\"});return u.type!=\"user\"?{success:!1}:{success:!!API.account.banUser({user_id:u.object_id}),user:API.users.get({user_ids:u.object_id,fields:\"photo_50,online,screen_name\"})[0]};".replace(/%s/img, user)
-						}, function (response) {
-							data = Site.isResponse(response);
-							if (data.success) {
-								form.user.value = "";
-								list.insertBefore(Settings.blacklist.item(data.user, true), list.firstChild);
-							} else
-								Site.Alert({
-									text: "Ошибка!\n\n" + response.execute_errors[0].error_msg
-								});
-						});
-					} else
-						Site.Alert({
-							text: Lang.get("settings.error_enter_id"),
-							click: function (event) {
-								form.user.focus();
-							}
-						});
-					return false;
-				}
-			});
-			list.id = "settings-banlist";
-			for (var i = 0, l = data.items.length; i < l; ++i)
-				list.appendChild(Settings.blacklist.item(data.items[i]));
-			parent.appendChild(Settings.getTabs());
-			parent.appendChild(Site.CreateHeader(data.count > 0 ? Lang.get("settings", "blacklist_header_blockeds", data.count) + " " + data.count + " " + Lang.get("settings", "blacklist_header_blocked_users", data.count) : Lang.get("settings.blacklist_header_none")));
-			parent.appendChild(form);
-			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"),data.count,30))
-			Site.Append(parent);
-			Site.SetHeader(Lang.get("settings.blacklist"));
+					bundle.form.user.value = "";
+					var first = bundle.list.firstChild;
+					bundle.list.insertBefore(Settings.blacklist.item(result.u, true), first);
+					if (first.className.indexOf("empty")) {
+						$.elements.remove(first);
+					};
+				}).execute();
 		},
-		item: function (c, animation) {
-			var field = document.createElement("div");
-			field.id = "blacklist-user" + c.id;
-			field.className = "friends-item" + (animation ? " docs-saved" : "");
-			field.appendChild($.elements.create("div", {"class": "feed-delete", onclick: function (event) {
-				event.preventDefault();
-				$.event.cancel(event);
-				Settings.blacklist.remove(c.id, this.parentNode);
-			}}))
-			field.appendChild($.elements.create("img", {src: getURL(c.photo_50), "class": "friends-left"}));
-			field.appendChild($.elements.create("div", {"class": "friends-right", append: [
-				$.elements.create("a", {href: "#" + c.screen_name || "id" + c.id, append: [
-					$.elements.create("strong", {html: Site.Escape(c.first_name + " " + c.last_name) + Site.isOnline(c)})
-				]})
-			]}));
-			return field;
-		},
-		remove: function (user_id, node) {
-			Site.API("account.unbanUser", {user_id: user_id}, function (data) {
-				node.style.height = ($.getPosition(node).height - 21) + "px";
-				node.innerHTML="<span class=\"tip\">Пользователь удален из черного списка<\/span>";
-			});
+
+		remove: function (userId, node) {
+			node.style.height = node.clientHeight + "px";
+			node.style.opacity = .7;
+			new APIRequest("account.unbanUser", {userId: userId})
+				.setOnCompleteListener(function(data) {
+					prefix(node, "transition", ".3s all ease-out");
+					setTimeout(function() {
+						node.style.height = 0;
+						node.style.paddingTop = 0;
+						node.style.paddingBottom = 0;
+					}, 40);
+					setTimeout(function() {
+						$.elements.remove(node);
+					}, 350);
+				})
+				.execute();
 		}
 	},
+
 	store: {
 		getTabs: function () {
 			return Site.CreateTabPanel([

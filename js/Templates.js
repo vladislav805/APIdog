@@ -5,36 +5,38 @@
  */
 
 var Templates = {
-	getUser: function (user, options) {
+	getUser: function(user, options) {
 		options = options || {};
-		var wrap = document.createElement(options.fulllink ? "a" : "div"),
-			photo = document.createElement("img"),
-			right = document.createElement("div"),
-			name = document.createElement(options.fulllink ? "strong" : "a");
-		photo.src = getURL(user.photo_rec || user.photo_50 || user.photo);
-		wrap .className = "friends-item";
-		photo.className = "friends-left";
-		right.className = "friends-right";
-		var link = "#" + (user.screen_name || user.id && "id" + user.id || user.uid && "id" + user.uid);
+		var e = $.e,
+			name,
+			photo = e("img", {"class": "friends-left", src: getURL(user.photo_100 || user.photo_50 || user.photo)}),
+			right = e("div", {"class": "friends-right", append: (name = e(options.fulllink || !options ? "strong" : "a"))}),
+			wrap = e(options.fulllink || !options ? "a" : "div", {"class": "friends-item", append: [photo, right]}),
+			link = "#" + (user.screen_name || user.id && "id" + user.id || user.uid && "id" + user.uid);
+
 		if (options.fulllink) {
 			wrap.href = link;
-			name.innerHTML = Site.Escape(user.name || user.first_name + " " + user.last_name) + Site.isOnline(user);
+			name.innerHTML = getName(user);
 		} else {
 			name.href = link;
-			name.innerHTML = "<strong>" + Site.Escape(user.name || user.first_name + " " + user.last_name) + Site.isOnline(user) + "</strong>";
-		}
-		right.appendChild(name);
-		if (options.actions)
-			for (var i = 0, l = options.actions.length; i < l; ++i)
-				if (options.actions[i])
-					right.appendChild($.elements.create("div", {append: [options.actions[i]]}));
-		if (options.close)
-			wrap.appendChild($.elements.create("div", {"class": "feed-close", onclick: options.close}));
-		wrap.appendChild(photo);
-		wrap.appendChild(right);
+			name.innerHTML = "<strong>" + getName(user) + "</strong>";
+		};
+
+		if (options.actions) {
+			for (var i = 0, l = options.actions.length; i < l; ++i) {
+				right.appendChild(e("div", {append: options.actions[i]}));
+			};
+		};
+
 		return wrap;
 	},
 
+	/**
+	 * Маленький однострочный элемент списка пользователей
+	 * @param  {Object<String, Mixed>} user    Объект пользователя
+	 * @param  {Object<String, Mixed>} options Объект с дополнительными опциями
+	 * @return {DOMNode}                       Элемент списка
+	 */
 	getMiniUser: function(user, options) {
 		options = options || {};
 		var e = $.e,
