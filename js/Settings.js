@@ -830,12 +830,13 @@ var Settings = {
 			params.bdate = [params.bdate_day, params.bdate_month, params.bdate_year].join(".");
 			delete params.bdate_day, params.bdate_month, params.bdate_year;
 
-			Site.API("account.saveProfileInfo", params, function (data) {
-				if (data.response && data.response.changed)
-					Site.Alert({text: Lang.get("settings.saved")});
-				else
+			new APIRequest("account.saveProfileInfo", params).setOnCompleteListener(function (data) {
+				if (data.changed) {
+					new Snackbar({text: Lang.get("settings.saved")}).show();
+				} else {
 					Site.Alert({text: "Что-то пошло не так..\nОтвет от API:\n\n" + JSON.stringify(data)});
-			})
+				};
+			}).execute();
 
 			return false;
 		};
