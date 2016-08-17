@@ -35,14 +35,15 @@ var Friends = {
 
 			default:
 				ownerId = ownerId || API.uid;
-				if (Friends.friends[ownerId] && (ownerId == API.uid || !ownerId))
-					return Friends.showFriends(ownerId, Friends.friends[ownerId]);
+//				if (Friends.friends[ownerId] && (ownerId == API.uid || !ownerId))
+//					return Friends.showFriends(ownerId, Friends.friends[ownerId]);
 				Site.APIv5("friends.get", {
 					user_id: ownerId,
 					fields: "photo_50,online,can_write_private_message,screen_name,sex",
 					order: "hints",
 					v: 5.8
 				}, function (data) {
+
 					if (data.error) {
 						Site.Alert({text: "Ошибка! Доступ запрещен!"});
 						return;
