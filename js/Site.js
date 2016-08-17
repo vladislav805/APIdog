@@ -1145,37 +1145,31 @@ var Site = {
 			]
 		});
 	},
-	CreateInlineForm: function (opts) {
-		var Form = document.createElement("form");
-		Form.appendChild($.elements.create("table", {"class": "s", append: [
-			$.elements.create("tr", {append: [
-				$.elements.create("td", {"class": "s-text", append: [
-					$.elements.create("input", {
-						type: opts.type || "text",
-						"class": "sizefix",
-						name: opts.name,
-						value: Site.Unescape(opts.value || ""),
-						onkeyup: opts.onkeyup,
-						autocomplete: "off",
-						onblur: opts.onblur,
-						placeholder: opts.placeholder || ""
-					})
-				]}),
-				$.elements.create("td", {"class": "s-submit", append: [
-					$.elements.create("input", {type: "submit", name: "submitbtninline", value: opts.title})
-				]})
-			]})
-		]}));
-		if (opts.method)
-			Form.method = opts.method;
-		if (opts.action)
-			Form.action = opts.action;
-		if (opts.enctype)
-			Form.enctype = opts.enctype;
-		if (opts.target)
-			Form.target = opts.target;
-		Form.onsubmit = opts.onsubmit;
-		return Form;
+	CreateInlineForm: function(opts) { return Site.getInlineForm(opts); },
+
+	getInlineForm: function(opts) {
+		var e = $.e,
+			form = e("form", {append: [
+				e("table", {"class": "s", append: e("tr", {append: [
+						e("td", {"class": "s-text", append: [
+							e("input", {
+								type: opts.type || "text",
+								"class": "sizefix",
+								name: opts.name,
+								value: (opts.value || "").unsafe(),
+								onkeyup: opts.onkeyup,
+								autocomplete: "off",
+								onblur: opts.onblur,
+								placeholder: (opts.placeholder || "").unsafe()
+							})
+						]}),
+						e("td", {"class": "s-submit", append: e("input", {type: "submit", name: "submitbtninline", value: opts.title}) })
+					]})
+				})
+			],
+			onsubmit: opts.onsubmit
+		});
+		return form;
 	},
 	CreateHider: function (head, content, isOpened) {
 		var parent = document.createElement("div");

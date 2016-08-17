@@ -395,7 +395,8 @@ ThemeBundle.prototype = {
  * Prototypes
  */
 
-var ds = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"};
+var ds = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"},
+	dsr = {"&lt;": "<", "&gt;": ">", "&quot;": "\"", "&#039;": "'", "&amp;": "&"};
 
 /**
  * Formatting number by groups: from 1234567 to 1 234 567
@@ -458,11 +459,9 @@ String.prototype.setLang = function (data, value) {
 };
 
 
-String.prototype.schema = function (data)
-{
+String.prototype.schema = function(data) {
 	var s = this, k;
-	for (k in data)
-	{
+	for (k in data) {
 		s = s.replace(new RegExp("%" + k, "img"), data[k]);
 	};
 	return s;
@@ -484,8 +483,21 @@ Number.random = function(a, b) {
  */
 String.prototype.safe = function() {
 	var s = this, i;
-	for (i in ds)
+	for (i in ds) {
 		s = s.replace(i, ds[i]);
+	};
+	return s;
+};
+
+/**
+ * Replace safe html symbols to plain text
+ * @return {String} Unsafe string
+ */
+String.prototype.unsafe = function() {
+	var s = this, i;
+	for (i in dsr) {
+		s = s.replace(i, dsr[i]);
+	};
 	return s;
 };
 
@@ -4585,7 +4597,7 @@ Modal.prototype = {
 			if (~Object.prototype.toString.call(fromNodeAnimation).toLowerCase().indexOf("html")) {
 				fromNodeAnimation = this.computeFrom(fromNodeAnimation);
 			};
-
+console.log(fromNodeAnimation);
 			this._showAnimate(fromNodeAnimation);
 		};
 
@@ -4624,7 +4636,8 @@ Modal.prototype = {
 	},
 
 	computeFrom: function(node) {
-		var pos = {top: node.offsetTop, left: node.offsetLeft, width: node.clientWidth, height: node.clientHeight};
+		var pos = $.getPosition(node);
+		pos.top -= getScroll();
 		return {
 			top: pos.top + pos.height / 2,
 			left: pos.left + pos.width / 2
@@ -4948,7 +4961,7 @@ function AttachmentController(options) {
 
 AttachmentController.prototype = {
 
-	open: function() {
+	open: function(from) {
 		this.chunk = [];
 		this.modal = new Modal({
 			title: lg("attacher.modalTitle"),
@@ -4973,7 +4986,7 @@ AttachmentController.prototype = {
 				}
 			]
 		});
-		this.modal.show();
+		this.modal.show(from);
 	},
 
 	clear: function() {
@@ -5017,7 +5030,7 @@ AttachmentController.prototype = {
 				"class": "attacher-typeList-item",
 				html: lg(AttachmentController.langs[j]),
 				onclick: (function(k) {
-					return function(event) { self.openSelectWindow(k); }
+					return function(event) { self.openSelectWindow(k, this); }
 				})(j)
 			}));
 		};
@@ -5033,7 +5046,7 @@ AttachmentController.prototype = {
 		return [];
 	},
 
-	openSelectWindow: function(typeId) {
+	openSelectWindow: function(typeId, button) {
 		var self = this;
 		switch (typeId) {
 			case APIDOG_ATTACHMENT_PHOTO:
@@ -5118,7 +5131,7 @@ AttachmentController.prototype = {
 					],
 					host = new TabHost(tabs, {});
 
-				this.open();
+				this.open(button);
 				this.modal.setContent(host.getNode());
 				break;
 
@@ -5173,7 +5186,7 @@ AttachmentController.prototype = {
 					],
 					host = new TabHost(tabs, {});
 
-				this.open();
+				this.open(button);
 				this.modal.setContent(host.getNode());
 				break;
 		};

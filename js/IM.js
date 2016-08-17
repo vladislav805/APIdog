@@ -222,7 +222,7 @@ var IM = {
 				return false;
 			},
 			head,
-			headName = e("span", { html: "peer " + peerId }),
+			headName = e("span", { id: "g-title-dialog-" + peerId, html: "peer " + peerId }),
 			headActions = null,
 			form,
 			textarea = IM.createTextarea(peerId, {
@@ -377,12 +377,13 @@ var IM = {
 				new APIRequest("execute", {
 					code: "var i=parseInt(Args.c),c=API.messages.getChat({chat_id:i,v:5.52,fields:\"online\"});return{c:c,u:API.users.get({user_ids:c.users@.id+c.users@.invited_by,fields:Args.f})};",
 					c: peerId,
-					f: "online,photo_100,photo_50,screen_name,first_name_gen,last_name_gen"
+					f: "online,photo_100,photo_50,screen_name,first_name_gen,last_name_gen,sex"
 				}).setOnCompleteListener(function(result) {
 					Local.add(result.u);
 
 					showUsers(result.c.users);
 					showSettings(result.c);
+
 					modal.setTitle(lg("im.chatInfoTitle").schema({t: result.c.title.safe().emoji()}));
 				}).execute();
 			},
@@ -393,16 +394,127 @@ var IM = {
 					// TODO!
 					// There will be multiline item with name of inviter and button for kick
 					// from chat for admins
-					uiUsers.appendChild(Templates.getMiniUser(user));
+					uiUsers.appendChild(Templates.getMiniUser(Local.Users[user.id]));
 				});
 			},
 
 			showSettings = function(chat) {
 				$.elements.clearChild(uiSettings);
 				console.log(chat);
+
+				uiSettings.appendChild(getTitleForm(chat));
+				uiSettings.appendChild(getNotificationsForm(chat));
+			},
+
+			getTitleForm = function(chat) {
+				var lHead = Site.getPageHeader(lg("im.chatInfoFormTitleHead")),
+					lForm = Site.getInlineForm({
+						title: lg("im.chatInfoFormTitleChange"),
+						name: "title",
+						value: chat.title,
+						onsubmit: function() {
+							event.preventDefault();
+							IM.setChatTitle(peerId, this.title.value.trim());
+							return false;
+						}
+					});
+				lForm.style.padding = "10px"; // ух ебать костыль нахуй
+				return e("div", {append: [lHead, lForm]});
+			},
+
+			getNotificationsForm = function(chat) {
+				var lHead = Site.getPageHeader(lg("im.chatInfoFormNotificationsHead")),
+					disabled = chat.push_settings.disabled_until,
+					lButton,
+					lInfo,
+
+					click = function() {
+						if (disabled) {
+							sendNewNotificationsSettings(0);
+							lButton.disabled = true;
+						} else {
+							showSelectDateUntilNotificationsWillBeDisabled(function(time) {
+								sendNewNotificationsSettings(time);
+								lButton.disabled = true;
+							});
+						};
+					},
+
+					showSelectDateUntilNotificationsWillBeDisabled = function(onSelected) {
+						var dateChooser,
+							modal = new Modal({
+								width: 400,
+								title: lg("im.chatInfoFormNotificationsModalTitle"),
+								content: (dateChooser = createInputDate({name: "untilDate"}, (Date.now() / 1000) + (24 * 60 * 60))).node,
+								footer: [
+									{
+										name: "ok",
+										title: lg("im.chatInfoFormNotificationsModalOk"),
+										onclick: function() {
+											onSelected(dateChooser.getValue());
+											this.close();
+										}
+									},
+									{
+										name: "cancel",
+										title: lg("general.cancel"),
+										onclick: function() {
+											this.close();
+										}
+									}
+								]
+							}).show();
+					},
+
+					updateButtonText = function() {
+						lButton.value = lg(disabled ? "im.chatInfoFormNotificationsEnable" : "im.chatInfoFormNotificationsDisable");
+						lInfo.innerHTML = disabled
+										? disabled < 0
+											? lg("im.chatInfoFormNotificationsDisabledEver")
+											: lg("im.chatInfoFormNotificationsDisabledUntil").schema({d: $.getDate(disabled)})
+										: lg("im.chatInfoFormNotificationsEnabled");
+					},
+
+					sendNewNotificationsSettings = function(disabledUntil) {
+						// TODO: переделать под всех, а не только под конфы
+						var time = disabledUntil <= 0 ? disabledUntil : disabledUntil - parseInt(Date.now() / 1000);
+						new APIRequest("account.setSilenceMode", {
+							peer_id: 2000000000 + peerId,
+							time: time,
+							v: 5.46
+						}).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(result) {
+							lButton.disabled = false;
+							chat.push_settings.disabled_until = disabledUntil;
+							disabled = disabledUntil;
+							updateButtonText();
+						}).execute();
+					},
+
+					lForm = e("form", {
+						append: [
+							e("div", {"class": "im-info-notify-icon"}),
+							e("div", {"class": "im-info-notify-content", append: [
+								lInfo = e("strong"),
+								lButton = e("input", {
+									type: "button",
+									onclick: function() {
+										click();
+									}
+								})
+							]})
+						],
+						onsubmit: function(event) {
+							event.preventDefault();
+
+							return false;
+						}
+					});
+				updateButtonText();
+				lForm.style.padding = "10px"; // ух ты ебать какой пиздатый костыль нахуй
+				return e("div", {append: [lHead, lForm]});
 			};
 
-		modal.show();
+		modal.show($.element("g-title-dialog-c" + peerId));
 		load();
 	},
 
