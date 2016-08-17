@@ -109,6 +109,16 @@ function lg(id, extra) {
 	return result;
 };
 
+function prefix(node, property, value) {
+	var forPrefix = property[0].toUpperCase() + property.substring(1);
+	node.style["webkit" + forPrefix] = value;
+	node.style["moz" + forPrefix] = value;
+	node.style["ms" + forPrefix] = value;
+	node.style["o" + forPrefix] = value;
+	node.style[property] = value;
+	return node;
+};
+
 function shuffle(array) {
 	var m = array.length, t, i;
 	while (m) {
@@ -4403,8 +4413,511 @@ Snackbar.prototype = {
 		}, 500);
 	},
 
+};
 
+/**
+ * Modal window
+ * @param   {Object}   o   Options
+ */
+function Modal(o) {
+	o = o || {};
+	var self = this;
+	this.modal = $.e("div", {"class": 'modal modal-animation'});
+	this.title = $.e("h1", {"class": 'modal-title'});
+	this.body = $.e("div", {"class": 'modal-content'});
+	this.footer = $.e("div", {"class": 'modal-footer'});
+	this.block = $.e("div", {"class": 'modal-block', onclick: o.uncloseableByBlock ? null : function() { self.close() }});
+	this.wrap = $.e("div", {"class": 'modal-wrap'});
 
+	this.modal.appendChild(this.title);
+	this.modal.appendChild(this.body);
+	this.modal.appendChild(this.footer);
+
+	this.wrap.appendChild(this.modal);
+	this.wrap.appendChild(this.block);
+
+	this._init();
+	this._setOptions(o);
+	this._windowStateChanged();
+};
+Modal.prototype = {
+
+	/**
+	 * Initialize modal window
+	 * @return   {Modal}
+	 */
+	_init: function() {
+		var s = this;
+		$.elements.addClass(this.wrap, "hidden");
+		$.event.add(this.body, "scroll", function (event) {
+			s._onScroll(event);
+		});
+		var self = this;
+		$.event.add(window, "resize", function (event) {
+			self._onResizeDocument(event);
+		});
+		if (isEnabled(128)) {
+			this.modal.style.marginTop = "50px";
+			this.hasMarginTop = true;
+		};
+		return this._insert();
+	},
+
+	/**
+	 * Is fixed hat
+	 */
+	hasMarginTop: false,
+
+	/**
+	 * Insert modal to document
+	 * @return   {Modal}
+	 */
+	_insert: function() {
+		getBody().appendChild(this.wrap);
+		return this;
+	},
+
+	/**
+	 * Set options of modal
+	 * @param   {Modal}
+	 */
+	_setOptions: function(o) {
+		if (o.title) {
+			this.title.innerHTML = o.title;
+		};
+
+		if (o.content) {
+			if (typeof o.content === "string") {
+				this.body.innerHTML = o.content;
+			} else {
+				this.body.appendChild(o.content);
+			};
+		};
+
+		if (o.footer) {
+			if (Array.isArray(o.footer)) {
+				this.buttons = o.footer;
+				this._setupButtons();
+				if (this._hasCloseButton) {
+					this._addCloseButtonHead();
+				};
+			} else {
+				if (typeof footer === "string") {
+					this.footer.innerHTML = o.footer;
+				} else {
+					this.footer.append(o.footer);
+				};
+			};
+		};
+
+		if (o.noPadding) {
+			this.setPadding(false);
+		};
+
+		if (o.width) {
+			this.setWidth(o.width);
+		};
+
+		if (o.height) {
+			this.setHeight(o.height);
+		};
+
+		if (o.onScroll) {
+			this._onScrollCallback = o.onScroll;
+		};
+
+		return this;
+	},
+
+	setOnScroll: function(fx) {
+		this._onScrollCallback = fx;
+		return this;
+	},
+
+	_hasCloseButton: function() {
+		var found = false;
+
+		(this.buttons || []).forEach(function (b) { if (b.name == "close") found = true; });
+
+		return found;
+	},
+
+	_addCloseButtonHead: function() {
+		var self = this;
+		this.modal.insertBefore($.e("div", {
+			"class": "modal-closeButton",
+			onclick: function () {
+				self.close();
+			}
+		}), this.title);
+	},
+
+	setPadding: function(state) {
+		$.elements[state ? "removeClass" : "addClass"](this.body, "modal-content-noPadding");
+		return this;
+	},
+
+	/**
+	 * Setup buttons by special format
+	 * @return   {Modal}
+	 */
+	_setupButtons: function() {
+		if (!this.buttons)
+			return this;
+		this.footer.innerHTML = "";
+		var n = this.footer, b, self = this;
+		b = this.buttons.map(function(item) {
+			n.appendChild($.e("button", {html: item.title, "data-name": item.name, onclick: function (event) {
+				item.onclick.call(self);
+			}}));
+		});
+
+		return this;
+	},
+
+	/**
+	 * Open modal and show it on document
+	 * @return   {Modal}
+	 */
+	show: function(fromNodeAnimation) {
+		if (fromNodeAnimation) {
+
+			if (~Object.prototype.toString.call(fromNodeAnimation).toLowerCase().indexOf("html")) {
+				fromNodeAnimation = this.computeFrom(fromNodeAnimation);
+			};
+
+			this._showAnimate(fromNodeAnimation);
+		};
+
+		$.elements.removeClass(this.wrap, "hidden");
+
+		this._onResizeDocument();
+		return this;
+	},
+
+	_showAnimate: function(from) {
+		var modal = this.modal,
+			setStyle = function(left, top, scale, opacity) {
+				var s;
+				modal.style.opacity = opacity;
+				prefix(modal, "transform", s = ("translate(" + left + "px, " + top + "px) scale(" + scale + ")"));
+			},
+			doc = {height: document.documentElement.clientHeight, width: document.documentElement.clientWidth};
+
+		$.elements.removeClass(modal, "modal-animation");
+		$.elements.addClass(modal, "modal-targetAnimated");
+
+		setStyle(
+			from.left - (doc.width / 2),
+			from.top - (doc.height / 2),
+			.1,
+			.1
+		);
+
+		setTimeout(function() {
+			setStyle(0, 0, 1, 1);
+		}, 50);
+
+		setTimeout(function() {
+			$.elements.removeClass(modal, "modal-targetAnimated");
+		}, 320);
+	},
+
+	computeFrom: function(node) {
+		var pos = {top: node.offsetTop, left: node.offsetLeft, width: node.clientWidth, height: node.clientHeight};
+		return {
+			top: pos.top + pos.height / 2,
+			left: pos.left + pos.width / 2
+		};
+	},
+
+	/**
+	 * Close modal
+	 */
+	close: function() {
+		$.elements.addClass(this.wrap, "modal-closing");
+		var s = this;
+		setTimeout(function () {
+			s.remove();
+		}, 600);
+		return this;
+	},
+
+	remove: function() {
+		this.wrap.remove();
+		this._windowStateChanged();
+	},
+
+	/**
+	 * Set title of modal
+	 * @param   {String}   title   New title of modal
+	 */
+	setTitle: function(title) {
+		this.title.innerHTML = title;
+		return this;
+	},
+
+	/**
+	 * Set content of modal
+	 *
+	 * @param   {?}   content   New content of modal
+	 */
+	setContent: function(content) {
+		this.body.innerHTML = "";
+		if (typeof content === "string")
+			this.body.innerHTML = content;
+		else
+			this.body.appendChild(content);
+		return this;
+	},
+
+	/**
+	 * Return content wrapper
+	 * @return   {Node}   Wrapper of content modal
+	 */
+	getContent: function() {
+		return this.body;
+	},
+
+	/**
+	 * Set footer of modal
+	 *
+	 * @param   {?}   footer   New footer of modal
+	 */
+	setFooter: function(footer) {
+		this.footer.innerHTML = "";
+		if (typeof footer === "string")
+			this.footer.innerHTML = footer;
+		else
+			this.footer.appendChild(footer);
+		return this;
+	},
+
+	/**
+	 * Current button-set
+	 *
+	 * @return   {Array}   Buttons of modal
+	 */
+	getButtons: function() {
+		if (!this.buttons)
+			return false;
+		return this.buttons;
+	},
+
+	/**
+	 * Adding button
+	 *
+	 * @param   {Object}   opts   Options of button
+	 */
+	addButton: function(opts) {
+		this.getButtons().unshift(opts);
+		this._setupButtons();
+		return this;
+	},
+
+	/**
+	 * Replace button in modal
+	 *
+	 * @param   {String}   name   Name of button
+	 * @param   {Object}   opts   Options of button
+	 */
+	setButton: function(name, opts) {
+		var found = -1;
+		this.buttons = this.buttons.map(function (i) {
+			if (i.name !== name)
+				return i;
+			found = true;
+			return opts;
+		});
+		if (found)
+			this._setupButtons();
+		return this;
+	},
+
+	/**
+	 * Replace button in modal
+	 *
+	 * @param   {String}   name   Name of button
+	 * @param   {Object}   opts   Options of button
+	 */
+	setButtons: function(buttons) {
+		this.buttons = buttons
+		this._setupButtons();
+		return this;
+	},
+
+	/**
+	 * Remove button from footer
+	 *
+	 * @param    {String}   name   Name of button
+	 * @return   {Modal}
+	 */
+	removeButton: function(name) {
+		var index = -1;
+		this.buttons = this.buttons.forEach(function (i, x) {
+			if (i.name !== name)
+				return;
+			index = x;
+		});
+		if (~index) {
+			this.buttons.splice(index, 1);
+			this._setupButtons();
+		};
+		return this;
+	},
+
+	/**
+	 * Parse sizes
+	 *
+	 * @param	{Number}   w   Value
+	 */
+	_parseSizes: function(w) {
+		return typeof w === "string" ? w : w + "px";
+	},
+
+	/**
+	 * Set width of modal window
+	 *
+	 * @param   {Number}   w   New value of width
+	 */
+	setWidth: function(w) {
+		this.modal.style.width = this._parseSizes(w);
+		return this;
+	},
+
+	/**
+	 * Set height of modal window
+	 *
+	 * @param   {Number}   h   New value of height
+	 */
+	setHeight: function(h) {
+		this.modal.style.height = this._parseSizes(h);
+		return this;
+	},
+
+	/**
+	 * Closing window with delay
+	 * @param  {Number} time Delay in ms
+	 */
+	closeAfter: function (time) {
+		var s = this;
+		setTimeout(function () { s.close(); }, time);
+		return this;
+	},
+
+	_onScrollCallback: null,
+
+	_onScroll: function (event) {
+		var ch, st, oh;
+		this._onScrollCallback && this._onScrollCallback({
+			top: st = this.body.scrollTop,
+			scrollHeight: oh = this.body.offsetHeight,
+			contentHeight: ch = (this.body.firstChild && this.body.firstChild.offsetHeight),
+			needLoading: ch - st - oh * 2 < 0
+		});
+	},
+
+	_onResizeDocument: function (event) {
+		var d = document.documentElement.clientHeight;
+
+		if (this.hasMarginTop) {
+			d -= 50;
+		};
+
+		this.modal.style.maxHeight = (d - 50) + "px";
+		this.body.style.maxHeight = (d - 157) + "px";
+	},
+
+	_windowStateChanged: function () {
+		var hasOpened = false;
+		Array.prototype.forEach.call(document.querySelectorAll(".modal:not(.modal-x)"), function (i) {
+			if (!$.elements.hasClass(i, "hidden")) hasOpened = true;
+		});
+		$.elements[hasOpened ? "addClass" : "removeClass"](document.documentElement, "__fixedBody");
+	}
+};
+
+/**
+ * Custom progressbar
+ *
+ * @param   {Number}   min   Minimal value
+ * @param   {Number}   max   Maximum value
+ */
+function ProgressBar (min, max) {
+	this.min = min || 0;
+	this.max = max || 100;
+	this.value = 0;
+	this.wrap = $.e("div", {"class": 'pb-wrap', append: this.line = $.e("div", {"class": 'pb-line'})});
+	this._init();
+};
+ProgressBar.prototype = {
+	_init: function () {
+
+	},
+
+	/**
+	 * Return node of progressbar
+	 * @return   {Node}
+	 */
+	getNode: function () {
+		this.update();
+		return this.wrap;
+	},
+
+	/**
+	 * Update UI by current values
+	 * @return   {ProgressBar}
+	 */
+	update: function () {
+		this.line.style.width = this.getPercent() + "%";
+		return this;
+	},
+
+	/**
+	 * Eval percent from current values
+	 * @return   {Number}
+	 */
+	getPercent: function () {
+		return Math.abs(this.min - ((this.min + this.value) * 100 / this.max));
+	},
+
+	/**
+	 * Change minimal value
+	 * @param   {Number}   min   New minimal value
+	 */
+	setMin: function (min) {
+		this.min = min;
+		this.update();
+		return this;
+	},
+
+	/**
+	 * Change maximal value
+	 * @param   {Number}   max   New maximal value
+	 */
+	setMax: function (max) {
+		this.max = max;
+		this.update();
+		return this;
+	},
+
+	/**
+	 * Change current value
+	 * @param   {Number}   value   New value
+	 */
+	setValue: function (value) {
+		this.value = value;
+		this.update();
+		return this;
+	},
+
+	/**
+	 * Return current value
+	 * @return   {Number}   Current value
+	 */
+	getValue: function () {
+		return this.value;
+	}
 };
 
 /**

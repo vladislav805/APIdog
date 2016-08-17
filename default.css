@@ -6443,6 +6443,8 @@ textarea.support-field {
 	background-image: url(//static.apidog.ru/port.v7/uploadIcon-2x.png)
 }
 
+/* Modal */
+
 .modal-block,
 .modal-wrap {
 	position: fixed;
@@ -6454,11 +6456,13 @@ textarea.support-field {
 	height: 100%;
 	z-index: 10000000;
 }
+
 .modal-block {
 	background: rgba(0, 0, 0, .6);
 	-webkit-animation: modalOpenBlock .2s ease-in-out;
 	animation: modalOpenBlock .2s ease-in-out;
 }
+
 .modal-wrap {
 	display: flex;
 	justify-content: center;
@@ -6479,9 +6483,13 @@ textarea.support-field {
 	position: relative;
 	background: rgb(255, 255, 255);
 	border-radius: 2px;
+}
+
+.modal-animation {
 	-webkit-animation: modalOpen .2s ease-in-out;
 	animation: modalOpen .2s ease-in-out;
 }
+
 .modal-title {
 	display: flex;
 	font-size: 17px;
@@ -6493,6 +6501,7 @@ textarea.support-field {
 	padding: 16px 22px;
 	background: rgb(89, 123, 165);
 }
+
 .modal-closeButton {
 	width: 54px;
 	height: 54px;
@@ -6500,6 +6509,7 @@ textarea.support-field {
 	right: 0;
 	cursor: pointer;
 }
+
 .modal-closeButton::after,
 .modal-closeButton::before {
 	content: "";
@@ -6512,10 +6522,12 @@ textarea.support-field {
 	-webkit-transform: rotate(45deg);
 	transform: rotate(45deg);
 }
+
 .modal-closeButton::before {
 	-webkit-transform: rotate(-45deg);
 	transform: rotate(-45deg);
 }
+
 .modal-content {
 	font-size: 13px;
 	line-height: 18px;
@@ -6525,9 +6537,11 @@ textarea.support-field {
 	overflow: auto;
 	max-height: 380px;
 }
+
 .modal-content-noPadding {
 	padding: 0 !important;
 }
+
 .modal-footer {
 	border-top: 1px solid rgba(0, 0, 0, .1);
 	font-size: 16px 22px;
@@ -6535,9 +6549,11 @@ textarea.support-field {
 	padding: 8px;
 	text-align: right;
 }
+
 .modal-footer:empty {
 	display: none;
 }
+
 .modal-footer button {
 	background: transparent;
 	border: none;
@@ -6570,22 +6586,26 @@ textarea.support-field {
 	padding: 0 8px !important;
 	background: none !important;
 }
+
 .modal-footer button:hover {
 	background-color: rgba(158, 158, 158, .2);
 }
+
 .modal-closing .modal,
 .modal-closing .modal-block {
 	-webkit-transition: all .2s ease-in-out;
 	transition: all .2s ease-in-out;
 }
+
 .modal-closing .modal {
-	-webkit-transform: scale(0);
-	transform: scale(0);
-	opacity: 0;
+	-webkit-transform: scale(0) !important;
+	transform: scale(0) !important;
+	opacity: 0 !important;
 }
+
 .modal-closing .modal-block {
 	opacity: 0;
-}.
+}
 
 @-webkit-keyframes modalOpen { 0% { transform: scale(0); opacity: 0 } 100% { transform: scale(1); opacity: 1 }}
 @keyframes modalOpen { 0% { transform: scale(0); opacity: 0 } 100% { transform: scale(1); opacity: 1 }}
@@ -6630,6 +6650,22 @@ textarea.support-field {
 .modal-x .modal-closeButton::before {
 	top: 17px;
 	right: 8px;
+}
+
+.modal-targetAnimated {
+	-webkit-animation: none;
+	-moz-animation: none;
+	-ms-animation: none;
+	-o-animation: none;
+	animation: none;
+	-webkit-transition: .2s ease-out;
+	-moz-transition: .2s ease-out;
+	-ms-transition: .2s ease-out;
+	transition: .2s ease-out;
+	-webkit-transition-property: -webkit-transform, -moz-transform, transform, opacity;
+	-moz-transition-property: -webkit-transform, -moz-transform, transform, opacity;
+	-ms-transition-property: -webkit-transform, -moz-transform, transform, opacity;
+	transition-property: -webkit-transform, -moz-transform, transform, opacity;
 }
 
 
