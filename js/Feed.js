@@ -96,7 +96,9 @@ var Feed = {
 			data = data.items;
 		Feed.getItems(list, data, count, next);
 		parent.appendChild(Feed.GetTabs());
-		parent.appendChild(Site.CreateHeader(lg("feed.newsfeed"), $.e("a", {"class": "fr", html: lg("feed.filter"), onclick: Feed.getBanned})));
+		parent.appendChild(Site.CreateHeader(lg("feed.newsfeed"), $.e("a", {"class": "fr", html: lg("feed.filter"), onclick: function() {
+			Feed.getBanned(this);
+		}})));
 		parent.appendChild(Feed.getSelectionsTabs());
 		parent.appendChild(list);
 		Site.Append(parent);
@@ -400,7 +402,7 @@ var Feed = {
 		}}));
 		return list;
 	},
-	getBanned: function () {
+	getBanned: function(animateFrom) {
 		Site.APIv5("newsfeed.getBanned", {
 			v: 5.14,
 			extended: 1,
@@ -438,7 +440,7 @@ var Feed = {
 						}
 					}
 				]
-			}).show();
+			}).show(animateFrom);
 		})
 	},
 	removeBan: function (id, node) {
