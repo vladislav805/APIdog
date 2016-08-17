@@ -49,7 +49,7 @@
 		<meta name="application-name" content="APIdog" />
 		<meta name="msapplication-tooltip" content="Неофициальный клиент ВКонтакте offline" />
 
-		<link rel="stylesheet" href="default.css" />
+		<link rel="stylesheet" href="css/default.css" />
 		<link rel="yandex-tableau-widget" href="manifest.json?7" />
 		<link rel="icon" href="favicon.png?1" />
 		<link rel="shortcut icon" href="favicon.png?1" />
@@ -169,8 +169,9 @@
 						<!--a href="#support">FAQ</a-->
 						<a href="donate.php"><?=$speech["menuDonate"];?></a>
 						<a href="blog.php"><?=$speech["menuBlog"];?></a>
-						<a href="extensions.php" id="_link_ext">APIdog LongPoll</a>
-						<a href="auth.php?act=logout"><?=$speech["menuLogout"];?></a>
+						<!--a href="extensions.php" id="_link_ext">APIdog Plus</a-->
+						<!--a href="auth.php?act=logout"><?=$speech["menuLogout"];?></a-->
+						<a href="/authorize.php?act=logout"><?=$speech["menuLogout"];?></a>
 					</aside>
 					<div id="birthdays"></div>
 					<div class="footer">
@@ -191,10 +192,9 @@
 				</section>
 			</div>
 		</div>
-		<script src="lib1.3.0.js"></script>
-		<script src="//apidog.ru/hammer.js"></script>
-		<script src="/minify.php?file=jsDebug"></script>
-		<audio id="Player" class="hidden"></audio>
+		<script src="lib/lib1.3.0.js"></script>
+		<script src="lib/hammer.js"></script>
+		<script src="lib/assembler.php"></script>
 		<noscript>
 			<img src="//mc.yandex.ru/watch/19029880" style="position:absolute; left:-9999px;" alt="" />
 		</noscript>

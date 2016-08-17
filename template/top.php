@@ -16,8 +16,8 @@
 		<meta name="application-name" content="APIdog" />
 		<meta name="msapplication-tooltip" content="Неофициальный клиент ВКонтакте offline" />
 		<title><?=getLabel("_title");?></title>
-		<link rel="stylesheet" href="default.css" />
-		<link rel="stylesheet" href="nondefault.css" />
+		<link rel="stylesheet" href="css/default.css" />
+		<link rel="stylesheet" href="css/nondefault.css" />
 		<link rel="yandex-tableau-widget" href="manifest.json?7" />
 		<link rel="icon" href="favicon.png?1" />
 		<link rel="shortcut icon" href="favicon.png?1" />
