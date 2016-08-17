@@ -8,9 +8,8 @@ var Profile = {
 	RequestPage: function (screenName) {
 		switch(Site.Get("act")) {
 
-			// deprecated
 			case "info":
-				return Profile.ShowFullInfo(screenName);
+				return Profile.showFullInfo(screenName);
 
 			case "requests":
 				return Groups.getRequests(screenName);
@@ -181,56 +180,107 @@ var Profile = {
 
 			nodeInfo.appendChild($.e("a", {
 				html: Lang.get("profiles.full_info"),
-				href: "#" + info.screen_name + "?act=info",
+				href: "#" + user.screen_name + "?act=info",
 				"class": "profile-gotofullinfo"
 			}));
 
-// точка конца рефакторинга
-
-
 			if (API.userId == userId) {
-				info.common_count = 0;
+				user.common_count = 0;
 			};
 
-			var csg = info.can_see_gifts;
-			var q = {
-				friends:        ["friends?id=" + userId,                       Lang.get("profiles.counters_friends")],
-//              online_friends: ["friends" + userId + "?section=online",       "Друзья онлайн"],
-				common_count:   ["friends?id=" + userId + "&act=mutual",       Lang.get("profiles.counters_common_friends")],
-				groups:         ["groups?user_id=" + userId,                   Lang.get("profiles.counters_groups")],
-				albums:         ["photos"+userId,                              Lang.get("profiles.counters_albums")],
-//              user_photos:    ["photos" + userId + "?act=tagged",            "Фотографии с " + info.first_name_ins],
-				photos:         ["photos"+userId+"?act=all",                   Lang.get("profiles.counters_photos")],
-				videos:         ["videos"+userId,                              Lang.get("profiles.counters_videos")],
-//              user_videos:    ["videos" + userId + "?act=tagged",            "Видео с " + info.first_name_ins],
-				audios:         ["audio?oid="+userId,                          Lang.get("profiles.counters_audios")],
-				notes:          ["notes" + userId,                             Lang.get("profiles.counters_notes")],
-				followers:      [info.screen_name + "?act=followers",       Lang.get("profiles.counters_followers")],
-				subscriptions:  [info.screen_name + "?act=subscriptions",   Lang.get("profiles.counters_subscriptions"), counters.subscriptions + counters.pages],
-			},
-				d = [Site.CreateHeader(Lang.get("profiles.counters_additional"))];
-			for(var current in q)
-				if(counters[current] || info[current] || q[current][2])
-					d.push($.e("a", {
-						href:"#" + q[current][0],
-						html: q[current][1] + " <i class='count'>" + formatNumber(q[current][2] || counters[current] || info[current]) + "<\/i>"
-					}))
+			var cnt = user.counters,
+				links = [
+					{
+						link: "friends?id=" + userId,
+						label: "countersFriends",
+						count: cnt.friends
+					},
+					{
+						link: "friends?id=" + userId + "&act=mutual",
+						label: "countersFriendsCommon",
+						count: cnt.common_count
+					},
+					{
+						link: "groups?user_id=" + userId,
+						label: "countersGroups",
+						count: cnt.groups
+					},
+					{
+						link: "photos" + userId,
+						label: "countersAlbums",
+						count: cnt.albums
+					},
+					{
+						link: "photos" + userId + "?act=all",
+						label: "countersPhotos",
+						count: cnt.photos
+					},
+					{
+						link: "videos" + userId,
+						label: "countersVideos",
+						count: cnt.videos
+					},
+					{
+						link: "audio?ownerId=" + userId,
+						label: "countersAudios",
+						count: cnt.audios
+					},
+					{
+						link: "notes" + userId,
+						label: "countersNotes",
+						count: cnt.notes
+					},
+					{
+						link: function() { Profile.showFollowers(user.screen_name, this) },
+						label: "countersFollowers",
+						count: cnt.followers
+					},
+					{
+						link: function() { Profile.showSubscriptions(user.screen_name, this) },
+						label: "countersSubscriptions",
+						count: cnt.subscriptions + cnt.pages
+					},
+					{
+						link: user.can_see_gifts ? "gifts?userId=" + userId : "gifts?act=send&toId=" + userId,
+						label: user.can_see_gifts ? "countersGifts" : "countersGiftsSend",
+						count: user.can_see_gifts ? counters.gifts : -1
+					},
+					{
+						link: "feed?act=search&owner=" + user.id,
+						label: "countersWallSearch",
+						count: isActive && wall.count ? -1 : 0
+					}
+				];
 
-			d.push($.e("a", {
-				href:"#" + (csg ? "gifts?userId="+userId : "gifts?act=send&toId="+userId),
-				html: csg ? Lang.get("profiles.counters_gifts") + " <i class=count>" + formatNumber(counters.gifts) + "<\/i>" : Lang.get("profiles.counters_gifts_send")
-			}));
-			if (isActive && wall && wall.count)
-				d.push($.e("a", {
-					href:"#" + info.screen_name + "?act=search",
-					html: "Поиск по стене " + info.first_name_gen
+			var i, l, k, isLink;
+
+			for (i = 0, l = links.length; i < l; ++i) {
+				k = links[i];
+
+				if (!k.count) {
+					continue;
+				};
+
+				isLink = typeof k.link === "string";
+
+				nodeMedia.appendChild(e(isLink ? "a" : "div", {
+					"class": "profile-counters a",
+					href: isLink ? "#" + k.link : null,
+					onclick: !isLink ? k.link : null,
+					append: [
+						k.count > 0
+							? e("strong", {
+								"class": "profile-counters-count",
+								html: parseInt(k.count).format()
+							  })
+							: null,
+						e("div", {
+							"class": "profile-counters-label",
+							html: k.count >= 0 ? lg("profiles." + k.label, k.count) : lg("profiles." + k.label)
+						})
+					]
 				}));
-
-			// начало рефакторинга
-
-			nodeMedia.appendChild(e("div", {
-				"class": "profile-last profile-lists", append: d
-			}));
+			};
 
 			wrap.appendChild(nodeInfo);
 			wrap.appendChild(nodeMedia);
@@ -736,7 +786,7 @@ var Profile = {
 	 * Открывает модальное окно, загружает и выводит информацию о подписчиках юзера screenName
 	 * @param  {String} screenName Скрин нейм пользователя
 	 */
-	showFollowers: function(screenName) {
+	showFollowers: function(screenName, node) {
 		var
 			e = $.e,
 			offset = 0,
@@ -752,7 +802,7 @@ var Profile = {
 					title: lg("general.close"),
 					onclick: function() { this.close() }
 				}]
-			}).show(),
+			}).show(node),
 			load = function(callback) {
 				new APIRequest("execute", {
 					code: "var i=API.utils.resolveScreenName({screen_name:Args.d}).object_id;return{u:API.users.get({user_id:i,fields:Args.f,name_case:\"gen\",v:5.52})[0],d:API.users.getFollowers({user_id:i,count:Args.c,fields:Args.f,offset:parseInt(Args.o),v:5.52})};",
@@ -792,7 +842,7 @@ var Profile = {
 	 * Открывает модальное окно, загружает и выводит информацию о подписках юзера screenName
 	 * @param  {String} screenName Скрин нейм пользователя
 	 */
-	showSubscriptions: function(screenName) {
+	showSubscriptions: function(screenName, node) {
 		var
 			e = $.e,
 			offset = 0,
@@ -808,7 +858,7 @@ var Profile = {
 					title: lg("general.close"),
 					onclick: function() { this.close() }
 				}]
-			}).show(),
+			}).show(node),
 			load = function(callback) {
 				new APIRequest("execute", {
 					code: "var i=API.utils.resolveScreenName({screen_name:Args.d}).object_id;return{u:API.users.get({user_id:i,fields:Args.f,name_case:\"gen\",v:5.52})[0],d:API.users.getSubscriptions({user_id:i,count:Args.c,extended:1,fields:Args.f,offset:parseInt(Args.o),v:5.52})};",
