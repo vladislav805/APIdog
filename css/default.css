@@ -6669,9 +6669,13 @@ textarea.support-field {
 		left: 0;
 		width: 100%;
 		right: 0;
+	}
+
+	.modal-animation {
 		-webkit-animation: modalOpenMobile .5s cubic-bezier(.17,.84,.44,1);
 		animation: modalOpenMobile .5s cubic-bezier(.17,.84,.44,1);
 	}
+
 	.modal-closing .modal {
 		-webkit-transform: translateY(100%);
 		transform: translateY(100%);
