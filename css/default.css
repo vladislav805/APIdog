@@ -1483,6 +1483,20 @@ input[type=search].sf
     line-height: 24px;
 }
 
+@media screen and (max-width: 360px) {
+	.profile-counters {
+		width: 33.3333%;
+	}
+
+	.profile-counters-count {
+		font-size: 19px;
+	}
+
+	.profile-counters-label {
+		font-size: 11.5px;
+	}
+}
+
 .profile-status {
 	cursor: pointer;
 }
