@@ -3740,6 +3740,16 @@ img.wall-left {
 	background-image: url("data:image/svg+xml,%3Csvg fill='%23000000' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18' fill='rgb%2886, 124, 164%29'/%3E%3C/svg%3E")
 }
 
+@media screen and (max-width: 512px) {
+	.vkrepost-wrap .vklike-label {
+		display: none;
+	}
+
+	.vkrepost-wrap {
+		height: 22px;
+	}
+}
+
 /* List of users and groups */
 
 .listItem {
@@ -4999,43 +5009,6 @@ html.photo-view-full {
 	padding:3px 6px;
 }
 
-.settings-userbg-item {
-	color: #66768F;
-	cursor: pointer;
-}
-.settings-interface-header {
-	margin: 10px 16px;
-	overflow: hidden;
-	position: relative;
-	min-height: 120px;
-}
-.settings-interface-left {
-	float: left;
-	width: 150px;
-}
-.settings-interface-right {
-	margin-left: 166px;
-}
-.settings-interface-right h1 {
-	font-size: 16px;
-	font-weight: 700;
-}
-.settings-interface-right-buttons {
-	position: absolute;
-	left: 166px;
-	bottom: 2px;
-}
-.settings-interface-right-buttons input[type=button] {
-	margin-right: 6px;
-}
-.settings-interface-full {
-	padding: 10px 20px;
-	display: block;
-}
-.settings-interface-full img {
-	border-radius: 5px;
-	max-width: 100%;
-}
 /* b */
 .settings-photo {
 	padding: 6px 16px;
