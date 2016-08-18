@@ -1440,6 +1440,10 @@ input[type=search].sf
 	margin-top: -2px;
 }
 
+.profile-media {
+	margin: 10px;
+}
+
 .profile-counters {
     width: 25%;
     display: inline-block;
