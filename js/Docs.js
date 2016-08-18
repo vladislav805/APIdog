@@ -59,7 +59,7 @@ VKDocument.prototype = {
 									title: Lang.get("docs.actionEdit"),
 									"class": "doc-i doc-i-edit",
 									onclick: function (event) {
-										context.edit();
+										context.edit(this);
 										return $.event.cancel(event);
 									}
 								}) : null,
@@ -112,12 +112,13 @@ VKDocument.prototype = {
 		return node;
 	},
 
-	edit: function () {
+	edit: function (nodeButton) {
 		var doc = this;
 		new EditWindow({
 			lang: true,
 			title: "docs.editWindowTitle",
 			isEdit: true,
+			fromNode: nodeButton,
 			items: [
 				{
 					type: APIDOG_UI_EW_TYPE_ITEM_SIMPLE,
