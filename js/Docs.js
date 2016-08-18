@@ -86,7 +86,7 @@ VKDocument.prototype = {
 							html: this.extension
 			  			}),
 						e("div", {"class": "doc-info", append: [
-							this.nodeTitle = e("strong", {html: this.title.safe()}),
+							this.nodeTitle = e("div", {"class": "doc-name cliptextfix", html: this.title.safe()}),
 							e("div", {"class": "docs-size", html: this.getFooter()})
 						]})
 					]

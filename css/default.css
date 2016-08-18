@@ -3750,8 +3750,9 @@ img.wall-left {
 }
 
 .vktab-tabs {
-	overflow: hidden;
+	overflow: auto;
 	padding: 0 16px;
+	white-space: nowrap;
 }
 
 .vktab-contents {
@@ -3760,7 +3761,7 @@ img.wall-left {
 
 .vktab-tab {
 	margin: 0 2px;
-	float: left;
+	display: inline-block;
 	cursor: pointer;
 	padding: 0 6px;
 	line-height: 40px;
@@ -4611,7 +4612,10 @@ html.photo-view-full {
 }
 
 .doc-actions {
-	float: right;
+	position: absolute;
+	right: 14px;
+	background: rgba(255, 255, 255, .6);
+	box-shadow: 0 0 4px 1px rgba(255, 255, 255, .6);
 }
 
 .doc-item:hover .doc-actions {
@@ -4632,6 +4636,12 @@ html.photo-view-full {
 
 .doc-info > * {
 	line-height: 18px;
+}
+
+.doc-name {
+	display: block;
+	font-weight: 900;
+	padding-right: 14px;
 }
 
 .doc-deleted {
