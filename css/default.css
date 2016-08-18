@@ -2194,7 +2194,13 @@ strong span{
 	cursor: pointer;
 }
 
-
+@media screen and (max-width: 512px) {
+	.attacher-album-item,
+	.attacher-photo-item {
+		width: 33.3333%;
+		height: 90px;
+	}
+}
 
 
 
