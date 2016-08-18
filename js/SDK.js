@@ -3527,6 +3527,9 @@ function EditWindow (o) {
 	this.nodes = {};
 	this.state = false;
 
+	// others
+	this.fromNode = o.fromNode;
+
 	// initialize
 	this.init(o);
 	this.populate();
@@ -3556,7 +3559,7 @@ EditWindow.prototype = {
 					}
 				}
 			]
-		}).show();
+		}).show(this.fromNode || false);
 	},
 
 	label: function (key, forceLang) {
