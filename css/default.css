@@ -27,12 +27,6 @@ table {
 	border-spacing: 0;
 }
 
-.clearfix::after {
-	content: "";
-	display: block;
-	clear: both;
-}
-
 * {
 	margin:0;
 	padding:0;
@@ -146,22 +140,44 @@ a:focus {
 	outline:none;
 	cursor:pointer !important;
 }
+
 a:focus{}
-.sizefix{
-	-webkit-box-sizing:border-box;
-	-moz-box-sizing:border-box;
-	-ms-box-sizing:border-box;
-	box-sizing:border-box;
-}
+
 .apointer{
 	cursor: pointer;
 }
-.selectfix{
-	-webkit-user-select:none;
-	-moz-user-select:none;
-	-ms-user-select:none;
-	user-select:none;
+
+/* Fixes */
+
+.sizefix {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
 }
+
+.selectfix {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.cliptextfix {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	display: block;
+	white-space: nowrap;
+}
+
+.clearfix::after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+/* --- */
+
 .pr {
 	position: relative;
 }
@@ -2351,25 +2367,28 @@ strong span{
 
 
 .dialogs-item {
-	display: table-row;
+	display: block;
 	-webkit-tap-highlight-color: transparent;
 	-webkit-focus-ring-color: transparent;
 	outline: none;
-	color: #66768F;
+	color: rgb(107, 136, 182);
 	cursor: pointer;
+	border-right: 5px solid transparent;
 }
 
 .dialogs-item-new {
-	border-right: 5px solid #6B88B6;
+	border-right-color: rgb(107, 136, 182);
 }
 
 .dialogs-item-left,
 .dialogs-item-right {
-	display: table-cell;
+	display: block;
 }
 
 .dialogs-item-left {
-	padding: 15px;
+	padding: 10px 12px;
+	position: relative;
+	float: left;
 }
 
 .dialogs-item-left img {
@@ -2379,7 +2398,8 @@ strong span{
 }
 
 .dialogs-item-right {
-	padding: 9px 15px 15px 0;
+	margin-left: 80px;
+	padding: 9px 12px 9px 0;
 	vertical-align: middle;
 	border-bottom: 1px solid rgba(107, 136, 182, .4);
 }
@@ -2389,6 +2409,10 @@ strong span{
 	color: #ADC1C9;
 	font-size: 10px;
 	line-height: 22px;
+}
+
+.dialogs-name {
+	font-weight: 900;
 }
 
 .dialogs-content {
@@ -2412,20 +2436,27 @@ strong span{
 }
 
 .dialogs-unread {
-	padding: 0 8px;
-	line-height: 30px;
-	background: #D5DDE5;
-	border-radius: 30px;
+	border-radius: 22px;
+	line-height: 22px;
+	font-size: 10px;
 	font-weight: 900;
-	float: right;
-	margin-top: -6px;
+	text-align: center;
+	padding: 0 4px;
+	/*background: rgb(213, 221, 229);*/
+	background: rgb(223, 95, 100);
+	color: white;
+	position: absolute;
+	bottom: 6px;
+	right: 6px;
+	width: 22px;
+	height: 22px;
 }
 
-.dialogs-unread:before {
+/*.dialogs-unread:before {
 	display: inline;
 	content: "+";
 	float: left;
-}
+}*/
 
 .dialogs-unread:empty {
 	display: none;

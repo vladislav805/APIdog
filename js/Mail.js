@@ -106,60 +106,51 @@ VKMessage.prototype = {
 			href: Mail.version && o.type != 3 ? "#im?to=" + fromId : "#mail?act=item&id=" + this.messageId,
 			"id": Mail.version ? "mail-dialog" + fromId : "mail-message" + this.messageId,
 			"class": [
-				"selectfix dialogs-item",
+				"selectfix clearfix dialogs-item",
 				(!this.isOut && !this.isRead ? "dialogs-item-new" : ""),
 				(this.peer[0] == APIDOG_DIALOG_PEER_CHAT ? "dialogs-chat" : "")
 			].join(" "),
 			append: [
 				e("div", {
 					"class": "dialogs-item-left",
-					append:
+					append: [
 						e("img", {
 							"class": "dialogs-left",
-							src: from.photo ? getURL(from.photo) : Mail.defaultChatImage})
+							src: from.photo ? getURL(from.photo) : Mail.defaultChatImage
+						}),
+						e("span", {
+							"class": "dialogs-unread",
+							id: "ml" + fromId, html: unread || ""
+						})
+					]
 				}),
 				e("div", {
 					"class": "dialogs-item-right",
 					append: [
-						e("div", {
-							"class": "dialogs-date",
-							append: [
-								this.isOut
-									? e("div", {
-										"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")
-									  })
-									: null,
-									document.createTextNode($.getDate(this.date, 2))
-							]
-						}),
 						e("div", {
 							"class": "dialogs-content",
 							append: [
 								e("div", {
 									"class": "dialogs-head",
 									append: [
-										e("strong", {
-											html: Mail.Emoji(from.name)
-										})
+										e("div", {"class": "dialogs-date", append: [
+											this.isOut
+												? e("div", {
+													"class": "dialogs-state" + (this.isRead ? " dialogs-state-readed" : "")
+												  })
+												: null,
+												document.createTextNode($.getDate(this.date, 2))
+										]}),
+										e("div", {"class": "dialogs-name cliptextfix", html: from.name.emoji()})
 									]
 								}),
 								e("div", {
-									"class": "n-f clearfix dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""),
+									"class": "n-f dialogs-text" + (this.isOut && !this.isRead ? " dialogs-new-message" : "") + (!this.isOut ? " dialogs-in" : ""),
 									append: [
 										e("div", {
 											append: [
 												e("span", {
-													"class": "dialogs-unread",
-													id: "ml" + fromId, html: unread || ""
-												}),
-												this.isOut
-													? e("img", {
-														src: getURL(API.photo_50),
-														"class": "dialogs-miniphoto"
-													  })
-													: null,
-												e("span", {
-													"class": "dialogs-minitext",
+													"class": "dialogs-minitext cliptextfix",
 													html: !this.action
 														? text
 														: IM.getStringActionFromSystemVKMessage(this)
