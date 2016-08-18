@@ -397,13 +397,13 @@ var Settings = {
 
 		item: function (c, animation) {
 			var node;
-			return node = Templates.getUser(c, { fulllink: true, actions: [
-				$.e("div", {"class": "icon icon-delete", html: "%удалить%", onclick: function(event) {
+			return node = Templates.getMiniUser(c, { full: true, action: {
+				node: $.e("div", {"class": "i i24 fr settings-i-remove", onclick: function(event) {
 					event.preventDefault();
 					Settings.blacklist.remove(c.id, node);
 					return false;
 				}})
-			]});
+			}});
 		},
 
 		add: function(user, bundle) {
@@ -430,7 +430,7 @@ var Settings = {
 					bundle.form.user.value = "";
 					var first = bundle.list.firstChild;
 					bundle.list.insertBefore(Settings.blacklist.item(result.u, true), first);
-					if (first.className.indexOf("empty")) {
+					if (~first.className.indexOf("empty")) {
 						$.elements.remove(first);
 					};
 				}).execute();
