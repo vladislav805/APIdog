@@ -243,12 +243,14 @@ var Profile = {
 					{
 						link: user.can_see_gifts ? "gifts?userId=" + userId : "gifts?act=send&toId=" + userId,
 						label: user.can_see_gifts ? "countersGifts" : "countersGiftsSend",
-						count: user.can_see_gifts ? counters.gifts : -1
+						count: user.can_see_gifts ? counters.gifts : -1,
+						icon: user.can_see_gifts ? null : "profile-i-gift"
 					},
 					{
 						link: "feed?act=search&owner=" + user.id,
 						label: "countersWallSearch",
-						count: isActive && wall.count ? -1 : 0
+						count: isActive && wall.count ? -1 : 0,
+						icon: "profile-i-searchWall"
 					}
 				];
 
@@ -273,9 +275,11 @@ var Profile = {
 								"class": "profile-counters-count",
 								html: parseInt(k.count).toK()
 							  })
-							: null,
+							: k.icon
+								? e("div", {"class": "i i18 " + k.icon})
+								: null,
 						e("div", {
-							"class": "profile-counters-label",
+							"class": "profile-counters-label cliptextfix",
 							html: k.count >= 0 ? lg("profiles." + k.label, k.count) : lg("profiles." + k.label)
 						})
 					]
