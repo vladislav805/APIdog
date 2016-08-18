@@ -432,6 +432,20 @@ Number.prototype.getInformationValue = function () {
 };
 
 /**
+ * Convert number to humanize format: 1234 => 1.2K, 1000000 => 1KK
+ * @return {String} Result
+ */
+Number.prototype.toK = function() {
+	if (this < 1000) {
+		return String(this);
+	} else if (this < 1000000) {
+		return (this / 1000).toFixed(1) + "K";
+	} else {
+		return (this / 1000000).toFixed(1) + "KK"
+	};
+};
+
+/**
  * Return formatted string by lang-values
  * @param {mixed} data  if object, replacing by this key=>value, else - it key for replacing
  * @param {mixed} value if in first arg string: it contain new value

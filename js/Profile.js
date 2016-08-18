@@ -271,7 +271,7 @@ var Profile = {
 						k.count > 0
 							? e("strong", {
 								"class": "profile-counters-count",
-								html: parseInt(k.count).format()
+								html: parseInt(k.count).toK()
 							  })
 							: null,
 						e("div", {
