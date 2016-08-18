@@ -1459,10 +1459,10 @@
 		]
 	},
 	"settings":{
+		"settings":"Настройки",
 		"save":"Сохранить",
 		"saving":"Сохранение...",
 		"saved":"Настройки успешно сохранены!",
-		"settings":"Настройки",
 		"reset_background":"Сбросить фон",
 		"relongpoll":"Перезапустить LongPoll",
 		"mark_offline":"Отметить меня offline",
@@ -1487,21 +1487,16 @@
 		"param_disable_images":"отключить изображения",
 		"param_dialog_as_vk":"диалоги как на vk.com (сверху вниз)",
 		"marked_as_offline":"Через 60 секунд API пометит Вас offline",
-		"error_enter_id":"Введите идентификатор или короткое имя пользователя",
-		"blacklist":"Черный список",
-		"blacklist_header_blockeds":[
-			"Заблокирован",
-			"Заблокировано",
-			"Заблокировано"
-		],
-		"blacklist_header_blocked_users":[
-			"пользователь",
-			"пользователя",
-			"пользователей"
-		],
-		"blacklist_header_none":"Заблокированных нет",
-		"blacklist_field_placeholder":"Введите id или домен...",
-		"blacklist_button":"Заблокировать",
+
+		"blacklistTitle": "Чёрный список",
+		"blacklistHeadTitleLoading": "Чёрный список",
+		"blacklistFormInputPlaceholder": "Вставьте ссылку",
+		"blacklistFormButton": "Заблокировать",
+		"blacklistHeadTitle": "%n %m",
+		"blacklistUsers": ["заблокированный", "заблокированных", "заблокированных"],
+		"blacklistNobody": "Никто не заблокирован",
+		"blacklistFormErrorIncorrectLink": "Неверная ссылка",
+
 		"tabs_general":"Сайт",
 		"tabs_interface":"Интерфейс",
 		"tabs_profile":"Аккаунт",
