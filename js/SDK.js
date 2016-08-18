@@ -4811,6 +4811,10 @@ console.log(fromNodeAnimation);
 	 * @param   {Number}   w   New value of width
 	 */
 	setWidth: function(w) {
+		if (document.documentElement.clientWidth < 512 && typeof w === "string" && w.indexOf("%")) {
+			return this;
+		};
+
 		this.modal.style.width = this._parseSizes(w);
 		return this;
 	},
