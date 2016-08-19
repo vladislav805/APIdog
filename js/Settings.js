@@ -57,29 +57,31 @@ var Settings = {
 			TYPE_BUTTON = 2;
 
 		var e = $.e,
-			form = e("form", {"settings-wrap settings", id: "settings"}),
+			form = e("form", {"class": "settings-wrap settings", id: "settings"}),
 			data = [
 				{
-					type: "header",
-					label: "settings.param_h_messages",
-					right: $.e("span", {
+					type: TYPE_HEADER,
+					label: "headerMessages",
+					right: e("span", {
 						"class": "fr a",
-						html: Lang.get("settings.relongpoll"),
+						html: lg("settings.relongpoll"),
 						disabled: API.isExtension,
 						onclick: function (event) {
-							if (this.disabled)
+							if (this.disabled) {
 								return;
+							};
+
 							LongPoll.restart();
 							$.elements.remove(this);
-							Site.Alert({text : "LongPoll перезапущен."});
+							new Snackbar({text : "LongPoll перезапущен."}).show();
 						}
 					})
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 8,
-					label: "settings.param_longpoll",
+					label: "itemLongpoll",
 					name: "longpoll",
-					type: "checkbox",
 					disabled: API.isExtension,
 					onchange: function (event) {
 						var form = this.form;
@@ -90,53 +92,54 @@ var Settings = {
 					}
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 64,
-					label: "settings.param_soundnotify",
-					name: "soundnotify",
-					type: "checkbox"
+					label: "itemSoundNotify",
+					name: "soundnotify"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 32768,
-					label: "settings.param_dialog_as_vk",
-					name: "dialogasvk",
-					type: "checkbox"
+					label: "itemDialogsAsVK",
+					name: "dialogasvk"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 2,
-					label: "settings.param_autoread",
-					name: "autoread",
-					type: "checkbox"
+					label: "itemAutoRead",
+					name: "autoread"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 2048,
-					label: "settings.param_send_typing",
-					name: "sendtypingevent",
-					type: "checkbox"
+					label: "itemSendTyping",
+					name: "sendtypingevent"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 8192,
-					label: "settings.param_send_by_ctrl_enter",
-					name: "sendbyctrlenter",
-					type: "checkbox"
+					label: "itemSendMessageByCtrlEnter",
+					name: "sendbyctrlenter"
 				},
 				{
-					type: "header",
-					label: "settings.param_h_site"
+					type: TYPE_HEADER,
+					label: "headerSite"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 1,
-					label: "settings.param_online",
-					name: "online",
-					type: "checkbox"
+					label: "itemOnline",
+					name: "online"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 4,
-					label: "settings.param_proxy",
+					label: "itemProxy",
 					name: "proxy",
-					type: "checkbox",
 					onchange: function (event) {
-						if (!this.checked)
+						if (!this.checked) {
 							return;
+						};
 
 						alert("Включение этой функции может привести к некорректной работе сайта. Используйте эту настройку только если на Вашей Интернет-сети стоит запрет на подключение к домену vk.com (иначе говоря - фильтр на сети)");
 					}
@@ -152,6 +155,7 @@ var Settings = {
 					}
 				},
 */				{
+					type: TYPE_CHECKBOX,
 					bit: 16,
 					label: "settings.param_edit_links",
 					name: "editlinks",
