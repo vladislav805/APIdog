@@ -1257,7 +1257,7 @@ var Site = {
 							$.elements.toggleClass(smbx, "hidden");
 						}}) : null,
 						Wall.CreateSelectAttachmentsMenu(opts.owner_id, at, Form),
-						$.e("input",{type: "submit", name: "submitbtn", value:{ru: "Отправить", ua: "Надіслати", en: "Send", gop: "Ёбнуть"}[Lang.lang]}),
+						$.e("input",{type: "submit", name: "submitbtn", value: lg("general.send")}),
 						ownerId && postId ? $.e("div", {id: "wall-comments-replyUI" + ownerId + "_" + postId}) : null,
 						$.e("span", {append: additionally}),
 						at ? $.e("input",{type:"hidden",value: "", name:"attachments", id:"im-attachments"}) : null,
