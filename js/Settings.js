@@ -32,11 +32,11 @@ var Settings = {
 	},
 	getTabs: function () {
 		return Site.CreateTabPanel([
-			["settings",               Lang.get("settings.tabs_general")],
-			["settings?act=profile",   Lang.get("settings.tabs_profile")],
-			["settings?act=blacklist", Lang.get("settings.tabs_blacklist")],
-			["settings?act=stickers",  Lang.get("settings.tabs_stickers")],
-			["settings?act=smiles",    Lang.get("settings.tabs_smiles")],
+			["settings",               Lang.get("settings.tabsGeneral")],
+//			["settings?act=profile",   Lang.get("settings.tabsProfile")],
+			["settings?act=blacklist", Lang.get("settings.tabsBlacklist")],
+//			["settings?act=stickers",  Lang.get("settings.tabsStickers")],
+//			["settings?act=smiles",    Lang.get("settings.tabsSmiles")],
 		]);
 	},
 
@@ -52,11 +52,16 @@ var Settings = {
 			API.settings.bitmask += 8;
 		};
 
-		var form = document.createElement("form"),
+		var TYPE_HEADER = 0,
+			TYPE_CHECKBOX = 1,
+			TYPE_BUTTON = 2;
+
+		var e = $.e,
+			form = e("form", {"settings-wrap settings", id: "settings"}),
 			data = [
 				{
 					type: "header",
-					label: Lang.get("settings.param_h_messages"),
+					label: "settings.param_h_messages",
 					right: $.e("span", {
 						"class": "fr a",
 						html: Lang.get("settings.relongpoll"),
@@ -72,7 +77,7 @@ var Settings = {
 				},
 				{
 					bit: 8,
-					label: Lang.get("settings.param_longpoll"),
+					label: "settings.param_longpoll",
 					name: "longpoll",
 					type: "checkbox",
 					disabled: API.isExtension,
@@ -86,47 +91,47 @@ var Settings = {
 				},
 				{
 					bit: 64,
-					label: Lang.get("settings.param_soundnotify"),
+					label: "settings.param_soundnotify",
 					name: "soundnotify",
 					type: "checkbox"
 				},
 				{
 					bit: 32768,
-					label: Lang.get("settings.param_dialog_as_vk"),
+					label: "settings.param_dialog_as_vk",
 					name: "dialogasvk",
 					type: "checkbox"
 				},
 				{
 					bit: 2,
-					label: Lang.get("settings.param_autoread"),
+					label: "settings.param_autoread",
 					name: "autoread",
 					type: "checkbox"
 				},
 				{
 					bit: 2048,
-					label: Lang.get("settings.param_send_typing"),
+					label: "settings.param_send_typing",
 					name: "sendtypingevent",
 					type: "checkbox"
 				},
 				{
 					bit: 8192,
-					label: Lang.get("settings.param_send_by_ctrl_enter"),
+					label: "settings.param_send_by_ctrl_enter",
 					name: "sendbyctrlenter",
 					type: "checkbox"
 				},
 				{
 					type: "header",
-					label: Lang.get("settings.param_h_site")
+					label: "settings.param_h_site"
 				},
 				{
 					bit: 1,
-					label: Lang.get("settings.param_online"),
+					label: "settings.param_online",
 					name: "online",
 					type: "checkbox"
 				},
 				{
 					bit: 4,
-					label: Lang.get("settings.param_proxy"),
+					label: "settings.param_proxy",
 					name: "proxy",
 					type: "checkbox",
 					onchange: function (event) {
@@ -136,7 +141,7 @@ var Settings = {
 						alert("Включение этой функции может привести к некорректной работе сайта. Используйте эту настройку только если на Вашей Интернет-сети стоит запрет на подключение к домену vk.com (иначе говоря - фильтр на сети)");
 					}
 				},
-				{
+/*				{
 					bit: 1024,
 					label: "уведомления",
 					name: "notifications",
@@ -146,50 +151,50 @@ var Settings = {
 //						ntf.style.display = this.checked ? "block" : "none";
 					}
 				},
-				{
+*/				{
 					bit: 16,
-					label: Lang.get("settings.param_edit_links"),
+					label: "settings.param_edit_links",
 					name: "editlinks",
 					type: "checkbox"
 				},
 				{
 					type: "header",
-					label: Lang.get("settings.param_h_interface")
+					label: "settings.param_h_interface"
 				},
 				{
 					bit: 32,
-					label: Lang.get("settings.param_touch"),
+					label: "settings.param_touch",
 					name: "touch",
 					type: "checkbox"
 				},
 				{
 					bit: 128,
-					label: Lang.get("settings.param_fixed"),
+					label: "settings.param_fixed",
 					name: "fixedhead",
 					type: "checkbox"
 				},
 				{
 					bit: 512,
-					label: Lang.get("settings.param_double_click"),
+					label: "settings.param_double_click",
 					name: "dblclickdisabled",
 					type: "checkbox"
 				},
 				{
 					bit: 16384,
-					label: Lang.get("settings.param_disable_images"),
+					label: "settings.param_disable_images",
 					name: "disabledimages",
 					type: "checkbox"
 				},
 				{
 					type: "select",
-					label: Lang.get("settings.param_lang"),
+					label: "settings.param_lang",
 					name: "language",
 					options: Settings.languages,
 					selectedIndex: (function(a,b,c,d){c.call(a,function(e){if(e.code===b)d=e.value});return d})(Settings.languages, Lang.lang, Array.prototype.forEach)
 				},
 				{
 					type: "button",
-					label: Lang.get("settings.save"),
+					label:"settings.save",
 					name: "saver",
 					click: function (event) {
 						this.form.onsubmit();
@@ -197,9 +202,7 @@ var Settings = {
 				}
 			],
 			params = document.createElement("div");
-		var tabs = Settings.getTabs();
-		form.className = "settings-wrap settings";
-		form.id = "settings";
+
 		form.onsubmit = function (event) {
 			var e = form.elements,
 				saver = form.saver,
@@ -289,8 +292,8 @@ var Settings = {
 		form.appendChild(params);
 
 
-		Site.append(form);
-		Site.setHeader(Lang.get("settings.settings"));
+		Site.append($.e("div", {append: [Settings.getTabs(), form]}));
+		Site.setHeader(lg("settings.generalTitle"));
 
 		for (var i = 0, l = tasked.length; i < l; ++i)
 			(function (n, f) {var q=n;q.f=f;q.f()})(tasked[i][0], tasked[i][1]);
