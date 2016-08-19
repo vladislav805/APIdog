@@ -617,7 +617,7 @@ var Mail = {
 	version: 1, // 1 - dialogs, 0 - messages
 
 	explain: function() {
-		switch (Site.Get("act")) {
+		switch (getAct()) {
 			case "item":
 				return Mail.getMessageById(+Site.Get("id"));
 
@@ -629,8 +629,6 @@ var Mail = {
 
 			default:
 
-				Mail.page();
-
 				var type = +Site.Get("type") || 0;
 				if (Mail.version && type != 3)
 					return Mail.showDialogs(0);
@@ -639,9 +637,6 @@ var Mail = {
 		};
 	},
 
-	page: function () {
-
-	},
 
 	/**
 	 * Загрузка списка сообщений
@@ -649,7 +644,7 @@ var Mail = {
 	 * @param  {int}      offset   Сдвиг
 	 * @param  {Function} callback Функция-обработчик
 	 */
-	loadDialogs: function (offset, callback) {
+	loadDialogs: function(offset, callback) {
 		new APIRequest("execute", {
 			code: 'var m=API.messages.getDialogs({count:40,offset:Args.o,preview_length:120,v:5.52}),q=m.items,w,i=0,l=q.length,g=[];while(i<l){w=q[i].message;if(w.user_id<0){g.push(-w.user_id);};i=i+1;};return{counters:API.account.getCounters(),dialogs:m,users:API.users.get({user_ids:m.items@.message@.user_id+m.items@.message@.source_mid,fields:"photo_100,online,sex"}),groups:API.groups.getById({group_ids:g})};',
 			o: offset
@@ -670,12 +665,12 @@ var Mail = {
 	 * Функция загрузки и отображения диалогов
 	 * 15.01.2016: добавлены обработчики onNewMessageReceived и onMessageReaded
 	 */
-	showDialogs: function () {
+	showDialogs: function() {
 
 		var e = $.e,
 			head,
 			headCount = e("span", {html: "Loading..."}),
-			headActions = null, // TODO
+			headActions = Mail.getActions(), // TODO
 			list,
 			wrap = e("div", { append: [
 				head = Site.getPageHeader(headCount, headActions),
@@ -903,56 +898,72 @@ var Mail = {
 
 	getActions: function () {
 		var p = {};
-		p[lg("mail.actionReadAll")] = function (event) {
-			var modal = new Modal({
-				width: 395,
-				title: lg("mail.readAllConfirmTitle"),
-				content: lg("mail.readAllConfirmText"),
-				footer: [
-					{
-						name: "yes",
-						title: lg("general.yes"),
-						onclick: function () {
-							modal.close();
-							Mail.requestReadAll();
+
+		p["readAll"] = {
+			label: lg("mail.actionReadAll"),
+			onclick: function(item) {
+				var modal = new Modal({
+					width: 395,
+					title: lg("mail.readAllConfirmTitle"),
+					content: lg("mail.readAllConfirmText"),
+					footer: [
+						{
+							name: "yes",
+							title: lg("general.yes"),
+							onclick: function () {
+								this.close();
+								Mail.requestReadAll();
+							}
+						},
+						{
+							name: "close",
+							title: lg("general.no"),
+							onclick: function () {
+								this.close();
+							}
 						}
-					},
-					{
-						name: "close",
-						title: lg("general.no"),
-						onclick: function () {
-							modal.close();
-						}
-					}
-				]
-			}).show();
+					]
+				}).show(item.node());
+			}
 		};
 
-		p[Lang.get(Mail.version ? "mail.actionSwitch2messages" : "mail.actionSwitch2dialogs")] = function (event) {
+		p["createChat"] = {
+			label: lg("mail.actionCreateChat"),
+			isDisabled: true,
+			onclick: function() {
+				alert("not implemented yet!");
+			}
+		};
+
+
+
+
+/*		p[Lang.get(Mail.version ? "mail.actionSwitch2messages" : "mail.actionSwitch2dialogs")] = function (event) {
 			Mail.version = +!Mail.version;
 			Mail.explain();
-		};
+		};*/
 
-		p[Lang.get("mail.actionCreateChat")] = function (event) {
-			window.location.hash = "#mail?act=chat";
-		};
 
-		p[("!<input type=\"checkbox\" %s onchange='Mail.setAutoRead(this);' \/><span> " + Lang.get("settings.param_autoread") + "<\/span>").replace(/%s/ig, API.SettingsBitmask & 2 ? "checked" : "")] = function (event) {event.stopPropagation()};
-		return Site.CreateDropDownMenu(Lang.get("general.actions"), p);
+		/*p[("!<input type=\"checkbox\" %s onchange='Mail.setAutoRead(this);' \/><span> " + Lang.get("settings.param_autoread") + "<\/span>").replace(/%s/ig, API.SettingsBitmask & 2 ? "checked" : "")] = function (event) {event.stopPropagation()};*/
+		return new DropDownMenu(lg("general.actions"), p).getNode();
 	},
 
-	setAutoRead: function (node) {
+	/**
+	 * @deprecated
+	 * @param {DOMNode} node ?
+	 */
+	/*setAutoRead: function (node) {
 		API.SettingsBitmask += node.checked ? (API.SettingsBitmask & 2 ? 0 : 2) : (API.SettingsBitmask & 2 ? -2 : 0);
 		Settings.fastSaveSettings(API.SettingsBitmask);
-	},
+	},*/
 
 	photosChats: {},
 
 	requestReadAll: function (readed) {
-		Site.API("execute", {
-			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:5.16}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:%r%+i};'.replace(/%r%/ig, readed || 0)
-		}, function (data) {
-			data = data.response;
+		new APIRequest("execute", {
+			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:5.16}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:Args.r+i};',
+			r: (readed || 0)
+		}).setOnCompleteListener(function(data) {
 			if (data.n > 0) {
 				return Mail.requestReadAll(data.r);
 			};
@@ -964,8 +975,8 @@ var Mail = {
 			};
 
 
-			Site.Alert({text: data + " " + $.textCase(data, lg("mail.readAllReadReady"))});
-		})
+			new Snackbar({text: data + " " + lg("mail.readAllReadReady", data)}).show();
+		}).execute()
 	},
 
 	deletedMessage: false,

@@ -3800,7 +3800,7 @@ DropDownMenu.prototype = {
 
 	update: function() {
 		var item;
-		console.log(this, this.mItemsNodes);
+
 		$.elements.clearChild(this.mNodeList);
 		for (var label in this.mActions) {
 			item = this.mActions[label];
@@ -3864,6 +3864,10 @@ DropDownMenu.prototype = {
 				return f;
 			},
 
+			node: function() {
+				return s.mItemsNodes[label];
+			},
+
 			remove: function() {
 				s.remove(label);
 				return f;
@@ -3895,7 +3899,7 @@ DropDownMenu.prototype = {
 				if (i.isDisabled) {
 					return;
 				};
-console.log(self);
+
 				self.close();
 				i.onclick(self.get(key));
 			}
@@ -3908,16 +3912,8 @@ console.log(self);
 };
 DropDownMenu.CLASS_OPENED = "xdd-opened";
 
-function DDMconvert2new(options) {
-	var res = {}, item, i = 0;
-	for (var key in options) {
-		res["item" + i++] = {
-			label: key,
-			onclick: options[key]
-		};
-	};
-	return res;
-};
+// back compatible
+function DDMconvert2new(a,b,c,d){b={},c=0;for(d in a){b["i"+c++]={label:d,onclick:a[d]}};return b};
 
 /**
  * Возвращает пустое поле с текстом

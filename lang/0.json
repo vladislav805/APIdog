@@ -503,73 +503,30 @@
 		]
 	},
 	"mail":{
-		"dialogs":[
-			"диалог",
-			"диалога",
-			"диалогов"
-		],
+		"dialogs": ["диалог", "диалога", "диалогов"],
 		"headTitle":"Диалоги",
 		"chatTitle":"Беседа ",
-		"attachmentName_photo":[
-			"фотография",
-			"фотографии",
-			"фотографий"
-		],
-		"attachmentName_video":[
-			"видеозапись",
-			"видеозаписи",
-			"видеозаписей"
-		],
-		"attachmentName_audio":[
-			"аудио",
-			"аудио",
-			"аудио"
-		],
-		"attachmentName_doc":[
-			"документ",
-			"документа",
-			"документов"
-		],
-		"attachmentName_link":[
-			"ссылка",
-			"ссылки",
-			"ссылок"
-		],
-		"attachmentName_forwarded":[
-			"пересланное сообщение",
-			"пересланных сообщений",
-			"пересланных сообщений"
-		],
-		"attachmentName_map":[
-			"карта",
-			"карты",
-			"карт"
-		],
-		"attachmentName_wall":[
-			"пост со стены",
-			"поста со стены",
-			"постов со стены"
-		],
-		"attachmentName_gift":[
-			"подарок",
-			"подарка",
-			"подарков"
-		],
-		"attachmentName_sticker":[
-			"стикер",
-			"стикера",
-			"стикеров"
-		],
-		"attachmentName_wall_reply":[
-			"комментарий",
-			"комментария",
-			"комментариев"
-		],
-		"readAllReadReady":[
-			"диалог был прочитан",
-			"диалога было прочитано",
-			"диалогов было прочитано"
-		],
+		"attachmentName_photo": ["фотография", "фотографии", "фотографий"],
+		"attachmentName_video": ["видеозапись", "видеозаписи", "видеозаписей"],
+		"attachmentName_audio": ["аудио", "аудио", "аудио"],
+		"attachmentName_doc": ["документ", "документа", "документов"],
+		"attachmentName_link": ["ссылка", "ссылки", "ссылок"],
+		"attachmentName_forwarded": ["пересланное сообщение", "пересланных сообщений", "пересланных сообщений"],
+		"attachmentName_map": ["карта", "карты", "карт"],
+		"attachmentName_wall": ["пост со стены", "поста со стены", "постов со стены"],
+		"attachmentName_gift": ["подарок", "подарка", "подарков"],
+		"attachmentName_sticker": ["стикер", "стикера", "стикеров"],
+		"attachmentName_wall_reply": ["комментарий", "комментария", "комментариев"],
+		"readAllReadReady": ["диалог был прочитан", "диалога было прочитано", "диалогов было прочитано"],
+		"actionReadAll":"Отметить всё прочитанным",
+		"actionSwitch2messages":"Переключить режим: сообщения",
+		"actionSwitch2dialogs":"Переключить режим: диалоги",
+		"actionCreateChat":"Создать чат",
+		"readAllConfirmTitle":"Подтверждение",
+		"readAllConfirmText":"Вы уверены, что хотите отметить все сообщения прочитанными?<br\/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.<\/small>",
+
+
+
 		"confirm_delete_dialog":"",
 		"confirm_delete_message":"Вы уверены, что хотите удалить сообщение?",
 		"tabs_inbox":"Входящие",
@@ -578,12 +535,6 @@
 		"tabs_important":"Важные",
 		"tabs_search":"Поиск",
 		"tabs_dialogs":"Диалоги",
-		"actionReadAll":"Отметить всё прочитанным",
-		"actionSwitch2messages":"Переключить режим: сообщения",
-		"actionSwitch2dialogs":"Переключить режим: диалоги",
-		"actionCreateChat":"Создать чат",
-		"readAllConfirmTitle":"Подтверждение",
-		"readAllConfirmText":"Вы уверены, что хотите отметить все сообщения прочитанными?<br\/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.<\/small>",
 		"types_messages":[
 			"Array",
 			"Array",
