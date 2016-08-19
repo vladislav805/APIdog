@@ -608,17 +608,24 @@
 		"chatInfoFormNotificationsModalOk":"Отключить",
 		"chatInfoFormNotificationsEnable":"Включить",
 		"chatInfoFormNotificationsDisable":"Отключить",
+
+		"actionReadDialog": "Отметить прочитанным",
+		"actionAttachments": "Материалы беседы",
+		"actionLeaveChat": "Покинуть беседу",
+		"actionGoTo": "Перейти к ...",
+		"actionSearch": "Поиск",
+		"actionDeleteDialog": "Удалить диалог",
+
+		"leaveChatConfirmTitle": "Подтверждение",
+		"leaveChatConfirm": "Вы уверены, что хотите выйти из беседы?<br><br><strong>Внимание<\/strong>: Вы сможете вернуться только если в беседе будет не более 50 участников",
+		"deleteDialogConfirmTitle": "Подтверждение",
+		"deleteDialogConfirm": "Вы уверены, что хотите удалить диалог?<br><br><strong>Внимание<\/strong>: восстановить диалог после этого действия будет <strong style='color: red'>невозможно<\/strong>.",
+
 		"forwarded_messages":[
 			"пересланное сообщение",
 			"пересланных сообщений",
 			"пересланных сообщений"
 		],
-		"action_mark_readed":"Отметить прочитанным",
-		"action_attachments":"Материалы беседы",
-		"action_delete_dialog":"Удалить диалог",
-		"action_analyze_dialog":"Анализ диалога",
-		"action_enable_pagination":"Включить пагинацию",
-		"action_disable_pagination":"Отключить пагинацию",
 		"action_important":"Важное",
 		"action_unimportant":"Неважное",
 		"action_forward":"Переслать",

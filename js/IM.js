@@ -223,7 +223,7 @@ var IM = {
 			},
 			head,
 			headName = e("span", { id: "g-title-dialog-" + peerId, html: "peer " + peerId }),
-			headActions = null,
+			headActions = IM.getActions(peerId),
 			form,
 			textarea = IM.createTextarea(peerId, {
 				send: send
@@ -518,9 +518,76 @@ var IM = {
 		load();
 	},
 
+	getActions: function(peerId) {
+		peerId = toPeerId(peerId);
 
+		var menu = {};
 
+		menu["read"] = {
+			label: lg("im.actionReadDialog"),
+			onclick: function() {
+				IM.readDialog(peerId);
+			}
+		};
 
+		menu["attachments"] = {
+			label: lg("im.actionAttachments"),
+			onclick: function() {
+				IM.showAttachments(peerId);
+			},
+			isDisabled: true
+		};
+
+		menu["leave"] = {
+			label: lg("im.actionLeaveChat"),
+			onclick: function(item) {
+				VKConfirm(lg("im.leaveChatConfirmTitle"), lg("im.leaveChatConfirm"), function() {
+					IM.leaveChat(peerId - APIDOG_DIALOG_PEER_CHAT_MAX_ID)
+				}, item.node());
+			},
+			isHidden: peerId < APIDOG_DIALOG_PEER_CHAT_MAX_ID
+		};
+
+		menu["goto"] = {
+			label: lg("im.actionGoTo"),
+			onclick: function() {
+				IM.openGoToDateWindow();
+			},
+			isDisabled: true
+		};
+
+		menu["search"] = {
+			label: lg("im.actionSearch"),
+			onclick: function() {
+				IM.openSearchWindow(peerId);
+			},
+			isDisabled: true
+		};
+
+		menu["delete"] = {
+			label: lg("im.actionDeleteDialog"),
+			onclick: function(item) {
+				VKConfirm(lg("im.deleteDialogConfirmTitle"), lg("im.deleteDialogConfirm"), function() {
+					IM.deleteDialog(peerId);
+				}, item.node());
+			}
+		};
+
+		return new DropDownMenu(lg("general.actions"), menu).getNode();
+	},
+
+	readDialog: function(peerId) {
+		new APIRequest("messages.markAsRead", {
+				peerId: peerId,
+				v: 5.52
+			})
+		.debug()
+			.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+			.setOnCompleteListener(function(data) {
+
+			})
+			.execute();
+	},
 
 
 

@@ -238,7 +238,7 @@ function recognizeBrowser (ua, returnAsObject) {
 	return !returnAsObject ? "Browser: " + browser + " / OS: " + os : {browser: browser, os: os};
 };
 
-function VKConfirm (title, text, callback) {
+function VKConfirm(title, text, callback, from) {
 	if (!callback) {
 		callback = text;
 		text = title;
@@ -265,7 +265,7 @@ function VKConfirm (title, text, callback) {
 				}
 			}
 		]
-	}).show();
+	}).show(from);
 	return modal;
 };
 
@@ -3771,7 +3771,7 @@ DropDownMenu.prototype = {
 				self.toggle();
 			}}),
 			this.mNodeList = $.e("div", {"class": "xdd-items"})
-		]});
+		], onclick: function(event) { event.stopPropagation(); event.cancelBubble = true; }});
 		return this;
 	},
 

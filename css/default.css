@@ -2495,7 +2495,7 @@ strong span{
 	font-size: 10px;
 	font-weight: 900;
 	text-align: center;
-	padding: 0 4px;
+	padding: 0;
 	/*background: rgb(213, 221, 229);*/
 	background: rgb(223, 95, 100);
 	color: white;
