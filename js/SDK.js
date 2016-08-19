@@ -3258,37 +3258,46 @@ AttachmentBundle.prototype = {
 
 /* Likes */
 
-/*
- * Returns custom like-button
+/**
+ * Возвращает кнопку для лайков
  * Created 10.01.2016 from code Wall.LikeButton
+ * @param  {String}   type      Тип
+ * @param  {int}      ownerId   Идентификатор владельца
+ * @param  {int}      itemId    Идентификатор элемента
+ * @param  {String}   accessKey Ключ доступа
+ * @param  {int}      likes     Количество лайков
+ * @param  {boolean}  isLiked   Лайкнул ли текущий пользователь?
+ * @param  {int}      reposts   Количество репостов
+ * @param  {Function} callback  Колбэк при успехе добавления/удаления лайка
+ * @param  {Object}   options   Опции для кнопки
+ * @return {DOMNode}            Кнопка
  */
-
-function getLikeButton (type, ownerId, itemId, accessKey, likes, isLiked, reposts, callback, options) {
+function getLikeButton(type, ownerId, itemId, accessKey, likes, isLiked, reposts, callback, options) {
 	var e = $.e,
 
-		requestLike = function () {
+		requestLike = function() {
 			toggleLike(type, ownerId, itemId, accessKey || "", update);
 		},
 
-		update = function (result) {
+		update = function(result) {
 			setCount(result.likes);
 			setLiked(result.isLiked);
 			callback && callback(result);
 		},
 
-		showLikers = function () {
-			likers(type, ownerId, itemId, accessKey);
+		showLikers = function() {
+			likers(type, ownerId, itemId, accessKey, false, { from: wrap });
 		},
 
-		setCount = function (n) {
+		setCount = function(n) {
 			count.innerHTML = n ? formatNumber(n) : "";
 		},
 
-		setLiked = function (s) {
+		setLiked = function(s) {
 			$.elements[s ? "addClass" : "removeClass"](wrap, "vklike-active");
 		},
 
-		label = e("span", {"class": "vklike-label", html: Lang.get("likers.likeButton"), onclick: requestLike}),
+		label = e("span", {"class": "vklike-label", html: lg("likers.likeButton"), onclick: requestLike}),
 		icon = e("div", {"class": "vklike-icon"}),
 		iconWrap = e("div", {"class": "vklike-icon-wrap", append: icon, onclick: requestLike}),
 		count = e("div", {"class": "vklike-count", onclick: showLikers}),
@@ -3308,42 +3317,51 @@ function getLikeButton (type, ownerId, itemId, accessKey, likes, isLiked, repost
 	return wrap;
 };
 
-/*
- * Returns custom repost-button
- * Created 10.01.2016 from code Wall.LikeButton
+/**
+ * Возвращает кнопку для репостов
+ * Created 10.01.2016
+ * @param  {String}   type       Тип
+ * @param  {int}      ownerId    Идентификатор владельца
+ * @param  {int}      itemId     Идентификатор элемента
+ * @param  {String}   accessKey  Ключ доступа
+ * @param  {int}      reposts    Количество репостов
+ * @param  {boolean}  isReposted Репостнул ли текущий пользователь?
+ * @param  {int}      access     Битовая маска, куда можно репостить
+ * @param  {Function} callback   Колбэк при успехе репоста
+ * @param  {Object}   options    Опции для кнопки
+ * @return {DOMNode}             Кнопка
  */
-
-function getRepostButton (type, ownerId, itemId, accessKey, reposts, isReposted, access, callback, options) {
+function getRepostButton(type, ownerId, itemId, accessKey, reposts, isReposted, access, callback, options) {
 	var e = $.e,
 
 		openShareWindow = function () {
-			share(type, ownerId, itemId, accessKey || "", null, access);
+			share(type, ownerId, itemId, accessKey || "", null, access, { from: wrap });
 		},
 
-		update = function (result) {
+		update = function(result) {
 			setCount(result.likes);
 			setReposted(result.isReposted);
 			callback && callback(result);
 		},
 
-		showReposted = function () {
-			likers(type, ownerId, itemId, accessKey, true);
+		showReposted = function() {
+			likers(type, ownerId, itemId, accessKey, true, { from: wrap });
 		},
 
-		setCount = function (n) {
+		setCount = function(n) {
 			count.innerHTML = n ? formatNumber(n) : "";
 		},
 
-		setReposted = function (s) {
+		setReposted = function(s) {
 			$.elements[s ? "addClass" : "removeClass"](wrap, "vklike-active");
 		},
 
-		label = e("span", {"class": "vklike-label", html: Lang.get("likers.repostButton"), onclick: openShareWindow}),
+		label = e("span", {"class": "vklike-label", html: lg("likers.repostButton"), onclick: openShareWindow}),
 		icon = e("div", {"class": "vklike-repost-icon", onclick: openShareWindow}),
 		count = e("div", {"class": "vklike-count", onclick: showReposted}),
 
 		wrap = e("div", {
-			"class": "vklike-wrap",
+			"class": "vklike-wrap vkrepost-wrap",
 			append: [ label, icon, count ]
 		});
 
@@ -3358,15 +3376,24 @@ function getRepostButton (type, ownerId, itemId, accessKey, reposts, isReposted,
 };
 
 
-/*
- * Like and dislike function
- * Created 10.01.2016
+/**
+ * Триггер лайков
+ *  * Created 10.01.2016
+ * @param  {String}   type      Тип
+ * @param  {int}      ownerId   Идентификатор владельца
+ * @param  {int}      itemId    Идентификатор элемента
+ * @param  {String}   accessKey Ключ доступа
+ * @param  {Function} callback  Колбэк при успехе
+ * @return {void}
  */
-
-function toggleLike (type, ownerId, itemId, accessKey, callback) {
+function toggleLike(type, ownerId, itemId, accessKey, callback) {
 	new APIRequest("execute", {
-		code: 'var p={type:"%t",item_id:%i,owner_id:%o,access_key:"%a"},me=API.likes.isLiked(p),act;act=me==0?API.likes.add(p):API.likes.delete(p);return[(-me)+1,act.likes,API.likes.getList(p+{filter:"copies"}).count];'.schema({o: ownerId, i: itemId, t: type, a: accessKey})
-	}).setOnCompleteListener(function (data) {
+		code: 'var p={type:Args.t,item_id:Args.i,owner_id:Args.o,access_key:Args.a},me=API.likes.isLiked(p),act;act=me==0?API.likes.add(p):API.likes.delete(p);return[(-me)+1,act.likes,API.likes.getList(p+{filter:"copies"}).count];',
+		o: ownerId,
+		i: itemId,
+		t: type,
+		a: accessKey
+	}).setOnCompleteListener(function(data) {
 		var p = {
 			type: type,
 			ownerId: ownerId,
@@ -3385,9 +3412,16 @@ function toggleLike (type, ownerId, itemId, accessKey, callback) {
 /**
  * Open modal window and load list of likers of item
  * Created 10.01.2016
+ * @param  {String}  type        Тип
+ * @param  {int}     ownerId     Идентификатор владельца
+ * @param  {int}     itemId      Идентификатор элемента
+ * @param  {String}  accessKey   Ключ доступа
+ * @param  {boolean} onlyReposts Только ли репосты?
+ * @param  {Object}  options     Дополнительные параметры для окна
+ * @return {void}
  */
-
-function likers (type, ownerId, itemId, accessKey, onlyReposts) {
+function likers(type, ownerId, itemId, accessKey, onlyReposts, options) {
+	options = options || {};
 	var
 		e = $.e,
 
@@ -3399,16 +3433,16 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 		tab = new TabHost([
 			{
 				name: "all",
-				title: Lang.get("likers.tabAll"),
+				title: lg("likers.tabAll"),
 				content: listAll
 			},
 			{
 				name: "friends",
-				title: Lang.get("likers.tabFriends"),
+				title: lg("likers.tabFriends"),
 				content: listFriends
 			}
 		], {
-			onOpenedTabChanged: function (event) {
+			onOpenedTabChanged: function(event) {
 				friendsOnly = event.opened.name == "friends";
 				offset = 0;
 				isAllLoaded = false;
@@ -3417,11 +3451,11 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 			}
 		}),
 
-		getCurrentList = function () {
+		getCurrentList = function() {
 			return !friendsOnly ? listAll : listFriends;
 		},
 
-		load = function () {
+		load = function() {
 			if (isAllLoaded) {
 				return;
 			};
@@ -3444,7 +3478,7 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 					v: 5.38
 				})
 				.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
-				.setOnCompleteListener(function (result) {
+				.setOnCompleteListener(function(result) {
 					if (!offset) {
 						$.elements.clearChild(getCurrentList());
 					};
@@ -3454,7 +3488,7 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 				.execute();
 		},
 
-		addItemsToList = function (items) {
+		addItemsToList = function(items) {
 			var list = getCurrentList();
 			items.forEach(function (user) {
 				list.appendChild(Templates.getListItemUserRow(user));
@@ -3462,7 +3496,7 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 			if (!items.length) {
 				isAllLoaded = true;
 				if (!list.children.length) {
-					list.appendChild(Site.EmptyField(Lang.get(!onlyReposts ? "likers.listNothing" : "likers.listNothingReposts")))
+					list.appendChild(getEmptyField(lg(!onlyReposts ? "likers.listNothing" : "likers.listNothingReposts")))
 				};
 			};
 		},
@@ -3474,21 +3508,21 @@ function likers (type, ownerId, itemId, accessKey, onlyReposts) {
 		isLoading = false,
 
 		modal = new Modal({
-			title: Lang.get(!onlyReposts ? "likers.windowTitle" : "likers.windowTitleReposts"),
+			title: lg(!onlyReposts ? "likers.windowTitle" : "likers.windowTitleReposts"),
 			content: tab.getNode(),
 			noPadding: true,
 			footer: [
 				{
 					name: "close",
-					title: Lang.get("likers.windowClose"),
+					title: lg("likers.windowClose"),
 					onclick: function () { this.close() }
 				}
 			],
-			onScroll: function (event) {
+			onScroll: function(event) {
 				if (isLoading || !event.needLoading) return;
 				load((isLoading = true) && (offset += step));
 			}
-		}).show();
+		}).show(options.from);
 
 	load(offset);
 };
