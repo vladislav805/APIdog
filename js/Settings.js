@@ -41,10 +41,10 @@ var Settings = {
 	},
 
 	languages: [
-		{value: 0, code: "ru", label: "RU | Русский"},
-		{value: 1, code: "en", label: "EN | English"},
-		{value: 2, code: "ua", label: "UA | Українська"},
-//		{value: 999, code: "gop", label: "RUG | Русский просторечие"}
+		{id: 0, code: "ru", label: "RU | Русский"},
+		{id: 1, code: "en", label: "EN | English"},
+		{id: 2, code: "ua", label: "UA | Українська"},
+//		{id: 999, code: "gop", label: "RUG | Русский просторечие"}
 	],
 
 	showSettings: function () {
@@ -54,9 +54,10 @@ var Settings = {
 
 		var TYPE_HEADER = 0,
 			TYPE_CHECKBOX = 1,
-			TYPE_BUTTON = 2;
+			TYPE_SELECT = 2,
+			TYPE_BUTTON = 3,
 
-		var e = $.e,
+			e = $.e,
 			form = e("form", {"class": "settings-wrap settings", id: "settings"}),
 			data = [
 				{
@@ -84,11 +85,12 @@ var Settings = {
 					name: "longpoll",
 					disabled: API.isExtension,
 					onchange: function (event) {
-						var form = this.form;
-						form.__ps_soundnotify.disabled = !this.checked;
+
+						form.itemSoundNotify.disabled = !this.checked;
 						if (!this.checked) {
-							form.__ps_soundnotify.checked = false;
-						}
+							form.itemSoundNotify.checked = false;
+						};
+
 					}
 				},
 				{
@@ -157,55 +159,62 @@ var Settings = {
 */				{
 					type: TYPE_CHECKBOX,
 					bit: 16,
-					label: "settings.param_edit_links",
-					name: "editlinks",
-					type: "checkbox"
+					label: "itemFixLinks",
+					name: "editlinks"
 				},
 				{
-					type: "header",
-					label: "settings.param_h_interface"
+					type: TYPE_HEADER,
+					label: "headerInterface"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 32,
-					label: "settings.param_touch",
-					name: "touch",
-					type: "checkbox"
+					label: "itemTouch",
+					name: "touch"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 128,
-					label: "settings.param_fixed",
-					name: "fixedhead",
-					type: "checkbox"
+					label: "itemFixedHeader",
+					name: "fixedhead"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 512,
-					label: "settings.param_double_click",
-					name: "dblclickdisabled",
-					type: "checkbox"
+					label: "itemDoubleClickDisabled",
+					name: "dblclickdisabled"
 				},
 				{
+					type: TYPE_CHECKBOX,
 					bit: 16384,
-					label: "settings.param_disable_images",
-					name: "disabledimages",
-					type: "checkbox"
+					label: "itemDisableImages",
+					name: "disabledimages"
 				},
 				{
-					type: "select",
-					label: "settings.param_lang",
+					type: TYPE_SELECT,
+					label: "itemLanguage",
 					name: "language",
 					options: Settings.languages,
-					selectedIndex: (function(a,b,c,d){c.call(a,function(e){if(e.code===b)d=e.value});return d})(Settings.languages, Lang.lang, Array.prototype.forEach)
+					selectedIndex: (function(avaliableLanguages, currentLanguage, each) {
+						var current;
+						each.call(avaliableLanguages, function(language) {
+							if (language.id === currentLanguage) {
+								current = language.id;
+							};
+						});
+						return current;
+					})(Settings.languages, API.settings.languageId, Array.prototype.forEach)
 				},
 				{
-					type: "button",
-					label:"settings.save",
+					type: TYPE_BUTTON,
+					label:"buttonSave",
 					name: "saver",
 					click: function (event) {
-						this.form.onsubmit();
+						Settings.saveSettings(form);
 					}
 				}
 			],
-			params = document.createElement("div");
+			params = e("div");
 
 		form.onsubmit = function (event) {
 			var e = form.elements,
@@ -243,64 +252,108 @@ var Settings = {
 			return false;
 		};
 
-		var current, p, bit, e = $.elements.create, tasked = [], input;
+		var current, p, bit, tasked = [], input, label, help;
 		for (var i = 0, l = data.length; current = data[i]; ++i) {
+
+			label = lg("settings." + current.label);
+			help = lg("settings." + current.label + "Help") || "";
+
 			switch (current.type) {
-				case "checkbox":
+
+				case TYPE_CHECKBOX:
 					bit = current.bit;
-					p = {type: "checkbox", name: "__ps_" + current.name, value: bit, bit: bit};
-					if (API.settings.bitmask & bit)
+					p = {
+						type: "checkbox",
+						name: current.label,
+						value: bit,
+						"data-bit": bit
+					};
+
+					if (API.settings.bitmask & bit) {
 						p.checked = true;
-					if (current.onchange)
+					};
+
+					if (current.onchange) {
 						p.onchange = current.onchange;
-					if (current.disabled)
+					};
+
+					if (current.disabled) {
 						p.disabled = true;
+					};
+
 					params.appendChild(e("label", {append: [
 						input = e("input", p),
-						e("span", {html: " " + current.label})
-					]}))
-					if (current.onchange)
+						e("span", {html: label})
+
+					], title: help}));
+
+					if (current.onchange) {
 						tasked.push([input, current.onchange]);
+					};
+
 					continue;
 					break;
-				case "select":
-					var select = document.createElement("select");
+
+
+				case TYPE_SELECT:
+					var select = e("select", { name: current.name });
 					select.name = current.name;
-					for (var k = 0, m = current.options.length; k < m; ++k)
-						select.appendChild(e("option", {value: current.options[k].value, html: current.options[k].label}));
+					for (var k = 0, m = current.options.length; k < m; ++k) {
+						select.appendChild(e("option", {
+							value: current.options[k].value,
+							html: current.options[k].label
+						}));
+					};
 
 					select.selectedIndex = current.selectedIndex;
 
 					params.appendChild(e("div", {"class": "sf-wrap", append: [
-						e("div", {"class": "tip-form", html: Lang.get("settings.param_lang")}),
+						e("div", {"class": "tip-form", html: label}),
 						select
 					]}));
 					continue;
 					break;
-				case "button":
-					p = {type: "button", value: current.label, name: current.name, onclick: current.click};
-					if (p.disabled)
+
+
+				case TYPE_BUTTON:
+					p = {
+						type: "button",
+						value: label,
+						name: current.name,
+						onclick: current.click
+					};
+
+					if (p.disabled) {
 						p.disabled = true;
+					};
+
 					params.appendChild(e("input", p));
 					continue;
 					break;
-				case "header":
-					params.appendChild(Site.getPageHeader(current.label, current.right));
+
+
+				case TYPE_HEADER:
+					params.appendChild(Site.getPageHeader(label, current.right));
 					continue;
 					break;
+
+
 			};
 		};
-		if (!API.authId) {
-			form.appendChild(e("div", {"class": "photo-deleted", html: "Сбой на сервере. Настройки синхронизировать не удалось. Вы можете поставить настройки для текущей сессии (пока не перезагрузите страницу). Если ничего не помогает или такое происходит постоянно &mdash; переавторизуйтесь"}));
-		};
-		form.appendChild(params);
 
+		if (!API.authId) {
+			form.appendChild(e("div", {"class": "photo-deleted", html: lg("settings.warningNoAuthKey")}));
+		};
+
+		form.appendChild(params);
 
 		Site.append($.e("div", {append: [Settings.getTabs(), form]}));
 		Site.setHeader(lg("settings.generalTitle"));
 
-		for (var i = 0, l = tasked.length; i < l; ++i)
-			(function (n, f) {var q=n;q.f=f;q.f()})(tasked[i][0], tasked[i][1]);
+		for (var i = 0, l = tasked.length; i < l; ++i) {
+			tasked[i][1].call(tasked[i][0]);
+			//(function (n, f) {var q=n;q.f=f;q.f()})(, );
+		};
 	},
 	applySettings: function (data, isAI) {
 		console.log(data);
