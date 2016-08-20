@@ -26,6 +26,16 @@ var Fave = {
 		]);
 	},
 	userChate: null,
+
+/*
+
+var i=0,m=25,s=200,r=[],c=1,t;while(r.length<c&&i<m){t=API.fave.getUsers({offset:s*i,count:s,v:5.52,fields:Args.f});c=t.count;r=r+t.items;i=i+1;};return r;
+
+f = fields
+
+*/
+
+
 	Users: function (offset) {
 		var fx = function (data) {
 			var parent = document.createElement("div"), list = document.createElement("div"), count = data.count;
@@ -120,6 +130,14 @@ var Fave = {
 			}
 		});
 	},
+
+/*
+
+var i=0,m=25,s=200,r=[],c=1,t;while(r.length<c&&i<m){t=API.fave.getLinks({offset:s*i,count:s,v:5.52});c=t.count;r=r+t.items;i=i+1;};return r;
+
+*/
+
+
 	Links:function(offset){
 		Site.APIv5("fave.getLinks",{
 			count: 40,
@@ -254,7 +272,7 @@ var Fave = {
 			if (data[0] == 0)
 				parent.appendChild($.elements.create("div",{"class": "msg-empty", html: "Ничего нет.."}))
 			for(var i = 1; i < data.length; ++i)
-				list.appendChild(Video.Item && Video.Item(data[i]) || Video.item(Video.tov5(data[i])));
+				list.appendChild(Video.item(Video.tov5(data[i])));
 			parent.appendChild(list);
 			parent.appendChild(Site.PagebarV2(Site.Get("offset"),data[0],40));
 			Site.SetHeader("Закладки");
