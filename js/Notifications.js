@@ -349,7 +349,7 @@ var Notifications = {
 					creator = _users[feed.from_id] || stdusr;
 					owner = _users[feed.to_id] || stdusr;
 					var link = {post: "wall", photo: "photo", video: "video"}[type] + (post.to_id || post.owner_id) + "_" + post.id;
-					left.appendChild(Notifications.getPhotoLinkProfile(creator));
+					left.appendChild(Notifications.getPhotoLinkProfile(creator, {icon: "comment"}));
 					right.appendChild(e("div", {append: [
 						e("strong", {append: [
 							e("a", {href: "#" + creator.screen_name, html: creator.name || creator.first_name + " " + creator.last_name})
@@ -445,7 +445,7 @@ var Notifications = {
 							topic: post && post.id
 						}[type]
 					].join("");
-					left.appendChild(Notifications.getPhotoLinkProfile(creator));
+					left.appendChild(Notifications.getPhotoLinkProfile(creator, {icon: "comment"}));
 					right.appendChild(e("div", {append: [
 						e("strong", {append: [
 							e("a", {href: "#" + creator.screen_name, html: creator.name || creator.first_name + " " + creator.last_name})
