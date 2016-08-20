@@ -523,7 +523,7 @@ progress {
 	position: relative;
 }
 
-.head-content::after {
+/*.head-content::after {
 	content: "";
 	position: absolute;
 	top: 0;
@@ -533,7 +533,7 @@ progress {
 	display: block;
 	pointer-events: none;
 	background: linear-gradient(to right, transparent, rgb(86, 124, 164));
-}
+}*/
 
 .head-title {
 	padding: 0 10px;
