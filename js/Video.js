@@ -800,9 +800,9 @@ var Video = {
 				return;
 			};
 
-			if (Audios.isPlaying())
+/*			if (Audios.isPlaying())
 				Audios.Player.Pause();
-
+*/
 			var title       = video.title,
 				description = video.description,
 				duration    = video.duration,
@@ -906,6 +906,10 @@ var Video = {
 		if (hasMine) {
 			actions[l("videos.action_video_delete")]        = function (event) {Video.deleteVideo(ownerId, videoId, accessKey)};
 		};
+		actions[l("videos.actionOpenInNewTab")] = function() {
+			var tab = window.open(video.player.replace(/^http:/ig, "https:"), "_blank");
+			tab.focus();
+		};
 		return Site.CreateHeader(Site.Escape(video.title), Site.CreateDropDownMenu(Lang.get("general.actions"), actions));
 	},
 
@@ -982,11 +986,10 @@ var Video = {
 		window.onResizeCallback = Video.onChangeBodySizeEvent;
 		if (!video.files || video.files && (video.files.external || video.files.flv_320 || video.files.flv_240)) {
 			wrap.id = "__video_player_wrap";
-			var u = video.player.replace(/^http:/ig, "https:");
 			wrap.appendChild($.e("iframe", {
 				frameborder: 0,
 				allowfullscreen: true,
-				src: video.files && video.files.external ? (/vk.com/ig.test(u) ? video.files.external.replace(/^http:/ig, "https:") : u) : "data:text/html,<html><meta charset=utf-8><body><a href='" + u + "' target=_blank>Открыть видео в отдельном окне</a><br><iframe src='" + u + "' frameborder=0 width=100% height=100%></iframe></body></html>",
+				src: video.files && video.files.external ? (/vk.com/ig.test(u) ? video.files.external.replace(/^http:/ig, "https:") : u) : "data:text/html,<html><meta charset=utf-8><style>*{margin:0;padding:0}</style><body><iframe src='" + u + "' frameborder=0 width=100% height=100%></iframe></body></html>",
 				style:"width:100%;height:100%;"
 			}));
 			setTimeout(Video.onChangeBodySizeEvent, 200);
