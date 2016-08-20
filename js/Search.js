@@ -183,13 +183,25 @@ var Search = {
 					"type": 2,
 					"name": "age_from",
 					"title": "Возраст (от):",
-					"params": ages
+					"params": ages,
+					"onchange": function() {
+						var curVal = this.options[this.selectedIndex].value;
+						if (this.form.age_to < curVal) {
+							this.form.age_to = curVal;
+						}
+					}
 				},
 				{
 					"type": 2,
 					"name": "age_to",
 					"title": "Возраст (до):",
-					"params": ages
+					"params": ages,
+					"onchange": function() {
+						var curVal = this.options[this.selectedIndex].value;
+						if (this.form.age_from > curVal) {
+							this.form.age_from = curVal;
+						}
+					}
 				},
 				{
 					"type": 2,
@@ -214,11 +226,11 @@ var Search = {
 					"onchange": function (event) {
 						var selectedYear = this.form.birth_year.options[this.form.birth_year.selectedIndex].value || new Date().getFullYear(),
 							isLeap = !isNaN(+new Date(selectedYear + "-02-29")),
-							days = [31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.options[this.selectedIndex].value],
+							days = [0, 31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.form.birth_month.options[this.form.birth_month.selectedIndex].value],
 							nodes = this.form.birth_day;
 						for (var i = 1, l = nodes.options.length; i < l; ++i)
 							if (nodes.options[i + 1])
-								nodes.options[i + 1].disabled = i >= days;
+								nodes.options[i + 1].hidden = i >= days;
 					}
 				},
 				{
@@ -228,19 +240,19 @@ var Search = {
 						for ( ; b > c; --b)
 							a.push([b, b]);
 						return a;
-					})([[0, "год"]], 2014, 1900),
+					})([[0, "год"]], (function(d) { return d.getFullYear() - 14; })(new Date()), 1910),
 					"nofull": true,
 					"onchange": function (event) {
 						var selectedYear = this.options[this.selectedIndex].value || new Date().getFullYear(),
 							isLeap = !isNaN(+new Date(selectedYear + "-02-29")),
-							days = [31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.form.birth_month.options[this.form.birth_month.selectedIndex].value],
+							days = [0, 31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.form.birth_month.options[this.form.birth_month.selectedIndex].value],
 							nodes = this.form.birth_day;
 						for (var i = 1, l = nodes.options.length; i < l; ++i)
 							if (nodes.options[i + 1])
-								nodes.options[i + 1].disabled = i >= days;
+								nodes.options[i + 1].hidden = i >= days;
 					}
 				},
-				{
+/*				{
 					"type": 1,
 					"name": "has_photo",
 					"title": "с фотографией"
@@ -250,7 +262,7 @@ var Search = {
 					"name": "online",
 					"title": "сейчас на сайте"
 				},
-				{
+*/				{
 					"type": 3,
 					"name": "country",
 					"title": "Страна",
