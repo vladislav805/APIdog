@@ -6,26 +6,25 @@
 
 /**
  * Формат ответа от Proxy LongPoll Server:
- *
  * [
- * 	int status,
- *  object response,
- * 	object extra
+ * 	   int status,
+ *     object response,
+ * 	   object extra
  * ]
  *
  * status:
- * 	0 - удачный запрос
- * 	1 - vk: ошибка при получении адреса для сервера (captcha)
- * 	2 - vk: ошибка при получении адреса для сервера (vk)
- * 	3 - vk: ошибка при получении адреса для сервера (vk is down)
- *  4 - longpoll: пустой ответ
- *  5 - longpoll: ошибка парсинга ответа
- *  6 - longpoll: failed
- *  7 - longpoll: onError
+ * 	   0 - удачный запрос
+ * 	   1 - vk: ошибка при получении адреса для сервера (captcha)
+ * 	   2 - vk: ошибка при получении адреса для сервера (vk)
+ * 	   3 - vk: ошибка при получении адреса для сервера (vk is down)
+ *     4 - longpoll: пустой ответ
+ *     5 - longpoll: ошибка парсинга ответа
+ *     6 - longpoll: failed
+ *     7 - longpoll: onError
  *
  * response:
- * 	int ts
- * 	array updates
+ * 	   int ts
+ * 	   array updates
  *
  * extra: свободный формат
  */
@@ -33,13 +32,13 @@
 var http	= require("http"),
 	https	= require("https"),
 	url		= require("url"),
-	query	= require("querystring"),
+	querystring	= require("querystring"),
 
-	server = http.createServer(function (request, response) {
+	server = http.createServer(function(request, response) {
 
 		var requestData = url.parse(request.url),
 			path = requestData.pathname,
-			GET = query.parse(requestData.query),
+			GET = querystring.parse(requestData.query),
 
 			userAccessToken = GET.userAccessToken,
 			captchaId = GET.captchaSid,
@@ -47,7 +46,7 @@ var http	= require("http"),
 
 		response.writeHead(200, {
 			"Content-Type": "application/json; charset=utf-8",
-			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Origin": "https://apidog.ru",
 			"Access-Control-Allow-Credentials": true,
 			"Access-Control-Allow-Methods": "HEAD, OPTIONS, GET, POST",
 			"Access-Control-Allow-Headers": "Content-Type, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control"
@@ -168,7 +167,7 @@ function API(method, params, callback, response) {
 	var options = {
 		host: "api.vk.com",
 		port: 443,
-		path: "/method/" + method + "?" + buildHttpQuery(params),
+		path: "/method/" + method + "?" + querystring.stringify(params),
 		method: "GET"
 	};
 
@@ -191,19 +190,4 @@ function API(method, params, callback, response) {
 	}).on("error", function (e) {
 		return outputJSON(response, [3, null, {}]);
 	});
-};
-
-/**
- * Построение строки запроса
- * @param  {Object} data Параметры
- * @return {String}      Закодированная строка
- */
-function buildHttpQuery (data) {
-	var params = [];
-
-	for (var item in data) {
-		params.push(item + "=" + encodeURIComponent(data[item]));
-	};
-
-	return params.join("&");
 };
