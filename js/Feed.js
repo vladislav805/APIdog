@@ -31,6 +31,9 @@ var Feed = {
 				}).setOnCompleteListener(Feed.showComments).execute();
 
 			case "search":
+				if (Site.get("owner")) {
+					return Feed.searchByOwner(Site.get("owner"), Site.get("q"), getOffset());
+				};
 				return Feed.search({q: Site.Get("q") || "", offset: getOffset()});
 
 			case "notifications":
@@ -694,16 +697,17 @@ var Feed = {
 			Site.SetHeader("Поиск", {link: "feed"});
 		})
 	},
-	searchByOwner: function (screenName, query, offset) {
+	searchByOwner: function(ownerId, query, offset) {
 		Site.Loader();
 		query = decodeURIComponent(query || "") || "";
 		var q = Site.Escape(query);
 		Site.API("execute", {
-			code: "return{o:API.users.get({user_ids:\"%d\",fields:\"first_name_gen,online,screen_name\",v:5.29})[0],g:API.groups.getById({group_id:\"%d\"})[0],r:API.wall.search({query:\"%s\",domain:\"%d\",count:50,offset:%o,owners_only:%f,extended:1,v:5.29})};"
-				.replace(/%s/img, Site.AddSlashes(query))
-				.replace(/%d/img, screenName)
-				.replace(/%o/img, offset)
-				.replace(/%f/img, Site.Get("comments") ? 0 : 1)
+			code: "return{o:API.users.get({user_ids:Args.h,fields:Args.f,v:5.29})[0],g:API.groups.getById({group_id:-Args.h})[0],r:API.wall.search({query:Args.q,owner_id:Args.h,count:50,offset:parseInt(Args.o),owners_only:Args.w==1,extended:1,v:5.29})};",
+			h: ownerId,
+			f: "first_name_gen,online,screen_name",
+			q: query,
+			o: getOffset(),
+			w: Site.get("comments") ? 0 : 1
 		}, function (data) {
 			data = Site.isResponse(data);
 			if (!data.o && !data.g) {
@@ -718,6 +722,7 @@ var Feed = {
 				isUser = data.o,
 				u = Local.Users,
 				w = data.r.items,
+				owner = Local.Users[ownerId],
 				hash = String(q).split("@")[0],
 				count = data.r.count,
 				form = Site.CreateInlineForm({
@@ -726,7 +731,7 @@ var Feed = {
 					placeholder: "Поиск..",
 					name: "q",
 					onsubmit: function (event) {
-						window.location.hash = "#" + screenName + "?act=search&q=" + encodeURIComponent($.trim(this.q.value));
+						window.location.hash = "#feed?act=search&owner=" + ownerId + "&q=" + encodeURIComponent($.trim(this.q.value));
 						event.preventDefault();
 						return false;
 					}
@@ -735,7 +740,7 @@ var Feed = {
 				page = e("div", {append: [
 					Site.CreateHeader(
 						("На странице %s найдено %d " + $.textCase(count, ["запись", "записи", "записей"]) + " по хэштегу %h")
-							.replace(/%s/img, Site.Escape(isUser ? owner.first_name_gen : owner.name))
+							.replace(/%s/img, (isUser ? owner.first_name_gen : owner.name).safe())
 							.replace(/%d/img, count)
 							.replace(/%h/img, hash)
 					),
@@ -750,7 +755,7 @@ var Feed = {
 				list.appendChild(Site.EmptyField(query ? "Ничего не найдено" : "Введите запрос"));
 			list.appendChild(Site.PagebarV2(offset, count, 50));
 			Site.Append(page);
-			Site.SetHeader("Поиск по стене", {link: screenName});
+			Site.SetHeader("Поиск по стене", {link: "#" + owner.screen_name});
 		});
 	}
 };

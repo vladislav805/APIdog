@@ -447,7 +447,6 @@ var Site = {
 			console.error(e);
 		}).setOnCompleteListener(function(result) {
 			Site.setCounters(result.c);
-			console.log(result);
 			switch (result.t) {
 				case "u":
 					return Profile.display(result.u, result.w);

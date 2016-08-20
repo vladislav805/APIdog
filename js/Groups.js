@@ -457,7 +457,7 @@ var Groups = {
 				if (group.r > 0)
 					objects.push([info.screen_name + "?act=requests", "Заявки на вступление в группу", group.r]);
 			};
-			objects.push([info.screen_name + "?act=search", "Поиск по стене", -1]);
+			objects.push(["feed?act=search&owner=-" + info.id, "Поиск по стене", -1]);
 			infoblock.appendChild(Site.CreateHeader("Группа"));
 			infoblock.appendChild($.e("div", {"class": "hider profile-lists", append: counterRow(objects)}))
 

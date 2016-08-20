@@ -43,10 +43,6 @@ var Profile = {
 				return Groups.ShowContacts(screenName);
 
 			// deprecated
-			case "search":
-				return Feed.searchByOwner(screenName, Site.Get("q"), getOffset());
-
-			// deprecated
 			case "report":
 				return Profile.ShowReportPage(screenName);
 
