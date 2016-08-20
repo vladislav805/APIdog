@@ -481,7 +481,7 @@ var Video = {
 
 					var creator = $.element("_videos_creator");
 					creator.parentNode.insertBefore(Video.itemAlbum({
-						id: data.response.album_id,
+						id: data.album_id,
 						owner_id: owner_id,
 						title: title,
 						count: 0,
@@ -568,7 +568,7 @@ var Video = {
 			title: title,
 			v: 5.14
 		}, function (data) {
-			if (data.response) {
+			if (data) {
 				if (Video.albums[ownerId + "_" + albumId])
 					Video.albums[ownerId + "_" + albumId].title = title;
 				Site.Go(window.location.hash.replace("#", ""));
@@ -579,7 +579,7 @@ var Video = {
 	deleteAlbum: function (ownerId, albumId) {
 		VKConfirm(Lang.get("videos.confirm_album_delete"), function () {
 			Site.APIv5("video.deleteAlbum", {owner_id: ownerId, album_id: albumId, v: 5.14}, function (data) {
-				if (!data.response)
+				if (!data)
 					return Site.Alert({text: "error #" + data.error.error_code + " (" + data.error.error_msg + ")"});
 				Site.Alert({text: Lang.get("videos.info_album_deleted")});
 				window.location.hash = "#videos" + (ownerId != API.uid ? ownerId : "") + "?act=albums";
