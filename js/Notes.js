@@ -268,8 +268,8 @@ var Notes = {
 					comment_privacy: privacyComment,
 					v: 5.24
 				}, function (data) {
-					if (data.response)
-						Site.Go(window.location.hash);
+					if (data)
+						Site.Go(window.location.hash.split("?")[0] + "?edited=" + Date.now()); // HOTFIX
 				});
 				return false;
 			},
@@ -289,14 +289,16 @@ var Notes = {
 		}));
 		$.elements.remove(node.nextSibling);
 	},
+
 	deleteNote: function (node, owner_id, note_id) {
 		Site.API("notes.delete", {note_id: note_id}, function (data) {
-			if (data.response) {
+			if (data) {
 				Site.Alert({text: Lang.get("notes.deleted")});
 				window.location.hash = "#notes";
 			}
 		});
 	},
+
 	getComments: function (node, owner_id, note_id, comments, options) {
 		options = options || {};
 		var items = comments.items, count = comments.count, longId = owner_id + "_" + note_id;
