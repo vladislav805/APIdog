@@ -28,8 +28,6 @@ var Fave = {
 	userChate: null,
 	Users: function (offset) {
 		var fx = function (data) {
-			data = Site.isResponse(data);
-			Fave.userChate = {response: data};
 			var parent = document.createElement("div"), list = document.createElement("div"), count = data.count;
 			parent.appendChild(Fave.GetTabs());
 			parent.appendChild(Site.CreateHeader("У Вас в закладках " + count + " " + $.TextCase(count, ["человек","человека","человек"])));
@@ -62,10 +60,7 @@ var Fave = {
 			Site.SetHeader("Закладки");
 			Site.Append(parent);
 		};
-		if (!Fave.userChate)
-			Site.API("execute", {code: "return API.fave.getUsers({count:500,fields:\"photo_50,online,can_write_private_message,screen_name\",v:5});"}, fx);
-		else
-			fx(Fave.userChate);
+			Site.API("execute", {code: "return API.fave.getUsers({count:500,fields:\"photo_50,online,can_write_private_message,screen_name\",v:5});"}, fx); // FASTFIX (need rewrite)
 	},
 	insertUsers: function (node, users, from, until) {
 		for (var u = users.items; from < until; ++from)
@@ -109,7 +104,7 @@ var Fave = {
 		Site.API("fave.removeUser", {
 			user_id: userId
 		}, function (data) {
-			if (data.response)
+			if (data)
 			{
 				$.elements.remove(node);
 			}
@@ -119,7 +114,7 @@ var Fave = {
 		Site.API("fave.removeLink", {
 			link_id: linkId
 		}, function (data) {
-			if (data.response)
+			if (data)
 			{
 				$.elements.remove(node);
 			}
@@ -131,7 +126,6 @@ var Fave = {
 			offset: offset,
 			v: 5.19
 		}, function (data) {
-			data = Site.isResponse(data);
 			var parent = document.createElement("div"),
 				list = document.createElement("div"),
 				q;
@@ -148,7 +142,7 @@ var Fave = {
 
 					var link = $.trim(this.link.value);
 
-					link = link.replace(/(https?:\/\/)?(s\d\.)?apidog\.ru\/#/igm, "http:\/\/vk.com/");
+					link = link.replace(/(https?:\/\/)?apidog\.ru\/6\.5\/#/igm, "http:\/\/vk.com/");
 
 					Site.API("fave.addLink", {
 						link: link
@@ -165,7 +159,7 @@ var Fave = {
 			for(var i = 0; i < data.items.length; ++i) {
 				var url = data.items[i].url;
 				if (/\/\/vk\.com\//igm.test(url))
-					url = url.replace(new RegExp("\\/\\/vk\\.com\\/", "img"), "\/\/apidog.ru\/#");
+					url = url.replace(new RegExp("\\/\\/vk\\.com\\/", "img"), "\/\/apidog.ru\/6.5\/#");
 				list.appendChild(q = $.e("a", {
 					"class": "groups-item",
 					href: url,
