@@ -20,7 +20,7 @@
 		"menuBlog":"Блог",
 		"menuAbout":"О проекте",
 		"pageGoToUp":"Наверх",
-		"footer":"APIdog v6.5 &copy; 2016<br>ver.20160817 night build",
+		"footer":"APIdog v6.5 &copy; 2016<br>ver.20160820 morning build",
 		"loadingSite":"Загрузка...",
 		"loadingAuthors":"Владислав Велюга, Антон Карпович, Александр Ткачук, Тарас Дацюк, Оксана Эриксон, Илья Ворчук, Надя Иванова"
 	},
@@ -748,8 +748,46 @@
 		"attach_view_doc":"Документы"
 	},
 	"groups":{
+
+		"listGroupsHead": "Список групп",
+
+		"listTabAll": "Все <i class='count'>%n</i>",
+		"listTabManage": "Управление <i class='count'>%n</i>",
+		"listTabInvites": "Приглашения <i class='count'>%n</i>",
+		"listTabSearch": "Поиск",
+		"listTabRecommendations": "Рекомендации",
+
+		"listHeaderJoinedYou": "Вы состоите в %n %g",
+		"listHeaderJoinedUser": "%o состоит в %n %g",
+		"listHeaderCreateGroup": "Создать",
+
+		"inGroups": ["группе", "группах", "группах"],
+		"toGroups": ["группу", "группы", "групп"],
+
+		"types": {
+			"page": "Публичная страница",
+			"group": "Группа",
+			"event": "Событие"
+		},
+		"countFollowers": ["подписчик", "подписчика", "подписчиков"],
+		"countMembers": ["участник", "участника", "участников"],
+
+
 		"modalLinksTitle":"Ссылки",
 		"modalContactsTitle":"Контакты",
+
+		"invitesHead": "Вас пригласили в %n %g",
+		"invitesHeadEmpty": "Вас никуда не пригласили",
+		"invitesContentEmpty": "Пусто :c",
+		"invitesTitle": "Приглашения в группы",
+		"invitesAcceptedSuccess": "Приглашение успешно одобрено",
+		"invitesDeclineSuccess": "Приглашение отклонено",
+		"invitesInviter": "Приглашает %u",
+		"invitesAccept": "Принять",
+		"invitesDecline": "Отклонить",
+
+
+
 		"search_founded":[
 			"Нашлась",
 			"Нашлось",
@@ -1423,9 +1461,44 @@
 		"save":"Сохранить",
 		"saving":"Сохранение...",
 		"saved":"Настройки успешно сохранены!",
-		"reset_background":"Сбросить фон",
 		"relongpoll":"Перезапустить LongPoll",
-		"mark_offline":"Отметить меня offline",
+
+
+		"generalTitle": "Настройки",
+		"warningNoAuthKey": "Сбой на сервере. Настройки синхронизировать не удалось. Вы можете поставить настройки для текущей сессии (пока не перезагрузите страницу). Если ничего не помогает или такое происходит постоянно &mdash; переавторизуйтесь",
+
+		"headerMessages": "Диалоги",
+		"headerSite": "Сайт",
+		"headerInterface": "Юзабилити",
+		"itemLongpoll": "использовать LongPoll",
+		"itemLongpollHelp": "LongPoll позвояет получать сообщения в реальном времени, без перезагрузки страницы",
+		"itemSoundNotify": "звуковые оповещения",
+		"itemDialogsAsVK": "диалоги как на vk.com",
+		"itemDialogsAsVKHelp": "Сообщения будут отображаться как на оригинальном сайте и официальных клиентах: сверху - старые, снизу - новые",
+		"itemAutoRead": "отмечать сообщения прочитанными",
+		"itemAutoReadHelp": "Будет ли APIdog автоматически отмечать сообщения прочитанными при открытии диалога",
+		"itemSendTyping": "оповещать собеседника о наборе сообщения",
+		"itemSendTypingHelp": "При отключенной настройке собеседник не будет видеть того, как Вы набираете сообщение: у него не будет отображаться строка '%имя% набирает сообщение...'",
+		"itemSendMessageByCtrlEnter": "отправка сообщений по Ctrl+Enter",
+		"itemSendMessageByCtrlEnterHelp": "При отключенной этой настройке отправка сообщений осуществляется нажатием только по Enter",
+		"itemOnline": "режим online",
+		"itemOnlineHelp": "При включенной этой настройке, аккаунт будет онлайн на протяжении времени, когда APIdog открыт",
+		"itemProxy": "использовать сервер как прокси",
+		"itemProxyHelp": "Если на Вашей сети стоит фильтр и Вы не можете получить доступ к vk.com, то включите эту опцию. В таком случае, все запросы к ВК будут идти через наш сервер, который в Вашей сети, скорее всего, не заблокирован.\n\nВНИМАНИЕ! УБЕДИТЕЛЬНАЯ ПРОСЬБА НЕ ВКЛЮЧАТЬ ЭТУ ОПЦИЮ БЕЗ ЕЁ ПРЯМОГО НАЗНАЧЕНИЯ!",
+		"itemFixLinks": "исправлять ссылки vk.com/* на apidog/*",
+		"itemFixLinksHelp": "Нужно для тех, кто не хочет случайно 'на автомате' открыть ВК и стать онлайн",
+		"itemTouch": "touch-управление",
+		"itemTouchHelp": "Только для сенсорных устройств: открытие меню и прочие вещи, связанные с жестами на сайте",
+		"itemFixedHeader": "фиксированная шапка",
+		"itemFixedHeaderHelp": "При включенной опции шапка всегда будет наверху. Стоит лишь прокрутить немножко наверх страницу, если шапка скрывается",
+		"itemDoubleClickDisabled": "отключить двойной клик",
+		"itemDisableImages": "отключить изображения",
+		"itemDisableImagesHelp": "Если Вы экономите трафик, отключите изображения, включив эту опцию",
+		"itemLanguage": "Язык сайта",
+		"buttonSave": "Сохранить",
+
+
+
 		"param_h_interface":"Интерфейс",
 		"param_h_site":"Сайт",
 		"param_h_messages":"Сообщения",
@@ -1448,6 +1521,10 @@
 		"param_dialog_as_vk":"диалоги как на vk.com (сверху вниз)",
 		"marked_as_offline":"Через 60 секунд API пометит Вас offline",
 
+		"generalTitle": "Настройки APIdog",
+		"tabsGeneral": "APIdog",
+		"tabsProfile": "Аккаунт",
+
 		"blacklistTitle": "Чёрный список",
 		"blacklistHeadTitleLoading": "Чёрный список",
 		"blacklistFormInputPlaceholder": "Вставьте ссылку",
@@ -1457,13 +1534,6 @@
 		"blacklistNobody": "Никто не заблокирован",
 		"blacklistFormErrorIncorrectLink": "Неверная ссылка",
 
-		"tabs_general":"Сайт",
-		"tabs_interface":"Интерфейс",
-		"tabs_profile":"Аккаунт",
-		"tabs_blacklist":"Черный список",
-		"tabs_stickers":"Стикеры",
-		"tabs_smiles":"Смайлы",
-		"tabs_themes":"Тема",
 		"stickers":"Стикеры",
 		"stickers_activate":"Включить",
 		"stickers_deactivate":"Отключить",
