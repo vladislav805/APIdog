@@ -355,6 +355,10 @@ var Settings = {
 			//(function (n, f) {var q=n;q.f=f;q.f()})(, );
 		};
 	},
+
+	saveSettings: function() {},
+
+
 	applySettings: function (data, isAI) {
 		console.log(data);
 		var saved = data.bitmask,
@@ -694,7 +698,7 @@ var Settings = {
 				type: "stickers",
 				filters: "free"
 			}, function (data) {
-				data.response ? Settings.store.showStore(data.response) : null;
+				Settings.store.showStore(data);
 			});
 		},
 		showStore: function (items) {
@@ -710,7 +714,7 @@ var Settings = {
 				list.appendChild(Settings.store.itemStickerBox(item, {buy: true}));
 			parent.appendChild(list);
 
-			Site.Append(parent);
+			Site.append(parent);
 			Site.SetHeader(Lang.get("settings.stickers"), {link: "settings"});
 		},
 		getItemById: function (productId) {
