@@ -8,10 +8,10 @@ var Groups = {
 	// need refactor
 	// need rewrite
 	RequestPage: function (ownerId) {
-		switch(Site.Get("act")) {
+		switch (Site.Get("section")) {
 			case "invites":
 				Site.Loader();
-				return Groups.Invites();
+				return Groups.getInvites();
 
 			case "search":
 				if(!Site.Get("q"))
@@ -74,122 +74,212 @@ var Groups = {
 
 			default:
 				Site.Loader();
-				var oid = Site.Get("user_id") || API.uid;
-				if (Groups.Groups[oid])
-					return (function (oid, data) {
-						return Groups.GenerateList(oid, data);
-					})(oid, Groups.Groups[oid]);
-				return Site.API("execute",
-				{
-					code: "return API.groups.get({user_id:" + oid + ",extended:1,fields:\"members_count,verified,city\",v:5.19});"
-				},
-				function (data) {
-					Groups.GenerateList(oid, Site.isResponse(data));
-				});
-		}
-	},
-	Groups:{},
 
-	// need refactor
-	// need rewrite
-	GenerateList: function (ownerId, list){
-		Groups.Groups[ownerId] = list;
-		var elem = document.createElement("div"),
-			groups = document.createElement("div"),
-			tabs = [
-				[API.uid == ownerId ? "groups" : "groups?user_id=" + ownerId, "Все <i class='count'>" + list.count + "<\/i>"]
-			],
-			admins = 0,
-			onlyAdmin = Site.Get("section") == "admin";
-		for (var i = 0, l = list.items.length; i < l; ++i) {
-			if (!onlyAdmin || onlyAdmin && list.items[i].is_admin)
-				groups.appendChild(Groups.Item(list.items[i], {noDeleteButton: ownerId != API.uid}));
-			if (ownerId == API.uid && list.items[i].is_admin)
-				admins++;
-		}
-		if (ownerId == API.uid) {
-			if (admins > 0) tabs.push(["groups?section=admin", "Управление <i class='count'>" + admins + "</i>"]);
-			if (Site.Counters && Site.Counters.groups > 0) tabs.push(["groups?act=invites", "Приглашения <i class='count'>" + Site.Counters.groups + "</i>"]);
-			tabs.push(["groups?act=recommends", "Рекомендованное"]);
-			tabs.push(["groups?act=search", "Поиск"]);
-		}
-		elem.appendChild(Site.CreateTabPanel(tabs));
-		elem.appendChild(
-			Site.CreateHeader(
-				!onlyAdmin ? (
-					ownerId == API.uid ? "Вы состоите в " : ""
-				) + list.count + " " + $.TextCase(list.count, (ownerId == API.uid ? ["группе", "группах", "группах"] : ["группа", "группы", "групп"])) : "Вы управляете " + admins + " " + $.TextCase(list, ["группой", "группами", "группами"]),
-				ownerId == API.uid ? $.e("a", {"class": "fr", onclick: Groups.showCreateForm, html: "Создать группу"}) : null
-				)
-		);
-		elem.appendChild(groups);
-		Site.SetHeader("Список групп");
-		Site.Append(elem);
-	},
-
-	// need refactor
-	// need rewrite
-	Item: function (c, opts) {
-		var current = document.createElement("a");
-		current.href = "#" + c.screen_name;
-		current.className = "groups-item";
-		Local.Users[-c.gid || -c.id] = c;
-		var type = {page: "Публичная страница", group: "Группа", event: "Событие"}[c.type],
-			gid = c.gid || c.id,
-			users = c.type == "page" ? ["подписчик", "подписчика", "подписчиков"] : ["участник", "участника", "участников"],
-			members = c.members_count, right;
-		current.id = "group_" + gid;
-		if (opts && !opts.noDeleteButton)
-			current.appendChild($.elements.create("div", {"class": "feed-close", onclick: (function (id) {
-				return function (event) {
-					$.event.cancel(event);
-					VKConfirm("Вы действительно хотите выйти из группы `" + c.name + "`", function () {
-						Groups.Leave2(id);
-					});
-					return $.event.cancel(event);
-				}
-			})(gid)}));
-		current.appendChild($.elements.create("img", {src: getURL(c.photo || c.photo_50), "class": "groups-left"}));
-		current.appendChild(right = $.elements.create("div", {"class": "groups-right", append: [
-			$.elements.create("strong", {html: Site.Escape(c.name)}),
-			$.elements.create("div", {"class": "tip", html: type}),
-			$.elements.create("div", {"class": "tip", html: (members ? formatNumber(members) + " " + $.textCase(members, users) : "")})
-		]}));
-		if (opts && opts.request) {
-
-			var fastJoin = function (event) {
-					Site.API("groups.join", {
-						group_id: gid
-					}, function (data) {
-						var e = $.element("group_request_" + gid);
-						$.elements.clearChild(e);
-						e.appendChild($.elements.create("span", {"class": "tip", html: Lang.get("groups.requests_join_success")}))
-					})
-					$.event.cancel(event);
-				},
-				fastDecline = function (event) {
-					Site.API("groups.leave", {
-						group_id: gid
-					}, function (data) {
-						var e = $.element("group_request_" + gid);
-						$.elements.clearChild(e);
-						e.appendChild($.elements.create("span", {"class": "tip", html: Lang.get("groups.requests_decline")}))
-					})
-					$.event.cancel(event);
+				var ownerId = Site.get("userId") || API.userId;
+				if (Groups.cache[ownerId]) {
+					Groups.showList(ownerId);
+					return;
 				};
-			var user = Local.Users[c.invited_by];
-			right.appendChild($.elements.create("div", {"class": "tip", append: [
-				$.elements.create("span", {html: "Вас приглашает "}),
-				$.elements.create("a", {href: "#" + user.screen_name, html: user.first_name + " " + user.last_name + Site.isOnline(user)})
-			]}));
-			right.appendChild($.elements.create("div", {id: "group_request_" + gid, append: [
-				$.elements.create("input", {type: "button", value: "Принять", onclick: fastJoin}),
-				document.createTextNode(" "),
-				$.elements.create("input", {type: "button", value: "Отклонить", onclick: fastDecline})
-			]}));
+
+				new APIRequest("execute", {
+					code: "var o=parseInt(Args.o);return{u:API.users.get({user_ids:o,fields:Args.uf,v:5.52}),g:API.groups.get({user_id:o,extended:1,fields:Args.gf,v:5.52})};",
+					o: ownerId,
+					uf: "first_name_gen,last_name_gen,sex",
+					gf: "members_count,verified,city"
+				}).setOnCompleteListener(function(data) {
+					Local.add(data.u);
+
+					Groups.cache[ownerId] = data.g.items;
+
+					Groups.showList(ownerId);
+				}).execute();
 		}
-		return current;
 	},
+
+	cache: {},
+
+	getTabs: function(ownerId) {
+		var source = Groups.cache[ownerId] || [],
+			isMy = ownerId == API.userId,
+
+			adminCount = isMy ? source.filter(function(g) { return !!g.admin_level; }).length : 0,
+
+			tabs = [
+				[
+					isMy
+						? "groups"
+						: "groups?userId=" + ownerId,
+					lg("groups.listTabAll").schema({ n: source.length })
+				]
+			];
+
+		if (isMy) {
+			if (adminCount) {
+				tabs.push([
+					"groups?section=manage",
+					lg("groups.listTabManage").schema({ n: adminCount })
+				]);
+			};
+
+			if (Site.counters.groups) {
+				tabs.push([
+					"groups?section=invites",
+					lg("groups.listTabInvites").schema({ n: Site.counters.groups })
+				]);
+			};
+
+			tabs.push([
+				"groups?act=search",
+				lg("groups.listTabSearch")
+			]);
+
+			tabs.push([
+				"groups?act=recommends",
+				lg("groups.listTabRecommendations")
+			]);
+		};
+
+		return Site.CreateTabPanel(tabs);
+	},
+
+	showList: function(ownerId) {
+		var e = $.e,
+
+			source = Groups.cache[ownerId],
+			owner = Local.Users[ownerId],
+			isMy = ownerId == API.userId,
+			isAdmin = Site.get("section") === "manage",
+
+			list = !(isMy && isAdmin)
+				? source
+				: source.filter(function(group) {
+					return !!group.admin_level;
+				  }),
+
+			nodeWrap = e("div"),
+			nodeList = e("div"),
+
+			cursor = 0,
+			chunkBy = 40,
+
+			isBusy = true,
+
+			insert = function() {
+				if (cursor >= list.length) {
+					return;
+				};
+
+				for (var max = cursor + chunkBy; cursor < Math.min(max, source.length); ++cursor) {
+					nodeList.appendChild(Groups.itemList(list[cursor], {owner: owner}));
+				};
+				isBusy = false;
+			};
+
+
+
+		nodeWrap.appendChild(Groups.getTabs(ownerId));
+
+		nodeWrap.appendChild(Site.getPageHeader(
+			isMy
+				? lg("groups.listHeaderJoinedYou").schema({
+					n: source.length,
+					g: lg("groups.inGroups", source.length)
+				  })
+				: lg("groups.listHeaderJoinedUser").schema({
+					o: owner.first_name,
+					n: source.length,
+					g: lg("groups.inGroups", source.length)
+				  }),
+			isMy
+				? e("a", {
+					"class": "fr",
+					onclick: Groups.showCreateForm,
+					html: lg("groups.listHeaderCreateGroup")
+				  })
+				: null
+		));
+
+		nodeWrap.appendChild(nodeList);
+		Site.setHeader(lg("groups.listGroupsHead"));
+		Site.append(nodeWrap);
+
+		insert();
+
+		window.onScrollCallback = function(event) {
+			if (event.needLoading && !isBusy) {
+				isBusy = true;
+				insert();
+			};
+		};
+	},
+
+	itemList: function (g, options) {
+		options = options || {};
+		var e = $.e,
+			groupId = (g.id || g.gid),
+
+			type = lg("groups.types")[g.type],
+			users = lg(g.type == "page" ? "groups.countFollowers" : "groups.countMembers"),
+			members = g.members_count,
+			right;
+
+// TODO
+		return Templates.getUser(g, {
+			fulllink: true,
+			actions: [
+				e("div", {"class": "tip", append: document.createTextNode(type + ", " + (members ? members.format() + " " + $.textCase(members, users) : ""))}),
+				options.request
+					? Groups.getInviteBlock(g)
+					: null
+			]
+		});
+	},
+
+	getInviteBlock: function(group) {
+		var e = $.e,
+
+			inviter = Local.Users[group.invited_by],
+
+			fastJoin = function (event) {
+				Groups.join(group.id, function(res) {
+					$.elements.clearChild(block);
+					block.appendChild(e("span", {"class": "tip", html: lg("groups.invitesAcceptedSuccess")}))
+				});
+				$.event.cancel(event);
+			},
+
+			fastDecline = function (event) {
+				Groups.leave(group.id, function(res) {
+					$.elements.clearChild(block);
+					block.appendChild(e("span", {"class": "tip", html: lg("groups.invitesDeclineSuccess")}))
+				})
+				$.event.cancel(event);
+			},
+
+			block = e("div", {"class": "tip", append: [
+				e("span", {html: lg("groups.invitesInviter").schema({ u : getName(inviter) }) }),
+				e("div", {"class": "groups-invite-actions", append: [
+					e("input", {type: "button", value: lg("groups.invitesAccept"), onclick: fastJoin}),
+					e("input", {type: "button", value: lg("groups.invitesDecline"), onclick: fastDecline})
+				]})
+			]});
+
+
+		return block;
+	},
+
+	join: function(groupId, callback, notSure) {
+		new APIRequest("groups.join", {
+			groupId: groupId
+		}).setOnCompleteListener(callback).execute();
+	},
+
+	leave: function(groupId, callback, notSure) {
+		new APIRequest("groups.leave", {
+			groupId: groupId
+		}).setOnCompleteListener(callback).execute();
+	},
+
 	showCreateForm: function () {
 		var e = $.e,
 			form = e("div", {"class": "sf-wrap"}),
@@ -893,41 +983,44 @@ var Groups = {
 			Site.Append(parent);
 		})
 	},
-	Invites:function(){
-		Site.API("execute", {
-			code:'var g=API.groups.getInvites({count:50,offset:' + Site.Get("offset") + ',fields:"members_count",v:5.14});return [g,API.users.get({"user_ids":g.items@.invited_by,"fields":"online,screen_name"})];'
-		}, Groups.GenerateInvites);
+
+	getInvites: function() {
+		new APIRequest("execute", {
+			code:'var g=API.groups.getInvites({count:200,fields:"members_count",v:5.14});return{g:g,u:API.users.get({user_ids:g.items@.invited_by,fields:"online,screen_name,sex"})};'
+		}).setOnCompleteListener(function(result) {
+			Local.add(result.u);
+
+			Groups.showInvites(result.g);
+		}).execute();
 	},
-	GenerateInvites: function (data) {
-		data = Site.isResponse(data);
-		Local.AddUsers(data[1]);
-		var groups = data[0],
-			parent = document.createElement("div"),
-			list = document.createElement("div"),
-			tabs = [
-				["groups", "Все <i class='count'>" + (Groups.Groups[API.uid] && Groups.Groups[API.uid].length || "") + "<\/i>"]
-			],
-			admins = 0;
-		if (Groups.Groups[API.uid])
-			for (var i = 1, l = Groups.Groups[API.uid].length; i < l; ++i)
-				if (Groups.Groups[API.uid][i].is_admin)
-					admins++;
-		if (admins > 0)
-			tabs.push(["groups?section=admin", "Управление <i class='count'>" + admins + "</i>"]);
-		if (Site.Counters && Site.Counters.groups > 0)
-			tabs.push(["groups?act=invites", "Приглашения <i class='count'>" + Site.Counters.groups + "</i>"]);
-		tabs.push(["groups?act=recommends", "Рекомендованное"]);
-		tabs.push(["groups?act=search", "Поиск"]);
-		parent.appendChild(Site.CreateTabPanel(tabs));
-		var count = groups.count,
-			groups = groups.items;
-		parent.appendChild(Site.CreateHeader(Lang.get("groups.request_you_have") + count + " " + Lang.get("groups", "request_groups", count)));
-		for (var i = 0, l = groups.length; i < l; ++i)
-			list.appendChild(Groups.Item(groups[i], {request: true}));
-		parent.appendChild(list);
-		Site.SetHeader(Lang.get("groups.request_header"));
-		Site.Append(parent);
+
+	showInvites: function(data) {
+		var e = $.e,
+			wrap = e("div"),
+			list = e("div"),
+			count = data.count,
+			groups = data.items;
+
+		wrap.appendChild(Groups.getTabs(API.userId));
+		wrap.appendChild(Site.getPageHeader(
+			count
+				? lg("groups.invitesHead").schema({ n: count, g: lg("groups.toGroups", count)})
+				: lg("groups.invitesHeadEmpty")
+		));
+
+		if (count) {
+			for (var i = 0, l = groups.length, group; group = groups[i]; ++i) {
+				list.appendChild(Groups.itemList(group, { request: true }));
+			};
+		} else {
+			list.appendChild(getEmptyField(lg("groups.invitesContentEmpty")));
+		};
+
+		wrap.appendChild(list);
+		Site.setHeader(lg("groups.invitesTitle"));
+		Site.append(wrap);
 	},
+
 	Search: function () {
 		var parent = document.createElement("div"),
 			list = document.createElement("div");
