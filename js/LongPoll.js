@@ -45,6 +45,19 @@ var
 	APIDOG_LONGPOLL_SET_COUNT_DIALOGS = 80,
 	APIDOG_LONGPOLL_SET_NOTIFY_CHAT = 114,
 
+	APIDOG_LONGPOLL_RESULT_CODE_OK = 0,
+	APIDOG_LONGPOLL_RESULT_CODE_CAPTCHA = 1,
+	APIDOG_LONGPOLL_RESULT_CODE_API_ERROR = 2,
+	APIDOG_LONGPOLL_RESULT_CODE_SERVER_ISSUE = 3,
+	APIDOG_LONGPOLL_RESULT_CODE_EMPTY_RESPONSE = 4,
+	APIDOG_LONGPOLL_RESULT_CODE_NOT_JSON = 5,
+	APIDOG_LONGPOLL_RESULT_CODE_FAILED = 6,
+	APIDOG_LONGPOLL_RESULT_CODE_API_REQUEST_UNKNOWN = 7,
+
+	APIDOG_LONGPOLL_RESULT_SECTION_STATUS = 0,
+	APIDOG_LONGPOLL_RESULT_SECTION_RESPONSE = 1,
+	APIDOG_LONGPOLL_RESULT_SECTION_EXTRA = 2,
+
 	APIDOG_LONGPOLL_FLAG_UNREAD = 1,
 	APIDOG_LONGPOLL_FLAG_OUTBOX = 2,
 	APIDOG_LONGPOLL_FLAG_DELETED = 128,
@@ -155,7 +168,7 @@ var LongPoll = {
 	},
 
 	isNeedStart: function () {
-		return!!(API.SettingsBitmask & APIDOG_SETTINGS_LONGPOLL);
+		return!!(API.settings.bitmask & APIDOG_SETTINGS_LONGPOLL);
 	},
 
 	// created 15.01.2016
@@ -181,36 +194,24 @@ var LongPoll = {
 			if (ar.status === 200) {
 				var result = JSON.parse(ar.responseText);
 
-				if (result.response) {
-					LongPoll.resolveProblem(result.response);
-					return;
-				};
-
-				if (result[0].failed) {
-					LongPoll.currentData = null;
-					setTimeout(LongPoll.start, 2000);
-					return;
-				};
-
-				if (result[1].errorId) {
-					console.error("LP/error: " + result[1].errorId);
-					setTimeout(LongPoll.start, 2000);
+				if (result[APIDOG_LONGPOLL_RESULT_SECTION_STATUS]) {
+					LongPoll.onIssue(result);
 					return;
 				};
 
 				if (!LongPoll.currentData.server) {
-					LongPoll.currentData = result[1];
+					LongPoll.currentData = result[APIDOG_LONGPOLL_RESULT_SECTION_EXTRA];
 				};
 
-				console.info("LP/result: " + JSON.stringify(result[0]))
+				console.info("LP/result: " + JSON.stringify(result[APIDOG_LONGPOLL_RESULT_SECTION_RESPONSE]))
 
 				LongPoll.getResult(
-					LongPoll.parseResult(result[0])
+					LongPoll.parseResult(result[APIDOG_LONGPOLL_RESULT_SECTION_RESPONSE])
 				);
 			};
 		};
 
-		ar.open("GET", "/longpoll?" + LongPoll.getServerURL(), true);
+		ar.open("GET", "/longpoll.php?" + LongPoll.getServerURL(), true); // TODO to nodejs
 		ar.send(null);
 
 		LongPoll.ajaxRequest = ar;
@@ -222,15 +223,15 @@ var LongPoll = {
 	getServerURL: function () {
 		var l = LongPoll.currentData || {},
 			p = {
-				access_token: API.access_token,
+				userAccessToken: API.userAccessToken,
 				server: l.server || "",
 				ts: l.ts || "",
 				key: l.key || ""
 			};
 
-		if (l.captcha_sid) {
-			p.captcha_sid = l.captcha_sid;
-			p.captcha_key = l.captcha_key;
+		if (l.captchaId) {
+			p.captchaId = l.captchaIid;
+			p.captchaKey = l.captchaKey;
 		};
 
 		return $.ajax.queryBuilder(p);
@@ -287,10 +288,16 @@ var LongPoll = {
 	fixStrings: function (s) {
 		return (s || "")
 			.replace(/<br(\s?\/)?>/img, "\n")
-			.replace(/&amp;/img, "&")
-			.replace(/&lt;/img, "<")
-			.replace(/&gt;/img, ">")
-			.replace(/&quot;/img, "\"");
+			.unsafe();
+	},
+
+	onIssue: function(e) {
+		switch (e[0]) {
+			case APIDOG_LONGPOLL_RESULT_CODE_FAILED:
+				LongPoll.currentData = null;
+				setTimeout(LongPoll.start, 2000);
+				break;
+		};
 	},
 
 
@@ -316,7 +323,7 @@ var LongPoll = {
 		LongPoll.currentData.ts = data.serverData.ts;
 		setTimeout(LongPoll.start, 700);
 
-		data.each(function (i) {
+		data.each(function(i) {
 			switch (i.eventId) {
 				case APIDOG_LONGPOLL_EVENT_REMOVE_FLAGS:
 					switch (i.flag) {
@@ -332,6 +339,10 @@ var LongPoll = {
 
 				case APIDOG_LONGPOLL_EVENT_NEW_MESSAGE:
 					window.onNewMessageReceived && window.onNewMessageReceived(i.message);
+					break;
+
+				case APIDOG_LONGPOLL_SET_COUNT_DIALOGS:
+					Site.setMailCounter(i.count);
 					break;
 
 				case APIDOG_LONGPOLL_EVENT_TYPING_USER:

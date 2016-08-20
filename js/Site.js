@@ -240,6 +240,11 @@ var Site = {
 		Site.counters = data;
 	},
 
+	setMailCounter: function(count) {
+		g("menu-messages").setAttribute("data-count", count);
+		Site.counters.messages = count;
+	},
+
 	onClickHead: function (event, node) {
 		var u;
 		if (u = node.getAttribute("data-url")) {
