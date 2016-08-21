@@ -1497,30 +1497,6 @@
 		"itemLanguage": "Язык сайта",
 		"buttonSave": "Сохранить",
 
-
-
-		"param_h_interface":"Интерфейс",
-		"param_h_site":"Сайт",
-		"param_h_messages":"Сообщения",
-		"param_lang":"Язык сайта (beta)",
-		"param_online":"установить режим online",
-		"param_autoread":"читать входящие сообщения",
-		"param_fake_online":"мнимый онлайн",
-		"param_proxy":"использовать наш сервер как прокси",
-		"param_longpoll":"включить автообновление диалогов (LongPoll)",
-		"param_edit_links":"исправлять ссылки vk.com\/* и m.vk.com\/* на apidog.ru\/*",
-		"param_touch":"использовать touch-управление",
-		"param_soundnotify":"включить звуковые оповещения",
-		"param_fixed":"установить фиксированную шапку",
-		"param_double_click":"не лайкать фото и записи при двойном нажатии",
-		"param_friends_notifications":"оповещать об активности друзей",
-		"param_send_typing":"уведомлять собеседника о том, что Вы набираете сообщение",
-		"param_old_version_messages":"старый вид сообщений, диалоги отключены",
-		"param_send_by_ctrl_enter":"отправлять сообщения по Enter",
-		"param_disable_images":"отключить изображения",
-		"param_dialog_as_vk":"диалоги как на vk.com (сверху вниз)",
-		"marked_as_offline":"Через 60 секунд API пометит Вас offline",
-
 		"generalTitle": "Настройки APIdog",
 		"tabsGeneral": "APIdog",
 		"tabsProfile": "Аккаунт",
@@ -1763,6 +1739,11 @@
 		"send_sending":"Отправка..",
 		"send_sent":"Отправлено!"
 	},
+
+	"fave": {
+		"title": "Закладки"
+	},
+
 	"attacher":{
 		"modalTitle":"Прикрепить",
 		"typePhoto":"Фотографию",
