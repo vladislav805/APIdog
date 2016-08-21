@@ -1,31 +1,118 @@
 /**
  * APIdog v6.5
  *
- * upd: -1
+ * Branch: editing
+ * Last update: 22/08/2016
  */
 
 var Fave = {
-	RequestPage: function () {
-		var offset = Site.Get("offset");
-		switch(Site.Get("section")) {
-			case "links":   return Fave.Links(offset); break;
+
+	RequestPage: function() {
+
+		switch (Site.get("section")) {
+			case "links":
+				return Fave.page(Fave.links);
+
+
 			case "posts":   return Fave.Posts(offset); break;
 			case "photos":  return Fave.Photos(offset);break;
 			case "videos":  return Fave.Videos(offset);break;
+
 			case "users":
-			default:        return Fave.Users(offset);
+			default:
+				return Fave.page(Fave.users);
 		}
 	},
-	GetTabs: function () {
-		return Site.CreateTabPanel([
-			["fave", "Люди"],
-			["fave?section=links", "Ссылки"],
-			["fave?section=posts", "Посты"],
-			["fave?section=photos" ,"Фото"],
-			["fave?section=videos", "Видео"]
-		]);
+
+	getTabs: function () {
+		return getTabPanel({
+			users: {
+				title: lg("fave.tabUsers"),
+				link: "fave?section=users",
+				current: {
+					name: "section",
+					value: [null, "", "users"]
+				}
+			},
+			links: {
+				title: lg("fave.tabLinks"),
+				link: "fave?section=links",
+				current: {
+					name: "section",
+					value: "links"
+				}
+			},
+			posts: {
+				title: lg("fave.tabPosts"),
+				link: "fave?section=posts",
+				current: {
+					name: "section",
+					value: "posts"
+				}
+			},
+			photos: {
+				title: lg("fave.tabPhotos"),
+				link: "fave?section=photos",
+				current: {
+					name: "section",
+					value: "photos"
+				}
+			},
+			videos: {
+				title: lg("fave.tabVideos"),
+				link: "fave?section=videos",
+				current: {
+					name: "section",
+					value: "videos"
+				}
+			}
+		});
 	},
-	userChate: null,
+
+	MAX_INSERTING: 50,
+
+	page: function(controller) {
+		var e = $.e,
+
+			header = e("div"),
+
+			wrap = e("div", {
+				append: [
+					Fave.getTabs(),
+					Site.getPageHeader(header),
+					controller.getNodeSearchForm(),
+					controller.getNodeList()
+				]
+			}),
+
+			reset = function() {
+				isLoading = false;
+			},
+
+			isAll = false,
+			isLoading = true;
+
+		window.onScrollCallback = function(event) {
+			if (!isAll && !isLoading && event.needLoading) {
+				controller.loadNext(reset);
+			};
+		};
+
+		if (!controller.hasCache()) {
+			isLoading = true;
+			controller.loadNext(reset);
+		} else {
+			controller.cursor = 0;
+			controller.show(Fave.MAX_INSERTING);
+		};
+
+		controller.onMetaData = function(count, all) {
+			header.innerHTML = lg(controller.lang.header).schema({ n: count, f: lg(controller.lang.items) });
+			isAll = all;
+		};
+
+		Site.append(wrap).setHeader(lg("fave.title"));
+	},
 
 /*
 
@@ -35,101 +122,170 @@ f = fields
 
 */
 
+	users: {
 
-	Users: function (offset) {
-		var fx = function (data) {
-			var parent = document.createElement("div"), list = document.createElement("div"), count = data.count;
-			parent.appendChild(Fave.GetTabs());
-			parent.appendChild(Site.CreateHeader("У Вас в закладках " + count + " " + $.TextCase(count, ["человек","человека","человек"])));
-			if (count == 0)
-				parent.appendChild(Site.EmptyField("Никого нет.."));
-			else {
-				var fxSearch = function (event) {
-					var text = $.trim(this.q ? this.q.value : this.value);
-					$.elements.clearChild(list);
-					if (!text) {
-						Fave.insertUsers(list, Fave.userChate.response, 0, 40);
-					} else {
-						Fave.searchUser(list, Fave.userChate, text);
-					}
-					return false;
-				};
-				parent.appendChild(Site.CreateInlineForm({
-					type: "search",
-					name: "q",
-					title: Lang.get("docs.find"),
-					onsubmit: fxSearch,
-					onkeyup: fxSearch,
-					placeholder: Lang.get("docs.search")
-				}))
-			}
-			for (var i = offset, data = data.items, l = offset + 40; i < l; ++i)
-				list.appendChild(Fave.getUser(data[i]))
-			list.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
-			parent.appendChild(list);
-			Site.SetHeader("Закладки");
-			Site.Append(parent);
-		};
-			Site.API("execute", {code: "return API.fave.getUsers({count:500,fields:\"photo_50,online,can_write_private_message,screen_name\",v:5});"}, fx); // FASTFIX (need rewrite)
-	},
-	insertUsers: function (node, users, from, until) {
-		for (var u = users.items; from < until; ++from)
-			node.appendChild(Fave.getUser(u[from]));
-	},
-	searchUser: function (node, users, q) {
-		var founded = [];
-		users = users.response;
-		for (var i = 0, u = users.items, l = u.length; i < l; ++i) {
-			if (new RegExp(q, "gi").test(u[i].first_name) || new RegExp(q, "gi").test(u[i].last_name))
-				founded.push(u[i]);
-		}
-		if (!founded.length) {
-			node.appendChild(Site.EmptyField(Lang.get("docs.search_by_query") + " \"" + Site.Escape(q) + "\" " + Lang.get("docs.search_not_found")));
-		} else {
-			Fave.insertUsers(node, {count: founded.length, items: founded}, 0, founded.length);
-		}
-	},
-	getUser: function (i) {
-		var e = $.e, q;
-		return (q = i ? e("a", {"class": "friends-item", id: "fave-user" + i.id, href: "#" + (i.screen_name || "id" + i.id), append: [
-			e("img", {"class": "friends-left", src: getURL(i.photo_100) || i.photo_50}),
-			e("div", {"class": "friends-right", append: [
-				e("div", {
-					"class": "feed-delete",
-					onclick: (function (id) {
-						return function (event) {
-							$.event.cancel(event);
-							return Fave.removeUser(id, q);
-						};
-					})(i.id)
-				}),
-				e("strong", {
-					"class": "m-p-name",
-					html: Site.Escape(i.first_name + " " + i.last_name) + Site.isOnline(i)
+		cache: [],
+
+		cursor: 0,
+
+		lang: {
+			header: "fave.headTitle",
+			items: "fave.usersUsers"
+		},
+
+		nodes: {
+			form: null,
+			list: null
+		},
+
+		hasCache: function() {
+			console.log(this.cache);
+			return !!this.cache.length;
+		},
+
+		getNodeSearchForm: function() {
+			var e = $.e;
+			return this.nodes.form = e("form");
+		},
+
+		getNodeList: function() {
+			var e = $.e;
+			return this.nodes.list = e("div");
+		},
+
+
+		loadNext: function(reset) {
+			var self = this;
+			new APIRequest("fave.getUsers", {
+				count: 500,
+				fields: "photo_100,online,can_write_private_message,city,screen_name",
+				v: 5.52
+			})
+				.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+				.setOnCompleteListener(function(res) {
+					self.onMetaData(res.count, true);
+					reset();
+					self.cache = self.cache.concat(res.items);
+					self.show(Fave.MAX_INSERTING);
 				})
-			]})
-		]}) : document.createTextNode(""));
-	},
-	removeUser: function (userId, node) {
-		Site.API("fave.removeUser", {
-			user_id: userId
-		}, function (data) {
-			if (data)
-			{
-				$.elements.remove(node);
+				.execute();
+		},
+
+		show: function(max) {
+			for (var i = 0, k = this.cursor; i < max && this.cache[i]; ++i, ++this.cursor)  {
+				this.nodes.list.appendChild(Templates.getUser(this.cache[i], { fulllink: true, actions: (
+					$.e("div", {"class": "i i24 fr settings-i-remove", onclick: function(event) {
+						event.preventDefault();
+
+						return false;
+					}})
+				)}));
 			}
-		});
+		}
+
 	},
-	removeLink: function (linkId, node) {
-		Site.API("fave.removeLink", {
-			link_id: linkId
-		}, function (data) {
-			if (data)
-			{
-				$.elements.remove(node);
+
+
+
+	links: {
+
+		cache: [],
+
+		cursor: 0,
+
+		lang: {
+			header: "fave.headTitle",
+			items: "fave.usersLinks"
+		},
+
+		nodes: {
+			form: null,
+			list: null
+		},
+
+		hasCache: function() {
+			console.log(this.cache);
+			return !!this.cache.length;
+		},
+
+		getNodeSearchForm: function() {
+			var e = $.e;
+			return this.nodes.form = e("form");
+		},
+
+		getNodeList: function() {
+			var e = $.e;
+			return this.nodes.list = e("div");
+		},
+
+
+		loadNext: function(reset) {
+			var self = this;
+			new APIRequest("fave.getLinks", {
+				count: 500,
+				v: 5.52
+			})
+				.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+				.setOnCompleteListener(function(res) {
+					self.onMetaData(res.count, true);
+					reset();
+					self.cache = self.cache.concat(res.items);
+					self.show(Fave.MAX_INSERTING);
+				})
+				.execute();
+		},
+
+		show: function(max) {
+			console.log(this.cursor);
+			var w;
+			for (var i = 0, k = this.cursor; i < max && this.cache[i]; ++i, ++this.cursor)  {
+				w = this.cache[i];
+				console.log(w);
+				this.nodes.list.appendChild(Templates.getUser({
+					screen_name: w.url.split("/")[3],
+					name: w.title,
+					photo_50: w.photo_50,
+					photo_100: w.photo_100
+				}, { fulllink: true, actions: (
+					$.e("div", {"class": "i i24 fr settings-i-remove", onclick: function(event) {
+						event.preventDefault();
+
+						return false;
+					}})
+				)}));
 			}
-		});
+		}
+
 	},
+
+
+
+
+/*
+
+search in faved users
+
+var fxSearch = function (event) {
+	var text = $.trim(this.q ? this.q.value : this.value);
+	$.elements.clearChild(list);
+	if (!text) {
+		Fave.insertUsers(list, Fave.userChate.response, 0, 40);
+	} else {
+		Fave.searchUser(list, Fave.userChate, text);
+	}
+	return false;
+};
+parent.appendChild(Site.CreateInlineForm({
+	type: "search",
+	name: "q",
+	title: Lang.get("docs.find"),
+	onsubmit: fxSearch,
+	onkeyup: fxSearch,
+	placeholder: Lang.get("docs.search")
+}))
+
+*/
+
 
 /*
 
@@ -137,74 +293,29 @@ var i=0,m=25,s=200,r=[],c=1,t;while(r.length<c&&i<m){t=API.fave.getLinks({offset
 
 */
 
+/*
 
-	Links:function(offset){
-		Site.APIv5("fave.getLinks",{
-			count: 40,
-			offset: offset,
-			v: 5.19
-		}, function (data) {
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				q;
-			list.className = "minilist";
-			parent.appendChild(Fave.GetTabs());
-			parent.appendChild(Site.CreateHeader("У Вас в закладках " + data.count + " " + $.TextCase(data.count, ["ссылка","ссылки","ссылок"])));
-			parent.appendChild(Site.CreateInlineForm({
-				type: "url",
-				name: "link",
-				placeholder: "Вставьте ссылку",
-				title: "Добавить",
-				onsubmit: function (event) {
-					$.event.cancel(event);
+adding to faved links
 
-					var link = $.trim(this.link.value);
+$.event.cancel(event);
 
-					link = link.replace(/(https?:\/\/)?apidog\.ru\/6\.5\/#/igm, "http:\/\/vk.com/");
+var link = $.trim(this.link.value);
 
-					Site.API("fave.addLink", {
-						link: link
-					}, function (data) {
-						if (Site.isResponse(data))
-							Site.Go(window.location.hash);
-					})
+link = link.replace(/(https?:\/\/)?apidog\.ru\/6\.5\/#/igm, "http:\/\/vk.com/");
 
-					return false;
-				}
-			}));
-			if (data.count == 0)
-				parent.appendChild($.e("div",{"class": "msg-empty", html: "Ничего нет.."}))
-			for(var i = 0; i < data.items.length; ++i) {
-				var url = data.items[i].url;
-				if (/\/\/vk\.com\//igm.test(url))
-					url = url.replace(new RegExp("\\/\\/vk\\.com\\/", "img"), "\/\/apidog.ru\/6.5\/#");
-				list.appendChild(q = $.e("a", {
-					"class": "groups-item",
-					href: url,
-					append: [
-						$.e("img", {"class": "groups-left", src: getURL(data.items[i].photo_50)}),
-						$.e("div", {"class": "groups-right", append: [
-							$.e("div", {
-								"class": "feed-delete",
-								onclick: (function (id) {
-									return function (event) {
-										$.event.cancel(event);
-										return Fave.removeLink(id, q);
-									};
-								})(data.items[i].id)
-							}),
-							$.e("strong", {html: Site.Escape(data.items[i].title)}),
-							$.e("div", {"class": "tip", html: data.items[i].description || ""})
-						]})
-					]
-				}));
-			}
-			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), data.count, 40));
-			Site.SetHeader("Закладки");
-			Site.Append(parent);
-		});
-	},
+Site.API("fave.addLink", {
+	link: link
+}, function (data) {
+	if (Site.isResponse(data))
+		Site.Go(window.location.hash);
+})
+
+return false;
+
+*/
+
+
+
 	Posts: function (offset) {
 		Site.APIv5("fave.getPosts",{
 			count: 30,
