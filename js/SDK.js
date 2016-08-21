@@ -97,6 +97,40 @@ function getLoader() {
 	return $.e("div", {style: "padding: 90px 0", append: $.e("div", {"class": "loader-svg"})});
 };
 
+function getTabPanel(tabs, options) {
+	options = options || {};
+	var e = $.e,
+		wrap = e("div", {"class": "vktab-tabs"}),
+		tab,
+		item,
+		param,
+		val;
+
+	for (var label in tabs) {
+		item = tabs[label];
+		tab = e("a", { "class": "vktab-tab", html: item.title });
+
+		if (item.link) {
+			tab.href = "#" + item.link;
+		} else {
+			$.event.add(tab, "click", item.onclick);
+		};
+
+		if (item.current) {
+			param = Site.get(item.current.name);
+			val = item.current.value;
+
+			if (typeof val === "string" ? val == param : isArray(val) && !~val.indexOf(param)) {
+				$.elements.addClass(tab, "vktab-tab-active");
+			};
+		};
+
+		wrap.appendChild(tab);
+	};
+
+	return e("div", {"class": "vktab-wrap", append: wrap});
+};
+
 function lg(id, extra) {
 	var result = Lang.get(id);
 	if (result && extra) {
