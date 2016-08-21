@@ -14,7 +14,10 @@ var Fave = {
 				return Fave.page(Fave.links);
 
 
-			case "posts":   return Fave.Posts(offset); break;
+			case "posts":
+				return Fave.page(Fave.posts);
+
+
 			case "photos":  return Fave.Photos(offset);break;
 			case "videos":  return Fave.Videos(offset);break;
 
@@ -94,6 +97,7 @@ var Fave = {
 
 		window.onScrollCallback = function(event) {
 			if (!isAll && !isLoading && event.needLoading) {
+				isLoading = true;
 				controller.loadNext(reset);
 			};
 		};
@@ -102,7 +106,7 @@ var Fave = {
 			isLoading = true;
 			controller.loadNext(reset);
 		} else {
-			controller.cursor = 0;
+			controller.reset();
 			controller.show(Fave.MAX_INSERTING);
 		};
 
@@ -137,6 +141,8 @@ f = fields
 			form: null,
 			list: null
 		},
+
+		reset: function() { this.cursor = 0; },
 
 		hasCache: function() {
 			console.log(this.cache);
@@ -193,18 +199,13 @@ f = fields
 
 		cursor: 0,
 
-		lang: {
-			header: "fave.headTitle",
-			items: "fave.usersLinks"
-		},
+		lang: { header: "fave.headTitle", items: "fave.linksLinks" },
 
-		nodes: {
-			form: null,
-			list: null
-		},
+		nodes: { form: null, list: null },
+
+		reset: function() { this.cursor = 0; },
 
 		hasCache: function() {
-			console.log(this.cache);
 			return !!this.cache.length;
 		},
 
@@ -213,11 +214,7 @@ f = fields
 			return this.nodes.form = e("form");
 		},
 
-		getNodeList: function() {
-			var e = $.e;
-			return this.nodes.list = e("div");
-		},
-
+		getNodeList: function() { return this.nodes.list = $.e("div"); },
 
 		loadNext: function(reset) {
 			var self = this;
@@ -255,7 +252,6 @@ f = fields
 				)}));
 			}
 		}
-
 	},
 
 
@@ -314,32 +310,57 @@ return false;
 
 */
 
+	posts: {
 
+		cursor: 0,
 
-	Posts: function (offset) {
-		Site.APIv5("fave.getPosts",{
-			count: 30,
-			offset: offset,
-			extended: 1,
-			v: 5.29
-		}, function (data) {
-			data = Site.isResponse(data);
-			Local.AddUsers(data.profiles.concat(data.groups));
-			var parent = document.createElement("div"),
-				count = data.count;
-			data = data.items;
-			parent.appendChild(Fave.GetTabs());
-			parent.appendChild(Site.CreateHeader("У Вас в закладках " + count + " " + $.textCase(count, ["запись","записи","записей"])));
-			if (!count)
-				parent.appendChild(Site.EmptyField("Ничего нет.."));
-			else
-				for (var i = 0, l = data.length; i < l; ++i)
-					parent.appendChild(Wall.ItemPost(data[i], data[i].owner_id, data[i].id, {from: "fave?section=posts"}));
-			parent.appendChild(Site.PagebarV2(offset, count, 30));
-			Site.SetHeader("Закладки");
-			Site.Append(parent);
-		});
+		cache: [],
+
+		lang: { header: "fave.headTitle", items: "fave.postsPosts" },
+
+		nodes: { form: null, list: null },
+
+		reset: function() { this.cursor = 0; this.cache = []; },
+
+		hasCache: function() { return false; },
+
+		getNodeSearchForm: function() { return null; },
+
+		getNodeList: function() { return this.nodes.list = $.e("div"); },
+
+		loadNext: function(reset) {
+			var self = this;
+			console.log(this.cursor);
+			new APIRequest("fave.getPosts", {
+				count: Fave.MAX_INSERTING,
+				offset: this.cursor,
+				v: 5.52,
+				extended: 1
+			})
+				.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+				.setOnCompleteListener(function(res) {
+					Local.add(res.profiles);
+					Local.add(res.groups);
+
+					self.onMetaData(res.count, res.count <= self.cache.length);
+					reset();
+					self.cache = self.cache.concat(res.items);
+					self.show(Fave.MAX_INSERTING);
+				})
+				.execute();
+		},
+
+		show: function(max) {
+			var w;
+			for (var i = 0, k = this.cursor; i < max && this.cache[k]; ++i, ++k, ++this.cursor)  {
+				w = this.cache[k];
+				this.nodes.list.appendChild(Wall.itemPost(w, w.owner_id, w.id));
+			};
+		}
+
 	},
+
+
 	Photos: function (offset) {
 		Site.APIv5("fave.getPhotos", {
 			count: 40,
