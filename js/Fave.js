@@ -73,13 +73,14 @@ var Fave = {
 		var e = $.e,
 
 			header = e("div"),
+			list,
 
 			wrap = e("div", {
 				append: [
 					Fave.getTabs(),
 					Site.getPageHeader(header),
 					controller.getNodeSearchForm(),
-					controller.getNodeList()
+					list = controller.getNodeList()
 				]
 			}),
 
@@ -100,6 +101,9 @@ var Fave = {
 		controller.onMetaData = function(count, all) {
 			header.innerHTML = lg(controller.lang.header).schema({ n: count, f: lg(controller.lang.items) });
 			isAll = all;
+			if (!count) {
+				$.elements.clearChild(list).appendChild(getEmptyField("fave.nothing"));
+			};
 		};
 
 		if (!controller.hasCache()) {
