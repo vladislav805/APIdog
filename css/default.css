@@ -5516,26 +5516,43 @@ html.photo-view-full {
 	min-width: 200px;
 	height: 350px;
 }
+
 .maps-head {
-	background: #F2F4F7;
 	overflow: hidden;
+	background: #F2F4F7;
 	padding: 10px 14px;
 }
+
+.maps-head-title {
+	overflow: hidden;
+	margin-bottom: 12px;
+	line-height: 32px;
+}
+
 .maps-rightblock {
 	text-align: right;
 	font-size: x-small;
+	line-height: 16px;
 }
+
 .maps-lefticon {
 	float: left;
-	margin-right: 6px;
+	margin-right: 8px;
 }
+
 .maps-head strong {
 	color: #66768F;
 	line-height: 31px;
 }
+
 .maps-checkins {
-	padding: 6px 0 5px;
+	line-height: 31px;
 }
+
+
+
+
+
 
 .captcha form {
 	display: block;
