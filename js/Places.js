@@ -5,35 +5,33 @@
  */
 
 var Places = {
-	explain: function (url) {
-		switch (url) {
-			case "places":
-				if (Site.Get("id")) {
+	explain: function(url) {
+		switch (getAct()) {
+			case "checkins":
+				return Places.getCheckinList(Site.get("id"));
 
-				}
-			break;
-			case "place":
-				switch (Site.Get("act")) {
-					case "checkins":
-						return Places.getCheckinList(Site.Get("id"));
-					break;
-					case "photos":
-						return Places.getPhotos(Site.Get("lat"), Site.Get("long"), Site.Get("place"));
-					break;
-					default:
-						return Places.getById(Site.Get("id"));
-				}
-			break;
-		}
+			case "photos":
+				return Places.getPhotos(Site.get("lat"), Site.get("long"), Site.get("place"));
+
+			default:
+				return Places.getById(Site.get("id"));
+		};
 	},
-	getById: function (id) {
-		Site.API("execute", {
-			code: 'return [API.places.getById({places:%p%,v:5})[0],API.places.getTypes()];'.replace(/%p%/img, id)
-		}, function (data) {
-			data = Site.isResponse(data);
-			var place = data[0],
-				type = (function (a,b,c,d,e){for(;++b<d;)if(a[b][e]==c)return a[b];return {}})(data[1],-1,place.type,data[1].length,"id"),
-				parent = document.createElement("div"),
+
+	getById: function(id) {
+		new APIRequest("execute", {
+			code: "return{p:API.places.getById({places:Args.p,v:5.52})[0],t:API.places.getTypes()};",
+			p: id
+		}).setOnCompleteListener(function(data) {
+			var place = data.p,
+				type = (function(a,b,c,d,e){
+					for(;++b<d;)
+						if(a[b][e]==c)
+							return a[b];
+					return {}
+				})(data.t, -1, place.type, data.t.length, "id"),
+				e = $.e,
+				parent = e("div"),
 				coord = [place.latitude, place.longitude],
 				strCoord = coord[1] + "," + coord[0],
 				YandexMapsLinkSite = "\/\/maps.yandex.ru\/?ll=" + strCoord +"&z=14&l=map&pt=" + strCoord,
@@ -42,83 +40,135 @@ var Places = {
 				checkins = place.checkins,
 				created = place.created,
 				updated = place.updated,
-				title = Site.Escape(place.title),
-				YandexMap = $.elements.create("div", {style: "background: url(" + YandexMapsLinkImage + ") no-repeat center center;", "class": "maps-map"}),
-				linkToYandexMaps = $.elements.create("a", {href: YandexMapsLinkSite, target: "_blank"}),
-				head = $.elements.create("div", {"class": "maps-head"}),
-				headTop = $.elements.create("div");
-			headTop.appendChild($.elements.create("div", {
-				"class": "fr tip maps-rightblock",
-				append: [
-					$.elements.create("div", {html: "Добавлена: " + $.getDate(created)}),
-					updated ? $.elements.create("div", {html: "Обновлена: " + $.getDate(updated)}) : null
-				]
-			}));
-			headTop.appendChild($.elements.create("img", {src: type.icon, "class": "maps-lefticon"}));
-			headTop.appendChild($.elements.create("strong", {html: title}));
-			headTop.style.overflow = "hidden";
-			headTop.style.marginBottom = "8px";
-			head.appendChild(headTop);
-			head.appendChild($.elements.create("div", {append: [
-				$.elements.create("a", {html: "Отметились " + checkins + " " + $.TextCase(checkins, "человек,человека,человек".split(",")), href: "#place?act=checkins&id=" + id, "class": "fr maps-checkins"}),
-				$.elements.create("input", {
-					type: "button",
-					value: "Отметиться здесь",
-					onclick: function (event) {
-						Site.API("places.checkin", {place_id: id});
-					}
-				})
-			]}));
-			linkToYandexMaps.appendChild(YandexMap);
-			parent.appendChild(head);
-			parent.appendChild(linkToYandexMaps);
-			parent.appendChild($.elements.create("a", {html: "Фотографии рядом", href: "#place?act=photos&lat=" + place.latitude + "&long=" + place.longitude + "&place=" + id, "class": "button-block"}));
-			Site.Append(parent);
-			Site.SetHeader("Отметка на карте");
-		});
-	},
-	getCheckinList: function (id) {
-		Site.API("execute", {
-			code: 'var p=API.places.getCheckins({place:%p%,v:5});return [API.places.getById({places:%p%})[0],p,API.users.get({user_ids: p.items@.uid,fields:\"photo_rec,online\"})];'.replace(/%p%/img, id)
-		}, function (data) {
-			data = Site.isResponse(data);
-			var place = data[0],
-				title = Site.Escape(place.title),
-				place_id = id,
-				checkins = data[1],
-				count = checkins.count,
-				items = checkins.items,
-				users = Local.AddUsers(data[2]),
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Site.CreateHeader("Здесь " + $.TextCase(count, "отметился,отметилось,отметились".split(",")) + " " + count + " " + $.TextCase(count, "человек,человека,человек".split(","))));
-			for (var i = 0, l = items.length; i < l; ++i) {
-				var c = items[i],
-					user = users[c.uid],
-					name = user.first_name + " " + user.last_name + Site.isOnline(user),
-					screen_name = user.screen_name,
-					photo = getURL(user.photo_rec),
-					date = $.getDate(c.date),
-					text = c.text,
-					post = c.id;
-				list.appendChild($.e("div", {"class": "friends-item maps-checkins-item", append: [
-					$.e("img", {"class": "friends-left", src: photo}),
-					$.e("div", {"class": "friends-right", append: [
-						$.e("a", {href: "#" + screen_name, html: "<strong>%n%</strong>".replace(/%n%/img, name)}),
-						$.e("div", {
-							html: "<a href='#wall%l%' class='tip'>%d%<\/a> %s%"
-									.replace(/%d%/img, date + (text ? ":" : ""))
-									.replace(/%s%/img, text || "")
-									.replace(/%l%/img, post)
+				title = place.title.safe(),
+
+				linkToYandexMaps = e("a", {
+					href: YandexMapsLinkSite,
+					target: "_blank",
+					append: e("div", {
+						style: "background: url(" + YandexMapsLinkImage + ") no-repeat center center;",
+						"class": "maps-map"
+					})
+				}),
+				head = e("div", {"class": "maps-head", append: [
+					e("div", {"class": "maps-head-title", append: [
+						e("div", {
+							"class": "fr tip maps-rightblock",
+							append: [
+								e("div", {html: lg("places.labelDateAdded").schema({d: $.getDate(created)})}),
+								updated ? e("div", {html: lg("places.labelDateUpdated").schema({d: $.getDate(updated)})}) : null
+							]
+						}),
+						e("img", {src: type.icon, "class": "maps-lefticon"}),
+						e("strong", {html: title})
+					]}),
+					e("div", {append: [
+						e("span", {
+							html: checkins
+								? lg("places.labelCheckined").schema({n: checkins, h: lg("places.labelCheckins", checkins)})
+								: lg("places.labelChecinesNot"),
+							onclick: function(event) {
+								Places.getCheckinList(id, this);
+							},
+							"class": "fr a maps-checkins"
+						}),
+						e("input", {
+							type: "button",
+							value: lg("places.doCheckin"),
+							onclick: function (event) {
+								Places.doCheckin(id);
+							}
 						})
 					]})
-				]}));
-			}
-			parent.appendChild(list);
-			Site.Append(parent);
-			Site.SetHeader("Список отметившихся");
-		})
+				]});
+
+			parent.appendChild(head);
+			parent.appendChild(linkToYandexMaps);
+			parent.appendChild(e("a", {html: lg("places.buttonPhotosNear"), href: "#place?act=photos&lat=" + place.latitude + "&long=" + place.longitude + "&place=" + id, "class": "button-block"}));
+			Site.append(parent);
+			Site.setHeader(lg("places.titlePlace"));
+		}).execute();
 	},
+
+	doCheckin: function(placeId) {
+		new APIRequest("places.checkin", {place_id: id}).setOnCompleteListener(function() {
+// TODO
+		}).execute();
+	},
+
+	getCheckinList: function(placeId, node) {
+		var
+			e = $.e,
+			offset = 0,
+			step = 100,
+			allLoaded = false,
+			wrap = e("div", {"class": "listView-wrap", append: getLoader()}),
+			modal = new Modal({
+				title: lg("profiles.modalSubscriptionsTitleLoading"),
+				content: wrap,
+				noPadding: true,
+				footer: [{
+					name: "close",
+					title: lg("general.close"),
+					onclick: function() { this.close() }
+				}]
+			}).show(node),
+			load = function(callback) {
+				new APIRequest("execute", {
+					code: "var p=API.places.getCheckins({place:Args.p,v:5.52,count:20,offset:parseInt(Args.o)});return{p:API.places.getById({places:Args.p})[0],l:p,u:API.users.get({user_ids:p.items@.user_id,fields:Args.f})};",
+					p: placeId,
+					f: "photo_50,online,screen_name",
+					o: offset
+				}).setOnCompleteListener(function(data) {
+					if (!offset) {
+						$.elements.clearChild(wrap);
+					};
+
+					var place = data.p,
+						list = data.l,
+
+						count = list.count,
+						list = list.items;
+
+					Local.add(data.u);
+
+					modal.setTitle(lg("places.modalCheckinsTitle").schema({n: count, h: lg("places.modalCheckins", count)}));
+
+					(list || []).map(function(c) {
+
+						user = Local.Users[c.user_id];
+
+						wrap.appendChild(e("div", {"class": "friends-item maps-checkins-item", append: [
+							e("img", {"class": "friends-left", src: getURL(user.photo_50)}),
+							e("div", {"class": "friends-right", append: [
+								e("a", { href: "#" + user.screen_name, append: e("strong", {html: getName(user)}) }),
+								$.e("div", { append: [
+									e("a", { href: "#wall" + c.id, "class": "tip", html: $.getDate(c.date) + (c.text ? ":" : "") }),
+									c.text ? e("div", {html: c.text.safe()}) : null
+								]})
+							]})
+						]}));
+					});
+
+					if (wrap.children.length >= count) {
+						allLoaded = true;
+					};
+
+					offset += list.length;
+
+					callback && callback();
+
+				}).execute();
+			};
+
+		setSmartScrollListener(wrap.parentNode, function(reset) {
+			!allLoaded && load(reset);
+		});
+
+		load();
+	},
+
+	// todo
 	getPhotos: function (lat, lng, place) {
 		Site.Loader();
 		Site.APIv5("photos.search", {
