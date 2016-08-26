@@ -715,8 +715,8 @@ function startFirstRequestAPI() {
 
 /*		if (window.adblockEnabled) {
 			$.elements.appendToBody($.e("div", {style: "background: rgba(255, 0, 0, .8); color: rgb(255, 255, 255); line-height: 50px; display: block !important; height: 50px !important; opacity: 1 !important; visibility: visible !important; margin: 0 !important; padding: 0 16px; position: fixed !important; bottom: 0 !important; width: 100% !important; left: 0 !important; right: 0 !important;", html: "Мы обнаружили включенный AdBlock в Вашем браузере! Пожалуйста, если Вам нравится наш сайт, отключите его. <a onclick=\"showAdBlockWindow(event); return false;\" href=\"#\">Почему я должен это сделать?</a>"}));
-		};
-	}).execute();*/
+		};*/
+	}).execute();
 };
 
 var Loader = {
@@ -766,15 +766,11 @@ var menu = {
 			reset = function () {
 				listen = null;
 				$.elements.removeClass(menu, clsp);
-				menu.style.webkitTransform = "";
-				menu.style.msTransform = "";
-				menu.style.transform = "";
+				prefix(menu, "transform", "");
 			},
 
 			setTransform = function (x) {
-				menu.style.webkitTransform = "translateX(" + x + "px)";
-				menu.style.msTransform = "translateX(" + x + "px)";
-				menu.style.transform = "translateX(" + x + "px)";
+				prefix(menu, "transform", "translateX(" + x + "px)");
 			},
 
 			open = function () {
@@ -878,7 +874,6 @@ var menu = {
 	 * Hiding/showing header
 	 * @param  {ScrollEvent} event Event-object from listener
 	 */
-	// note: Антон пидор
 	toTopScrollEvent: function (event) {
 		$.elements[getScroll() > window.CONST_MENU_HEIGHT ? "removeClass" : "addClass"](g("_menu_up"), "hidden");
 
@@ -902,21 +897,20 @@ var nav = {
 		url = url.replace(/^#/img, "");
 		window.history.replaceState({}, null, "#" + url);
 	},
+
 	go: function(url) {
 		url = url.replace(/^#/img, "");
 		window.history.pushState({}, null, "#" + url);
 		Site.Go(url);
 	}
-}
+};
+
 
 /*
  *	Вопрос: только вот какого хуя оно не пашет одновременно одним способом и там и там?!
  */
-if (window.location.pathname != "/6.5/") {
-	getBody().addEventListener("scroll", menu.toTopScrollEvent);
-} else {
-	window.addEventListener("scroll", menu.toTopScrollEvent);
-};
+
+window.addEventListener("scroll", menu.toTopScrollEvent);
 
 var _scrlt = getScroll();
 var _ttrlt = 0;
