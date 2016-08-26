@@ -15,7 +15,7 @@ var Lang = {
 		});
 	},
 
-	get: function (category, variable, count) {
+	get: function(category, variable, count) {
 		if (category.indexOf(".") >= 0) {
 			category = category.split(".");
 			variable = category[1];
@@ -28,4 +28,17 @@ var Lang = {
 			result = $.textCase(count, result);
 		return result != null ? result : "%" + category + "." + variable + "%";
 	}
+};
+
+function lg(id, extra) {
+	var result, i = id.split(".");
+	result = Lang.data[i[0]] && Lang.data[i[0]][i[1]];
+	if (result && extra) {
+		if (typeof extra === "number") {
+			result = $.textCase(extra, result);
+		} else {
+			result = String(result).setLang(extra || {});
+		};
+	};
+	return result || "%" + id + "%";
 };

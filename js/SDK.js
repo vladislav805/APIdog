@@ -131,18 +131,6 @@ function getTabPanel(tabs, options) {
 	return e("div", {"class": "vktab-wrap", append: wrap});
 };
 
-function lg(id, extra) {
-	var result = Lang.get(id);
-	if (result && extra) {
-		if (typeof extra === "number") {
-			result = $.textCase(extra, result);
-		} else {
-			result = String(result).setLang(extra || {});
-		};
-	};
-	return result;
-};
-
 function prefix(node, property, value) {
 	var forPrefix = property[0].toUpperCase() + property.substring(1);
 	node.style["webkit" + forPrefix] = value;
