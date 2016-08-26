@@ -1463,7 +1463,6 @@
 		"saved":"Настройки успешно сохранены!",
 		"relongpoll":"Перезапустить LongPoll",
 
-
 		"generalTitle": "Настройки",
 		"warningNoAuthKey": "Сбой на сервере. Настройки синхронизировать не удалось. Вы можете поставить настройки для текущей сессии (пока не перезагрузите страницу). Если ничего не помогает или такое происходит постоянно &mdash; переавторизуйтесь",
 
@@ -1500,6 +1499,7 @@
 		"generalTitle": "Настройки APIdog",
 		"tabsGeneral": "APIdog",
 		"tabsProfile": "Аккаунт",
+		"tabsBlacklist": "Чёрный список",
 
 		"blacklistTitle": "Чёрный список",
 		"blacklistHeadTitleLoading": "Чёрный список",
@@ -1601,6 +1601,19 @@
 		"profile_settings":"Настройки страницы",
 		"settings_profile_default_wall_owner":"по умолчанию на стене отображаются собственные записи",
 		"settings_profile_disable_wall_replies":"отключить комментирование"
+	},
+	"places": {
+		"labelDateAdded": "Добавлена: %d",
+		"labelDateUpdated": "Обновлена: %d",
+		"labelCheckined": "Отметились здесь %n %h",
+		"labelCheckins": ["раз", "раза", "раз"],
+		"labelChecinesNot": "Никто не отмечался",
+		"doCheckin": "Отметиться здесь",
+		"buttonPhotosNear": "Фотографии рядом",
+		"titlePlace": "Отметка на карте",
+
+		"modalCheckinsTitle": "%n %h",
+		"modalCheckins": ["отметка", "отметки", "отметок"]
 	},
 	"support":{
 		"support":"Поддержка",
