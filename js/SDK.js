@@ -298,120 +298,6 @@ window.addEventListener("mousemove", function _mouseMoveDetector() {
     window.removeEventListener("mousemove", _mouseMoveDetector);
 });
 
-/* Theme SDK */
-
-var ThemeManager = {
-
-	_cb: {
-		bundle: {},
-		oninstall: null,
-		ondestroy: null,
-		onresize: null,
-		onscroll: null,
-		onlikeditem: null,
-		onnavigatestart: null,
-		onnavigateend: null,
-		onplayerinited: null,
-		onplayertrackchanged: null,
-		onlongpollmessagerecieve: null,
-		onnotifyreplied: null,
-		onintrvaleddatarecieved: null,
-	},
-
-	onInstall: function (callback)
-	{
-		ThemeManager._cb.bundle = new ThemeBundle();
-
-		if (callback)
-		{
-			ThemeManager._cb.oninstall = callback;
-			return ThemeManager;
-		};
-
-		ThemeManager._cb.oninstall && ThemeManager._cb.oninstall(this.getBundle());
-	},
-
-	onDestroy: function (callback)
-	{
-		if (callback)
-		{
-			ThemeManager._cb.ondestroy = callback;
-			return ThemeManager;
-		};
-
-		ThemeManager._cb.ondestroy && ThemeManager._cb.ondestroy(this.getBundle());
-	},
-
-	getBundle: function ()
-	{
-		return ThemeManager._cb.bundle;
-	},
-
-	onResize: function (callback)
-	{
-		if (callback)
-		{
-			ThemeManager._cb.onresize = callback;
-			return ThemeManager;
-		};
-
-		ThemeManager._cb.onresize && ThemeManager._cb.onresize(this.getBundle(), {
-			width: document.documentElement.clientWidth,
-			height: document.documentElement.clientHeight
-		});
-	},
-
-	onScroll: function (callback)
-	{
-		if (callback)
-		{
-			ThemeManager._cb.onscroll = callback;
-			return ThemeManager;
-		};
-
-		ThemeManager._cb.onscroll && ThemeManager._cb.onscroll(this.getBundle(), getScroll());
-	},
-
-	onIntervaledDataRecieved: function (callback)
-	{
-		if (callback)
-		{
-			ThemeManager._cb.onintrvaleddatarecieved = callback;
-			return ThemeManager;
-		};
-	},
-
-};
-function ThemeBundle () {
-
-};
-ThemeBundle.prototype = {
-
-	storage: {},
-
-	set: function (key, value)
-	{
-		this.storage[key] = value;
-		return this;
-	},
-
-	get: function (key)
-	{
-		return this.storage[key];
-	},
-
-	remove: function (key)
-	{
-		delete this.storage[key];
-		return this;
-	},
-
-	removeAll: function ()
-	{
-		this.storage = {};
-	}
-};
-
 
 /**
  * Prototypes
@@ -610,13 +496,11 @@ window.addEventListener("load", function (event) {
 		return;
 	};
 
-
-
-
 	window.CONST_MENU_HEIGHT = $.getPosition(g("_menu")).height;
 
-	if (!Lang.lang)
+	if (!Lang.lang) {
 		Lang.lang = API.settings.languageId;
+	};
 
 	(function (d,w,c){(w[c]=w[c]||[]).push(function(){try{w.yaCounter19029880=new Ya.Metrika({id:19029880,trackHash:!0})}catch(e){}});var n=d.getElementsByTagName("script")[0],s=d.createElement("script"),f=function(){n.parentNode.insertBefore(s,n);};s.type="text/javascript";s.async=!0;s.src=(d.location.protocol=="https:"?"https:":"http:")+"//mc.yandex.ru/metrika/watch.js";if(w.opera=="[object Opera]")d.addEventListener("DOMContentLoaded",f,!1);else f()})(document,window,"yandex_metrika_callbacks");
 
@@ -687,8 +571,7 @@ window.addEventListener("load", function (event) {
 	getBody().addEventListener("keydown", function (event) {
 		event = event || window.event;
 		var stop = function () { $.event.cancel(event) };
-		switch (event.keyCode)
-		{
+		switch (event.keyCode) {
 			case KeyboardCodes.MEDIA_CHANGE_STATE:
 			case KeyboardCodes.F1:
 				Audios.Player.Trigger();
@@ -713,45 +596,6 @@ window.addEventListener("load", function (event) {
 				Audios.Next();
 				stop();
 				break;
-
-			case KeyboardCodes.F7:
-				if (event.ctrlKey && event.altKey) {
-					Site.enableLoggingAPIRequests();
-				};
-				break;
-
-			case KeyboardCodes.F8:
-				if (event.ctrlKey && event.shiftKey) {
-					getHead().appendChild($.e("script", {src: "/1april.js"}));
-				};
-				stop();
-				break;
-
-			case KeyboardCodes.F7:
-				if (event.ctrlKey && event.shiftKey) {
-					getHead().appendChild($.e("script", {src: "/_/console.js"}));
-				};
-				stop();
-				break;
-
-			case KeyboardCodes.F6:
-				if (event.ctrlKey && event.shiftKey) {
-					$.elements.toggleClass(getBody(), "mainFullWidth");
-				};
-				stop();
-				break;
-
-			case KeyboardCodes.F9:
-				if (event.ctrlKey && event.shiftKey) {
-					Site.showLogo();
-				};
-				stop();
-				break;
-
-			case KeyboardCodes.F10:
-				stop();
-				getHead().appendChild($.e("script", {src: "/_/lamp.min.js"}));
-				break;
 		}
 	});
 	getBody().addEventListener("click", function (event) {
@@ -774,11 +618,11 @@ window.addEventListener("load", function (event) {
 
 });
 
-function startFirstRequestAPI () {
+function startFirstRequestAPI() {
 	Loader.main.setTitle("Requesting user info...");
 	new APIRequest("execute", {
-		code: 'return{u:API.users.get({fields:"photo_rec,screen_name,bdate",v:5.28})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({filters:"active",type:"stickers",v:5.28,extended:1}),l:API.messages.getRecentStickers().sticker_ids,f:API.friends.get({fields:"online,photo_50,sex,bdate,screen_name,can_write_private_message,city,country",v:5.8,order:"hints"}),d:API.utils.getServerTime()};'
-	}).setOnErrorListener(function () {
+		code: 'return{u:API.users.get({fields:"photo_50,photo_100,screen_name,bdate",v:5.52})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({filters:"active",type:"stickers",v:5.52,extended:1}),l:API.messages.getRecentStickers().sticker_ids,f:API.friends.get({fields:"online,photo_50,photo_100,sex,bdate,screen_name,can_write_private_message,city,country",v:5.52,order:"hints"}),d:API.utils.getServerTime()};'
+	}).setOnErrorListener(function() {
 		new Modal({
 			title: "Хм..",
 			content: "Произошло что-то странное. На первый запрос от ВК сайт не смог получить ответа.<br />Проблема находится либо у ВК, либо в Вашем соединении. Если проблема в Вашем доступе к ВК (домену vk.com), то Вы можете включить режим прокси и попробовать еще раз &mdash; в большинстве случаев это помогает, но учтите, что при этом режиме отключается расширение APIdog LongPoll (если оно было установлено) и все запросы будут идти через наш сервер.<br />Если Вы найдете причину ошибки и устраните её, то, пожалуйста, отключите режим прокси.",
@@ -805,52 +649,38 @@ function startFirstRequestAPI () {
 				}
 			]
 		}).show();
-	}).setOnCompleteListener(function (data) {
+	}).setOnCompleteListener(function(data) {
 		var user = data.u, friends, isAlreadyStarted = false;
 
-		API.uid         = user.id;
-		API.first_name  = user.first_name;
-		API.last_name   = user.last_name;
-		API.full_name   = user.first_name + " " + user.last_name;
-		API.photo_rec   = user.photo_rec;
-		API.photo_50    = user.photo_rec;
-		API.screen_name = user.screen_name;
+		API.userId      = user.id;
 		API.bdate = user.bdate;
 
-		Local.Users[API.uid] = user;
+		Local.add([user]);
 
-		if (data.u) {
-			Site.showUser(user);
-		};
+		// показать имя и фото в шапке
+		user && Site.showUser(user);
 
+		// вычислить временную неточность между настоящим временем и временем на устройстве
 		window._timeOffset = parseInt(Date.now() / 1000) - data.d;
 
-		ReAccess(API.Access = data.a);
+		API.access = data.a;
 
-		if (data.s && data.s.items) {
-			IM.saveStickers(data.s.items);
-		};
+		// сохранить доступные стикеры
+		data.s && data.s.items && IM.saveStickers(data.s.items);
 
-		if (data.l) {
-			IM.saveLastStickers(data.l);
-		};
+		// сохранить последние использованные стикеры
+		data.l && IM.saveLastStickers(data.l);
 
-		if (data.c) {
-			Site.setCounters(data.c);
-		};
+		// показать счетчики в меню
+		data.c && Site.setCounters(data.c);
 
-		if (data.b) {
-			API.userBalance = data.b;
-		};
+		// сохранить баланс голосов, если доступны
+		data.b && (API.userBalance = data.b);
 
-		if (friends = data.f) {
-			Local.AddUsers(friends.items);
-			Friends.friends[API.uid] = friends;
-			Friends.showBirthdays(friends.items);
-		};
+		// показать дни рождения под меню
+		(friends = data.f) && (Local.add(friends.items) && Friends.showBirthdays(friends.items));
 
 		if (!APIdogNoInitPage) {
-			UpdateCounters();
 			setInterval(UpdateCounters, 60000);
 		};
 
@@ -859,11 +689,8 @@ function startFirstRequestAPI () {
 		};
 */
 
-		ThemeManager.onInstall();
-
-
 		Loader.main.setTitle("Loading language data...");
-		Lang.load(function () {
+		Lang.load(function() {
 			Loader.main.close();
 			onInited();
 			if (!getAddress()) {
@@ -882,14 +709,14 @@ function startFirstRequestAPI () {
 			age = new Date().getFullYear() - year;
 		};
 
-		APIdogRequest("apidog.getAds", {age: age}, function (result) {
+/*		APIdogRequest("apidog.getAds", {age: age}, function(result) {
 			(function (a,b,c,f){var d=function(e){return b("a",{"class":"APIdog-ad-item",target:"_blank",href:e.link,append:[b("p",{append:b("strong",{html:e.title})}),b("img",{src:e.image,alt:e.title,"class":"APIdog-ad-img APIdog-ad-"+([0,"single","extend"][e.type])}),e.type===2?b("div",{"class":"APIdog-ad-description",html:e.description}):null,b("div",{"class":"btn APIdog-ad-button",html:"Перейти"})]})};while(f<a.length)c.appendChild(d(a[f++]))})(result,$.e,$.element("_apidv"),0)
-		});
+		});*/
 
-		if (window.adblockEnabled) {
+/*		if (window.adblockEnabled) {
 			$.elements.appendToBody($.e("div", {style: "background: rgba(255, 0, 0, .8); color: rgb(255, 255, 255); line-height: 50px; display: block !important; height: 50px !important; opacity: 1 !important; visibility: visible !important; margin: 0 !important; padding: 0 16px; position: fixed !important; bottom: 0 !important; width: 100% !important; left: 0 !important; right: 0 !important;", html: "Мы обнаружили включенный AdBlock в Вашем браузере! Пожалуйста, если Вам нравится наш сайт, отключите его. <a onclick=\"showAdBlockWindow(event); return false;\" href=\"#\">Почему я должен это сделать?</a>"}));
 		};
-	}).execute();
+	}).execute();*/
 };
 
 var Loader = {
@@ -1219,10 +1046,6 @@ function identifyDeviceByCSS () {
 
 function cancelEvent(e){e=e||window.event;if(!e)return!1;e=e.originalEvent||e;e.preventDefault&&e.preventDefault();e.stopPropagation&&e.stopPropagation();e.cancelBubble=!0;return e.returnValue=!1;};
 function sizeof(a){return Object.keys(a).length;};
-
-function ReAccess (mask) {
-	Site.initialization(mask);
-};
 
 window.onResizeCallback;
 window.onKeyDownCallback;

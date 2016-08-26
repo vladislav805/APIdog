@@ -19,8 +19,8 @@ var Site = {
 
 	showUser: function  (u) {
 		g("_link").href = "#" + (u.screen_name || "id" + u.id);
-		g("_name").innerHTML = u.first_name;
-		g("_photo").src = getURL(u.photo_rec || u.photo_50);
+		g("_name").innerHTML = u.first_name.safe();
+		g("_photo").src = getURL(u.photo_50);
 	},
 
 	proxy: function (method, params, callback) {
