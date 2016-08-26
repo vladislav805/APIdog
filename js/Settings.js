@@ -247,6 +247,7 @@ var Settings = {
 						snackbar.close();
 					}
 				}).show();
+				APINotify.fire(DogEvent.INTERNAL_SETTINGS_CHANGED, { bitmask: bitmask });
 				Settings.applySettings(result);
 			});
 			return false;
@@ -497,6 +498,7 @@ var Settings = {
 					if (~first.className.indexOf("empty")) {
 						$.elements.remove(first);
 					};
+					APINotify.fire(DogEvent.PROFILE_USER_BLOCK_CHANGED, { userId: result.u.id, blocked: true });
 				}).execute();
 		},
 
@@ -514,6 +516,7 @@ var Settings = {
 					setTimeout(function() {
 						$.elements.remove(node);
 					}, 350);
+					APINotify.fire(DogEvent.PROFILE_USER_BLOCK_CHANGED, { userId: result.u.id, blocked: false });
 				})
 				.execute();
 		}

@@ -330,6 +330,7 @@ var Profile = {
 							// null,
 							// Lang.get("profiles.acts_friend_secondarary")
 							// ][data - 1]
+							// APINotify.fire(DogEvent.FRIEND_STATUS_CHANGED, { status: ??? });
 						}
 					};
 					if (status == 2) {
@@ -338,6 +339,7 @@ var Profile = {
 							onclick: function (item) {
 								// friends.delete
 								// Lang.get("profiles.request_cancelled")
+								// APINotify.fire(DogEvent.FRIEND_STATUS_CHANGED, { status: ??? });
 							}
 						};
 					};
@@ -354,6 +356,7 @@ var Profile = {
 							// Lang.get("profiles.acts_friend_request_deleted"),
 							// Lang.get("profiles.reccomendation_deleted")
 							// ][data - 1]
+							// APINotify.fire(DogEvent.FRIEND_STATUS_CHANGED, { status: ??? });
 						}
 					};
 					break;
@@ -380,6 +383,7 @@ var Profile = {
 								.enable()
 								.commit();
 						});
+						APINotify.fire(DogEvent.PROFILE_USER_BLOCK_CHANGED, { userId: user.id, blocked: user.blacklisted_by_me });
 					}
 				};
 			};
@@ -415,6 +419,7 @@ var Profile = {
 							.enable()
 							.commit();
 					});
+					APINotify.fire(DogEvent.PROFILE_USER_FAVORITE_CHANGED, { userId: user.id, favorite: user.is_favorite });
 				}
 			};
 		};
@@ -509,6 +514,8 @@ var Profile = {
 					if (!text) {
 						node.className = 'profile-status tip';
 					};
+
+					APINotify.fire(DogEvent.PROFILE_STATUS_CHANGED, { text: text });
 				});
 				return false;
 			},

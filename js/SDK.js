@@ -944,12 +944,11 @@ window.KeyboardCodes = {
 	F11: 122,
 	F12: 123
 };
-function loadStickers () {
-	Site.API("store.getProducts", {filters: "active", type: "stickers", v: 5.14, extended: 1}, function (data) {
+function loadStickers() {
+	new APIRequest("store.getProducts", {filters: "active", type: "stickers", v: 5.52, extended: 1}).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(data) {
 		data = data.items;
-
 		IM.saveStickers(data);
-	});
+	}).execute();
 };
 
 
@@ -980,9 +979,22 @@ var APINotify = {
 
 var DogEvent = {
 
+	PROFILE_USER_BLOCK_CHANGED: 100,
+	PROFILE_USER_FAVORITE_CHANGED: 101,
+	PROFILE_STATUS_CHANGED: 102,
+
+	FRIEND_STATUS_CHANGED: 200,
+
 	AUDIO_LIST_PRELOADED: 1100,
 	AUDIO_ADDED: 1101,
 	AUDIO_PLAYLIST_CHANGED: 1102,
+
+	DOCUMENT_UPLOADED: 1200,
+	DOCUMENT_EDITED: 1201,
+	DOCUMENT_ADDED: 1202,
+	DOCUMENT_DELETED: 1203,
+
+	INTERNAL_SETTINGS_CHANGED: 3200
 
 };
 

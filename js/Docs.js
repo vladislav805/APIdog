@@ -136,6 +136,7 @@ VKDocument.prototype = {
 						modal.setContent(getEmptyField("docs.editSuccess", true)).setFooter("").closeAfter(1500);
 						doc.title = values.title;
 						doc.notifySetDataChanged();
+						APINotify.fire(DogEvent.DOCUMENT_EDITED, { document: doc });
 					})
 					.execute();
 			}
@@ -159,6 +160,7 @@ VKDocument.prototype = {
 			self.ownerId = API.userId;
 			self.documentId = data;
 			self.date = Date.now() / 1000;
+			APINotify.fire(DogEvent.DOCUMENT_ADDED, { document: self });
 		}).execute();
 	},
 
@@ -185,6 +187,7 @@ VKDocument.prototype = {
 					accessKey: self.accessKey
 				}).setOnCompleteListener(function (result) {
 					$.elements.remove(self.node);
+					APINotify.fire(DogEvent.DOCUMENT_DELETED, { document: self });
 				}).execute();
 			},
 			onClick: function (snackbar) {
@@ -294,9 +297,9 @@ var Docs = {
 
 	},
 
-	getSize: function () { return 0 },
+	getSize: function() { return 0 },
 
-	explain: function (url) {
+	explain: function(url) {
 		url = url || window.location.hash.substring(1);
 		var matches = /docs?(-?\d+)?(_(\d+))?/img.exec(url),
 			ownerId = parseInt(matches[1]) || API.userId,
@@ -325,7 +328,7 @@ var Docs = {
 	mList: null,
 	mActionBlock: null,
 
-	showList: function (data, ownerId) {
+	showList: function(data, ownerId) {
 
 		Docs.mStorage[ownerId] = data;
 
@@ -404,16 +407,16 @@ var Docs = {
 		e.click();
 	},
 
-	onUpload: function (node, groupId) {
+	onUpload: function(node, groupId) {
 		uploadFiles(node, {
 			maxFiles: 20,
 			method: "docs.getUploadServer",
 			params: {group_id: groupId}
 		}, {
-			onTaskFinished: function (result) {
+			onTaskFinished: function(result) {
 				var parent = $.element("doclist"), doc, node, o = groupId ? -groupId : API.userId;
 
-				result.map(function (i) {
+				result.map(function(i) {
 					doc = new VKDocument(Docs.tov5(i));
 					node = doc.getNode(Docs.mActionBlock);
 					$.elements.addClass(node, "docs-saved");
@@ -424,19 +427,20 @@ var Docs = {
 				$.elements.addClass($.element("uploadform"), "hidden");
 				Docs.mStorage[o].items = result.concat(Docs.mStorage[o].items);
 				Docs.setCount(Docs.mStorage[o].items.length);
+				APINotify.fire(DogEvent.DOCUMENT_UPLOADED, { ownerId: o, documents: result });
 			}
 		});
 	},
 
-	setCount: function (n, before, after) {
+	setCount: function(n, before, after) {
 		$.element("docs-count").innerHTML = (before ? before + " " : "") + n + " " + Lang.get("docs", "docs", n) + (after ? " " + after : "");
 	},
-	insertDocs: function (node, docs, from, until) {
+	insertDocs: function(node, docs, from, until) {
 		for (var d = docs.items; from < until; ++from)
 			node.appendChild(Docs.item(d[from]));
 	},
 
-	item: function (doc, opts) {
+	item: function(doc, opts) {
 		if (!doc)
 			return $.e("div");
 		opts = opts || {};
@@ -489,7 +493,7 @@ var Docs = {
 	},
 
 // todo:
-	search: function (node, docs, q) {
+	search: function(node, docs, q) {
 		var founded = [];
 		for (var i = 0, d = docs.items, l = d.length; i < l; ++i) {
 			if (new RegExp(q, "gi").test(d[i].title))
@@ -508,7 +512,7 @@ var Docs = {
 
 
 	// need for upload
-	tov5: function (doc) {
+	tov5: function(doc) {
 		doc.owner_id    = doc.owner_id  || doc.oid;
 		doc.id          = doc.id        || doc.did;
 		doc.photo_130   = doc.photo_130 || doc.thumb;
@@ -520,25 +524,25 @@ var Docs = {
 	CLASS_GIF_PREVIEW_OPENED: "doc-a-gif-opened",
 	CLASS_GIF_HIDDEN: "hidden",
 
-	getAttachment: function (doc) {
+	getAttachment: function(doc) {
 		return new VKDocument(doc).getAttachmentNode();
 	},
 
-	getById: function (ownerId, docId) {
+	getById: function(ownerId, docId) {
 		new APIRequest("docs.getById", {docs: ownerId + "_" + docId}).setOnCompleteListener(function (data) {
 			console.log(data);
 		}).execute();
 	}
 };
 
-onInited(function () {
+onInited(function() {
 	Docs.mActionBlock = new ActionBlock([
-		{ name: "opn", label: Lang.get("docs.actionOpen"), onClick: function (item) { window.open(item.url); } },
-		{ name: "cpy", label: Lang.get("docs.actionCopy"), onClick: function (item) { item.copy(); } },
-		{ name: "snd", label: Lang.get("docs.actionSend"), onClick: function (item) { item.share(); } },
-		{ name: "edt", label: Lang.get("docs.actionEdit"), onClick: function (item) { item.edit(); } },
-		{ name: "dlt", label: Lang.get("docs.actionDelete"), onClick: function (item) { item.deleteDocument(); } }
-	]).setOnPreparingItem(function (action, item) {
+		{ name: "opn", label: lg("docs.actionOpen"), onClick: function(item) { window.open(item.url); } },
+		{ name: "cpy", label: lg("docs.actionCopy"), onClick: function(item) { item.copy(); } },
+		{ name: "snd", label: lg("docs.actionSend"), onClick: function(item) { item.share(); } },
+		{ name: "edt", label: lg("docs.actionEdit"), onClick: function(item) { item.edit(); } },
+		{ name: "dlt", label: lg("docs.actionDelete"), onClick: function(item) { item.deleteDocument(); } }
+	]).setOnPreparingItem(function(action, item) {
 		switch (action.name) {
 			case "cpy":
 				return item.ownerId != API.userId;
