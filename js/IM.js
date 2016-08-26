@@ -342,9 +342,11 @@ var IM = {
 	},
 
 	showChatInfo: function(peerId) {
-		console.log(peerId);
 		var
 			e = $.e,
+
+			chat,
+
 			uiUsers = e("div", {"class": "im-dialog-users", append: getLoader()}),
 			uiSettings = e("div", {"class": "im-dialog-settings", append: getLoader()}),
 			wrap = new TabHost([
@@ -398,15 +400,16 @@ var IM = {
 				});
 			},
 
-			showSettings = function(chat) {
+			showSettings = function(chatapi) {
 				$.elements.clearChild(uiSettings);
-				console.log(chat);
 
-				uiSettings.appendChild(getTitleForm(chat));
-				uiSettings.appendChild(getNotificationsForm(chat));
+				chat = new VKChat(chatapi);
+
+				uiSettings.appendChild(getTitleForm());
+				uiSettings.appendChild(getNotificationsForm());
 			},
 
-			getTitleForm = function(chat) {
+			getTitleForm = function() {
 				var lHead = Site.getPageHeader(lg("im.chatInfoFormTitleHead")),
 					lForm = Site.getInlineForm({
 						title: lg("im.chatInfoFormTitleChange"),
@@ -414,7 +417,9 @@ var IM = {
 						value: chat.title,
 						onsubmit: function() {
 							event.preventDefault();
-							IM.setChatTitle(peerId, this.title.value.trim());
+							chat.edit(this.title.value.trim(), function() {
+								new Snackbar({text: lg("im.chatInfoFormTitleEdited")}).show();
+							});
 							return false;
 						}
 					});
@@ -422,9 +427,9 @@ var IM = {
 				return e("div", {append: [lHead, lForm]});
 			},
 
-			getNotificationsForm = function(chat) {
+			getNotificationsForm = function() {
 				var lHead = Site.getPageHeader(lg("im.chatInfoFormNotificationsHead")),
-					disabled = chat.push_settings.disabled_until,
+					disabled = chat.settings.disabled,
 					lButton,
 					lInfo,
 
@@ -478,13 +483,9 @@ var IM = {
 					sendNewNotificationsSettings = function(disabledUntil) {
 						// TODO: переделать под всех, а не только под конфы
 						var time = disabledUntil <= 0 ? disabledUntil : disabledUntil - parseInt(Date.now() / 1000);
-						new APIRequest("account.setSilenceMode", {
-							peer_id: 2000000000 + peerId,
-							time: time,
-							v: 5.46
-						}).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(result) {
+						console.log(chat);
+						chat.setSilenceMode(disabledUntil, function() {
 							lButton.disabled = false;
-							chat.push_settings.disabled_until = disabledUntil;
 							disabled = disabledUntil;
 							updateButtonText();
 						}).execute();

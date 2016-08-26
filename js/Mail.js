@@ -550,6 +550,49 @@ VKMessage.send = function(options) {
 	}).execute();
 };
 
+function VKChat(c) {
+	this.chatId = c.id;
+	this.title = c.title;
+	this.users = c.users;
+	this.adminId = c.admin_id;
+	this.settings = { disabled: c.push_settings && c.push_settings.disabled_until || 0};
+
+	this.chat_id = c.id; // for compatible
+};
+
+VKChat.prototype = {
+
+	getId: function() {
+		return this.chatId;
+	},
+
+	edit: function(title, callback) {
+		new APIRequest("messages.editChat", {
+				chatId: this.chatId,
+				title: title
+			})
+			.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+			.setOnCompleteListener(callback)
+			.execute();
+	},
+
+	setSilenceMode: function(disabledUntil, callback) {
+		var self = this;
+		new APIRequest("account.setSilenceMode", {
+				peer_id: 2000000000 + this.chatId,
+				time: disabledUntil,
+				v: 5.46
+			})
+			.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+			.setOnCompleteListener(function(result) {
+				self.settings.disabled = disabledUntil;
+				callback();
+			})
+			.execute();
+	}
+
+};
+
 function getPeerByMessage(msg) {
 	var id = msg.userId;
 	return isNaN(msg)
@@ -582,13 +625,13 @@ function getPeerId(id) {
 };
 
 // u123 -> [u, 123], g123 -> [g, 123], c123 => 123
-function parsePeer (pId) { // u123 -> [u, 123]
+function parsePeer(pId) { // u123 -> [u, 123]
 	return [pId[0], parseInt(pId.substring(1))];
 };
 
 // [u, 123] -> 123, [g, 123] -> -123, [c, 123] -> 2000000123
-// u123 -> 123
-function toPeerId (peer) {
+// u123 -> 123, g123 -> -123, c123 -> 2000000123
+function toPeerId(peer) {
 	var t = peer[0];
 	peer = parseInt(Array.isArray(peer) ? peer[1] : peer.substring(1));
 	return {
@@ -603,7 +646,7 @@ function toPeer(peer) {
 	return toPeerId(peer.join(""));
 };
 
-function getObjectByPeer (peer) {
+function getObjectByPeer(peer) {
 	switch (peer[0]) {
 		case APIDOG_DIALOG_PEER_USER: return Local.Users[peer[1]];
 		case APIDOG_DIALOG_PEER_CHAT: return IM.chats[peer[1]];
