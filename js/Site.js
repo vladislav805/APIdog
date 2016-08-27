@@ -5,17 +5,19 @@
  */
 
 var Site = {
-	 initialization: function () {
-		if (APIdogNoInitPage) return;
+	 initialization: function() {
+		if (APIdogNoInitPage) {
+			return;
+		};
+
 		if (!window.longpollStarted) {
 			window.longpollStarted = true;
-			if (!LongPoll._ext)
+			if (!LongPoll._ext) {
 				setTimeout(LongPoll.start, 3000);
-			//Site.setAPIdogActivity(Site.setAPIdogActivityTimer = setInterval(Site.setAPIdogActivity, 2 * 60 * 1000));
-		}
+			};
+		};
 	},
 
-	getAddress: function (o) { return getAddress(o); },
 
 	showUser: function  (u) {
 		g("_link").href = "#" + (u.screen_name || "id" + u.id);
@@ -32,48 +34,7 @@ var Site = {
 			json: true
 		});
 	},
-	isEnabledLoggingAPIRequest: false,
-	logIncrement: 0,
-	enableLoggingAPIRequests: function () {
-		Site.isEnabledLoggingAPIRequest = true;
-		getBody().appendChild($.e("div", {id: "_logParent", "class": "_logWrap"}));
-	},
 
-
-	// опечатка блять
-	logAPIReuqest: function (logId, method, params) {
-		if (!method && !params) {
-			$.elements.remove($.element("logAPIRequest" + logId));
-			return;
-		};
-
-		$.element("_logParent").appendChild($.e("div", {
-			id: "logAPIRequest" + logId,
-			"class": "_log-item",
-			title: JSON.stringify(params),
-			onclick: function (event) {
-				var modal = new Modal({
-					title: "#" + logId,
-					content: (function (a, b, c, d) {
-						for (d in a)
-							b.push(d + "<br>" + a[d]);
-						c.innerHTML = b.join("<br><br>");
-						return c;
-					})(params, [], $.e("div")),
-					footer: [
-						{
-							name: "close",
-							title: "Закрыть",
-							onclick: function () {
-								modal.close();
-							}
-						}
-					]
-				}).show();
-			},
-			html: "#" + logId + ": " + method
-		}));
-	},
 
 	APIRequestCallbacks: [],
 	APIRequestCallbacksCount: -1,
@@ -174,7 +135,7 @@ var Site = {
 
 					default:
 						Site.Alert({
-							text: "Ошибка от API:<br/><tt>" + (data.error.error_text || Errors[data.error.error_code] || data.error.error_msg) + "</tt>"
+							text: "Ошибка от API:<br/><tt>" + (data.error.error_text || data.error.error_msg) + "</tt>"
 						});
 						break;
 				}
@@ -302,8 +263,7 @@ var Site = {
 
 
 	// updated 04/07/2015 from v6.5
-	get: function (param)
-	{
+	get: function (param) {
 		var hash = window.location.hash.replace("#", ""),
 			key,
 			current,
@@ -313,20 +273,15 @@ var Site = {
 
 		hash = hash.slice(hash.indexOf("?") + 1).split("&");
 
-		for (key in hash)
-		{
+		for (key in hash) {
 			c = hash[key];
 			offset = c.indexOf("=");
 			key = c.slice(0, offset);
 			value = c.slice(++offset);
 			params[key] = value;
-		}
+		};
+
 		return param ? params[param] : params;
-	},
-	Get: function (param, real)
-	{
-		var result = Site.get(param);
-		return !real && !result ? 0 : result;
 	},
 
 
@@ -548,7 +503,6 @@ var Site = {
 		$.elements.clearChild(g("content")).appendChild(node);
 		return Site;
 	},
-	Append: function (node) { Site.append(node) },
 	isOnline: function (data, mode) {
 		mode = mode || 0;
 		if (data && data.online) {
@@ -652,12 +606,6 @@ var Site = {
 		};
 	},
 
-	SetHeader: function (title, back) { Site.setHeader(title, back); },
-	SetBackButton: function (obj) {  },
-
-	EmptyField: function (text) {
-		return $.e("div", {"class": "msg-empty", html: text});
-	},
 	showNewNotifications: function (data) {
 		if (!data) return;
 		Local.AddUsers(data.profiles.concat(data.groups));
@@ -977,23 +925,7 @@ var Site = {
 		}
 		return k > 1 ? html : document.createElement("div");
 	},
-	Escape: function (str) {
-		return str ? str
-			.replace(/&/g, "&amp;")
-			.replace(/</g, "&lt;")
-			.replace(/>/g, "&gt;")
-			.replace(/"/g, "&quot;")
-			.replace(/'/g, "&#039;")
-		: "";
-	},
-	Unescape:function(str){
-		return str ? str
-			.replace(/&lt;/g, "<")
-			.replace(/&gt;/g, ">")
-			.replace(/&quot;/g, "\"")
-			.replace(/&#039;/g, "'")
-		: "";
-	},
+
 	AddSlashes: function (str) {
 		return (String(str))
 //          .replace(/[\\"']/g,'\\$&')
@@ -1033,26 +965,7 @@ var Site = {
 		return elem;
 	},
 
-	// 29/02/2016 removed computing position on click
-	CreateDropDownMenu: function (z, y, x) {
 
-		return new DropDownMenu(z, DDMconvert2new(y), x).getNode();
-
-		/**
-		 * @deprecated
-		 */
-
-		//o=o||{};var a=$.e("div"),b=$.e("div"),c=$.e("div"),e=$.e("div");if (!Object.keys(y).length)return a;a.className="dd-wrap";b.className="dd-title";c.className="dd-titlefake";b.innerHTML=z;c.innerHTML=z;$.event.add(b,"click",function(e){Site.DropDown(e,c,o.toTop);return $.event.cancel(e)});$.event.add(c,"click",function(e){Site.DropDown(e,c,o.toTop);return $.event.cancel(e)});e.className="dd";if(!o.toTop)e.appendChild(c);for(var d in y){var c=document.createElement(d[0]=="!"?"label":"div");c.className="dd-item";c.onclick=y[d];c.innerHTML=d.replace(/^!/i,"");e.appendChild(c)};if(o.toTop)e.appendChild(c);a.appendChild(b);a.appendChild(e);$.event.add(a,"click",function(e){if(e.target!=this&&e.srcElement!=this)Site.DropDown(e,this,o.toTop)});return a;
-	},
-	DropDown: function (node, button, isTop){
-		$.elements.toggleClass(node, "dd-open");
-		var p = $.getPosition(node),
-			b = $.getPosition(button);
-		if (isTop) {
-			node.style.top = "auto";
-			node.style.bottom = "0";
-		}
-	},
 	CreateHeader: function (left, right, opts) {
 
 		return Site.getPageHeader(left, right, opts);
@@ -1149,7 +1062,6 @@ var Site = {
 			]
 		});
 	},
-	CreateInlineForm: function(opts) { return Site.getInlineForm(opts); },
 
 	getInlineForm: function(opts) {
 		var e = $.e,
@@ -1175,6 +1087,10 @@ var Site = {
 		});
 		return form;
 	},
+
+	/**
+	 * @deprecated
+	 */
 	CreateHider: function (head, content, isOpened) {
 		var parent = document.createElement("div");
 		head.onclick = function (event) {
@@ -1186,6 +1102,10 @@ var Site = {
 		parent.appendChild(content);
 		return parent;
 	},
+
+	/**
+	 * @deprecated
+	 */
 	CreateWriteForm:function(opts, ownerId, postId){
 		var Form=document.createElement("form"), txtr, smbx;
 		opts = opts || {};
@@ -1278,7 +1198,9 @@ var Site = {
 		return Form;
 	},
 
-	// 29/02/2016 set deprecated
+	/**
+	 * @deprecated | 29/02/2016
+	 */
 	Alert: function (opts) {
 		opts = opts || {};
 		var wrap = document.createElement("div"),
@@ -1322,6 +1244,10 @@ var Site = {
 		document.getElementsByTagName("body")[0].appendChild(wrap);
 		return wrap;
 	},
+
+	/**
+	 * @deprecated
+	 */
 	redrawAlerts: function (deleted) {
 		var q = document.querySelectorAll(".alert:not(.alert-closing)"),
 			h = 0,
@@ -1331,6 +1257,10 @@ var Site = {
 			item.style.bottom = (px(item.style.bottom) - d - 30) + "px";
 		});
 	},
+
+	/**
+	 * @deprecated
+	 */
 	associateAuthKey: function (authKey, authId, userId) {
 		Support.Ajax("\/api\/v2\/apidog.associateAuthKey", {
 			authKey: authKey,
@@ -1345,39 +1275,17 @@ var Site = {
 			Settings.applySettings(data.user.settings, true);
 		})
 	},
-	showLogo: function () {
-		var b = document.body;
-		$.elements.clearChild(b);
-		b.style.background = "rgb(95, 127, 186) no-repeat url(//static.apidog.ru/v6.2/logo_login_2x.png) center center";
-		b.style.backgroundSize = "350px";
-		b.style.overflow = "hidden";
-		Array.prototype.forEach.call(document.querySelectorAll("html, body"), function (i) {
-			i.style.height = "100%";
-		});
-		var cast;
-		b.appendChild(cast = $.e("div", {
-			style: "position:absolute;bottom:5px;right:0;left:0;width:100%;text-align:center;color:white;transform:translateY(90%);transition:.5s ease-in-out all",
-			html: "<table style='margin:0 auto'><caption>Основан 8 августа 2012 г. © Владислав Велюга</caption><tr><td><strong>Команда проекта</strong>:<ul><li>Владислав Велюга<li>Антон Карпович<li>Арсений Метелёв<li>Александр Ткачук<li> Динар Каримов</ul><strong>Ушедшие из команды</strong>:<ul><li>Геннадий Моторин<li>Леонид Шевчук<li>Тарас Дацюк</ol></td><td><strong>Агенты поддержки</strong>: <ul><li>Оксана Эриксон</ul><strong>А также благодарность следующим людям</strong>: <ul><li>Надежде Ивановой<li>Алине Казаковой<li>Эдуарду Безменову<li>Манулу Этовину<li>Антону Лаврищеву<li>всем пользователям</ul></td></tr></table>"
-		}));
-		$.event.add(cast, "mouseout", function ()
-		{
-			cast.style.transform = "translateY(90%)";
-		});
-		$.event.add(cast, "mouseover", function (event)
-		{
-			cast.style.transform = "translateY(0)";
-		});
-		document.documentElement.style.overflow = "hidden";
-	},
+
+	/**
+	 * @deprecated
+	 */
 	setAPIdogActivity: function () {
 		APIdogRequest("support.ping", {}, function (data) {
 			data = data.count;
 			$.element("count-support").innerHTML = data > 0 ? "<i>" + data + "</i>" : "";
 		});
 	},
-	getScrolled: function () {
-		return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
-	},
+
 	getDate: function (unix) {
 		var now = parseInt(+new Date() / 1000);
 		if (now < unix)
@@ -1410,10 +1318,7 @@ var Site = {
 	},
 
 
-
-
 	showCaptchaBox: function (o) {
-
 		var t, form = $.e("form", {"class": "form-captcha", append: [
 				$.e("img", {src: o.captchaImage}),
 				t = $.e("input", {type: 'text', autocomplete: 'off', name: 'key'})
@@ -1438,31 +1343,102 @@ var Site = {
 			}).show();
 		t.focus();
 	},
+
+	/**
+	 * @deprecated
+	 */
+	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:result },
+
+	/**
+	 * @deprecated
+	 */
+	getAddress: function(o) { return getAddress(o); },
+
+	/**
+	 * @deprecated
+	 */
+	getScrolled: function(){return getScroll()},
+
+	/**
+	 * @deprecated
+	 */
+	SetHeader: function(a,b){Site.setHeader(a,b)},
+
+	/**
+	 * @deprecated
+	 */
+	Append: function(a) { Site.append(a) },
+
+	/**
+	 * @deprecated
+	 */
+	EmptyField: function(a) { return getEmptyField(a) },
+
+	/**
+	 * @deprecated
+	 */
+	Escape: function(a) { return String(a).safe() },
+
+	/**
+	 * @deprecated
+	 */
+	Unescape:function(a){ return String(a).unsafe() },
+
+	/**
+	 * 29/02/2016 removed computing position on click
+	 * @deprecated
+	 */
+	CreateDropDownMenu: function(a,b,c){ return new DropDownMenu(a,DDMconvert2new(b),c).getNode() },
+
+	/**
+	 * @deprecated: left for compatible
+	 */
+	DropDown:function(a,b,c){$.elements.toggleClass(a,"dd-open");var p=$.getPosition(a),b=$.getPosition(b);if(c){a.style.top="auto";a.style.bottom=0}},
+
+	/**
+	 * @deprecated
+	 */
+	CreateInlineForm: function(a) { return Site.getInlineForm(a); },
+
+	/**
+	 * @deprecated
+	 */
+	SetBackButton: function(a){},
+
+	/**
+	 * @deprecated
+	 */
+	enableLoggingAPIRequests: function () {},
+
+	/**
+	 * @deprecated
+	 */
+	logAPIReuqest: function () {},
+
 };
-var Errors = {
-	1: "Неизвестная ошибка",
-	4: "Неверный sig",
-	5: "Ошибка аутификации пользователя",
-	6: "Слишком много запросов в секунду",
-	7: "Данное действие запрещено пользователем при авторизации",
-	20: "Запрещенное действие: запрос к API через OAuth-авторизацию к данному методу запрещен. Для получения данных с этой страницы требуется полная авторизация",
-	100: "Внутренняя ошибка исполнения запроса к API: В запросе пропущен обязательный параметр для выполнения данного метода",
-	113: "Неверный параметр user_id",
-	114: "Неправильный параметр album_id",
-	119: "Неверное название",
-	200: "Доступ запрещен",
-	211: "Доступ к комментарию запрещен",
-	212: "Доступ к комментариям запрещен"
-};
+
+/**
+ * Return url of photo or empty svg-image (if images disabled) or proxy address
+ * @param  {string} url  url of photo
+ * @param  {string} type extension of file
+ * @return {string}      result
+ */
 function getURL (url, type) {
 	type = type || "jpg";
-	if (isEnabled(16384))
-		return "data:image/png;base64,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";
-	return (API.SettingsBitmask & 4 ? "\/api\/v2\/apidog.proxyData?t=" + type + "&u=" + encodeURIComponent(url) : url);
+	if (isEnabled(16384)) {
+		return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Ctext font-size='26px' y='136' x='9' font-family='sans-serif' line-height='125%25' style='letter-spacing:0px;word-spacing:0px'%3E%3Ctspan x='9' y='136'%3E &lt;Изображение &gt;%3C/tspan%3E%3C/text%3E%3C/svg%3E";
+	};
+
+	return (isEnabled(4) ? "\/api\/v2\/apidog.proxyData?t=" + type + "&u=" + encodeURIComponent(url) : url);
 };
 
 
-
+/**
+ * @deprecated
+ */
 function setDragEventListener(n,t){var s=this;s.e=n;s.s=t.onDragStart;s.d=t.onDrag;s.u=t.onDragEnd;s.sx=0;s.sy=0;s.w=!1;s.p=function(q){q=$.event.fixEvent(q);return{x:q.clientX+window.scrollX,y:q.clientY+window.scrollY}};s.e.onmousedown=function(q){var p=s.p(q);s.sx=p.x;s.sy=p.y;s.w=!0;if(s.s)s.s(q,s)};s.e.onmousemove=function(q){if(!s.w)return;var p=s.p(q);if(s.d)s.d({event:q,e:s.e,ox:p.x-s.sx,oy:p.y-s.sy})};s.e.onmouseup=function(q){var p=s.p(q);s.w=false;if(s.u)s.u({event:q,e:s.e,ox:s.sx-p.x,oy:s.sy-p.y})}};
 
+/**
+ * @deprecated
+ */
 function refreshFeed(){if(getAddress(true)!="feed")return;Feed.RequestPage()};var v65HeaderStyle={className:"gifts-head"};

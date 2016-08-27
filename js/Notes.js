@@ -17,7 +17,7 @@ var Notes = {
 			note = /^note(\d+)_(\d+)/ig.exec(h),
 			notes = /^notes(\d+)?/ig.exec(h);
 		note = note ? [note[1], note[2]] : [];
-		notes = notes ? notes[1] : API.uid;
+		notes = notes ? notes[1] : API.userId;
 			console.log(note, notes);
 		return Notes.explain(Site.Get("act"), note && note[0] || notes, note[1]);
 	},
@@ -48,9 +48,9 @@ var Notes = {
 	},
 	getTabs: function (owner_id) {
 		var tabs = [
-			["notes" + (owner_id != API.uid ? owner_id : ""), Lang.get("notes.notes")]
+			["notes" + (owner_id != API.userId ? owner_id : ""), Lang.get("notes.notes")]
 		];
-		if (owner_id == API.uid)
+		if (owner_id == API.userId)
 			tabs = tabs.concat([["notes?act=friends", Lang.get("notes.friends_notes")], ["notes?act=create", Lang.get("notes.create")]]);
 		return Site.CreateTabPanel(tabs);
 	},
@@ -85,7 +85,7 @@ var Notes = {
 				data = Site.isResponse(data);
 				if (!data)
 					return;
-				window.location.hash = "#note" + API.uid + "_" + data.nid;
+				window.location.hash = "#note" + API.userId + "_" + data.nid;
 			});
 			return false;
 		};
@@ -101,7 +101,7 @@ var Notes = {
 		return d;
 	},
 	getList: function (owner_id) {
-		owner_id = owner_id || API.uid;
+		owner_id = owner_id || API.userId;
 		Site.API("notes.get", {user_id: owner_id, count: 30, offset: Site.Get("offset")}, function (data) {
 			if (!(data = Site.isResponse(data)))
 				return;
@@ -138,7 +138,7 @@ var Notes = {
 			for (var i = 0, l = items.length; i < l; ++i) {
 				list.appendChild(Notes.item(Notes.tov5(items[i])));
 			}
-			parent.appendChild(Notes.getTabs(API.uid));
+			parent.appendChild(Notes.getTabs(API.userId));
 			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("notes", "notes_", count)));
 			parent.appendChild(list);
 			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
@@ -152,7 +152,7 @@ var Notes = {
 			e("strong", {html: n.title}),
 			e("div", {"class": "boards-date", html: Site.getDate(n.date)}),
 			e("div", {"class": "boards-last", html: n.comments + " " + Lang.get("notes", "comments_", n.comments)}),
-			n.user_id != API.uid && n.first_name && n.last_name ? e("div", {"class": "a strong", html: n.first_name + " " + n.last_name, onclick: function (event) {
+			n.user_id != API.userId && n.first_name && n.last_name ? e("div", {"class": "a strong", html: n.first_name + " " + n.last_name, onclick: function (event) {
 				$.event.cancel(event);
 				window.location.hash = "#id" + n.user_id;
 			}}) : null
@@ -201,7 +201,7 @@ var Notes = {
 			]})
 		]}));
 		node.appendChild(content = e("div", {"class": "note-content", html: Notes.filterContent(note.text)}));
-		if (note.owner_id == API.uid) {
+		if (note.owner_id == API.userId) {
 			node.appendChild(e("div", {"class": "note-content tip", append: [
 				e("a", {"class": "a", html: Lang.get("notes.edit"), onclick: function (event) {
 					Notes.editNote(content, note);
@@ -353,7 +353,7 @@ var Notes = {
 
 		item.className = "comments board-creater";
 		item.id = "comment_note_" + longId;
-		if (API.uid == from) {
+		if (API.userId == from) {
 			actions.push(e("span", {"class": "a", html: Lang.get("notes.edit"), onclick: (function (node, owner_id, note_id, comment_id) {
 				return function (event) {
 					var node = textNode.parentNode;
@@ -364,7 +364,7 @@ var Notes = {
 			actions.push(e("span", {"class": "tip", html: " | "}));
 		}
 
-		if (API.uid == from || owner_id == API.uid)
+		if (API.userId == from || owner_id == API.userId)
 			actions.push(e("span", {"class": "a", html: Lang.get("notes.delete"), onclick: (function (id, elem) {
 				return function (event) {
 					if (!confirm(Lang.get("notes.delete_confirm_comment")))
@@ -438,7 +438,7 @@ var Notes = {
 							id: data,
 							owner_id: owner_id,
 							note_id: note_id,
-							user_id: API.uid,
+							user_id: API.userId,
 							reply_to: 0
 						}), form);
 						nodeText && (nodeText.value = "");
