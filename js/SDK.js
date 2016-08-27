@@ -171,10 +171,10 @@ function includeScripts (scripts, onLoad) {
 		scripts = [scripts];
 
 	var loaded = 0, all = scripts.length, e = $.e, head = getHead();
-	scripts.forEach(function (script) {
+	scripts.forEach(function(script) {
 		head.appendChild(e("script", {
 			src: script,
-			onload: function (event) {
+			onload: function(event) {
 				if ($.elements.remove(this) && ++loaded == all)
 					onLoad();
 			}
@@ -229,13 +229,13 @@ function recognizeBrowser (ua, returnAsObject) {
 		browser = "Mozilla Firefox " + (/firefox\/([\d\.]+)/i.exec(ua)[1]);
 
 	if (/ios/i.test(ua))
-		os = "iOS " + (function (v) {
+		os = "iOS " + (function(v) {
 			return v.replace(/_/g, ".");
 		})((/os ([\d_]+)/i).exec(ua)[1]);
 	else if (/android/i.test(ua))
 		os = "Android " + (/android ([\d\.]+)/i.exec(ua)[1]);
 	else if (/windows/i.test(ua))
-		os = "Windows " + (function (v) {
+		os = "Windows " + (function(v) {
 			return {
 				"5.0": "2000",
 				"5.1": "XP",
@@ -274,7 +274,7 @@ function VKConfirm(title, text, callback, from) {
 			{
 				name: "yes",
 				title: Lang.get("general.yes"),
-				onclick: function () {
+				onclick: function() {
 					modal.close();
 					callback();
 				}
@@ -282,7 +282,7 @@ function VKConfirm(title, text, callback, from) {
 			{
 				name: "no",
 				title: Lang.get("general.no"),
-				onclick: function () {
+				onclick: function() {
 					modal.close();
 				}
 			}
@@ -310,7 +310,7 @@ var ds = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"}
  * Formatting number by groups: from 1234567 to 1 234 567
  * @return {String} result number
  */
-Number.prototype.format = function () {
+Number.prototype.format = function() {
 	return String(this).replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, "$1\u2009").trim();
 };
 
@@ -318,7 +318,7 @@ Number.prototype.format = function () {
  * Return number with beginning zero if number less than 10
  * @return {String} result number
  */
-Number.prototype.fix00 = function () {
+Number.prototype.fix00 = function() {
 	return this < 10 ? "0" + this : this;
 };
 
@@ -326,7 +326,7 @@ Number.prototype.fix00 = function () {
  * Geerate string with name of value of file
  * @return {String} string, contains value and unit of measure
  */
-Number.prototype.getInformationValue = function () {
+Number.prototype.getInformationValue = function() {
 	if (this <= 0) {
 		return "0 b";
 	};
@@ -358,7 +358,7 @@ Number.prototype.toK = function() {
  * @param {mixed} data  if object, replacing by this key=>value, else - it key for replacing
  * @param {mixed} value if in first arg string: it contain new value
  */
-String.prototype.setLang = function (data, value) {
+String.prototype.setLang = function(data, value) {
 	if (!$.isObject(data)) {
 		return this.replace(new RegExp("%" + data, "img"), Lang.get(value));
 	};
@@ -463,7 +463,7 @@ function APIdogRequest (method, params, callback, fallback) {
 		key;
 	xhr.open("POST", location.protocol + "\/\/" + window.APIdogAPIDomain + window.APIdogAPIPath + method, true);
 	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-	xhr.onreadystatechange = function (event) {
+	xhr.onreadystatechange = function(event) {
 		if (xhr.DONE == xhr.readyState) {
 			if (xhr.status == 200) {
 				var json = JSON.parse(xhr.responseText);
@@ -480,9 +480,9 @@ function APIdogRequest (method, params, callback, fallback) {
 	xhr.send(postFields);
 };
 
-window.addEventListener("DOMContentLoaded", function () {
+window.addEventListener("DOMContentLoaded", function() {
 	identifyDeviceByCSS();
-	window.addEventListener("hashchange", function (event) {
+	window.addEventListener("hashchange", function(event) {
 		if (window.NoHashChange != true)
 			Site.Go(window.location.hash);
 		window.NoHashChange = false;
@@ -491,7 +491,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
 /* Events */
 
-window.addEventListener("load", function (event) {
+window.addEventListener("load", function(event) {
 	if (APIdogNoInitPage) {
 		return;
 	};
@@ -502,13 +502,13 @@ window.addEventListener("load", function (event) {
 		Lang.lang = API.settings.languageId;
 	};
 
-	(function (d,w,c){(w[c]=w[c]||[]).push(function(){try{w.yaCounter19029880=new Ya.Metrika({id:19029880,trackHash:!0})}catch(e){}});var n=d.getElementsByTagName("script")[0],s=d.createElement("script"),f=function(){n.parentNode.insertBefore(s,n);};s.type="text/javascript";s.async=!0;s.src=(d.location.protocol=="https:"?"https:":"http:")+"//mc.yandex.ru/metrika/watch.js";if(w.opera=="[object Opera]")d.addEventListener("DOMContentLoaded",f,!1);else f()})(document,window,"yandex_metrika_callbacks");
+	(function(d,w,c){(w[c]=w[c]||[]).push(function(){try{w.yaCounter19029880=new Ya.Metrika({id:19029880,trackHash:!0})}catch(e){}});var n=d.getElementsByTagName("script")[0],s=d.createElement("script"),f=function(){n.parentNode.insertBefore(s,n);};s.type="text/javascript";s.async=!0;s.src=(d.location.protocol=="https:"?"https:":"http:")+"//mc.yandex.ru/metrika/watch.js";if(w.opera=="[object Opera]")d.addEventListener("DOMContentLoaded",f,!1);else f()})(document,window,"yandex_metrika_callbacks");
 
 	menu.initTouchEvents();
 
 	startFirstRequestAPI();
 
-	window.addEventListener("scroll", function (event) {
+	window.addEventListener("scroll", function(event) {
 		if (!window.onScrollCallback)
 			return;
 		var top = getScroll();
@@ -519,7 +519,7 @@ window.addEventListener("load", function (event) {
 		});
 	});
 	//window.addEventListener("resize", reWriteWidthToTopLeftButton);
-	window.addEventListener("resize", function (event) {
+	window.addEventListener("resize", function(event) {
 
 		if (!window.onResizeCallback) {
 			return;
@@ -538,28 +538,28 @@ window.addEventListener("load", function (event) {
 			body:       {width: wp.width, height: wp.height}
 		});
 	});
-	getBody().addEventListener("dragenter", function (event) {
+	getBody().addEventListener("dragenter", function(event) {
 		if (!window.onDragEnter)
 			return;
 		event.preventDefault();
 		window.onDragEnter(event);
 		return false;
 	});
-	getBody().addEventListener("dragleave", function (event) {
+	getBody().addEventListener("dragleave", function(event) {
 		if (!window.onDragLeave)
 			return;
 		event.preventDefault();
 		window.onDragLeave(event);
 		return false;
 	});
-	getBody().addEventListener("drop", function (event) {
+	getBody().addEventListener("drop", function(event) {
 		if (!window.onDropped)
 			return;
 		window.onDropped(event);
 		event.preventDefault();
 		return false;
 	});
-	getBody().addEventListener("keydown", function (event) {
+	getBody().addEventListener("keydown", function(event) {
 		if (!window.onKeyDownCallback)
 			return;
 
@@ -568,9 +568,9 @@ window.addEventListener("load", function (event) {
 			originalEvent: event
 		});
 	});
-	getBody().addEventListener("keydown", function (event) {
+	getBody().addEventListener("keydown", function(event) {
 		event = event || window.event;
-		var stop = function () { $.event.cancel(event) };
+		var stop = function() { $.event.cancel(event) };
 		switch (event.keyCode) {
 			case KeyboardCodes.MEDIA_CHANGE_STATE:
 			case KeyboardCodes.F1:
@@ -598,7 +598,7 @@ window.addEventListener("load", function (event) {
 				break;
 		}
 	});
-	getBody().addEventListener("click", function (event) {
+	getBody().addEventListener("click", function(event) {
 		var opened = document.querySelector(".dd-open"), clicked = event.target, init;
 
 		if (!opened) {
@@ -630,7 +630,7 @@ function startFirstRequestAPI() {
 				{
 					name: "enableProxy",
 					title: "Включить прокси",
-					onclick: function () {
+					onclick: function() {
 						if (!(API.settings.bitmask & 4)) {
 							API.settings.bitmask += 4;
 						};
@@ -642,7 +642,7 @@ function startFirstRequestAPI() {
 				{
 					name: "tryAgain",
 					title: "Повторить",
-					onclick: function () {
+					onclick: function() {
 						startFirstRequestAPI();
 						this.close();
 					}
@@ -710,7 +710,7 @@ function startFirstRequestAPI() {
 		};
 
 /*		APIdogRequest("apidog.getAds", {age: age}, function(result) {
-			(function (a,b,c,f){var d=function(e){return b("a",{"class":"APIdog-ad-item",target:"_blank",href:e.link,append:[b("p",{append:b("strong",{html:e.title})}),b("img",{src:e.image,alt:e.title,"class":"APIdog-ad-img APIdog-ad-"+([0,"single","extend"][e.type])}),e.type===2?b("div",{"class":"APIdog-ad-description",html:e.description}):null,b("div",{"class":"btn APIdog-ad-button",html:"Перейти"})]})};while(f<a.length)c.appendChild(d(a[f++]))})(result,$.e,$.element("_apidv"),0)
+			(function(a,b,c,f){var d=function(e){return b("a",{"class":"APIdog-ad-item",target:"_blank",href:e.link,append:[b("p",{append:b("strong",{html:e.title})}),b("img",{src:e.image,alt:e.title,"class":"APIdog-ad-img APIdog-ad-"+([0,"single","extend"][e.type])}),e.type===2?b("div",{"class":"APIdog-ad-description",html:e.description}):null,b("div",{"class":"btn APIdog-ad-button",html:"Перейти"})]})};while(f<a.length)c.appendChild(d(a[f++]))})(result,$.e,$.element("_apidv"),0)
 		});*/
 
 /*		if (window.adblockEnabled) {
@@ -726,11 +726,11 @@ var Loader = {
 		CLASS_WRAP: ".loadScreen-wrap",
 		CLASS_TITLE: ".loadScreen-title",
 
-		setTitle: function (title) {
+		setTitle: function(title) {
 			document.querySelector(Loader.main.CLASS_TITLE).innerHTML = title;
 		},
 
-		close: function () {
+		close: function() {
 			$.elements.remove(document.querySelector(Loader.main.CLASS_WRAP));
 			$.elements.removeClass(document.documentElement, "_notloaded");
 		}
@@ -740,11 +740,11 @@ var Loader = {
 };
 
 var menu = {
-	toggle: function () { $.elements.toggleClass(g("wrap"), "menu-opened"); },
+	toggle: function() { $.elements.toggleClass(g("wrap"), "menu-opened"); },
 
 	// created 11.01.2016
 	// refactored 09.02.2016
-	initTouchEvents: function () {
+	initTouchEvents: function() {
 		delete Hammer.defaults.cssProps.userSelect;
 
 		var wrap = $.element("wrap"),
@@ -763,27 +763,27 @@ var menu = {
 
 			vertical = 0,
 
-			reset = function () {
+			reset = function() {
 				listen = null;
 				$.elements.removeClass(menu, clsp);
 				prefix(menu, "transform", "");
 			},
 
-			setTransform = function (x) {
+			setTransform = function(x) {
 				prefix(menu, "transform", "translateX(" + x + "px)");
 			},
 
-			open = function () {
+			open = function() {
 				reset();
 				$.elements.addClass(wrap, clso);
 			},
 
-			close = function () {
+			close = function() {
 				reset();
 				$.elements.removeClass(wrap, clso);
 			},
 
-			restore = function () {
+			restore = function() {
 				reset();
 				start ? open() : close();
 			},
@@ -792,7 +792,7 @@ var menu = {
 
 		hammer.get("pan").set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-		hammer.on("pan", function (event) {
+		hammer.on("pan", function(event) {
 			vertical++;
 
 			if (listen === null) {
@@ -804,7 +804,7 @@ var menu = {
 			};
 		});
 
-		hammer.on("panstart", function (event) {
+		hammer.on("panstart", function(event) {
 			if (event.pointerType == "mouse") {
 				return listen = false;
 			};
@@ -815,7 +815,7 @@ var menu = {
 			vertical = 0;
 		});
 
-		hammer.on("panleft panright", function (event) {
+		hammer.on("panleft panright", function(event) {
 			if (!listen) return;
 			event.preventDefault();
 
@@ -824,7 +824,7 @@ var menu = {
 			!event.isFinal && setTransform(x);
 		});
 
-		hammer.on("panend", function (event) {
+		hammer.on("panend", function(event) {
 			if (event.velocityX > .7 && event.deltaX > 0 || x > 172) {
 				open(); start = 216;
 			} else if (event.velocityX > .7 && event.deltaX < 0 || x < 43) {
@@ -837,7 +837,7 @@ var menu = {
 
 	toTopPositionYStarted: 0,
 	toTopPositionOnePart: 0,
-	toTop: function (q, start) {
+	toTop: function(q, start) {
 		if (start) {
 			menu.toTopPositionYStarted = getScroll();
 		};
@@ -845,9 +845,9 @@ var menu = {
 		var part = menu.toTopPositionYStarted / 100,
 			scrolled = getScroll(),
 			started = menu.toTopPositionYStarted,
-			animate = function (opts) {
+			animate = function(opts) {
 				var start = new Date,
-					timer = setInterval(function () {
+					timer = setInterval(function() {
 						var progress = (new Date - start) / opts.duration;
 						if (progress > 1)
 							progress = 1;
@@ -861,7 +861,7 @@ var menu = {
 		animate({
 			delay: 10,
 			duration: 600,
-			delta: function (progress) {
+			delta: function(progress) {
 				return 1 - Math.sin(Math.acos(progress))
 			},
 			step: function(delta) {
@@ -874,7 +874,7 @@ var menu = {
 	 * Hiding/showing header
 	 * @param  {ScrollEvent} event Event-object from listener
 	 */
-	toTopScrollEvent: function (event) {
+	toTopScrollEvent: function(event) {
 		$.elements[getScroll() > window.CONST_MENU_HEIGHT ? "removeClass" : "addClass"](g("_menu_up"), "hidden");
 
 		var scroll = getScroll(),
@@ -956,12 +956,12 @@ var APINotify = {
 
 	mEvents: {},
 
-	listen: function (eventId, listener) {
+	listen: function(eventId, listener) {
 		APINotify.mEvents[eventId] ? APINotify.mEvents[eventId].push(listener) : (APINotify.mEvents[eventId] = [listener]);
 		return this;
 	},
 
-	fire: function (eventId, extra) {
+	fire: function(eventId, extra) {
 		var query = APINotify.mEvents[eventId];
 
 		if (!query || !query.length) {
@@ -1019,10 +1019,10 @@ var
 
 function getBrowserFeatures () {
 	var u = navigator.userAgent.toLowerCase(),
-		is = function (s) {
+		is = function(s) {
 			return ~u.indexOf(s);
 		},
-		get = function (cases) {
+		get = function(cases) {
 			var item;
 			for (var name in cases) {
 				item = cases[name].split("|");
@@ -1071,7 +1071,7 @@ $.elements.addClass(getBody(), isMobile ? "mobile" : "pc");
 
 var Local = {
 	Users: {},
-	AddUsers: function (a) { return Local.add(a); },
+	AddUsers: function(a) { return Local.add(a); },
 
 	/**
 	 * Сохранение данных о пользователях/группах/чатах и пр.
@@ -1079,7 +1079,7 @@ var Local = {
 	 * 07/08/2016: добавлена поддержка хранения chat (v6.5)
 	 * @param {Array} users Массив с пользователями
 	 */
-	add: function (users) {
+	add: function(users) {
 		if (users == null) {
 			return;
 		};
@@ -1122,7 +1122,7 @@ var Local = {
 		return Local.Users;
 	},
 
-	getUserByDomain: function (screen_name) {
+	getUserByDomain: function(screen_name) {
 		for (var user in Local.Users)
 			if (Local.Users[user].screen_name == screen_name)
 				return Local.Users[user];
@@ -1131,7 +1131,7 @@ var Local = {
 };
 
 function UpdateCounters () {
-	Array.prototype.forEach.call(document.querySelectorAll(".visitweb_img, .APIdog-ad-img"), function (a) {
+	Array.prototype.forEach.call(document.querySelectorAll(".visitweb_img, .APIdog-ad-img"), function(a) {
 		if (a) {
 			do {
 				if (a != document && !$.elements.hasClass(a, "u1akWuaMIYYd0sr7X31jqZ3JP2QoXA2") && ~$.getStyle(a).display.indexOf("none")) {
@@ -1142,7 +1142,7 @@ function UpdateCounters () {
 	});
 	new APIRequest("execute", {
 		code: ("return{c:API.account.getCounters(),f:API.friends.getOnline({v:5.8,online_mobile:1}),n:API.notifications.get({start_time:%s,count:5})" + (isEnabled(1) ? ",online:API.account.setOnline({voip:0})" : "") + "};").schema({s: vkLastCheckNotifications})
-	}).setOnCompleteListener(function (data) {
+	}).setOnCompleteListener(function(data) {
 		vkLastCheckNotifications = getUnixTime();
 		if (!data || APIdogNoInitPage)
 			return;
@@ -1203,13 +1203,13 @@ function createInputDate (options, date) {
 		y,
 		h,
 		i,
-		getDaysInMonth = function (month, year) {
+		getDaysInMonth = function(month, year) {
 			return [31, year % 4 ? 28 : 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
 		},
-		recount = function () {
+		recount = function() {
 			var sel = d.selectedIndex,
 				cur = getDaysInMonth(m.options[m.selectedIndex].value - 1, y.options[y.selectedIndex].value);
-			Array.prototype.forEach.call(d.options, function (node, index) {
+			Array.prototype.forEach.call(d.options, function(node, index) {
 				var over = index >= cur;
 				node.style.display = over ? "none" : "";
 				node.disabled = over;
@@ -1248,11 +1248,11 @@ function createInputDate (options, date) {
 
 		node: wrap,
 
-		getValue: function () {
+		getValue: function() {
 			return getUnixtimeFromCustomInputBundle(d, m, y, h, i);
 		},
 
-		setCurrentDate: function (xd, xm, xy, xh, xi) {
+		setCurrentDate: function(xd, xm, xy, xh, xi) {
 			setSelectedItem(d, xd);
 			m.selectedIndex = xm - 1;
 			setSelectedItem(y, xy);
@@ -1276,7 +1276,7 @@ function getUnixtimeFromCustomInputBundle (d, m, y, h, i) {
 };
 
 function setSelectedItem (select, value) {
-	Array.prototype.forEach.call(select.options, function (item, index) {
+	Array.prototype.forEach.call(select.options, function(item, index) {
 		if (item.value == value) {
 			select.selectedIndex = index;
 		};
@@ -1294,7 +1294,7 @@ function extendClass (child, parent) {
 function extendObject (target, data) {
 	target = target || {};
 	data = data || {};
-	Object.keys(data).forEach(function (key) {
+	Object.keys(data).forEach(function(key) {
 		if (!target[key])
 			target[key] = data[key];
 	});
@@ -1331,7 +1331,7 @@ function truncate (text, options) {
 			"class": "wall-showMoreButton",
 			html: options.moreText,
 			href: "#",
-			onclick: function (event) {
+			onclick: function(event) {
 				$.elements.removeClass(nodeRemaining, "hidden");
 				$.elements.remove(nodeEllipsis);
 				$.elements.remove(this);
@@ -1353,7 +1353,7 @@ function is2x () {
 };
 
 function parse (data, fx) {
-	return data.map(function (i) {
+	return data.map(function(i) {
 		return new fx(i);
 	});
 };
@@ -1366,23 +1366,23 @@ function VKList (data, constructor) {
 
 VKList.prototype = {
 
-	has: function (i) {
+	has: function(i) {
 		return !!this.get(i);
 	},
 
-	get: function (i) {
+	get: function(i) {
 		return this.items[i];
 	},
 
-	map: function (callback) {
+	map: function(callback) {
 		return this.items.map(callback);
 	},
 
-	getItems: function () {
+	getItems: function() {
 		return this.items;
 	},
 
-	getCount: function () {
+	getCount: function() {
 		return this.count;
 	}
 
@@ -1400,19 +1400,19 @@ function ExtendedModal (options) {
 
 ExtendedModal.prototype = {
 
-	customizeCallbacks: function () {
+	customizeCallbacks: function() {
 		var m = this.modal, context = this;
 
 		$.elements.addClass(m.modal, "modal-x"); // add pseudo name
 		m._windowStateChanged(); // fix scroll, unblocked
-		m._windowStateChanged = function () { }; // clear for nothing
+		m._windowStateChanged = function() { }; // clear for nothing
 
 		m._addCloseButtonHead();
 
-		m._setupButtons = function () { };
-		m.addButton = function () { };
+		m._setupButtons = function() { };
+		m.addButton = function() { };
 
-		m._onResizeDocument = function () {
+		m._onResizeDocument = function() {
 			context.onResizeDocument(context.getSizes());
 		};
 
@@ -1425,7 +1425,7 @@ ExtendedModal.prototype = {
 		this.initMoveableTitle(m.title);
 	},
 
-	getSizes: function () {
+	getSizes: function() {
 		var p = $.getPosition(this.modal.modal);
 		return {
 			documentWidth: document.documentElement.clientWidth,
@@ -1439,23 +1439,23 @@ ExtendedModal.prototype = {
 		};
 	},
 
-	initMoveableTitle: function (title) {
+	initMoveableTitle: function(title) {
 		var coods = { x: 0, y: 0 },
 			dragged = false,
 			pos,
-			computeDelta = function (x, y) {
+			computeDelta = function(x, y) {
 				return { x: x - coods.x, y: y - coods.y };
 			},
 			d,
 			context = this;
 
-		$.event.add(title, "mousedown", function (event) {
+		$.event.add(title, "mousedown", function(event) {
 			pos = context.getSizes();
 			coods = { x: event.clientX, y: event.clientY };
 			dragged = true;
 		});
 
-		$.event.add(title, "mousemove", function (event) {
+		$.event.add(title, "mousemove", function(event) {
 			if (!dragged) return;
 
 			d = computeDelta(event.clientX, event.clientY);
@@ -1463,23 +1463,23 @@ ExtendedModal.prototype = {
 			context.setPosition(pos.modalLeft + d.x, pos.modalTop + d.y);
 		});
 
-		$.event.add(title, "mouseup", function (event) {
+		$.event.add(title, "mouseup", function(event) {
 			dragged = false;
 		});
 
-		$.event.add(title, "mouseout", function (event) {
+		$.event.add(title, "mouseout", function(event) {
 			dragged = false;
 		});
 	},
 
-	onResizeDocument: function () {
+	onResizeDocument: function() {
 		var p = this.getSizes();
 		this.setPosition(p.modalLeft, p.modalTop);
 	},
 
-	setPosition: function (l, t, w, h) {
+	setPosition: function(l, t, w, h) {
 		var p = this.getSizes(),
-			getCorrectCoordinate = function (v, m) {
+			getCorrectCoordinate = function(v, m) {
 				return v < 0 ? 0 : v > m ? m : v;
 			};
 
@@ -1497,17 +1497,17 @@ ExtendedModal.prototype = {
 		return this;
 	},
 
-	show: function () {
+	show: function() {
 		this.modal.show();
 		return this;
 	},
 
-	close: function () {
+	close: function() {
 		this.modal.close();
 		return this;
 	},
 
-	closeAfter: function (a) {
+	closeAfter: function(a) {
 		this.modal.closeAfter(a);
 		return this;
 	}
@@ -1523,8 +1523,8 @@ ExtendedModal.prototype = {
 
 
 $.getDate = function(n,t){n=+n+(window._timeOffset||0);var t=typeof t=="undefined"?1:t,i=new Date,e;i.setTime(n*1e3);var r=new Date,o=i.getDate(),s=i.getMonth(),f=i.getFullYear(),c=i.getHours(),u=i.getMinutes(),v=i.getSeconds(),l=r.getDate(),a=r.getMonth(),h=r.getFullYear(),y=r.getHours(),p=r.getMinutes(),w=r.getSeconds();if(u=u<10?"0"+u:u,l==o&&a==s&&h==f){if(t==2)return c+":"+u;e=Lang.get("general.todayS")}else e=l-1==o&&a==s&&h==f?Lang.get("general.yesterdayS"):o+" "+Lang.get("general.months")[s]+" "+(h==f?"":f);return t==1&&(e+=Lang.get("general.dateAt")+c+":"+u),e}
-setInterval(function () {
-	Array.prototype.forEach.call(document.querySelectorAll(".__autodate"), function (i) {
+setInterval(function() {
+	Array.prototype.forEach.call(document.querySelectorAll(".__autodate"), function(i) {
 		i.innerHTML = Site.getDate(+i.getAttribute("data-unix"));
 	});
 }, 5000);
@@ -1533,14 +1533,14 @@ if(!md5){var md5=function(n){var j=function(o,r){var q=(o&65535)+(r&65535),p=(o>
 
 function parseToIDObject (data) {
 	var o = {};
-	(data || []).forEach(function (i) {
+	(data || []).forEach(function(i) {
 		o[i.id] = i;
 	});
 	return o;
 };
 
 function getAttachmentIdsByObjects (data) {
-	return (data || []).map(function (i) {
+	return (data || []).map(function(i) {
 		if (i.type === "link") {
 			return i.link.url;
 		};
@@ -1551,7 +1551,7 @@ function getAttachmentIdsByObjects (data) {
 function getRadioGroupSelectedValue (radios) {
 	var result = null;
 	if (!radios.length) return radios.value;
-	Array.prototype.forEach.call(radios, function (i) {
+	Array.prototype.forEach.call(radios, function(i) {
 		if (i.checked) result = i.value;
 	});
 	return result;
@@ -1563,7 +1563,7 @@ var APIQueue = {
 	queue: [],
 	history: {},
 
-	add: function (apiRequest) {
+	add: function(apiRequest) {
 		if (!apiRequest) {
 			return;
 		};
@@ -1576,7 +1576,7 @@ var APIQueue = {
 		return this.index;
 	},
 
-	get: function (index) {
+	get: function(index) {
 		return this.history[index];
 	}
 };
@@ -1593,7 +1593,7 @@ function APIRequest (method, params) {
 	this._init();
 };
 
-APIRequest.createExecute = function (code, params) {
+APIRequest.createExecute = function(code, params) {
 	params = params || {};
 	params.code = code;
 	return new APIRequest("execute", params);
@@ -1677,7 +1677,7 @@ APIRequest.prototype = {
 	 * Initializate object
 	 * Do not call manually!
 	 */
-	_init: function () {
+	_init: function() {
 		this.setParam(APIDOG_CONST_ACCESS_TOKEN, API.userAccessToken);
 		this.setParam(APIDOG_CONST_LANG, "ru"); // TODO: user-defined language
 		this.setParam(APIDOG_CONST_RANDOM, Math.random());
@@ -1709,7 +1709,7 @@ APIRequest.prototype = {
 	/**
 	 * User define listener for response
 	 */
-	setOnCompleteListener: function (listener) {
+	setOnCompleteListener: function(listener) {
 		this.mCompleteListener = listener;
 		return this;
 	},
@@ -1717,7 +1717,7 @@ APIRequest.prototype = {
 	/**
 	 * User define listener for errors
 	 */
-	setOnErrorListener: function (listener) {
+	setOnErrorListener: function(listener) {
 		this.mErrorListener = listener;
 		return this;
 	},
@@ -1726,7 +1726,7 @@ APIRequest.prototype = {
 	 * Set wrapper of request.
 	 * Supported values: APIDOG_REQUEST_WRAPPER_V5
 	 */
-	setWrapper: function (type) {
+	setWrapper: function(type) {
 		this.mWrapper = type;
 		return this;
 	},
@@ -1735,7 +1735,7 @@ APIRequest.prototype = {
 	 * If the query is executed using direct mode, instant stop request will not be. Instead, the
 	 * query will be executed,but callback will not be called.
 	 */
-	cancel: function () {
+	cancel: function() {
 		this.mRequest && this.mRequest.cancel();
 		this._debug("cancelled", this);
 	},
@@ -1743,7 +1743,7 @@ APIRequest.prototype = {
 	/**
 	 * When you call this method builds and executes a request to the API.
 	 */
-	execute: function () {
+	execute: function() {
 		this._convertParams();
 		this._prepareRequest();
 		this.mRequest.send(httpBuildQuery(this.params));
@@ -1755,7 +1755,7 @@ APIRequest.prototype = {
 	 * Change value of paramether of request
 	 * Can be invoked only before calling .execute()
 	 */
-	setParam: function (key, value) {
+	setParam: function(key, value) {
 		if (this.mState >= APIDOG_REQUEST_STATE_REQUESTED) {
 			throw "<APIRequest>.setParam(...): already put in the request, modify the parameters are prohibited";
 		};
@@ -1775,15 +1775,15 @@ APIRequest.prototype = {
 	/**
 	 * Returns currently value of paramether by key
 	 */
-	getParam: function (key) {
+	getParam: function(key) {
 		return this.params[key];
 	},
 
 	/**
 	 * Convert keys of params-object from camelCaseStyle to under_score by rules
 	 */
-	_convertParams: function () {
-		var vkStyle = function (key) { return key.replace(/[A-Z]/g, function (a) {return "_" + a.toLowerCase()})},
+	_convertParams: function() {
+		var vkStyle = function(key) { return key.replace(/[A-Z]/g, function(a) {return "_" + a.toLowerCase()})},
 			params = {};
 
 		for (var key in this.params) {
@@ -1798,18 +1798,18 @@ APIRequest.prototype = {
 	/**
 	 * Returns true, if request completed
 	 */
-	isComplete: function () {
+	isComplete: function() {
 		return this.mState == APIDOG_REQUEST_STATE_LOADED;
 	},
 
-	_wrapperV5: function () {
+	_wrapperV5: function() {
 		return {
 
-			getCode: function (method, params) {
+			getCode: function(method, params) {
 				return "return API." + method + "(" + this.getParams(params) + ");"
 			},
 
-			getParams: function (p) {
+			getParams: function(p) {
 				p = this.removeDefaultParams(p);
 
 				var pairs = [], t;
@@ -1825,14 +1825,14 @@ APIRequest.prototype = {
 				return pairs.length ? "{" + pairs.join(",") + "}" : "";
 			},
 
-			removeDefaultParams: function (p) {
+			removeDefaultParams: function(p) {
 				p.lang = undefined;
 				p.access_token = undefined;
 				p.random = undefined;
 				return p;
 			},
 
-			getValue: function (v) {
+			getValue: function(v) {
 				return !isNaN(v) ? null == v || "" == v ? "\"\"" : v : "\"" + v.replace(/"/igm, "\\\"").replace(/\n/img, "\\n") + "\"";
 			}
 
@@ -1842,7 +1842,7 @@ APIRequest.prototype = {
 	/**
 	 * Preparing params for sending request
 	 */
-	_prepareRequest: function () {
+	_prepareRequest: function() {
 		this._debug("preparing request");
 		/**
 		 * Sometimes we need wrap request in execute with version 4.x for getting info in version 5.x: in param code
@@ -1893,14 +1893,14 @@ APIRequest.prototype = {
 	/**
 	 * Returns queue indifier
 	 */
-	getQueueId: function () {
+	getQueueId: function() {
 		return this.queueId;
 	},
 
 	/**
 	 * Calling when request was completed (data recieved)
 	 */
-	_onCompleteLoad: function (result) {
+	_onCompleteLoad: function(result) {
 		this.mResult = result;
 		this.mState = APIDOG_REQUEST_STATE_LOADED;
 		this._debug("completed", this);
@@ -1917,7 +1917,7 @@ APIRequest.prototype = {
 	/**
 	 * Calling when while requesting was ocurred error
 	 */
-	_onError: function (reason) {
+	_onError: function(reason) {
 		this._debug("error is unknown, go to custom error listener");
 		this.mErrorListener && this.mErrorListener({reason: reason}, APIDOG_REQUEST_ERROR_INTERNAL);
 	},
@@ -1925,7 +1925,7 @@ APIRequest.prototype = {
 	/**
 	 *
 	 */
-	_onErrorAPI: function (error) {
+	_onErrorAPI: function(error) {
 		this._debug("error in response vk occured", error);
 		switch (error.error_code) {
 			case APIDOG_REQUEST_API_ERROR_CAPTCHA:
@@ -1938,7 +1938,7 @@ APIRequest.prototype = {
 				break;
 
 			case APIDOG_REQUEST_API_ERROR_RUNTIME:
-				var msg = "Runtime error API: debug info\n\nMethod: " + this.method + "\nParams:\n" + (function (a) {
+				var msg = "Runtime error API: debug info\n\nMethod: " + this.method + "\nParams:\n" + (function(a) {
 					var b = [];
 					for (var c in a) {
 						b.push(c + " = " + a[c]);
@@ -1973,7 +1973,7 @@ DirectRequest.prototype = {
 	 * @Override
 	 * Send request
 	 */
-	send: function (paramsString) {
+	send: function(paramsString) {
 		this.setUp(paramsString);
 		getHead().appendChild(this.mNode);
 	},
@@ -1981,10 +1981,10 @@ DirectRequest.prototype = {
 	/**
 	 * Set URL-address for API
 	 */
-	setUp: function (params) {
+	setUp: function(params) {
 		var s = this;
 		this.mNode.src = "https:\/\/api.vk.com\/method\/" + this.mRequest.method + "?" + params + "&callback=APIQueue.history[" + this.mRequest.getQueueId() + "].mRequest.mListener";
-		this.mNode.onerror = function (event) {
+		this.mNode.onerror = function(event) {
 			s._onError(event);
 		};
 	},
@@ -1992,7 +1992,7 @@ DirectRequest.prototype = {
 	/**
 	 * Input data
 	 */
-	mListener: function (data) {
+	mListener: function(data) {
 		this.mRequest._onCompleteLoad(data);
 	},
 
@@ -2000,14 +2000,14 @@ DirectRequest.prototype = {
 	 * @Override
 	 * Cancel request: by setting callback function to empty
 	 */
-	cancel: function () {
-		this.mListener = function () {  };
+	cancel: function() {
+		this.mListener = function() {  };
 	},
 
 	/**
 	 * Invoked when request catch error
 	 */
-	_onError: function (event) {
+	_onError: function(event) {
 		this.mRequest._onError(APIDOG_REQUEST_FAILED_BY_UNKNOWN);
 	}
 
@@ -2024,10 +2024,10 @@ function ProxyRequest (apiRequest) {
 
 ProxyRequest.prototype = {
 
-	_init: function () {
+	_init: function() {
 		var self = this;
 		this.mXhr.open("POST", "//apidog.ru:4006/method/" + this.mRequest.method);
-		this.mXhr.onreadystatechange = function () {
+		this.mXhr.onreadystatechange = function() {
 			if (self.mXhr.readyState === 4) {
 				if (self.mXhr.status === 200) {
 					self._onResponse();
@@ -2043,7 +2043,7 @@ ProxyRequest.prototype = {
 	 * @Override
 	 * Send request
 	 */
-	send: function (paramsString) {
+	send: function(paramsString) {
 		this.mXhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		this.mXhr.send(paramsString);
 	},
@@ -2051,14 +2051,14 @@ ProxyRequest.prototype = {
 	/**
 	 * Input data
 	 */
-	_onResponse: function () {
+	_onResponse: function() {
 		this.mRequest._onCompleteLoad(JSON.parse(this.mXhr.responseText));
 	},
 
 	/**
 	 * Error listener, when has problems witch connection
 	 */
-	_onError: function () {
+	_onError: function() {
 		this.mRequest._onError(!this.mXhr.status ? APIDOG_REQUEST_FAILED_BY_NETWORK_PROBLEMS : APIDOG_REQUEST_FAILED_BY_APIDOG_DOWN);
 	},
 
@@ -2066,8 +2066,8 @@ ProxyRequest.prototype = {
 	 * @Override
 	 * Cancel request: by setting callback function to empty
 	 */
-	cancel: function () {
-		this.mListener = function () {  };
+	cancel: function() {
+		this.mListener = function() {  };
 	}
 
 };
@@ -2086,7 +2086,7 @@ ExtensionRequest.prototype = {
 	 * @Override
 	 * Send request
 	 */
-	send: function (paramsString) {
+	send: function(paramsString) {
 		sendEvent("onAPIRequestExecute", {
 			requestMethod: this.mRequest.method,
 			requestParams: this.mRequest.params,
@@ -2097,14 +2097,14 @@ ExtensionRequest.prototype = {
 	/**
 	 * Input data
 	 */
-	_onResponse: function (result) {
+	_onResponse: function(result) {
 		this.mRequest._onCompleteLoad(result);
 	},
 
 	/**
 	 * Error listener, when has problems witch connection
 	 */
-	_onError: function () {
+	_onError: function() {
 		this.mRequest._onError(!this.mXhr.status ? APIDOG_REQUEST_FAILED_BY_NETWORK_PROBLEMS : APIDOG_REQUEST_FAILED_BY_APIDOG_DOWN);
 	},
 
@@ -2112,13 +2112,13 @@ ExtensionRequest.prototype = {
 	 * @Override
 	 * Cancel request: by setting callback function to empty
 	 */
-	cancel: function () {
-		this.mListener = function () {  };
+	cancel: function() {
+		this.mListener = function() {  };
 	}
 
 };
 
-receiveEvent("onAPIRequestExecuted", function (data) {
+receiveEvent("onAPIRequestExecuted", function(data) {
 	APIQueue.get(data.requestId).mRequest._onResponse(data.requestResult);
 });
 
@@ -2135,7 +2135,7 @@ receiveEvent("onAPIRequestExecuted", function (data) {
 var
 	APIDOG_TIME_INTERVAL_DAY = 24 * 60 * 60;
 
-function timeInterval (t) {
+function timeInterval(t) {
 	var d = Math.ceil(Date.now() / 1000);
 	return Math.max(d, t) - Math.min(d, t);
 };
@@ -2155,12 +2155,14 @@ var
 	APIDOG_SHARE_STEP_DO_SHARE = 4,
 
 	APIDOG_SHARE_TARGET_WALL = 0,
-	APIDOG_SHARE_TARGET_TYPE_USER = 1,
+	APIDOG_SHARE_TARGET_TYPE_MESSAGE = 1,
 	APIDOG_SHARE_TARGET_TYPE_GROUP = 2;
 
-function share (type, ownerId, itemId, accessKey, callback, access) {
+function share(type, ownerId, itemId, accessKey, callback, access) {
 
-	access = access || {wall: true, user: true, group: true};
+	access = /*access ||*/ {wall: true, user: true, group: true};
+
+	type = type.replace("post", "wall");
 
 	var
 		l = Lang.get,
@@ -2183,20 +2185,20 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 
 		commentNode,
 
-		text = function (text) {
+		text = function(text) {
 			return document.createTextNode(text);
 		},
 
-		loadTargetItems = function (type, callback) {
+		loadTargetItems = function(type, callback) {
 			switch (+type) {
-				case APIDOG_SHARE_TARGET_TYPE_USER:
+				case APIDOG_SHARE_TARGET_TYPE_MESSAGE:
 					new APIRequest("execute", {
 						code: "var m=API.messages.getDialogs({count:70,v:5.38}).items,i=0,l=m.length,d=[],c=[],u=[],g=[],o;while(i<l){o=m[i].message;d.push([o.user_id,o.chat_id]);if(o.user_id<0){g.push(-o.user_id);}else if(o.chat_id){c.push(o.chat_id);}else{u.push(o.user_id);};i=i+1;};return{dialogs:d,users:API.users.get({user_ids:u}),groups:API.groups.getById({group_ids:g}),chats:API.messages.getChat({chat_ids:c})};"
-					}).setOnCompleteListener(function (result) {
+					}).setOnCompleteListener(function(result) {
 						var u = parseToIDObject(result.users),
 							g = parseToIDObject(result.groups),
 							c = parseToIDObject(result.chats);
-						callback(result.dialogs.map(function (i) {
+						callback(result.dialogs.map(function(i) {
 							if (i[1]) {
 								return {value: "c" + i[1], html: l("share.targetLabelChat") + " «" + c[i[1]].title + "»"};
 							} else if (i[0] < 0) {
@@ -2213,8 +2215,8 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 						fields: "members_count",
 						extended: 1,
 						v: 5.28
-					}).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function (result) {
-						callback(result.items.map(function (i) {
+					}).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(result) {
+						callback(result.items.map(function(i) {
 							return {value: i.id, html: i.name};
 						}));
 					}).execute();
@@ -2226,7 +2228,7 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 			}
 		},
 
-		setNodeByStep = function (step) {
+		setNodeByStep = function(step) {
 			switch (step) {
 				case APIDOG_SHARE_STEP_CHOOSE_TARGET_TYPE:
 					wrapper.appendChild(chooseForm = $.e("form", {"class": "sf-wrap", append: [
@@ -2235,7 +2237,7 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 							$.e("span", {html: l("share.targetTypeWall")})
 						]}) : null,
 						access.user ? $.e("label", {append: [
-							$.e("input", {type: "radio", name: "targetType", value: APIDOG_SHARE_TARGET_TYPE_USER}),
+							$.e("input", {type: "radio", name: "targetType", value: APIDOG_SHARE_TARGET_TYPE_MESSAGE}),
 							$.e("span", {html: l("share.targetTypeUser")})
 						]}) : null,
 						access.group  ? $.e("label", {append: [
@@ -2256,15 +2258,15 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 
 					if (!chooseFormId) {
 						chooseFormId = $.e("div", {append: [
-							$.e("div", {"class": "tip", html: l(targetType == APIDOG_SHARE_TARGET_TYPE_USER ? "share.chooseTargetUser" : "share.chooseTargetGroup")}),
+							$.e("div", {"class": "tip", html: l(targetType == APIDOG_SHARE_TARGET_TYPE_MESSAGE ? "share.chooseTargetUser" : "share.chooseTargetGroup")}),
 							chooseTargetIdForm = $.e("select", { "class": "sf", append: chooseTargetIdLoading = $.e("option", {value: 0, html: l("share.chooseStateLoading")}) })
 						]});
 						chooseTargetIdForm.disabled = true;
 
-						loadTargetItems(targetType, function (items) {
+						loadTargetItems(targetType, function(items) {
 							$.elements.remove(chooseTargetIdLoading);
 							chooseTargetIdForm.appendChild(chooseTargetIdEmpty = $.e("option", {value: 0, html: l("share.chooseStateNotSelected"), selected: true}));
-							items.map(function (item) {
+							items.map(function(item) {
 								chooseTargetIdForm.appendChild($.e("option", item));
 							});
 							chooseTargetIdForm.disabled = false;
@@ -2303,22 +2305,23 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 			};
 		},
 
-		nextStep = function () {
+		nextStep = function() {
 			setNodeByStep(++step);
 		},
 
-		previousStep = function () {
+		previousStep = function() {
 			setNodeByStep(--step);
 		},
 
-		clearWrapper = function () {
+		clearWrapper = function() {
 			$.elements.clearChild(wrapper);
 		},
 
-		doShare = function () {
+		doShare = function() {
 			switch (+targetType) {
 				case APIDOG_SHARE_TARGET_WALL:
-					new APIRequest("wall.repost", { object: object, message: comment }).setOnCompleteListener(function (result) {
+					new APIRequest("wall.repost", { object: object, message: comment }).debug().setOnCompleteListener(function(result) {
+						console.log(result);
 						callback && callback(!!result, {
 							message: false,
 							postId: result.post_id,
@@ -2328,24 +2331,23 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 					}).execute() || modal.close();
 					break;
 
-				case APIDOG_SHARE_TARGET_TYPE_USER:
-					object = object.replace("post", "wall");
+				case APIDOG_SHARE_TARGET_TYPE_MESSAGE:
 					var params = { attachment: object, message: comment },
 						to = String(targetId).substring(0, 1),
 						id = String(targetId).substring(1);
 
-					params[{u: "user_id", g: "group_id", c: "chat_id"}[to]] = id;
-					new APIRequest("messages.send", params).setOnCompleteListener(function (result) {
+					params[{u: "userId", g: "groupId", c: "chatId"}[to]] = id;
+					new APIRequest("messages.send", params).setOnCompleteListener(function(result) {
 						callback && callback(!!result, {
 							message: true,
 							messageId: result,
-							peerId: to == "c" ? -id : id
+							peerId: to == "c" ? 2000000000 + id : to === "g" ? -id : id
 						}, modal) || modal.close();
 					}).execute();
 					break;
 
 				case APIDOG_SHARE_TARGET_TYPE_GROUP:
-					new APIRequest("wall.repost", { object: object, group_id: targetId, message: comment }).setOnCompleteListener(function (result) {
+					new APIRequest("wall.repost", { object: object, group_id: targetId, message: comment }).setOnCompleteListener(function(result) {
 						callback && callback(!!result, {
 							message: false,
 							postId: result.post_id,
@@ -2361,7 +2363,7 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 			};
 		},
 
-		okButtonCallback = function (event) {
+		okButtonCallback = function(event) {
 			nextStep();
 		},
 
@@ -2377,7 +2379,7 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 				{
 					name: "cancel",
 					title: l("share.buttonCancel"),
-					onclick: function () {
+					onclick: function() {
 						modal.close();
 					}
 				}
@@ -2385,19 +2387,20 @@ function share (type, ownerId, itemId, accessKey, callback, access) {
 		}).show();
 	nextStep();
 };
-function actionAfterShare (isSuccess, result, modal) {
+
+function actionAfterShare(isSuccess, result, modal) {
 	modal
 		.setContent(Lang.get("share.afterWindowTitle"))
 		.setButtons([
 			{
 				name: "go",
 				title: Lang.get("share.afterButtonGo"),
-				onclick: function () {
+				onclick: function() {
 					var u;
 					if (result.message) {
-						u = "im?to=" + result.peerId;
+						u = "im?to=" + getPeerId(result.peerId);
 					} else {
-						u = "wall" + (result.groupId ? -result.groupId : API.uid) + "_" + result.postId;
+						u = "wall" + (result.groupId ? -result.groupId : API.userId) + "_" + result.postId;
 					};
 					window.location.hash = "#" + u;
 					modal.close();
@@ -2406,7 +2409,7 @@ function actionAfterShare (isSuccess, result, modal) {
 			{
 				name: "cancel",
 				title: Lang.get("share.afterButtonClose"),
-				onclick: function () {
+				onclick: function() {
 					modal.close();
 				}
 			}
@@ -2454,26 +2457,26 @@ Comments.prototype = {
 	nodePaginationAfter: null,
 	nodeWriteForm: null,
 
-	getNode: function () {
+	getNode: function() {
 		this.populate();
 
 		return this.nodeWrap;
 	},
 
-	parseComments: function (comments) {
+	parseComments: function(comments) {
 		var that = this;
 		this.count = comments.count;
 		Local.add(comments.profiles);
 		Local.add(comments.groups);
-		this.items = comments.items.map(function (comment) {
+		this.items = comments.items.map(function(comment) {
 			return new VKComment(that, comment, that.object.ownerId);
 		});
 		return this;
 	},
 
-	populate: function () {
+	populate: function() {
 		var list = this.nodeList;
-		this.items.forEach(function (comment) {
+		this.items.forEach(function(comment) {
 			list.appendChild(comment.getNode());
 		});
 		$.elements.clearChild(this.nodePaginationAfter).appendChild(this.getPagination());
@@ -2481,15 +2484,15 @@ Comments.prototype = {
 		return this;
 	},
 
-	getHeaderText: function () {
+	getHeaderText: function() {
 		return this.count + " " + Lang.get("comment", "comments", this.count);
 	},
 
-	getWriteForm: function () {
+	getWriteForm: function() {
 		var form = new WriteForm({
 			context: this,
 			api: this.api.add,
-			onSend: function (event) {
+			onSend: function(event) {
 				console.log(event);
 			}
 		});
@@ -2497,20 +2500,20 @@ Comments.prototype = {
 		return form.getNode();
 	},
 
-	getPagination: function () {
+	getPagination: function() {
 		var e = $.e,
 			context = this,
 			wrap = e("div", {"class": "vkcomments-pagination-inner", count: count}),
 			step = 40,
 			offset = this.offset,
 			count = this.count,
-			fx = function (offset) {
-				return function () {
+			fx = function(offset) {
+				return function() {
 					context.loadComments(parseInt(offset));
 				};
 			},
 
-			item = function (i, text) {
+			item = function(i, text) {
 				return e("div", {
 					"data-offset": i,
 					onclick: fx(i),
@@ -2547,7 +2550,7 @@ Comments.prototype = {
 		return k > 1 ? wrap : e("div");
 	},
 
-	loadComments: function (offset) {
+	loadComments: function(offset) {
 		var that = this, code = 'var c=API.%m({owner_id:%h,%f:%i,offset:%o,count:40,extended:1,need_likes:1,v:5.38});c.profiles=c.profiles+API.users.get({user_ids:c.items@.reply_to_user,fields:"first_name_dat,last_name_dat"});return c;'.schema({
 			m: this.api.get.method,
 			f: this.api.get.itemField,
@@ -2558,12 +2561,12 @@ Comments.prototype = {
 
 		this.offset = offset;
 
-		new APIRequest("execute", {code: code}).setOnCompleteListener(function (result) {
+		new APIRequest("execute", {code: code}).setOnCompleteListener(function(result) {
 			that.loadCommentsDone.call(that, result);
 		}).execute();
 	},
 
-	loadCommentsDone: function (result) {
+	loadCommentsDone: function(result) {
 		$.elements.clearChild(this.nodeList);
 
 		nav.replace("wall" + this.object.ownerId + "_" + this.object.itemId + "?offset=" + this.offset);
@@ -2573,17 +2576,17 @@ Comments.prototype = {
 		this.populate();
 	},
 
-	request: function (method, params, callbackUI, callbackUser) {
+	request: function(method, params, callbackUI, callbackUser) {
 		var context = this;
 		new APIRequest(method, params)
 			.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
-			.setOnCompleteListener(function (result) {
+			.setOnCompleteListener(function(result) {
 				(callbackUI && callbackUI(result)) && (callbackUser && callbackUser(result, context));
 			})
 			.execute();
 	},
 
-	addCommentRequest: function (text, attachments, stickerId, replyToCommentId, fromGroup) {
+	addCommentRequest: function(text, attachments, stickerId, replyToCommentId, fromGroup) {
 		var params = { };
 
 		params[this.api.add.ownerField || "owner_id"] = this.object.ownerId;
@@ -2612,7 +2615,7 @@ console.log(params)
 //		this.request(this.api.add.method, params, this.addCommentDone, this.api.add.callback);
 	},
 
-	addCommentDone: function (result) {
+	addCommentDone: function(result) {
 
 	}
 
@@ -2647,19 +2650,19 @@ function VKComment (context, c, ownerId) {
 
 VKComment.prototype = {
 
-	request: function (method, params, callbackUI, callbackUser) {
+	request: function(method, params, callbackUI, callbackUser) {
 		var comment = this;
-		new APIRequest(method, params).setOnCompleteListener(function (result) {
+		new APIRequest(method, params).setOnCompleteListener(function(result) {
 			callbackUI(result, comment) && callbackUser(result, comment);
 		}).execute();
 	},
 
 	ui: {
 
-		deleteCommentDone: function (result, comment) {
+		deleteCommentDone: function(result, comment) {
 			comment.nodes.removed = $.e("div", {"class": "vkcomment-deletedString", append: [
 				document.createTextNode(Lang.get("comment.infoDeleted")),
-				$.e("span", {"class": "a", html: Lang.get("comment.actionRestore"), onclick: function (event) {
+				$.e("span", {"class": "a", html: Lang.get("comment.actionRestore"), onclick: function(event) {
 					comment.restoreCommentRequest();
 				}})
 			]});
@@ -2667,17 +2670,17 @@ VKComment.prototype = {
 			comment.node.style.display = "none";
 		},
 
-		restoreCommentDone: function (result, comment) {
+		restoreCommentDone: function(result, comment) {
 			$.elements.remove(comment.nodes.removed);
 			comment.nodes.removed = null;
 			comment.node.style.display = "";
 		},
 
-		reportComment: function (c) {
+		reportComment: function(c) {
 			var modal,
 				form,
 				selected,
-				nodes = Lang.get("comment.reportReasons").map(function (item, index) {
+				nodes = Lang.get("comment.reportReasons").map(function(item, index) {
 					return $.e("label", {append: [
 						$.e("input", {type: "radio", name: "reason", value: index}),
 						$.e("span", {"class": "tip", html: item})
@@ -2693,7 +2696,7 @@ VKComment.prototype = {
 					{
 						name: "ok",
 						title: Lang.get("comment.reportButton"),
-						onclick: function () {
+						onclick: function() {
 							selected = getRadioGroupSelectedValue(form.reason);
 
 							if (selected == null)
@@ -2706,7 +2709,7 @@ VKComment.prototype = {
 					{
 						name: "cancel",
 						title: Lang.get("comment.cancel"),
-						onclick: function () {
+						onclick: function() {
 							this.close();
 						}
 					},
@@ -2714,13 +2717,13 @@ VKComment.prototype = {
 			}).show();
 		},
 
-		reportCommentDone: function () {
+		reportCommentDone: function() {
 
 		}
 
 	},
 
-	editCommentRequest: function (callback, text, attachments) {
+	editCommentRequest: function(callback, text, attachments) {
 		var params = {};
 
 		params.owner_id = this.context.object.ownerId;
@@ -2731,7 +2734,7 @@ VKComment.prototype = {
 		this.request(this.context.api.edit.method, params, this.ui.editCommentDone, this.context.api.edit.callback);
 	},
 
-	deleteCommentRequest: function () {
+	deleteCommentRequest: function() {
 		var params = {};
 
 		params.owner_id = this.context.object.ownerId;
@@ -2740,7 +2743,7 @@ VKComment.prototype = {
 		this.request(this.context.api.remove.method, params, this.ui.deleteCommentDone, this.context.api.remove.callback);
 	},
 
-	restoreCommentRequest: function () {
+	restoreCommentRequest: function() {
 		var params = {};
 
 		params.owner_id = this.context.object.ownerId;
@@ -2749,7 +2752,7 @@ VKComment.prototype = {
 		this.request(this.context.api.restore.method, params, this.ui.restoreCommentDone, this.context.api.restore.callback);
 	},
 
-	reportCommentRequest: function () {
+	reportCommentRequest: function() {
 		var params = {};
 
 		params.owner_id = this.context.object.ownerId;
@@ -2761,7 +2764,7 @@ VKComment.prototype = {
 	node: null,
 	nodes: { left: null, right: null, removed: null },
 
-	getNode: function () {
+	getNode: function() {
 		if (this.node) {
 			return this.node;
 		};
@@ -2798,7 +2801,7 @@ VKComment.prototype = {
 		return this.node = wrap;
 	},
 
-	getFooter: function () {
+	getFooter: function() {
 		var comment = this,
 			nodes = [],
 			e = $.e,
@@ -2807,7 +2810,7 @@ VKComment.prototype = {
 		nodes.push(e("a", {
 			href: h,
 			html: Lang.get("comment.actionReply"),
-			onclick: function (event) {
+			onclick: function(event) {
 				event.preventDefault();
 
 				comment.context.writeForm.snapReply(comment.commentId, comment.userId);
@@ -2820,7 +2823,7 @@ VKComment.prototype = {
 			nodes.push(e("a", {
 				href: h,
 				html: Lang.get("comment.actionEdit"),
-				onclick: function (event) {
+				onclick: function(event) {
 					event.preventDefault();
 
 niy();
@@ -2835,10 +2838,10 @@ niy();
 			nodes.push(e("a", {
 				href: h,
 				html: Lang.get("comment.actionDelete"),
-				onclick: function (event) {
+				onclick: function(event) {
 					event.preventDefault();
 
-					VKConfirm(Lang.get("comment.confirmDelete"), function () {
+					VKConfirm(Lang.get("comment.confirmDelete"), function() {
 						comment.deleteCommentRequest();
 					});
 
@@ -2851,7 +2854,7 @@ niy();
 			nodes.push(e("a", {
 				href: h,
 				html: Lang.get("comment.actionReport"),
-				onclick: function (event) {
+				onclick: function(event) {
 					event.preventDefault();
 					comment.ui.reportComment(comment);
 					return false;
@@ -2859,9 +2862,9 @@ niy();
 			}));
 		};
 
-		return (function (old, footer) {
+		return (function(old, footer) {
 			var last = old.length - 1;
-			old.forEach(function (item, index) {
+			old.forEach(function(item, index) {
 				footer.push(item);
 				if (index < last)
 					footer.push(document.createTextNode(" | "));
@@ -2913,7 +2916,7 @@ WriteForm.prototype = {
 
 	nodeForm: null,
 
-	init: function () {
+	init: function() {
 		var self = this,
 			e = $.e,
 
@@ -2923,7 +2926,7 @@ WriteForm.prototype = {
 			sendButton,
 			text,
 			listAttachments,
-			ctx = function (fx) { return function () { fx.call(self); } };
+			ctx = function(fx) { return function() { fx.call(self); } };
 
 
 		textWrap			= e("div", {"class": "vkform-comment-text-wrap", append: text = e("textarea", {"class": "vkform-comment-text sizefix"})});
@@ -2944,7 +2947,7 @@ WriteForm.prototype = {
 				replyString = e("div", {"class": "vkfrom-comment-reply"}),
 				settingsString = e("div", {"class": "vkfrom-comment-settings"})
 			],
-			onsubmit: function (event) {
+			onsubmit: function(event) {
 				event.preventDefault();
 
 				self.onSubmit(this);
@@ -2968,7 +2971,7 @@ WriteForm.prototype = {
 		return this;
 	},
 
-	snapReply: function (replyCommentId, replyUserId) {
+	snapReply: function(replyCommentId, replyUserId) {
 		console.log(replyCommentId, replyUserId)
 		this.reply = replyCommentId
 			? {
@@ -2982,7 +2985,7 @@ WriteForm.prototype = {
 
 	reply: null,
 
-	updateReplyString: function () {
+	updateReplyString: function() {
 		var w = $.elements.clearChild(this.nodeReply), u, e = $.e, s = this;
 
 		if (!this.reply) {
@@ -2994,7 +2997,7 @@ WriteForm.prototype = {
 		w.appendChild(e("span", {"class": "tip", append: [
 			document.createTextNode(Lang.get("comment.writeFormReplyIn")),
 			e("a", {href: "#" + u.screen_name, html: u.name || u.first_name_dat + " " + u.last_name_dat}),
-			e("div", {"class": "vkform-comment-remove", onclick: function (event) {
+			e("div", {"class": "vkform-comment-remove", onclick: function(event) {
 				s.snapReply(0, 0);
 			}})
 		]}));
@@ -3007,23 +3010,23 @@ WriteForm.prototype = {
 		};
 	},
 
-	isFromGroup: function () {
+	isFromGroup: function() {
 		return this.nodeFromGroup && this.nodeFromGroup.checked;
 	},
 
-	isOnlyFriends: function () {
+	isOnlyFriends: function() {
 		return this.nodeOnlyFriends && this.nodeOnlyFriends.checked;
 	},
 
-	isWithSign: function () {
+	isWithSign: function() {
 		return this.nodeWithSign && this.nodeWithSign.checked;
 	},
 
-	getReplyToId: function () {
+	getReplyToId: function() {
 		return this.nodeReplyToId && parseInt(this.nodeReplyToId.value);
 	},
 
-	onSubmit: function (form) {
+	onSubmit: function(form) {
 		var params = {
 			text: this.nodeText.value.trim(),
 			attachments: this.attachments.getString(),
@@ -3038,13 +3041,13 @@ WriteForm.prototype = {
 		this.send(params);
 	},
 
-	send: function (params) {
+	send: function(params) {
 		var p = {}, self = this;
 console.log(this.reply);
 		this.controller.context.addCommentRequest(params.text, params.attachments, params.stickerId, params.replyToCommentId, params.fromGroup);
 	},
 
-	getNode: function () {
+	getNode: function() {
 		return this.nodeForm;
 	}
 };
@@ -3064,13 +3067,13 @@ AttachmentBundle.prototype = {
 
 	nodeList: null,
 
-	getString: function () {
-		return this.list.map(function (item) {
+	getString: function() {
+		return this.list.map(function(item) {
 			return item.getAttachId();
 		}).join(",");
 	},
 
-	registerList: function (node) {
+	registerList: function(node) {
 		this.nodeList = node;
 		return this;
 	},
@@ -3185,8 +3188,8 @@ function getLikeButton(type, ownerId, itemId, accessKey, likes, isLiked, reposts
 function getRepostButton(type, ownerId, itemId, accessKey, reposts, isReposted, access, callback, options) {
 	var e = $.e,
 
-		openShareWindow = function () {
-			share(type, ownerId, itemId, accessKey || "", null, access, { from: wrap });
+		openShareWindow = function() {
+			share(type, ownerId, itemId, accessKey || "", actionAfterShare, access, { from: wrap });
 		},
 
 		update = function(result) {
@@ -3341,7 +3344,7 @@ function likers(type, ownerId, itemId, accessKey, onlyReposts, options) {
 
 		addItemsToList = function(items) {
 			var list = getCurrentList();
-			items.forEach(function (user) {
+			items.forEach(function(user) {
 				list.appendChild(Templates.getListItemUserRow(user));
 			});
 			if (!items.length) {
@@ -3366,7 +3369,7 @@ function likers(type, ownerId, itemId, accessKey, onlyReposts, options) {
 				{
 					name: "close",
 					title: lg("likers.windowClose"),
-					onclick: function () { this.close() }
+					onclick: function() { this.close() }
 				}
 			],
 			onScroll: function(event) {
@@ -3422,7 +3425,7 @@ function EditWindow (o) {
 
 EditWindow.prototype = {
 
-	init: function (o) {
+	init: function(o) {
 		var self = this;
 		this.modal = new Modal({
 			title: this.label(o.title),
@@ -3431,7 +3434,7 @@ EditWindow.prototype = {
 				{
 					name: "save",
 					title: o.isEdit ? this.label("general.save", true) : this.label(o.save),
-					onclick: function () {
+					onclick: function() {
 						self.onSubmit();
 						this.close();
 					}
@@ -3439,7 +3442,7 @@ EditWindow.prototype = {
 				{
 					name: "close",
 					title: this.label("general.cancel", true),
-					onclick: function () {
+					onclick: function() {
 						this.close();
 					}
 				}
@@ -3447,13 +3450,13 @@ EditWindow.prototype = {
 		}).show(this.fromNode || false);
 	},
 
-	label: function (key, forceLang) {
+	label: function(key, forceLang) {
 		return this.isLangPhrases || forceLang ? Lang.get(key) : key;
 	},
 
-	populate: function () {
-		var e = $.e, wrap, that = this, node, l = function (t) { return t || "" }, tmp;
-		this.items.forEach(function (i) {
+	populate: function() {
+		var e = $.e, wrap, that = this, node, l = function(t) { return t || "" }, tmp;
+		this.items.forEach(function(i) {
 
 			node = null;
 
@@ -3467,7 +3470,7 @@ EditWindow.prototype = {
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_SELECT:
-					node = e("select", {name: i.name, append: i.items.map(function (s) {
+					node = e("select", {name: i.name, append: i.items.map(function(s) {
 						if (s.value == i.value) {
 							s.selected = true;
 						};
@@ -3508,7 +3511,7 @@ EditWindow.prototype = {
 		});
 	},
 
-	onSubmit: function () {
+	onSubmit: function() {
 		if (this.state) {
 			return;
 		};
@@ -3521,21 +3524,21 @@ EditWindow.prototype = {
 		this.onSave && this.onSave(this.getValues(), this.modal);
 	},
 
-	lock: function () { this.state = true; },
+	lock: function() { this.state = true; },
 
-	unlock: function () { this.state = false; },
+	unlock: function() { this.state = false; },
 
-	checkValidForm: function () {
+	checkValidForm: function() {
 		return true; // TODO
 	},
 
-	getItemFormNodeByName: function (name) {
+	getItemFormNodeByName: function(name) {
 		return this.content[name];
 	},
 
-	getValues: function () {
+	getValues: function() {
 		var nodes = this.nodes, data = {}, items = this.items, value, node;
-		Object.keys(this.nodes).forEach(function (key) {
+		Object.keys(this.nodes).forEach(function(key) {
 			node = nodes[key];
 			switch (+node.getAttribute("data-apt")) {
 				case APIDOG_UI_EW_TYPE_ITEM_SIMPLE:
@@ -3789,7 +3792,7 @@ function uploadFiles (node, o, callbacks) {
 		status = $.e("span", {html: lg("attacher.uploadModalConnecting")}),
 		progressbar = new ProgressBar(0, 100),
 
-		updateUI = function (event) {
+		updateUI = function(event) {
 			if (modal) {
 				status.innerHTML = (
 					event.percent < 99.9
@@ -3803,31 +3806,31 @@ function uploadFiles (node, o, callbacks) {
 
 		result = [],
 
-		finish = function (file) {
+		finish = function(file) {
 			result.push(file);
 			callbacks && callbacks.onFileUploaded && callbacks.onFileUploaded(file);
 			next();
 		},
 
-		next = function () {
+		next = function() {
 			files[++index] ? doTask(index) : endTask();
 		},
 
-		handleError = function (error) {
+		handleError = function(error) {
 			var f = files[index];
 			Site.Alert({text: "upload file &laquo;" + f.name.safe() + "&raquo; failure"});
 			callbacks && callbacks.onError && callbacks.onError(f);
 			next();
 		},
 
-		endTask = function () {
+		endTask = function() {
 			modal.close();
 			modal = null;
 
 			callbacks && callbacks.onTaskFinished && callbacks.onTaskFinished(result);
 		},
 
-		doTask = function (index) {
+		doTask = function(index) {
 			var f = files[index];
 			if (typeof f !== "string" && f.size > 26214400) { // 25MB
 				Site.Alert({text: "file &laquo;" + f.name + "&raquo; was passed because size more than 25MB"});
@@ -3870,16 +3873,16 @@ function TabHost (items, callbacks) {
 };
 
 TabHost.prototype = {
-	_init: function () {
+	_init: function() {
 		var s = this;
-		this.tabs = this.items.map(function (i) {
+		this.tabs = this.items.map(function(i) {
 			return i instanceof Tab ? i : new Tab(s, i);
 		});
 	},
 
 	tabs: null,
 
-	setSelectedTab: function (selected) {
+	setSelectedTab: function(selected) {
 		if (!isNaN(selected)) {
 			selected = this.tabs[selected];
 		};
@@ -3904,9 +3907,9 @@ TabHost.prototype = {
 		});
 	},
 
-	getSelectedTab: function () {
+	getSelectedTab: function() {
 		var found = null;
-		this.tabs.forEach(function (tab) {
+		this.tabs.forEach(function(tab) {
 			if (tab.isActive) {
 				found = tab;
 			};
@@ -3914,9 +3917,9 @@ TabHost.prototype = {
 		return found;
 	},
 
-	findTabByName: function (name) {
+	findTabByName: function(name) {
 		var found = null;
-		this.tabs.forEach(function (tab) {
+		this.tabs.forEach(function(tab) {
 			if (tab.name) {
 				found = tab;
 			};
@@ -3924,14 +3927,14 @@ TabHost.prototype = {
 		return found;
 	},
 
-	getTab: function () {},
+	getTab: function() {},
 
 	node: null,
 
 	nodeTabs: null,
 	nodeContents: null,
 
-	getNode: function () {
+	getNode: function() {
 		if (this.node) {
 			return this.node;
 		};
@@ -3941,7 +3944,7 @@ TabHost.prototype = {
 			tabs = e("div", {"class": "vktab-tabs"}),
 			contents = e("div", {"class": "vktab-contents"});
 
-		this.tabs.forEach(function (item) {
+		this.tabs.forEach(function(item) {
 			tabs.appendChild(item.title);
 			contents.appendChild(item.content);
 		});
@@ -3962,7 +3965,7 @@ TabHost.prototype = {
 
 function Tab (host, o) {
 	var that = this,
-		click = function (event) {
+		click = function(event) {
 			host.setSelectedTab(that);
 		};
 	this.name = o.name;
@@ -3975,41 +3978,41 @@ function Tab (host, o) {
 Tab.prototype = {
 	isActive: false,
 
-	show: function () {
+	show: function() {
 		this.isActive = true;
 		$.elements.addClass(this.title, "vktab-tab-active");
 		$.elements.addClass(this.content, "vktab-content-active");
 		return this;
 	},
 
-	hide: function () {
+	hide: function() {
 		this.isActive = false;
 		$.elements.removeClass(this.title, "vktab-tab-active");
 		$.elements.removeClass(this.content, "vktab-content-active");
 		return this;
 	},
 
-	open: function (host) {
+	open: function(host) {
 		this.onOpen && this.onOpen(this, host);
 		return this;
 	},
 
-	leave: function (host) {
+	leave: function(host) {
 		this.onLeave && this.onLeave(this, host);
 		return this;
 	},
 
-	setTitle: function (title) {
+	setTitle: function(title) {
 		this.title.innerHTML = title;
 		return this;
 	},
 
-	setContent: function (content) {
+	setContent: function(content) {
 		$.elements.clearChild(this.content).appendChild(content);
 		return this;
 	},
 
-	getName: function () {
+	getName: function() {
 		return this.name;
 	}
 };
@@ -4033,14 +4036,14 @@ SearchLine.prototype = {
 		placeholder: ""
 	},
 
-	getOption: function (name) {
+	getOption: function(name) {
 		return this._options[name] || this.defaultOptions[name];
 	},
 
 	/**
 	 * Initialize object
 	 */
-	_init: function () {
+	_init: function() {
 		var e = $.e,
 			field = e("input", {type: "text", "class": "searchform-field sizefix", autocomplete: false, placeholder: this.getOption("placeholder")}),
 			icon = e("input", {type: "submit", "class": "searchform-icon", value: ""}),
@@ -4054,7 +4057,7 @@ SearchLine.prototype = {
 		this._initEvents();
 	},
 
-	setVisibility: function (isVisible) {
+	setVisibility: function(isVisible) {
 		this.nodeForm.style.display = isVisible ? "block" : "none";
 		return this;
 	},
@@ -4062,32 +4065,32 @@ SearchLine.prototype = {
 	/**
 	 * Initialize events
 	 */
-	_initEvents: function () {
+	_initEvents: function() {
 		var self = this;
 
-		$.event.add(this.nodeForm, "submit", function (event) {
+		$.event.add(this.nodeForm, "submit", function(event) {
 			event.preventDefault();
 			self._onSubmit();
 		});
 
-		$.event.add(this.nodeField, "keyup", function (event) {
+		$.event.add(this.nodeField, "keyup", function(event) {
 			self._onKeyUp(event);
 		});
 
-		$.event.add(this.nodeField, "focus", function (event) {
+		$.event.add(this.nodeField, "focus", function(event) {
 			self._onFocus();
 		});
 
-		$.event.add(this.nodeField, "blur", function (event) {
+		$.event.add(this.nodeField, "blur", function(event) {
 			self._onBlur();
 		});
 
-		$.event.add(this.nodeIcon, "click", function (event) {
+		$.event.add(this.nodeIcon, "click", function(event) {
 			self._onSubmit();
 		});
 	},
 
-	setOnHintRequestListener: function (listener) {
+	setOnHintRequestListener: function(listener) {
 		this.mOnHintRequestListener = listener;
 		return this;
 	},
@@ -4100,7 +4103,7 @@ SearchLine.prototype = {
 	mOnBlur: null,
 	mOnHintRequestListener: null,
 
-	getEventParams: function (event) {
+	getEventParams: function(event) {
 		return {
 			event: event,
 			text: this.nodeField.value.trim(),
@@ -4111,32 +4114,32 @@ SearchLine.prototype = {
 	/**
 	 * Callback, invoked when
 	 */
-	_onSubmit: function () {
+	_onSubmit: function() {
 		this.mOnSearch && this.mOnSearch(this.getEventParams(SearchLine.EVENT_SEARCH));
 	},
 
 	/**
 	 * Callback, invoked when
 	 */
-	_onKeyUp: function () {
+	_onKeyUp: function() {
 		this.mOnKeyUp && this.mOnKeyUp(this.getEventParams(SearchLine.EVENT_KEYUP));
 	},
 
 	/**
 	 * Callback, invoked when
 	 */
-	_onFocus: function () {
+	_onFocus: function() {
 		this.mOnFocus && this.mOnFocus(this.getEventParams(SearchLine.EVENT_FOCUS));
 	},
 
 	/**
 	 * Callback, invoked when
 	 */
-	_onBlur: function () {
+	_onBlur: function() {
 		this.mOnBlur && this.mOnBlur(this.getEventParams(SearchLine.EVENT_BLUR));
 	},
 
-	getNode: function () {
+	getNode: function() {
 		return this.nodeForm;
 	}
 };
@@ -4154,20 +4157,20 @@ ActionBlock.CLASS_OPENED = "actionBlock-showing";
 
 ActionBlock.prototype = {
 
-	_init: function () {
+	_init: function() {
 		this.nodeWrap = $.e("div", {"class": "actionBlock"});
 		getBody().appendChild(this.nodeWrap);
 	},
 
-	_prepareItems: function () {
+	_prepareItems: function() {
 		var e = $.e, self = this;
-		return e("div", {"class": "actionBlock-wrap", append: this._actions.map(function (i) {
+		return e("div", {"class": "actionBlock-wrap", append: this._actions.map(function(i) {
 			if (self.mOnPreparingItem && self.mOnPreparingItem(i, self.mItemForAction) === false) {
 				return e("div");
 			};
 			return e("div", {
 				"class": "actionBlock-item" + (i.iconClass ? " actionBlock-item-icon " + i.iconClass : ""),
-				onclick: function (event) {
+				onclick: function(event) {
 					i.onClick && i.onClick(self.mItemForAction);
 					self.hide();
 				},
@@ -4180,32 +4183,32 @@ ActionBlock.prototype = {
 	mItemForAction: null,
 	mOnPreparingItem: null,
 
-	setItemForAction: function (item) {
+	setItemForAction: function(item) {
 		this.mItemForAction = item;
 		return this;
 	},
 
-	setOnPreparingItem: function (listener) {
+	setOnPreparingItem: function(listener) {
 		this.mOnPreparingItem = listener;
 		return this;
 	},
 
-	getNode: function () {
+	getNode: function() {
 		return this.nodeWrap;
 	},
 
-	show: function () {
+	show: function() {
 		var w = this.nodeWrap, s = this;
-		w.appendChild($.e("div", {"class": "actionBlock-block", onclick: function () { s.hide() }}));
+		w.appendChild($.e("div", {"class": "actionBlock-block", onclick: function() { s.hide() }}));
 		w.appendChild(this._prepareItems());
 		w.style.bottom = -(45 * this._actions.length) + "px";
 		$.elements.addClass(w, ActionBlock.CLASS_OPENED);
 	},
 
-	hide: function () {
+	hide: function() {
 		var w = this.nodeWrap;
 		$.elements.removeClass(w, ActionBlock.CLASS_OPENED);
-		setTimeout(function () {
+		setTimeout(function() {
 			$.elements.clearChild(w);
 		}, 500);
 	}
@@ -4220,24 +4223,24 @@ function PendingAction (action, time) {
 	var self = this;
 	this._action = action;
 	this._cancelled = false;
-	this._id = setTimeout(function () {
+	this._id = setTimeout(function() {
 		!self._cancelled && self.doAction();
 	}, time);
 };
 
 PendingAction.prototype = {
 
-	doAction: function () {
+	doAction: function() {
 		this._action && this._action();
 	},
 
-	cancel: function () {
+	cancel: function() {
 		this._cancelled = true;
 		clearTimeout(this._id);
 		return this;
 	},
 
-	force: function () {
+	force: function() {
 		this.cancel().doAction();
 	}
 
@@ -4256,7 +4259,7 @@ Snackbar.CLASS_FADE_OUT = "snackbar-fadeout";
 
 Snackbar.prototype = {
 
-	_init: function (options) {
+	_init: function(options) {
 		var self = this;
 		this.nodeWrap = $.e("div", {"class": "snackbar", append: [
 			this.nodeAction = $.e("div", {"class": "snackbar-right"}),
@@ -4266,19 +4269,19 @@ Snackbar.prototype = {
 		this._onClick = options.onClick;
 		this._onClose = options.onClose;
 		if (this._onClose) {
-			this._pending = new PendingAction(function () {
+			this._pending = new PendingAction(function() {
 				self._onClose();
 				self.close();
 			}, options.duration);
 		};
 		if (this._onClick) {
-			this.nodeWrap.addEventListener("click", function (event) {
+			this.nodeWrap.addEventListener("click", function(event) {
 				self._onClick(self);
 			});
 		};
 	},
 
-	setOptions: function (options) {
+	setOptions: function(options) {
 		$.elements[options.action ? "removeClass" : "addClass"](this.nodeAction, Snackbar.CLASS_HIDDEN_ACTION);
 		var self = this;
 		this._options = options;
@@ -4286,7 +4289,7 @@ Snackbar.prototype = {
 			$.elements.clearChild(this.nodeAction).appendChild($.e("div", {
 				"class": "snackbar-action",
 				html: options.action.label,
-				onclick: function (event) {
+				onclick: function(event) {
 					event.preventDefault();
 					self._onClickAction(event);
 				}
@@ -4295,30 +4298,30 @@ Snackbar.prototype = {
 		this.setText(options.text);
 	},
 
-	_onClickAction: function (event) {
+	_onClickAction: function(event) {
 		this._pending.cancel();
 		this._options.action.onClick(this, event);
 		this.close();
 	},
 
-	setText: function (text) {
+	setText: function(text) {
 		this.nodeContent.innerHTML = text;
 		return this;
 	},
 
-	show: function () {
+	show: function() {
 		var self = this;
-		this._id = setTimeout(function () {
+		this._id = setTimeout(function() {
 			self.close();
 		}, this._duration);
 		getBody().appendChild(this.nodeWrap);
 	},
 
-	close: function () {
+	close: function() {
 		clearTimeout(this._id);
 		$.elements.addClass(this.nodeWrap, Snackbar.CLASS_FADE_OUT);
 		var self = this;
-		setTimeout(function () {
+		setTimeout(function() {
 			$.elements.remove(self.nodeWrap);
 		}, 500);
 	},
@@ -4359,11 +4362,11 @@ Modal.prototype = {
 	_init: function() {
 		var s = this;
 		$.elements.addClass(this.wrap, "hidden");
-		$.event.add(this.body, "scroll", function (event) {
+		$.event.add(this.body, "scroll", function(event) {
 			s._onScroll(event);
 		});
 		var self = this;
-		$.event.add(window, "resize", function (event) {
+		$.event.add(window, "resize", function(event) {
 			self._onResizeDocument(event);
 		});
 		if (isEnabled(128)) {
@@ -4447,7 +4450,7 @@ Modal.prototype = {
 	_hasCloseButton: function() {
 		var found = false;
 
-		(this.buttons || []).forEach(function (b) { if (b.name == "close") found = true; });
+		(this.buttons || []).forEach(function(b) { if (b.name == "close") found = true; });
 
 		return found;
 	},
@@ -4456,7 +4459,7 @@ Modal.prototype = {
 		var self = this;
 		this.modal.insertBefore($.e("div", {
 			"class": "modal-closeButton",
-			onclick: function () {
+			onclick: function() {
 				self.close();
 			}
 		}), this.title);
@@ -4477,7 +4480,7 @@ Modal.prototype = {
 		this.footer.innerHTML = "";
 		var n = this.footer, b, self = this;
 		b = this.buttons.map(function(item) {
-			n.appendChild($.e("button", {html: item.title, "data-name": item.name, onclick: function (event) {
+			n.appendChild($.e("button", {html: item.title, "data-name": item.name, onclick: function(event) {
 				item.onclick.call(self);
 			}}));
 		});
@@ -4548,7 +4551,7 @@ console.log(fromNodeAnimation);
 	close: function() {
 		$.elements.addClass(this.wrap, "modal-closing");
 		var s = this;
-		setTimeout(function () {
+		setTimeout(function() {
 			s.remove();
 		}, 600);
 		return this;
@@ -4634,7 +4637,7 @@ console.log(fromNodeAnimation);
 	 */
 	setButton: function(name, opts) {
 		var found = -1;
-		this.buttons = this.buttons.map(function (i) {
+		this.buttons = this.buttons.map(function(i) {
 			if (i.name !== name)
 				return i;
 			found = true;
@@ -4665,7 +4668,7 @@ console.log(fromNodeAnimation);
 	 */
 	removeButton: function(name) {
 		var index = -1;
-		this.buttons = this.buttons.forEach(function (i, x) {
+		this.buttons = this.buttons.forEach(function(i, x) {
 			if (i.name !== name)
 				return;
 			index = x;
@@ -4714,15 +4717,15 @@ console.log(fromNodeAnimation);
 	 * Closing window with delay
 	 * @param  {Number} time Delay in ms
 	 */
-	closeAfter: function (time) {
+	closeAfter: function(time) {
 		var s = this;
-		setTimeout(function () { s.close(); }, time);
+		setTimeout(function() { s.close(); }, time);
 		return this;
 	},
 
 	_onScrollCallback: null,
 
-	_onScroll: function (event) {
+	_onScroll: function(event) {
 		var ch, st, oh;
 		this._onScrollCallback && this._onScrollCallback({
 			top: st = this.body.scrollTop,
@@ -4732,7 +4735,7 @@ console.log(fromNodeAnimation);
 		});
 	},
 
-	_onResizeDocument: function (event) {
+	_onResizeDocument: function(event) {
 		var d = document.documentElement.clientHeight;
 
 		if (this.hasMarginTop) {
@@ -4743,9 +4746,9 @@ console.log(fromNodeAnimation);
 		this.body.style.maxHeight = (d - 157) + "px";
 	},
 
-	_windowStateChanged: function () {
+	_windowStateChanged: function() {
 		var hasOpened = false;
-		Array.prototype.forEach.call(document.querySelectorAll(".modal:not(.modal-x)"), function (i) {
+		Array.prototype.forEach.call(document.querySelectorAll(".modal:not(.modal-x)"), function(i) {
 			if (!$.elements.hasClass(i, "hidden")) hasOpened = true;
 		});
 		$.elements[hasOpened ? "addClass" : "removeClass"](document.documentElement, "__fixedBody");
@@ -4766,7 +4769,7 @@ function ProgressBar (min, max) {
 	this._init();
 };
 ProgressBar.prototype = {
-	_init: function () {
+	_init: function() {
 
 	},
 
@@ -4774,7 +4777,7 @@ ProgressBar.prototype = {
 	 * Return node of progressbar
 	 * @return   {Node}
 	 */
-	getNode: function () {
+	getNode: function() {
 		this.update();
 		return this.wrap;
 	},
@@ -4783,7 +4786,7 @@ ProgressBar.prototype = {
 	 * Update UI by current values
 	 * @return   {ProgressBar}
 	 */
-	update: function () {
+	update: function() {
 		this.line.style.width = this.getPercent() + "%";
 		return this;
 	},
@@ -4792,7 +4795,7 @@ ProgressBar.prototype = {
 	 * Eval percent from current values
 	 * @return   {Number}
 	 */
-	getPercent: function () {
+	getPercent: function() {
 		return Math.abs(this.min - ((this.min + this.value) * 100 / this.max));
 	},
 
@@ -4800,7 +4803,7 @@ ProgressBar.prototype = {
 	 * Change minimal value
 	 * @param   {Number}   min   New minimal value
 	 */
-	setMin: function (min) {
+	setMin: function(min) {
 		this.min = min;
 		this.update();
 		return this;
@@ -4810,7 +4813,7 @@ ProgressBar.prototype = {
 	 * Change maximal value
 	 * @param   {Number}   max   New maximal value
 	 */
-	setMax: function (max) {
+	setMax: function(max) {
 		this.max = max;
 		this.update();
 		return this;
@@ -4820,7 +4823,7 @@ ProgressBar.prototype = {
 	 * Change current value
 	 * @param   {Number}   value   New value
 	 */
-	setValue: function (value) {
+	setValue: function(value) {
 		this.value = value;
 		this.update();
 		return this;
@@ -4830,7 +4833,7 @@ ProgressBar.prototype = {
 	 * Return current value
 	 * @return   {Number}   Current value
 	 */
-	getValue: function () {
+	getValue: function() {
 		return this.value;
 	}
 };
