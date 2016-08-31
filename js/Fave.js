@@ -22,7 +22,7 @@ var Fave = {
 		};
 	},
 
-	getTabs: function () {
+	getTabs: function() {
 		return getTabPanel({
 			users: {
 				title: lg("fave.tabUsers"),
@@ -272,7 +272,7 @@ f = fields
 
 search in faved users
 
-var fxSearch = function (event) {
+var fxSearch = function(event) {
 	var text = $.trim(this.q ? this.q.value : this.value);
 	$.elements.clearChild(list);
 	if (!text) {
@@ -312,7 +312,7 @@ link = link.replace(/(https?:\/\/)?apidog\.ru\/6\.5\/#/igm, "http:\/\/vk.com/");
 
 Site.API("fave.addLink", {
 	link: link
-}, function (data) {
+}, function(data) {
 	if (Site.isResponse(data))
 		Site.Go(window.location.hash);
 })
@@ -375,7 +375,6 @@ return false;
 
 		loadNext: function(reset) {
 			var self = this;
-			console.log(this.cursor);
 			new APIRequest("fave.getPhotos", {
 				count: Fave.MAX_INSERTING,
 				offset: this.cursor,
