@@ -8,8 +8,8 @@
 var Lang = {
 	data: null,
 
-	load: function (callback) {
-		APIdogRequest("apidog.getLanguageData", {}, function (result) {
+	load: function(callback) {
+		APIdogRequest("apidog.getLanguageData", {}, function(result) {
 			Lang.data = result.data;
 			callback && callback();
 		});
@@ -20,12 +20,18 @@ var Lang = {
 			category = category.split(".");
 			variable = category[1];
 			category = category[0];
-		}
+		};
+
 		var result = Lang.data[category][variable];
-		if (Lang.data && Lang.data[category] && Lang.data[category][variable])
+
+		if (Lang.data && Lang.data[category] && Lang.data[category][variable]) {
 			result = Lang.data[category][variable];
-		if (count !== undefined)
+		};
+
+		if (count !== undefined) {
 			result = $.textCase(count, result);
+		};
+
 		return result != null ? result : "%" + category + "." + variable + "%";
 	}
 };
