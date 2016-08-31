@@ -25,7 +25,6 @@
 			onclick="VKHide.enable(this);" />
 
 	</div>
-
 	<blockquote><?=getLabel("_warningMobile");?></blockquote>
 </div>
 <?
