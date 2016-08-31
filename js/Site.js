@@ -113,6 +113,7 @@ var Site = {
 	APIv5: function (method, params, callback) {
 		return Site.API("execute", {code: "return API." + method + "(" + (function (params, pairs, key) {
 			for (key in params) {
+				console.log(key, params);
 				pairs.push(key + ":" + (!isNaN(params[key]) ? null == params[key] || "" == params[key] ? "\"\"" :  params[key] : "\"" + params[key].replace(/"/igm, "\\\"").replace(/\n/img, "\\n") + "\""));
 			};
 			return pairs.length ? "{" + pairs.join(",") + "}" : "";
@@ -1347,7 +1348,7 @@ var Site = {
 	/**
 	 * @deprecated
 	 */
-	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:result },
+	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:c },
 
 	/**
 	 * @deprecated
