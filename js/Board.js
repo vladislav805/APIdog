@@ -6,7 +6,7 @@
 
 var Board = {
 	RequestPage: function (group_id) {
-		switch (Site.Get("act")) {
+		switch (Site.get("act")) {
 			case "create":
 				if (Local.Users[group_id] && !Local.Users[group_id].is_admin)
 					return window.location.hash = "#board" + group_id;
@@ -26,15 +26,15 @@ var Board = {
 		Site.API("execute", {
 			code: 'return [API.board.getTopics({group_id:%g%,order:%r%,offset:%o%,count:30,extended:1,v:5.0}),API.groups.getById({group_ids:%g%,fields:"can_add_topics"})[0]];'
 					.replace(/%g%/ig, group_id)
-					.replace(/%r%/ig, Site.Get("order"))
-					.replace(/%o%/ig, Site.Get("offset"))
+					.replace(/%r%/ig, Site.get("order"))
+					.replace(/%o%/ig, getOffset())
 		}, function (data) {
 			data = Site.isResponse(data);
 			var parent = document.createElement("div"),
 				fieldlist = document.createElement("div"),
 				board = data[0],
 				group = data[1],
-				users = Local.AddUsers(board.profiles.concat(board.groups)),
+				users = Local.add(board.profiles.concat(board.groups)),
 				list = board.items;
 			parent.appendChild(
 				Site.CreateHeader(
@@ -53,7 +53,7 @@ var Board = {
 				]}))
 			};
 			parent.appendChild(fieldlist);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), board.count, 30));
+			parent.appendChild(Site.PagebarV2(getOffset(), board.count, 30));
 			Site.Append(parent);
 			Site.SetHeader("Обсуждения", {link: group.screen_name || "club" + group_id});
 		})
@@ -106,14 +106,14 @@ var Board = {
 			code: 'return [API.board.getComments({group_id:%g%,topic_id:%b%,need_likes:1,extended:1,count:40,offset:%o%,sort: "asc",v:5.0}),API.board.getTopics({group_id:%g%,topic_ids:%b%}).items[0],API.groups.getById({group_id:%g%})[0].is_admin];'
 					.replace(/%g%/ig, group_id)
 					.replace(/%b%/ig, board_id)
-					.replace(/%o%/ig, Site.Get("offset"))
+					.replace(/%o%/ig, getOffset())
 		}, function (data) {
 			data = Site.isResponse(data);
 			var topic = data[1],
 				isAdmin = data[2],
 				data = data[0],
 				comments = data.items,
-				users = Local.AddUsers(data.profiles.concat(data.groups)),
+				users = Local.add(data.profiles.concat(data.groups)),
 				count = data.count,
 				parent = document.createElement("div"),
 				list = document.createElement("div"),
@@ -164,7 +164,7 @@ var Board = {
 				list.appendChild(Board.item(comments[i], isAdmin, group_id, board_id, {textarea: ft}));
 			}
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 40));
 			if (!topic.is_closed)
 				parent.appendChild(form);
 			Site.Append(parent);
@@ -192,7 +192,7 @@ var Board = {
 			};
 		})(o.textarea, user, c.id)}));
 		actions.push($.e("span", {"class": "tip", html: " | "}));
-		if (API.uid == from || is_admin && from < 0) {
+		if (API.userId == from || is_admin && from < 0) {
 			actions.push($.elements.create("span", {"class": "a", html: "Редактировать", onclick: (function (node, group_id, topic_id, comment_id, is_admin) {
 				return function (event) {
 					var node = textNode.parentNode;
@@ -202,7 +202,7 @@ var Board = {
 			})(textNode, group_id, topic_id, c.id, is_admin)}));
 			actions.push($.elements.create("span", {"class": "tip", html: " | "}));
 		}
-		if (is_admin || API.uid == from)
+		if (is_admin || API.userId == from)
 			actions.push($.elements.create("span", {"class": "a", html: "Удалить", onclick: (function (id, elem) {
 				return function (event) {
 					Site.API("board.deleteComment", {
@@ -280,7 +280,7 @@ var Board = {
 					data = Site.isResponse(data);
 					if (data) {
 						nodeList.appendChild(Board.item({
-							from_id: from_group ? -group_id : API.uid,
+							from_id: from_group ? -group_id : API.userId,
 							date: Math.round(+new Date() / 1000),
 							text: text,
 							id: data
