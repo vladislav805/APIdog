@@ -5,11 +5,11 @@
  */
 
 var Gifts = {
-	RequestPage: function () {
-		var act = Site.Get("act"),
-			userId = Site.Get("userId"),
-			toId = Site.Get("toId"),
-			giftId = Site.Get("giftId");
+	RequestPage: function() {
+		var act = getAct(),
+			userId = Site.get("userId"),
+			toId = Site.get("toId"),
+			giftId = Site.get("giftId");
 		Site.Loader();
 		switch (act) {
 			case "send":
@@ -22,9 +22,9 @@ var Gifts = {
 					no_inapp: 0,
 					force_payment: 1,
 					v: 5.27
-				}, function (data) {
+				}, function(data) {
 					if (!(data = Site.isResponse(data)))
-						return Site.Append(Site.EmptyField(Lang.get("gifts.error")));
+						return Site.Append(getEmptyField(Lang.get("gifts.error")));
 					var i, j, items, item;
 					Gifts.catalog = [];
 					Gifts.items = {};
@@ -36,38 +36,41 @@ var Gifts = {
 						}
 						Gifts.catalog.push(new GiftCategory(data[i]));
 					}
-					if (giftId)
+					if (giftId) {
 						return Gifts.showSendForm(toId, giftId);
-					else
+					} else {
 						return Gifts.showCatalog(toId);
+					};
 				});
 
 				break;
 			default:
 				Site.API("execute", {
 					code: "var g=API.gifts.get({user_id:%u%,count:40,offset:%o%,v:5.27});return{gifts:g,users:API.users.get({user_ids:g.items@.from_id,fields:\"first_name_gen,last_name_gen,sex,online,photo_50,screen_name\"})};"
-						.replace(/%o%/img, Site.Get("offset"))
-						.replace(/%u%/img, userId || API.uid)
+						.replace(/%o%/img, getOffset())
+						.replace(/%u%/img, userId || API.userId)
 				}, Gifts.showList);
 				break;
 		}
 	},
 	catalog: null,
 	items: null,
-	parse: function (items) {
-		for (var i in items)
+	parse: function(items) {
+		for (var i in items) {
 			items[i] = new Gift(items[i]);
+		}
 		return items;
 	},
-	showList: function (data) {
+	showList: function(data) {
 		data = Site.isResponse(data);
-		if (!data.gifts)
-		{
-			Site.Append(Site.EmptyField(Lang.get("gifts.gifts_access_denied")));
+
+		if (!data.gifts) {
+			Site.append(getEmptyField(Lang.get("gifts.gifts_access_denied")));
 			return;
-		}
-		var gifts, count, i, l, gift, wrap, list, e = $.e, userId = Site.Get("userId") || API.uid;
-		Local.AddUsers(data.users);
+		};
+
+		var gifts, count, i, l, gift, wrap, list, e = $.e, userId = Site.get("userId") || API.userId;
+		Local.add(data.users);
 		count = data.gifts.count;
 		gifts = Gifts.parse(data.gifts.items);
 		i = 0;
@@ -80,7 +83,7 @@ var Gifts = {
 		};
 
 		wrap.appendChild(Gifts.getDefaultTabs(userId));
-		wrap.appendChild(Site.CreateHeader(
+		wrap.appendChild(Site.getPageHeader(
 			count + " " + Lang.get("gifts", "gifts_", count),
 			$.e("a", {"class": "fr", href: "#gifts?act=send&toId=" + userId, html: Lang.get("gifts.send_gift")}),
 			{
@@ -88,22 +91,22 @@ var Gifts = {
 			}
 		));
 		wrap.appendChild(list);
-		wrap.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
+		wrap.appendChild(Site.PagebarV2(getOffset(), count, 40));
 		Site.Append(wrap);
 	},
-	getDefaultTabs: function (userId) {
+	getDefaultTabs: function(userId) {
 		var tabs = [
 			["gifts" + (userId ? "?userId=" + userId : ""), Lang.get("gifts.gifts")],
 		];
-		if (Site.Get("act"))
-			switch (Site.Get("act")) {
+		if (getAct())
+			switch (getAct()) {
 				case "send":
-					tabs.push([!Site.Get("giftId") ? "gifts?act=send&toId=" + userId : "gifts?act=send&toId=" + userId + "&giftId=" + Site.Get("giftId") , Lang.get("gifts.gifts_send")]);
+					tabs.push([!Site.get("giftId") ? "gifts?act=send&toId=" + userId : "gifts?act=send&toId=" + userId + "&giftId=" + Site.get("giftId") , Lang.get("gifts.gifts_send")]);
 					break;
 			}
 		return Site.CreateTabPanel(tabs);
 	},
-	showCatalog: function (toId, categoryId) {
+	showCatalog: function(toId, categoryId) {
 		var wrap, list, item, e = $.e;
 
 		wrap = e("div", {"class": "gifts-wrap"});
@@ -115,16 +118,16 @@ var Gifts = {
 		}
 
 		wrap.appendChild(Gifts.getDefaultTabs(toId));
-		wrap.appendChild(Site.CreateHeader(Lang.get("gifts.send_gift"), null, {className: "gifts-head"}));
+		wrap.appendChild(Site.getPageHeader(Lang.get("gifts.send_gift"), null, {className: "gifts-head"}));
 		wrap.appendChild(list);
 		Site.Append(wrap);
 		Gifts.onResizeSendCatalog(list.querySelectorAll("a.gifts-item"), $.getPosition(list).width);
-		window.onResizeCallback = function (event) {
+		window.onResizeCallback = function(event) {
 			var w = $.getPosition(list).width;
 			Gifts.onResizeSendCatalog(list.querySelectorAll("a.gifts-item"), w);
 		};
 	},
-	onResizeSendCatalog: function (nodes, width) {
+	onResizeSendCatalog: function(nodes, width) {
 		var n = 6;
 		if (width < 624)
 			n = 5;
@@ -140,11 +143,11 @@ var Gifts = {
 		for (i in nodes)
 			nodes[i].style.width = pfb + "px";
 	},
-	showSendForm: function (toId, giftId) {
+	showSendForm: function(toId, giftId) {
 		var wrap, form, gift, e = $.e, user;
 
 		wrap = e("div");
-		form = e("form", {"class": "sf-wrap", onsubmit: function (event) {
+		form = e("form", {"class": "sf-wrap", onsubmit: function(event) {
 			var message, privacy;
 
 			message = this.message && $.trim(this.message.value);
@@ -159,15 +162,15 @@ var Gifts = {
 			return false;
 		}});
 
-		Site.APIv5("users.get", {user_ids: toId, fields: "photo_50,online,screen_name", v: 5.27}, function (data) {
+		Site.APIv5("users.get", {user_ids: toId, fields: "photo_50,online,screen_name", v: 5.27}, function(data) {
 			data = Site.isResponse(data);
-			Local.AddUsers(data);
+			Local.add(data);
 			var u = data[0];
 			user.innerHTML = u.first_name + " " + u.last_name + Site.isOnline(u);
 			user.href = "#" + u.screen_name;
 		})
 
-		gift = Gifts.items[Site.Get("giftId")];
+		gift = Gifts.items[Site.get("giftId")];
 
 		form.appendChild(gift.getPreview());
 		form.appendChild(e("div", {"class": "tip", html: Lang.get("gifts.send_getter")}));
@@ -180,13 +183,13 @@ var Gifts = {
 		form.appendChild(e("input", {type: "submit", value: Lang.get("gifts.send_send"), name: "sbm"}));
 
 		wrap.appendChild(Gifts.getDefaultTabs(toId));
-		wrap.appendChild(Site.CreateHeader(Lang.get("gifts.send_gift"), null, {className: "gifts-head"}));
+		wrap.appendChild(Site.getPageHeader(Lang.get("gifts.send_gift"), null, {className: "gifts-head"}));
 		wrap.appendChild(form);
 
 		Site.Append(wrap);
 		Site.SetHeader(Lang.get("gifts.send_gift"), {link: "#gifts?act=send&toId=" + toId});
 	},
-	send: function (params, submitter) {
+	send: function(params, submitter) {
 		submitter.disabled = true;
 		submitter.value = Lang.get("gifts.send_sending");
 		var api = {
@@ -198,9 +201,9 @@ var Gifts = {
 			guid: parseInt(Math.random() * 10000000),
 			force_payment: 1,
 			no_inapp: 0
-		}, fx = function (data) {
+		}, fx = function(data) {
 			if (data.error && data.error.error_code == 24 && data.error.confirmation_text) {
-				VKConfirm(data.error.confirmation_text, function () {
+				VKConfirm(data.error.confirmation_text, function() {
 					api.confirm = 1;
 					Site.APIv5("gifts.send", api, fx);
 				});
@@ -214,14 +217,14 @@ var Gifts = {
 				API.balance.votes -= data.withdrawn_votes;
 
 			submitter.value = Lang.get("gifts.send_sent");
-			setTimeout(function () {
+			setTimeout(function() {
 				window.location.hash = "#gifts?userId=" + params.toId;
 			}, 1000);
 		};
 
 		Site.API("gifts.send", api, fx)
 	},
-	getAttachment: function (gift) {
+	getAttachment: function(gift) {
 		var e = $.e;
 		gift = new Gift({gift: gift});
 		return e("a", {"class": "attachments-gift", href: "#gifts", append: [
@@ -271,7 +274,7 @@ function GiftCategory (c) {
 	s.name = c.name;
 	s.items = c.items && c.items[0] && c.items[0].giftId != undefined ? items : Gifts.parse(c.items);
 };
-Gift.prototype.getNode = function (toId) {
+Gift.prototype.getNode = function(toId) {
 	var e = $.e, ctx = this;
 
 	return e("div", {"class": "gift-item", id: "gift" + this.id, append: [
@@ -279,14 +282,14 @@ Gift.prototype.getNode = function (toId) {
 			e(this.fromId ? "a" : "div", {"class": "a gift-photo", append: e("img", {src: getURL(this.sender.photo_50)})}),
 			e("div", {"class": "gift-right", append: [
 				e("div", {"class": "gift-sender", append: [
-					e(this.fromId ? "a" : "div", {"class": "a gift-sender", href: "#" + this.sender.screen_name, html: this.sender.first_name + " " + this.sender.last_name + Site.isOnline(this.sender)}),
+					e(this.fromId ? "a" : "div", {"class": "a gift-sender", href: "#" + this.sender.screen_name, html: getName(this.sender)}),
 					this.getType()
 				]}),
 				e("div", {"class": "tip", html: $.getDate(this.date)}),
 				this.getPreview(),
-				this.hash && toId == API.uid ? e("div", {"class": "gift-footer", append: [
+				this.hash && toId == API.userId ? e("div", {"class": "gift-footer", append: [
 					e("a", {href: "#gifts?act=send&toId=" + this.fromId, html: Lang.get("gifts.gift_action_reply")}),
-					e("div", {"class": "a", html: Lang.get("gifts.gift_action_delete"), onclick: function (event) {
+					e("div", {"class": "a", html: Lang.get("gifts.gift_action_delete"), onclick: function(event) {
 						ctx["delete"]();
 					}})
 				]}) : null
@@ -294,39 +297,39 @@ Gift.prototype.getNode = function (toId) {
 		]}),
 		e("div", {id: "gift" + this.id + "-deleted", "class": "hidden", append: e("div", {"class": "gift-deleted", append: [
 			e("span", {html: Lang.get("gifts.deleted")}),
-			e("span", {"class": "a", html: Lang.get("gifts.restore"), onclick: function (event) {
+			e("span", {"class": "a", html: Lang.get("gifts.restore"), onclick: function(event) {
 				ctx.restore();
 			}})
 		]})})
 	]});
 };
-Gift.prototype["delete"] = function () {
+Gift.prototype["delete"] = function() {
 	var giftId = this.id;
 	Site.API("gifts.delete", {
 		id: giftId,
 		gift_hash: this.hash
-	}, function (data) {
+	}, function(data) {
 		$.elements.addClass($.element("gift" + giftId + "-content"), "hidden");
 		$.elements.removeClass($.element("gift" + giftId + "-deleted"), "hidden");
 	});
 };
-Gift.prototype.restore = function () {
+Gift.prototype.restore = function() {
 	var giftId = this.id;
 	Site.API("gifts.restore", {
 		id: this.id,
 		gift_hash: this.hash
-	}, function (data) {
+	}, function(data) {
 		$.elements.removeClass($.element("gift" + giftId + "-content"), "hidden");
 		$.elements.addClass($.element("gift" + giftId + "-deleted"), "hidden");
 	});
 };
-Gift.prototype.getType = function () {
+Gift.prototype.getType = function() {
 	return $.e("span", {"class": "tip", html: Lang.get("gifts.gift_type_" + ["normal", "only_getter", "only_sender"][this.privacy || 0])});
 };
-Gift.prototype.getPreviewImage = function (isEvent) {
+Gift.prototype.getPreviewImage = function(isEvent) {
 	return $.e(!isEvent || this.disabled ? "div" : "a", {
 		"class": "gifts-item" + (this.disabled ? " gifts-disabled" : ""),
-		href: "#gifts?act=send&toId=" + Site.Get("toId") + "&giftId=" + this.giftId,
+		href: "#gifts?act=send&toId=" + Site.get("toId") + "&giftId=" + this.giftId,
 		append: [
 			$.e("img", {
 				"class": "gift-image",
@@ -339,26 +342,26 @@ Gift.prototype.getPreviewImage = function (isEvent) {
 		]
 	});
 };
-Gift.prototype.getPreview = function () {
+Gift.prototype.getPreview = function() {
 	return $.e("div", {"class": "gift-preview", append: [
 		$.e("img", {"class": "gift-image", src: getURL(this.giftPhoto.big)}),
-		this.message ? $.e("div", {"class": "gift-message", html: Site.Format(this.message)}) : null
+		this.message ? $.e("div", {"class": "gift-message", html: this.message.safe()}) : null // TODO FORMAT()
 	]});
 };
-GiftCategory.prototype.getExtendedBlock = function (parent) {
-	var e = $.e, wrap, header, preview, items, item, l = this.items, triggerFunction = function (event) {
+GiftCategory.prototype.getExtendedBlock = function(parent) {
+	var e = $.e, wrap, header, preview, items, item, l = this.items, triggerFunction = function(event) {
 		$.elements.toggleClass(wrap, "gifts-category-opened");
 	};
 
 	wrap = e("div", {"class": "gifts-category-item", id: "gifts-category-" + this.name});
-	header = e("div", {"class": "gifts-category-title", html: this.title, onclick: triggerFunction});
-	preview = e("div", {"class": "gifts-category-preview", append: (function (a, b, c, d, e) {
+	header = e("div", {"class": "gifts-category-title", html: this.title.safe(), onclick: triggerFunction});
+	preview = e("div", {"class": "gifts-category-preview", append: (function(a, b, c, d, e) {
 		while (b < c && (e = a[b++])) {
 			d.push(e.getPreviewImage(false));
 		}
 		return d;
 	})(l, 0, 6, [], null), onclick: triggerFunction});
-	items = e("div",  {"class": "gifts-category-items", append: (function (a, b, c, d) {
+	items = e("div",  {"class": "gifts-category-items", append: (function(a, b, c, d) {
 		while (c = a[b++])
 			d.push(c.getPreviewImage(true));
 		return d;
