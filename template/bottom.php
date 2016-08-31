@@ -5,14 +5,14 @@
 				</div>
 			</div>
 		</div>
-		<script src="lib1.3.0.js"></script>
+		<script src="lib/lib1.3.0.js"></script>
 		<script src="js/SDK.js"></script>
 		<script src="js/VKUpload.js"></script>
-		<script src="nondefault.js?1"></script>
-		<script type="text/javascript">var API = <?
+		<script src="lib/nondefault.js?1"></script>
+		<script type="text/javascript"><?
 	if (defined("_installed")) {
 		$user = getUserDataForNonStdPages();
-		print json_encode($user["usr"] ? $user["usr"] : [
+		print "var API = " . json_encode($user["usr"] ? $user["usr"] : [
 			"userAccessToken" => "",
 			"userId" => 0,
 			"authKey" => "",
