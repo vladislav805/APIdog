@@ -6,7 +6,7 @@
 
 var Feed = {
 	Filter: "",
-	GetTabs: function () {
+	GetTabs: function() {
 		return Site.CreateTabPanel([
 			["feed", lg("feed.tabFeed")],
 			["feed?act=notifications", lg("feed.tabNotifications")],
@@ -16,7 +16,7 @@ var Feed = {
 		]);
 	},
 
-	RequestPage: function () {
+	RequestPage: function() {
 		var start = new Date();
 		start.setTime(start.getTime() - 1000 * 60 * 60 * 24 * 14);
 		start = parseInt(start / 1000);
@@ -27,14 +27,14 @@ var Feed = {
 				return new APIRequest("execute", {
 					code: "return API.newsfeed.getComments({offset:Args.o,from:Args.f,count:30,allow_group_comments:1,last_comments:1,fields:\"photo_50,online,first_name_dat,last_name_dat\",v:5.30});",
 						o: getOffset(),
-						f: Site.Get("from")
+						f: Site.get("from")
 				}).setOnCompleteListener(Feed.showComments).execute();
 
 			case "search":
 				if (Site.get("owner")) {
 					return Feed.searchByOwner(Site.get("owner"), Site.get("q"), getOffset());
 				};
-				return Feed.search({q: Site.Get("q") || "", offset: getOffset()});
+				return Feed.search({q: Site.get("q") || "", offset: getOffset()});
 
 			case "notifications":
 				Site.Loader();
@@ -51,13 +51,13 @@ var Feed = {
 				Site.APIv5("newsfeed.getMentions", {start_time: start, count: 30, allow_group_comments:1, v: 5.8}, Feed.convert);
 			break;
 			case "recommends":
-				Site.APIv5("newsfeed.getRecommended", {start_time: start, count: 50, allow_group_comments:1, v: 5.14, start_from: Site.Get("start_from")}, Feed.convert);
+				Site.APIv5("newsfeed.getRecommended", {start_time: start, count: 50, allow_group_comments:1, v: 5.14, start_from: Site.get("start_from")}, Feed.convert);
 			break;
 			case "select_list":
 				if (Feed.Filters.length)
 					Feed.getLists();
 				else
-					Site.APIv5("newsfeed.getLists", {v: 5.14}, function (data) {
+					Site.APIv5("newsfeed.getLists", {v: 5.14}, function(data) {
 						data = Site.isResponse(data);
 						Feed.Filters = data.items;
 						return Feed.getLists();
@@ -65,8 +65,8 @@ var Feed = {
 			break;
 			default:
 				Site.Loader();
-				var lists = Site.Get("lists") || "",
-					filter = Site.Get("filter") == "photos" ? "photo,wall_photo,photo_tag" : "post,photo,photo_tag",
+				var lists = Site.get("lists") || "",
+					filter = Site.get("filter") == "photos" ? "photo,wall_photo,photo_tag" : "post,photo,photo_tag",
 					requests = [
 						{method: "account.getCounters", params: {}},
 						{method: "newsfeed.get", params: {start_time: start, count: 25, filters: filter, source_ids: lists, v: 5.14}}];
@@ -79,13 +79,13 @@ var Feed = {
 				Site.APIExecute(requests, Feed.getFeed);
 		}
 	},
-	convert: function (data) {console.log(data);
+	convert: function(data) {console.log(data);
 		return Feed.getFeed({response: [null, data]});
 	},
 	Cache:{},
 	CacheDate:0,
 	Filters: [],
-	getFeed: function (data) {
+	getFeed: function(data) {
 		data = data.response || data;
 		if (data[0])
 			Site.setCounters(data[0]);
@@ -107,7 +107,7 @@ var Feed = {
 		Site.Append(parent);
 		Site.SetHeader(lg("feed.headTitle"));
 	},
-	getSelectionsTabs: function () {
+	getSelectionsTabs: function() {
 		var e = Site.CreateTabPanel([
 			["feed", lg("feed.tabFeedSelections")],
 			["feed?filter=photos", lg("feed.tabPhotos")],
@@ -119,7 +119,7 @@ var Feed = {
 		$.elements.addClass(e, "feed-tabs-selector");
 		return e;
 	},
-	getItems: function (list, data, count, next) {
+	getItems: function(list, data, count, next) {
 		for (var i = 0, l = data.length; i < l; ++i) {
 			var c = data[i];
 			switch (c.type){
@@ -134,28 +134,28 @@ var Feed = {
 			}
 		};
 		var evfx, button;
-		list.appendChild(button=$.e("div", {"class": "button-block", html: "Поздние записи..", onclick: evfx=function (event) {
+		list.appendChild(button=$.e("div", {"class": "button-block", html: "Поздние записи..", onclick: evfx=function(event) {
 			if (this.disabled)
 				return;
 			this.disabled = true;
 			var start = new Date(),
 				button = this,
-				lists = Site.Get("lists") || "",
-				filter = Site.Get("filter") == "photos" ? "photo,wall_photo,photo_tag" : "post,photo,photo_tag";
+				lists = Site.get("lists") || "",
+				filter = Site.get("filter") == "photos" ? "photo,wall_photo,photo_tag" : "post,photo,photo_tag";
 			button.innerHTML = "&nbsp;";
 			$.elements.addClass(button, "msg-loader");
 			start.setTime(start.getTime() - 1000 * 60 * 60 * 24 * 14);
 			start = parseInt(start / 1000);
-			Site.APIv5(Site.Get("act") != "recommends" ? "newsfeed.get" : "newsfeed.getRecommended", {
+			Site.APIv5(Site.get("act") != "recommends" ? "newsfeed.get" : "newsfeed.getRecommended", {
 				start_time: start,
 				count: 25,
 				filters: filter,
 				source_ids: lists,
 				start_from: next,
 				v: 5.14
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
-				Local.AddUsers(data.profiles.concat(data.groups));
+				Local.add(data.profiles.concat(data.groups));
 				var count = data.count, next = data.next_from;
 				data = data.items;
 				Feed.getItems(list, data, count, next);
@@ -163,14 +163,14 @@ var Feed = {
 			});
 		}}));
 
-		window.onScrollCallback = function (event) {
+		window.onScrollCallback = function(event) {
 			if (event.needLoading) {
 				evfx.call(button);
 			};
 		};
 	},
 	event: {
-		addedPhotos: function (item) {
+		addedPhotos: function(item) {
 			var parent = document.createElement("div"),
 				right = document.createElement("div"),
 				list = document.createElement("div"),
@@ -178,30 +178,30 @@ var Feed = {
 				user = Local.Users[item.source_id];
 			parent.id = "wall-photo"+ item.source_id + "_" + item.post_id;
 			parent.appendChild(Feed.getHideNode("photo", item.source_id, item.post_id));
-			parent.appendChild($.elements.create("a", {
+			parent.appendChild($.e("a", {
 				href: "#" + user.screen_name,
-				append: [$.elements.create("img", {src: getURL(user.photo || user.photo_rec || user.photo_50), "class": "wall-left"})]
+				append: [$.e("img", {src: getURL(user.photo || user.photo_rec || user.photo_50), "class": "wall-left"})]
 			}));
-			right.appendChild($.elements.create("div", {append: [
-				$.elements.create("a", {href: "#" + user.screen_name, html: (user.name || user.first_name + " " + user.last_name + Site.isOnline(user)), "class": "bold"}),
-				$.elements.create("span", {"class": "tip", html: " " + lg("feed.eventsAddedPhotosVerb")[user.sex || 0] + " " + photos.count + " " + Lang.get("feed", "eventsAddedPhotosPhotos", photos.count)})
+			right.appendChild($.e("div", {append: [
+				$.e("a", {href: "#" + user.screen_name, html: (user.name || user.first_name + " " + user.last_name + Site.isOnline(user)), "class": "bold"}),
+				$.e("span", {"class": "tip", html: " " + lg("feed.eventsAddedPhotosVerb")[user.sex || 0] + " " + photos.count + " " + Lang.get("feed", "eventsAddedPhotosPhotos", photos.count)})
 			]}));
 			for (var i = 0; i < photos.items.length; ++i)
 				list.appendChild(Photos.itemPhoto(Photos.v5normalize(photos.items[i])));
 			right.appendChild(list);
-			right.appendChild($.elements.create("div", {"class": "tip", html: Site.getDate(item.date)}));
+			right.appendChild($.e("div", {"class": "tip", html: Site.getDate(item.date)}));
 			right.className = "wall-right";
 			parent.appendChild(right);
-			return $.elements.create("div", {append: [parent], "class": "wall-item"});
+			return $.e("div", {append: [parent], "class": "wall-item"});
 		},
-		addedFriends: function (item) {
+		addedFriends: function(item) {
 			var wrap = document.createElement("div"),
 				left = document.createElement("a"),
 				right = document.createElement("div"),
 				owner = Local.Users[item.source_id],
 				users = item.friends && item.friends.items || [],
 				count = item.friends && item.friends.count || 0,
-				e = $.elements.create,
+				e = $.e,
 				nodes = Feed.event.getFriendsListNode(users);
 			wrap.className = "wall-item";
 			if (!count)
@@ -221,17 +221,17 @@ var Feed = {
 			wrap.appendChild(right);
 			return wrap;
 		},
-		getFriendsListNode: function (u) {
+		getFriendsListNode: function(u) {
 			var e = $.e,
 				g = [],
 				t = e("span", {"class": "tip"}),
 				p = e("div"),
-				m = function (a, b)
+				m = function(a, b)
 				{
 					b = Local.Users[a.uid];
 					return e("a", {href: "#" + b.screen_name, html: b.first_name + " " + b.last_name});
 				},
-				n = function (a, b)
+				n = function(a, b)
 				{
 					b = Local.Users[a.uid];
 					return e("a", {"class": "feed-friends-photo", href: "#" + b.screen_name, append: e("img", {src: getURL(b.photo_50)})});
@@ -259,28 +259,28 @@ var Feed = {
 			return [t, p];
 		},
 	},
-	getHideNode: function (type, owner_id, item_id) {
-		return $.elements.create("div", {
+	getHideNode: function(type, owner_id, item_id) {
+		return $.e("div", {
 			"class": "feed-close a",
-			onclick: function (event) {
+			onclick: function(event) {
 				event.stopPropagation();
 				return Feed.hidePost(type, owner_id, item_id);
 			}
 		});
 	},
-	hidePost: function (type, owner_id, item_id) {
+	hidePost: function(type, owner_id, item_id) {
 		var node = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
 
-		Site.API("newsfeed.ignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function (response) {
+		Site.API("newsfeed.ignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function(response) {
 			if (!Site.isResponse(response))
 				return;
 
 			var hidden = $.e("div", {"class": "wall-hidden", append: [
 				$.e("div", {html: "Эта запись не будет показываться в ленте."}),
 				$.e("div", {append: [
-					$.elements.create("a", {
+					$.e("a", {
 						html: "Скрыть все новости этого " + (owner_id > 0 ? "пользователя" : "сообщества"),
-						onclick: function (event) {
+						onclick: function(event) {
 							event.stopPropagation();
 							return Feed.addBan(owner_id, type, item_id);
 						}
@@ -289,7 +289,7 @@ var Feed = {
 				$.e("div", {append:
 					$.e("a", {
 						html: "Вернуть этот пост в ленту",
-						onclick: function (event) {
+						onclick: function(event) {
 							event.stopPropagation();
 							$.elements.removeClass(node, "hidden");
 							$.elements.remove(hidden);
@@ -303,26 +303,26 @@ var Feed = {
 		});
 		return false;
 	},
-	unhidePost: function (type, owner_id, item_id) {
+	unhidePost: function(type, owner_id, item_id) {
 		var e = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
-		Site.API("newsfeed.unignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function (response) {
+		Site.API("newsfeed.unignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function(response) {
 			if (!Site.isResponse(response))
 				return;
 		});
 		return false;
 	},
-	addBan: function (owner_id, type, item_id) {
+	addBan: function(owner_id, type, item_id) {
 		var params = {}, curPost = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
 		if (owner_id > 0) params.user_ids = owner_id; else params.group_ids = -owner_id;
-		Site.API("newsfeed.addBan", params, function (response) {
+		Site.API("newsfeed.addBan", params, function(response) {
 			var e = document.querySelectorAll(".wall-item[id^=\"wall-post" + owner_id + "\"]");
 			for (var i = 0, l = e.length; i < l; ++i)
 				if (curPost != e[i])
 					$.elements.addClass(e[i], "hidden");
 			$.elements.clearChild(curPost.previousSibling);
-			curPost.previousSibling.appendChild($.elements.create("div", {html: "Все записи этого " + (owner_id > 0 ? "пользователя" : "сообщества") + " скрыты из новостной ленты"}));
-			curPost.previousSibling.appendChild($.elements.create("a", {html: "Отмена", onclick: function () {
-				Feed.removeFromBan(owner_id, function () {
+			curPost.previousSibling.appendChild($.e("div", {html: "Все записи этого " + (owner_id > 0 ? "пользователя" : "сообщества") + " скрыты из новостной ленты"}));
+			curPost.previousSibling.appendChild($.e("a", {html: "Отмена", onclick: function() {
+				Feed.removeFromBan(owner_id, function() {
 					for (var i = 0, l = e.length; i < l; ++i)
 						if (curPost != e[i])
 							$.elements.removeClass(e[i], "hidden");
@@ -332,24 +332,24 @@ var Feed = {
 			}}));
 		});
 	},
-	removeFromBan: function (ownerId, callback) {
+	removeFromBan: function(ownerId, callback) {
 		var options = {};
 		if (ownerId > 0)
 			options.user_ids = ownerId;
 		else
 			options.group_ids = -ownerId;
-		Site.API("newsfeed.deleteBan", options, function (data) {
+		Site.API("newsfeed.deleteBan", options, function(data) {
 			data = Site.isResponse(data);
 			callback();
 		});
 	},
-	getLists: function () {
+	getLists: function() {
 		var lists = Feed.Filters,
 			parent = document.createElement("div"),
 			list = document.createElement("div"),
-			e = $.elements.create,
-			getItem = function (i) {
-				return e("a", {href: "#feed?lists=" + (i.id ? "list" + i.id : i.name), html: Site.Escape(i.title)});
+			e = $.e,
+			getItem = function(i) {
+				return e("a", {href: "#feed?lists=" + (i.id ? "list" + i.id : i.name), html: i.title.safe()});
 			};
 		list.className = "minilist";
 		for (var i = 0, l = lists.length; i < l; ++i)
@@ -364,9 +364,9 @@ var Feed = {
 		Site.Append(parent);
 		Site.SetHeader("Списки новостей");
 	},
-	getFriends: function (data) {
+	getFriends: function(data) {
 		data = Site.isResponse(data);
-		Local.AddUsers(data.profiles.concat(data.groups));
+		Local.add(data.profiles.concat(data.groups));
 		var parent = document.createElement("div"),
 			list = document.createElement("div"),
 			next = data.next_from,
@@ -378,10 +378,10 @@ var Feed = {
 		Site.Append(parent);
 		Site.SetHeader("Обновления друзей");
 	},
-	getFriendsFeed: function (list, data, next) {
+	getFriendsFeed: function(list, data, next) {
 		for (var i = 0, l = data.length; i < l; ++i)
 			list.appendChild(Feed.event.addedFriends(data[i]));
-		list.appendChild($.elements.create("div", {"class": "button-block", html: "Поздние обновления..", onclick: function (event) {
+		list.appendChild($.e("div", {"class": "button-block", html: "Поздние обновления..", onclick: function(event) {
 			var start = new Date(),
 				button = this;
 			button.innerHTML = "&nbsp;";
@@ -394,9 +394,9 @@ var Feed = {
 				filters: "friend",
 				start_from: next,
 				v: 5.14
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
-				Local.AddUsers(data.profiles.concat(data.groups));
+				Local.add(data.profiles.concat(data.groups));
 				var count = data.count, next = data.next_from;
 				data = data.items;
 				$.elements.remove(button);
@@ -410,7 +410,7 @@ var Feed = {
 			v: 5.14,
 			extended: 1,
 			fields: "photo_50,first_name_dat,screen_name,online"
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			var list = document.createElement("div"),
 				data = data.groups.concat(data.profiles || []);
@@ -420,8 +420,8 @@ var Feed = {
 				list.appendChild(Templates.getMiniUser(data[i], {action: {
 					node: $.e("div", {
 						"class": "feed-delete",
-						onclick: (function (id) {
-							return function () {
+						onclick: (function(id) {
+							return function() {
 								return Feed.removeBan(id, this);
 							};
 						})(data[i].name ? -data[i].id : data[i].id)
@@ -438,7 +438,7 @@ var Feed = {
 					{
 						name: "close",
 						title: "Закрыть",
-						onclick: function () {
+						onclick: function() {
 							m.close();
 						}
 					}
@@ -446,7 +446,7 @@ var Feed = {
 			}).show(animateFrom);
 		})
 	},
-	removeBan: function (id, node) {
+	removeBan: function(id, node) {
 		if ($.elements.hasClass(node, "__deleted"))
 			return;
 		var options = {};
@@ -454,7 +454,7 @@ var Feed = {
 			options.user_ids = id;
 		else
 			options.group_ids = -id;
-		Site.API("newsfeed.deleteBan", options, function (data) {
+		Site.API("newsfeed.deleteBan", options, function(data) {
 			data = Site.isResponse(data);
 			if (data) {
 				var i = node.parentNode;
@@ -486,9 +486,9 @@ var Feed = {
 		});
 		return false;
 	},
-	showComments: function (data) {
+	showComments: function(data) {
 		data = Site.isResponse(data);
-		Local.AddUsers(data.profiles.concat(data.groups));
+		Local.add(data.profiles.concat(data.groups));
 		var e = $.e,
 			posts = data.items,
 			parent = e("div"),
@@ -513,15 +513,15 @@ var Feed = {
 				item.attachments.push(self);
 			};
 			post = Wall.ItemPost(item, ownerId, postId, {from: "feed?act=comments"});
-			post.insertBefore((function (type, ownerId, postId) {
+			post.insertBefore((function(type, ownerId, postId) {
 				return e("div", {
 					"class": "feed-close a",
-					onclick: function (event) {
+					onclick: function(event) {
 						Site.API("newsfeed.unsubscribe", {
 							type: type,
 							owner_id: ownerId,
 							item_id: postId
-						}, function (data) {
+						}, function(data) {
 							if (data.response)
 								$.element("feed_comments_" + type + "_" + ownerId + "_" + postId).style.opacity = .5;
 						});
@@ -532,7 +532,7 @@ var Feed = {
 			comments = e("div", {"class": "feed-comments-node", id: "feed_comments_" + type + "_" + ownerId + "_" + postId});
 
 			for (j = 0, k = item.comments.list.length; j < k; ++j) {
-				comments.appendChild((function (comment, j) {
+				comments.appendChild((function(comment, j) {
 					if (comment.cid) {
 						comment.id = comment.cid;
 						comment.reply_to_user = comment.reply_to_uid;
@@ -560,7 +560,7 @@ var Feed = {
 		Site.SetHeader("Комментарии", {link: "feed"});
 		Site.Append(parent);
 	},
-	getCommentForm: function (ownerId, postId, opts, type) {
+	getCommentForm: function(ownerId, postId, opts, type) {
 		var obj = {
 			name: "message",
 			nohead: true,
@@ -568,7 +568,7 @@ var Feed = {
 			asAdmin: opts.fromGroup,
 			allowAttachments: 30,
 			id: "wall-comments-area" + ownerId + "_" + postId,
-			onsubmit: function (event) {
+			onsubmit: function(event) {
 				var text = Site.AddSlashes(this.message.value),
 					fromGroup = this.from_group ? (this.from_group.checked ? 1 : 0) : 0,
 					attachments = this.attachments && this.attachments.value || "",
@@ -599,7 +599,7 @@ var Feed = {
 					video: "video.createComment",
 					topic: "board.addComment",
 					board: "board.addComment"
-				}[type], params, function (result) {
+				}[type], params, function(result) {
 					data = Site.isResponse(result);
 					var list = $.element("feed_comments_" + type + "_" + ownerId + "_" + postId),
 						att = attachments.split(","), a = [];
@@ -610,7 +610,7 @@ var Feed = {
 							audio: Audios.Data,
 							doc: Docs.docs
 						};
-						Array.prototype.forEach.call(att, function (i) {
+						Array.prototype.forEach.call(att, function(i) {
 							if (!i) return;
 							b = /(photo|video|audio|doc)(-?\d+_\d+)/img.exec(i);
 							i = {type: b[1]};
@@ -620,7 +620,7 @@ var Feed = {
 					};
 					var node;
 					form.parentNode.insertBefore(node = Wall.ItemComment({
-						from_id: API.uid,
+						from_id: API.userId,
 						id: data.comment_id,
 						text: text,
 						attachments: a,
@@ -644,7 +644,7 @@ var Feed = {
 		};
 		return Site.CreateWriteForm(obj, ownerId, postId);
 	},
-	search: function (opts) {
+	search: function(opts) {
 		opts.q = decodeURIComponent(opts.q);
 		Site.APIv5("newsfeed.search", {
 			extended: 1,
@@ -654,34 +654,34 @@ var Feed = {
 			start_time: Math.round(+new Date()/1000) - 2 * 31536000,
 			end_time: Math.round(+new Date()/1000),
 			v: 5.0
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			var parent = document.createElement("div"),
 				list = document.createElement("div"),
 				form = document.createElement("form"),
 				elem = document.createElement("div");
 			form.className = "sf-wrap";
-			form.appendChild($.elements.create("input", {type: "text", name:"q", placeholder:"Введите ключевое слово..", value: opts.q}));
-			form.appendChild($.elements.create("input", {type: "submit", value:"Поиск"}));
+			form.appendChild($.e("input", {type: "text", name:"q", placeholder:"Введите ключевое слово..", value: opts.q}));
+			form.appendChild($.e("input", {type: "submit", value:"Поиск"}));
 			elem.id = "feed-search";
 			elem.appendChild(Site.CreateHeader($.TextCase(data.count, ["Найдена", "Найдены", "Найдено"]) + " " + data.count + " " + $.TextCase(data.count, ["запись", "записи", "записей"])));
 			elem.appendChild(Site.CreateInlineForm({
 				name: "q",
 				value: opts.q,
 				title: "Поиск",
-				onsubmit: function (event) {
+				onsubmit: function(event) {
 					if ("#feed?act=search&q=" + this.q.value == window.location.hash)
 						return false;
 					window.location.hash = "#feed?act=search&q=" + encodeURIComponent(this.q.value);
 					$.elements.clearChild(list);
-					elem.appendChild($.elements.create("div", {"class": "msg-empty msg-loader"}));
+					elem.appendChild($.e("div", {"class": "msg-empty msg-loader"}));
 					return false;
 				}
 			}))
 			Site.Append(parent);
 			var posts = data.items;
-			Local.AddUsers(data.profiles);
-			Local.AddUsers(data.groups || data.group);
+			Local.add(data.profiles);
+			Local.add(data.groups || data.group);
 			for (var i = 0, l = posts.length; i < l; ++i) {
 				var c = posts[i];
 				try {
@@ -700,7 +700,7 @@ var Feed = {
 	searchByOwner: function(ownerId, query, offset) {
 		Site.Loader();
 		query = decodeURIComponent(query || "") || "";
-		var q = Site.Escape(query);
+		var q = query.safe();
 		Site.API("execute", {
 			code: "return{o:API.users.get({user_ids:Args.h,fields:Args.f,v:5.29})[0],g:API.groups.getById({group_id:-Args.h})[0],r:API.wall.search({query:Args.q,owner_id:Args.h,count:50,offset:parseInt(Args.o),owners_only:Args.w==1,extended:1,v:5.29})};",
 			h: ownerId,
@@ -708,15 +708,15 @@ var Feed = {
 			q: query,
 			o: getOffset(),
 			w: Site.get("comments") ? 0 : 1
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			if (!data.o && !data.g) {
 				Site.Append(Site.EmptyField("Ошибка<br\/><br\/>data.o && data.g is null"));
 				return;
 			};
-			Local.AddUsers([data.o, data.g]);
-			Local.AddUsers(data.r.profiles);
-			Local.AddUsers(data.r.groups);
+			Local.add([data.o, data.g]);
+			Local.add(data.r.profiles);
+			Local.add(data.r.groups);
 			var e = $.e,
 				owner = data.o || data.g,
 				isUser = data.o,
@@ -730,7 +730,7 @@ var Feed = {
 					value: hash,
 					placeholder: "Поиск..",
 					name: "q",
-					onsubmit: function (event) {
+					onsubmit: function(event) {
 						window.location.hash = "#feed?act=search&owner=" + ownerId + "&q=" + encodeURIComponent($.trim(this.q.value));
 						event.preventDefault();
 						return false;
@@ -748,7 +748,7 @@ var Feed = {
 					list
 				]});
 			if (w.length)
-				Array.prototype.forEach.call(w, function (post) {
+				Array.prototype.forEach.call(w, function(post) {
 					list.appendChild(Wall.ItemPost(post, post.owner_id, post.id, {deleteBtn: true, from: Site.getAddress(true)}));
 				});
 			else
