@@ -1,7 +1,8 @@
 /**
  * APIdog v6.5
  *
- * upd: -1
+ * Last update: 28/08/2016
+ * Branch: release
  */
 
 var Places = {
@@ -11,7 +12,8 @@ var Places = {
 				return Places.getCheckinList(Site.get("id"));
 
 			case "photos":
-				return Places.getPhotos(Site.get("lat"), Site.get("long"), Site.get("place"));
+				var g = Site.get();
+				return Places.getPhotos(g.lat, g["long"], g.place);
 
 			default:
 				return Places.getById(Site.get("id"));
@@ -168,35 +170,36 @@ var Places = {
 		load();
 	},
 
-	// todo
-	getPhotos: function (lat, lng, place) {
+	getPhotos: function(lat, lng, place) {
 		Site.Loader();
-		Site.APIv5("photos.search", {
+		new APIRequest("photos.search", {
 			lat: lat,
-			"long": lng,
+			"\"long\"": lng,
 			sort: 1,
 			count: 40,
-			offset: Site.Get("offset"),
+			offset: getOffset(),
 			radius: 1750,
 			v: 5.0
-		}, function (data) {
-			data = Site.isResponse(data);
-			var count = data.count,
+		}).debug().setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(data) {
+			var e = $.e,
+				count = data.count,
 				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("photos", "photos_count", count)));
-			if (count == 0)
-				list.appendChild(Site.EmptyField(Lang.get("photos", "photos_empty")));
-			for (var i = 0, l = photos.length; i < l; ++i) {
-				if (photos[i] == null)
-					break;
-				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
-			}
+				parent = e("div"),
+				list = e("div");
+			parent.appendChild(Site.getPageHeader(lg("places.photosTitle").schema({p: lg("places.photosCount", count), n: count}) ));
+			if (!count) {
+				list.appendChild(getEmptyField(lg("places.photosEmpty")));
+			} else {
+				for (var i = 0, l = photos.length; i < l; ++i) {
+					if (!photos[i]) {
+						continue;
+					};
+					list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
+				};
+			};
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
-			Site.Append(parent);
-			Site.SetHeader("Фотографии рядом", {link: "place?id=" + place});
-		})
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 40));
+			Site.append(parent).setHeader(lg("places.photosHeader"), {link: "place?id=" + place});
+		}).execute();
 	}
 };
