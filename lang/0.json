@@ -1613,7 +1613,12 @@
 		"titlePlace": "Отметка на карте",
 
 		"modalCheckinsTitle": "%n %h",
-		"modalCheckins": ["отметка", "отметки", "отметок"]
+		"modalCheckins": ["отметка", "отметки", "отметок"],
+
+		"photosTitle": "%n %p",
+		"photosCount": ["фотография", "фотографии", "фотографий"],
+		"photosEmpty": "Рядом с этим местом нет фотографий",
+		"photosHeader": "Фотографии рядом"
 	},
 	"support":{
 		"support":"Поддержка",
