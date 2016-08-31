@@ -34,8 +34,8 @@ var Friends = {
 				};
 
 			default:
-				ownerId = ownerId || API.uid;
-//				if (Friends.friends[ownerId] && (ownerId == API.uid || !ownerId))
+				ownerId = ownerId || API.userId;
+//				if (Friends.friends[ownerId] && (ownerId == API.userId || !ownerId))
 //					return Friends.showFriends(ownerId, Friends.friends[ownerId]);
 				Site.APIv5("friends.get", {
 					user_id: ownerId,
@@ -59,7 +59,7 @@ var Friends = {
 	friends: {},
 	Cities: [],
 	getTabs: function (ownerId) {
-		var user_id = ownerId != API.uid ? ownerId : "",
+		var user_id = ownerId != API.userId ? ownerId : "",
 			has = Friends.friends[ownerId],
 			count = has ? " <i class=count>" + Friends.friends[ownerId].count + "</i>" : "",
 			count_online = has ? " <i class=count>" + (function (a, e) {
@@ -74,7 +74,7 @@ var Friends = {
 				["friends?section=online" + to + (user_id ? "&id=" + user_id : ""), Lang.get("friends.tabs_online") + (count_online || "")]
 			];
 		if (!to) {
-			if (ownerId == API.uid) {
+			if (ownerId == API.userId) {
 				tabs.push(["friends?act=requests", Lang.get("friends.tabs_requests") + " " + (Site.Counters && Site.Counters.friends || "")]);
 				tabs.push(["friends?act=lists", Lang.get("friends.tabs_lists")]);
 				tabs.push(["friends?act=suggestions", Lang.get("friends.tabs_suggestions")]);
@@ -84,7 +84,7 @@ var Friends = {
 		return Site.CreateTabPanel(tabs);
 	},
 	showFriends: function (user_id, response, save) {
-		if (save == true && user_id == API.uid)
+		if (save == true && user_id == API.userId)
 			Friends.friends[user_id] = response;
 		if (Site.Get("section") == "online") {
 			var newArray = [];
@@ -289,7 +289,7 @@ var Friends = {
 		Local.AddUsers(data.users);
 		data = data.requests;
 		var parent = document.createElement("div");
-		parent.appendChild(Friends.getTabs(API.uid));
+		parent.appendChild(Friends.getTabs(API.userId));
 		parent.appendChild(Site.CreateTabPanel([
 			["friends?act=requests", "Входящие"],
 			["friends?act=requests&out=1", "Исходящие"]
@@ -359,7 +359,7 @@ var Friends = {
 				}));
 		else
 			list.appendChild(Site.EmptyField(Lang.get("friends.no_lists")));
-		parent.appendChild(Friends.getTabs(API.uid));
+		parent.appendChild(Friends.getTabs(API.userId));
 		parent.appendChild(Site.CreateHeader(Lang.get("friends.lists_of_friends")));
 		parent.appendChild(list);
 		Site.SetHeader(Lang.get("friends.lists_of_friends"));
@@ -386,7 +386,7 @@ var Friends = {
 		if (!isExists) {
 			var parent = document.createElement("div"),
 				list = document.createElement("div");
-			parent.appendChild(Friends.getTabs(API.uid));
+			parent.appendChild(Friends.getTabs(API.userId));
 			parent.appendChild(Site.CreateHeader(Lang.get("friends.suggestion_friends")));
 			for (var i = 0, l = data.length; i < l; ++i)
 				list.appendChild(Friends.item(data[i], {add: true}));
@@ -428,7 +428,7 @@ var Friends = {
 		}, function (data) {
 			data = Site.isResponse(data);
 			var parent = document.createElement("div");
-			parent.appendChild(Friends.getTabs(API.uid));
+			parent.appendChild(Friends.getTabs(API.userId));
 			parent.appendChild(Site.CreateHeader(Lang.get("friends.recent_friends")));
 			for (var i = 0; i < data.length; ++i)
 				parent.appendChild(Friends.item(data[i]));
@@ -438,7 +438,7 @@ var Friends = {
 	},
 	showFormCreateList: function () {
 		var thisFX = arguments.callee;
-		if (!Friends.friends[API.uid]) {
+		if (!Friends.friends[API.userId]) {
 			Site.APIv5("friends.get", {
 				fields: "photo_50,online,can_write_private_message,screen_name,sex",
 				order: "hints",
@@ -449,7 +449,7 @@ var Friends = {
 					Site.Alert({text: "Странно, ошибка.."});
 					return;
 				}
-				Friends.friends[API.uid] = data;
+				Friends.friends[API.userId] = data;
 				return thisFX();
 			});
 			return;
@@ -457,7 +457,7 @@ var Friends = {
 		var page = document.createElement("div"),
 			creator = document.createElement("form"),
 			list = document.createElement("form"),
-			friends = Friends.friends[API.uid].items,
+			friends = Friends.friends[API.userId].items,
 			e = $.elements.create;
 		creator.className = "sf-wrap";
 		creator.appendChild(e("div", {"class": "tip tip-form", html: Lang.get("friends.title_of_list")}));
@@ -477,7 +477,7 @@ var Friends = {
 			Site.APIv5("friends.addList", {name: name, user_ids: user_ids, v: 5.11}, function (data) {
 				if ((data = Site.isResponse(data)) && data.list_id) {
 					window.location.hash = "#friends?list=" + (data.list_id);
-					delete Friends.friends[API.uid];
+					delete Friends.friends[API.userId];
 				}
 			});
 			$.event.cancel(event);
@@ -501,7 +501,7 @@ var Friends = {
 				$.element("friends-create-btn").disabled = !document.querySelectorAll(".mp-checked").length;
 			}}));
 		};
-		page.appendChild(Friends.getTabs(API.uid));
+		page.appendChild(Friends.getTabs(API.userId));
 		page.appendChild(Site.CreateHeader(Lang.get("friends.creating_list")));
 		page.appendChild(creator);
 		page.appendChild(list);
@@ -518,7 +518,7 @@ var Friends = {
 	{
 		listId = parseInt(listId);
 		var thisFX = arguments.callee;
-		if (!Friends.friends[API.uid])
+		if (!Friends.friends[API.userId])
 		{
 			Site.APIv5("friends.get",
 			{
@@ -533,14 +533,14 @@ var Friends = {
 				{
 					return Site.Alert({text: "Странно, ошибка.."});
 				};
-				Friends.friends[API.uid] = data;
+				Friends.friends[API.userId] = data;
 				return thisFX();
 			});
 			return;
 		};
 		var parent = document.createElement("div"),
 			list = document.createElement("form"),
-			friends = Friends.friends[API.uid].items,
+			friends = Friends.friends[API.userId].items,
 			e = $.elements.create;
 		parent.appendChild(Friends.getTabs());
 		parent.appendChild(Site.CreateHeader(Lang.get("friends.editing_title")));
@@ -570,7 +570,7 @@ var Friends = {
 				}, function (data) {
 					if (data.response) {
 						Friends.Lists = (function (l,n,i,d,q,f,k,c){for(c=l[d].length;k<c;++k)if(l[d][k][q]==i){l[d][k][f]=n;break;};return l;})(Friends.Lists,name,listId,"items","id","name",0,null);
-						var f = Friends.friends[API.uid].items;
+						var f = Friends.friends[API.userId].items;
 						f.forEach(function (item) {
 							if (~userIds.indexOf(item.id)) {
 								if (item.lists) {
@@ -745,7 +745,7 @@ var Friends = {
 	},
 	MONTH_NAMES: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
 	getCalendar: function () {
-		if (!Friends.friends[API.uid]) {
+		if (!Friends.friends[API.userId]) {
 			var callback = arguments.callee;
 			Site.APIv5("friends.get", {
 				fields: "photo_50,can_write_private_message,online,screen_name,bdate,sex",
@@ -754,7 +754,7 @@ var Friends = {
 			return;
 		}
 
-		var friends = Friends.friends[API.uid].items,
+		var friends = Friends.friends[API.userId].items,
 			birthdays = {},
 			parseFriend = function (friend) {
 				if (!friend || !friend.bdate)
