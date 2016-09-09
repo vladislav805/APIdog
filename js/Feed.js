@@ -124,7 +124,7 @@ var Feed = {
 			var c = data[i];
 			switch (c.type){
 				case "post":
-					list.appendChild(Wall.ItemPost(c, c.source_id, c.post_id, {hide: true, from: "feed"}));
+					list.appendChild(Wall.itemPost(c, c.source_id, c.post_id, {hide: true, from: "feed"}));
 					break;
 				case "photo":
 					list.appendChild(Feed.event.addedPhotos(c));
@@ -512,7 +512,7 @@ var Feed = {
 				self[item.type] = item;
 				item.attachments.push(self);
 			};
-			post = Wall.ItemPost(item, ownerId, postId, {from: "feed?act=comments"});
+			post = Wall.itemPost(item, ownerId, postId, {from: "feed?act=comments"});
 			post.insertBefore((function(type, ownerId, postId) {
 				return e("div", {
 					"class": "feed-close a",
@@ -685,7 +685,7 @@ var Feed = {
 			for (var i = 0, l = posts.length; i < l; ++i) {
 				var c = posts[i];
 				try {
-					list.appendChild(Wall.ItemPost(c, c.owner_id, c.id, {ban: true, q: opts.q, from: "feed?act=search&q=" + opts.q}));
+					list.appendChild(Wall.itemPost(c, c.owner_id, c.id, {ban: true, q: opts.q, from: "feed?act=search&q=" + opts.q}));
 				} catch (e) {}
 			}
 			if (!l)
@@ -749,7 +749,7 @@ var Feed = {
 				]});
 			if (w.length)
 				Array.prototype.forEach.call(w, function(post) {
-					list.appendChild(Wall.ItemPost(post, post.owner_id, post.id, {deleteBtn: true, from: Site.getAddress(true)}));
+					list.appendChild(Wall.itemPost(post, post.owner_id, post.id, {deleteBtn: true, from: Site.getAddress(true)}));
 				});
 			else
 				list.appendChild(Site.EmptyField(query ? "Ничего не найдено" : "Введите запрос"));
