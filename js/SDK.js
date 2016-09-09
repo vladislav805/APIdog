@@ -1162,12 +1162,12 @@ function UpdateCounters () {
 			friends[i].online_mobile = ~fom.indexOf(id);
 			friends[i].online_app = !~fo.indexOf(id);
 		};
-		Friends.friends[API.userId].items = friends;
+		//Friends.friends[API.userId].items = friends;
 
-		ThemeManager._cb.onintrvaleddatarecieved && ThemeManager._cb.onintrvaleddatarecieved(ThemeManager.getBundle(), {
+		/*ThemeManager._cb.onintrvaleddatarecieved && ThemeManager._cb.onintrvaleddatarecieved(ThemeManager.getBundle(), {
 			counters: data.c,
 			friendsOnline: data.f
-		});
+		});*/
 	}).execute();
 };
 var stfo = setInterval(setFakeOnline, 30 * 1000);
