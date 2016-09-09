@@ -3629,14 +3629,8 @@ DropDownMenu.prototype = {
 		return this;
 	},
 
-	toggle: function() {
-		var isOpened = $.elements.hasClass(this.mNodeList, DropDownMenu.CLASS_OPENED),
-			lh = parseInt($.getStyle(this.mNodeList).lineHeight),
-			count = this.mNodeList.children.length;
-
-		$.elements.toggleClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
-
-		this.mNodeList.style.height = !isOpened ? (count * lh) + "px" : 0;
+	isOpened: function() {
+		return $.elements.hasClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
 	},
 
 	open: function() {
@@ -3644,12 +3638,24 @@ DropDownMenu.prototype = {
 			count = this.mNodeList.children.length;
 
 		$.elements.addClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
-		this.mNodeList.style.height = (count * lh) + "px";
+		this.recalcHeight();
 	},
 
 	close: function() {
 		$.elements.removeClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
 		this.mNodeList.style.height = 0;
+	},
+
+	toggle: function() {
+		this.isOpened() ? this.close() : this.open();
+	},
+
+	recalcHeight: function() {
+		var lh = parseInt($.getStyle(this.mNodeList).lineHeight), count = 0;
+		Array.prototype.forEach.call(this.mNodeList.children, function(itemMenu) {
+			count += +!$.elements.hasClass(itemMenu, "hidden");
+		});
+		this.mNodeList.style.height = (count * lh) + "px";
 	},
 
 	update: function() {
