@@ -512,10 +512,7 @@ var Wall = {
 
 
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! v6.4 оставить
-ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
-	itemPost: function (post, ownerId, postId, opts)
-	{
+	itemPost: function (post, ownerId, postId, opts) {
 		opts = opts || {};
 		ownerId = post.source_id || post.owner_id || post.to_id;
 		postId = post.id || post.post_id;
@@ -544,35 +541,33 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 			signer = users[signerId] || std,
 			w = Site.Escape;
 
-		if (post && !ownerId && !postId)
-		{
+		if (post && !ownerId && !postId) {
 			parent.innerHTML = "Error: Repost not found"
 			return parent;
 		};
 
-		wrap.appendChild(e("a",
-		{
+		wrap.appendChild(e("a", {
 			href: "#" + from.screen_name,
 			"class": "_im_link_" + fromId,
-			append: e("img",
-			{
+			append: e("img", {
 				"class": "wall-left _im_link_" + fromId,
 				src: getURL(from.photo_50 || from.photo_rec || from.photo)
 			})
 		}));
-		if (opts.hide)
-			wrap.appendChild(Feed.getHideNode("wall", ownerId, postId));
 
-		if ((opts.deleteBtn || opts.extra) && (post.can_delete || post.can_edit))
-		{
-			wrap.appendChild(e("div",
-			{
+		if (opts.hide) {
+			wrap.appendChild(Feed.getHideNode("wall", ownerId, postId));
+		};
+
+		if ((opts.deleteBtn || opts.extra) && (post.can_delete || post.can_edit)) {
+			wrap.appendChild(e("div", {
 				"class": "feed-close a",
 				onclick: function (event) {
 					return Wall.deletePost(ownerId, postId);
 				}
 			}));
 		};
+
 		var linkToPost = [
 			(post.type === "post" ? "wall" : (post.type == "topic" ? "board" : post.type || "wall")),
 			(post.type === "topic" ? -ownerId : ownerId),
@@ -580,19 +575,17 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 			postId,
 			opts.from ? "?from=" + encodeURIComponent(opts.from) : ""
 		].join("");
-		right.appendChild(e("div",
-		{
+
+		right.appendChild(e("div", {
 			append: [
 				e("div", {"class": "wall-head", append: [
 					e("div", {"class": "wall-head-author", append: [
-						e("strong",
-						{
+						e("strong", {
 							append: [
-								e("a",
-								{
+								e("a", {
 									href: "#" + from.screen_name,
 									"class": "_im_link_" + fromId,
-									html: w(from.name) || w(from.first_name + " " + from.last_name) + Site.isOnline(from)
+									html: getName(from)
 								}),
 								post.is_pinned
 									? e("span", {"class": "tip", html: " запись закреплена "})
@@ -610,8 +603,7 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 							: null
 					]}),
 					e("div", {"class": "wall-head-meta", append: [
-						e("a",
-						{
+						e("a", {
 							"data-unix": post.date,
 							"class": opts.feed ? "__autodate" : "",
 							href: "#" + linkToPost,
@@ -624,59 +616,49 @@ ItemPost: function (a, b, c, d) { return Wall.itemPost(a, b, c, d) },
 				]})
 			]
 		}));
-		right.appendChild(e("div",
-		{
+
+		right.appendChild(e("div", {
 			"class": "wall-content n-f",
 			append: truncate(post.text, {length: opts.item ? -1 : 400})
 		}));
-		right.appendChild(e("div",
-		{
+
+		right.appendChild(e("div", {
 			"class": "wall-attachments",
 			append: Site.Attachment(post.attachments, "wall" + ownerId + "_" + postId)
 		}));
 
-
 // TODO: переписать эту херню. она работает на говне
-		if (post.copy_history && post.copy_history.length)
-		{
+		if (post.copy_history && post.copy_history.length) {
 			var reposts = post.copy_history, next, j, k;
-			for (j = 0; j < reposts.length; ++j)
-			{
+			for (j = 0; j < reposts.length; ++j) {
 				next = [];
-				for (k = j + 1; k < reposts.length; ++k)
-				{
+				for (k = j + 1; k < reposts.length; ++k) {
 					next.push(reposts[k]);
 				};
 				reposts[j].copy_history = next;
 			};
-			right.appendChild(e("div",
-			{
+			right.appendChild(e("div", {
 				"class": "wall-repost",
-				append: Wall.itemPost(reposts[0], reposts[0].owner_id, reposts[0].id,
-				{
+				append: Wall.itemPost(reposts[0], reposts[0].owner_id, reposts[0].id, {
 					message: opts.message,
 					repost: true
 				})
 			}));
 		};
 
-		if (post.geo)
-		{
+		if (post.geo) {
 			right.appendChild(Wall.GeoAttachment(post.geo));
 		};
 
-		if (signerId)
-		{
-			right.appendChild(e("div",
-			{
+		if (signerId) {
+			right.appendChild(e("div", {
 				"class": "wall-signer",
 				append: [
 					e("div", {"class": "wall-icons wall-icon-author"}),
 					document.createTextNode(" "),
-					e("a",
-					{
+					e("a", {
 						"class": "_im_link_" + signerId,
-						html: signer.first_name + " " + signer.last_name + Site.isOnline(signer),
+						html: getName(signer),
 						href: "#" + signer.screen_name
 					})
 				]
