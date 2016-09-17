@@ -5,7 +5,7 @@
  * Progress: 30%
  */
 
-function VKAudio (a) {
+function VKAudio(a) {
 	this.ownerId = a.owner_id;
 	this.audioId = a.id || a.aid;
 	this.albumId = a.album_id;
@@ -32,7 +32,7 @@ VKAudio.prototype = {
 	/**
 	 * Returns string in "VK-style"
 	 */
-	getId: function () {
+	getId: function() {
 		return this.ownerId + "_" + this.audioId;
 	},
 
@@ -69,7 +69,7 @@ VKAudio.prototype = {
 	/**
 	 * Create (or return if was created in past) node for inserting to list
 	 */
-	getNode: function () {
+	getNode: function() {
 		if (this.mNode) {
 			return this.mNode;
 		};
@@ -99,17 +99,17 @@ VKAudio.prototype = {
 					]})
 				],
 
-				onclick: function (event) {
+				onclick: function(event) {
 					if (event.ctrlKey) {
-						return self.getBitrate(function (result) {
+						return self.getBitrate(function(result) {
 							new Snackbar({
 								text: result.isSuccess
-									? Lang.get("audio.infoBitrate").schema({
+									? lg("audio.infoBitrate").schema({
 										t: self.artist + " - " + self.title,
 										b: result.rate,
 										s: result.size.getInformationValue()
 									})
-									: Lang.get("audio.errorBitrate")
+									: lg("audio.errorBitrate")
 							}).show();
 						});
 					};
@@ -127,7 +127,7 @@ VKAudio.prototype = {
 	/**
 	 *
 	 */
-	setStateControl: function (isPlaying) {
+	setStateControl: function(isPlaying) {
 		$.elements[isPlaying ? "removeClass" : "addClass"](this.mNodeControl, "audio-i-play");
 		$.elements[isPlaying ? "addClass" : "removeClass"](this.mNodeControl, "audio-i-pause");
 	},
@@ -135,28 +135,28 @@ VKAudio.prototype = {
 	/**
 	 * Returns playlist, which audio pinned
 	 */
-	getPlaylist: function () {
+	getPlaylist: function() {
 		return this.mPlaylist;
 	},
 
 	/**
 	 * Returns duration in human-style
 	 */
-	getDuration: function () {
+	getDuration: function() {
 		return $.toTime(this.duration);
 	},
 
 	/**
 	 * Returns buttons for list-item
 	 */
-	getActions: function () {
+	getActions: function() {
 		return [];
 	},
 
 	/**
 	 * Preloading text lyrics
 	 */
-	loadLyrics: function (listener) {
+	loadLyrics: function(listener) {
 		if (!this.lyricsId) {
 			listener({text: ""});
 			return;
@@ -168,10 +168,10 @@ VKAudio.prototype = {
 	/**
 	 * Adding audio to list my audios
 	 */
-	addAudio: function (callback) {
+	addAudio: function(callback) {
 		var self = this;
 		new APIRequest("audio.add", { ownerId: this.ownerId, audioId: this.audioId })
-			.setOnCompleteListener(function (result) {
+			.setOnCompleteListener(function(result) {
 				APINotify.fire(DogEvent.AUDIO_ADDED, { audio: self });
 
 				var list = Audios.getPlaylist(APIDOG_AUDIO_PLAYLIST_OWNER, API.userId);
@@ -180,7 +180,7 @@ VKAudio.prototype = {
 					list.addAudio(self);
 				};
 			})
-			.setOnErrorListener(function (error) {
+			.setOnErrorListener(function(error) {
 				console.error(error);
 			})
 			.execute();
@@ -189,14 +189,14 @@ VKAudio.prototype = {
 	/**
 	 * Open dialog moving audio to album
 	 */
-	moveAudioToAlbum: function () {
+	moveAudioToAlbum: function() {
 
 	},
 
 	/**
 	 * Open modal window for editing audio
 	 */
-	editAudio: function () {
+	editAudio: function() {
 		var audio = this, w;
 		w = new EditWindow({
 			lang: true,
@@ -219,7 +219,7 @@ VKAudio.prototype = {
 					type: APIDOG_UI_EW_TYPE_ITEM_SELECT,
 					name: "genreId",
 					title: "audio.editTitle",
-					items: Audios.mGenres.map(function (item) {
+					items: Audios.mGenres.map(function(item) {
 						return {
 							value: item.genreId,
 							html: item.title
@@ -240,11 +240,11 @@ VKAudio.prototype = {
 					value: ""
 				}
 			],
-			onSave: function (values, modal) {
+			onSave: function(values, modal) {
 				new APIRequest("audio.edit", values)
 					.setParam("ownerId", audio.ownerId)
 					.setParam("audioId", audio.audioId)
-					.setOnCompleteListener(function (data) {
+					.setOnCompleteListener(function(data) {
 						modal.setContent(getEmptyField("audio.editSuccess", true)).setFooter("").closeAfter(1500);
 						audio.artist = values.artist;
 						audio.title = values.title;
@@ -258,8 +258,8 @@ VKAudio.prototype = {
 		});
 		var text = w.getItemFormNodeByName();
 		text.disabled = true;
-		text.value = "Загрузка..";
-		this.getLyrics(function (lyrics) {
+		text.value = "...";
+		this.getLyrics(function(lyrics) {
 			text.value = lyrics;
 		});
 	},
@@ -268,7 +268,7 @@ VKAudio.prototype = {
 	 * Invoking when audio was edited
 	 * Do not invoke manually!
 	 */
-	notifySetDataChanged: function () {
+	notifySetDataChanged: function() {
 		this.mNodeArtist = this.artist.safe();
 		this.mNodeTitle = this.title.safe();
 	},
@@ -276,25 +276,25 @@ VKAudio.prototype = {
 	/**
 	 * Open confirm and delete audio
 	 */
-	deleteAudio: function () {
+	deleteAudio: function() {
 		var self = this;
 		new Snackbar({
-			text: Lang.get("audio.deleteDone"),
+			text: lg("audio.deleteDone"),
 			duration: 10000,
-			onClose: function () {
+			onClose: function() {
 				new APIRequest("audio.delete", {
 					ownerId: self.ownerId,
 					audioId: self.audioId
-				}).setOnCompleteListener(function (result) {
+				}).setOnCompleteListener(function(result) {
 					$.elements.remove(self.mNode);
 				}).execute();
 			},
-			onClick: function (snackbar) {
+			onClick: function(snackbar) {
 				snackbar.close();
 			},
 			action: {
-				label: Lang.get("audio.deleteRestore"),
-				onClick: function () {
+				label: lg("audio.deleteRestore"),
+				onClick: function() {
 					$.elements.removeClass(self.node, "doc-deleted");
 				}
 			}
@@ -302,8 +302,8 @@ VKAudio.prototype = {
 		$.elements.addClass(this.node, "doc-deleted");
 	},
 
-	getBitrate: function (callback) {
-		APIdogRequest("apidog.getBitrate", { a: API.userAccessToken, i: this.ownerId + "_" + this.audioId }, function (data) {
+	getBitrate: function(callback) {
+		APIdogRequest("apidog.getBitrate", { a: API.userAccessToken, i: this.ownerId + "_" + this.audioId }, function(data) {
 			callback({ isSuccess: data.isSuccess, rate: data.bitrate, size: data.size || 0 });
 		});
 	}
@@ -314,7 +314,7 @@ VKAudio.prototype = {
 /**
  * Playlist of audios
  */
-function VKPlaylist (data, type, id) {
+function VKPlaylist(data, type, id) {
 	this.playlistId = type + id;
 	this.id = id;
 	this.type = type;
@@ -385,77 +385,77 @@ VKPlaylist.prototype = {
 	/**
 	 * Returns playlist ID
 	 */
-	getListId: function () {
+	getListId: function() {
 		return this.playlistId;
 	},
 
 	/**
 	 * Returns ID of playlist
 	 */
-	getId: function () {
+	getId: function() {
 		return this.id;
 	},
 
 	/**
 	 * Returns content type of playlist
 	 */
-	getType: function () {
+	getType: function() {
 		return this.type;
 	},
 
 	/**
 	 * Returns real count of audios in list (VK)
 	 */
-	getRealCount: function () {
+	getRealCount: function() {
 		return this.mRealCount;
 	},
 
 	/**
 	 * Returns available items in current time in this playlist
 	 */
-	getCount: function () {
+	getCount: function() {
 		return this.mData.length;
 	},
 
 	/**
 	 * Return audio by index from this playlist
 	 */
-	get: function (index) {
+	get: function(index) {
 		return this.mData[index] || false;
 	},
 
 	/**
 	 * Returns current playing audio (index or object)
 	 */
-	getCurrent: function (isExtended) {
+	getCurrent: function(isExtended) {
 		return !isExtended ? this.mCurrent : this.get(this.mCurrent);
 	},
 
 	/**
 	 * Returns true, if currently playing audio isn't last
 	 */
-	hasNext: function () {
+	hasNext: function() {
 		return this.mCurrent != -1 && this.mCurrent + 1 < this.mData.length - 1;
 	},
 
 	/**
 	 * Returns true, if currently playing audio isn't first
 	 */
-	hasPrevious: function () {
+	hasPrevious: function() {
 		return this.mCurrent != -1 && this.mCurrent - 1 >= 0;
 	},
 
 	/**
 	 * Preloading playlist, if cached count not equal real count
 	 */
-	preload: function (callback) {
+	preload: function(callback) {
 		if (this.mIsLoading || this.mIsAllLoaded) {
 			return;
 		};
 
 		this.mIsLoading = true;
 		var self = this, wasCount = this.getCount();
-		callback(function (result) {
+		callback(function(result) {
 			result = result.items ? result : result.audios;
 			APINotify.fire(DogEvent.AUDIO_LIST_PRELOADED, { playlistId: self.getId() });
 			result = parse(result.items, VKAudio);
@@ -476,7 +476,7 @@ VKPlaylist.prototype = {
 	/**
 	 * Returns index in playlist by audioId
 	 */
-	findPositionById: function (audioId) {
+	findPositionById: function(audioId) {
 		for (var i = 0, l = this.mData.length; i < l; ++i) {
 			if (this.mData[i].audioId === audioId) {
 				return i;
@@ -488,7 +488,7 @@ VKPlaylist.prototype = {
 	/**
 	 * Shuffle playlist
 	 */
-	shuffle: function () {
+	shuffle: function() {
 		var current = this.getCurrent(true).audioId;
 
 		if (this.mIsShuffled) {
@@ -509,7 +509,7 @@ VKPlaylist.prototype = {
 	/**
 	 * Change listener of event changing list
 	 */
-	setOnListChangedListener: function (listener) {
+	setOnListChangedListener: function(listener) {
 		this.mOnListChangedListener = listener;
 		return this;
 	},
@@ -518,9 +518,9 @@ VKPlaylist.prototype = {
 	 * Set playlist for VKAudio
 	 * Do not invoke manually!
 	 */
-	notifyItemsAboutPlaylist: function () {
+	notifyItemsAboutPlaylist: function() {
 		var that = this;
-		this.mData.map(function (item) {
+		this.mData.map(function(item) {
 			item.mPlaylist = that;
 		});
 	},
@@ -528,14 +528,14 @@ VKPlaylist.prototype = {
 	/**
 	 * Invoke when list was changed
 	 */
-	notifySetListChanged: function (event) {
+	notifySetListChanged: function(event) {
 		this.mOnListChangedListener && this.mOnListChangedListener(event);
 	},
 
 	/**
 	 * Add audio in begin list
 	 */
-	addAudio: function (audio) {
+	addAudio: function(audio) {
 		this.mData.unshift(audio);
 		~this.mCurrent && this.mCurrent++;
 		APINotify.fire(DogEvent.AUDIO_PLAYLIST_CHANGED, { playlist: this, audio: audio });
@@ -548,7 +548,7 @@ VKPlaylist.prototype = {
 		});
 	},
 
-	removeAudio: function (audio) {
+	removeAudio: function(audio) {
 		var index = this.findPositionById(audio.audioId);
 		this.mData.splice(index, 1);
 	}
@@ -558,7 +558,7 @@ VKPlaylist.prototype = {
 /**
  * Albums of audios in vk
  */
-function VKAudioAlbum (a) {
+function VKAudioAlbum(a) {
 	this.ownerId = a.owner_id;
 	this.albumId = a.id || a.album_id;
 	this.title = a.title;
@@ -569,18 +569,18 @@ VKAudioAlbum.prototype = {
 	mNode: null,
 	mNodeTitle: null,
 
-	getId: function () {
+	getId: function() {
 		return this.ownerId + "_" + this.albumId;
 	},
 
-	getLink: function () {
+	getLink: function() {
 		var o = {};
 		API.userId != this.ownerId ? (o.ownerId = this.ownerId) : null;
 		o.albumId = this.albumId;
 		return httpBuildQuery(o);
 	},
 
-	getNode: function () {
+	getNode: function() {
 		if (this.mNode) {
 			return this.mNode;
 		};
@@ -595,7 +595,7 @@ VKAudioAlbum.prototype = {
 		]});
 	},
 
-	getActions: function () {
+	getActions: function() {
 		var a = [], e = $.e, s = this;
 		if (this.ownerId != API.userId) {
 			return a;
@@ -603,8 +603,8 @@ VKAudioAlbum.prototype = {
 
 		a.push(e("div", {
 			"class": "audio-i audio-i-edit",
-			title: Lang.get("audio.albumTipEdit"),
-			onclick: function (event) {
+			title: lg("audio.albumTipEdit"),
+			onclick: function(event) {
 				s.editAlbum();
 				event.preventDefault();
 				return false;
@@ -613,8 +613,8 @@ VKAudioAlbum.prototype = {
 
 		a.push(e("div", {
 			"class": "audio-i audio-i-delete",
-			title: Lang.get("audio.albumTipDelete"),
-			onclick: function (event) {
+			title: lg("audio.albumTipDelete"),
+			onclick: function(event) {
 				s.deleteAlbum();
 				event.preventDefault();
 				return false;
@@ -627,7 +627,7 @@ VKAudioAlbum.prototype = {
 	/**
 	 * Open dialog editing album
 	 */
-	editAlbum: function () {
+	editAlbum: function() {
 		var album = this;
 		new EditWindow({
 			lang: true,
@@ -641,11 +641,11 @@ VKAudioAlbum.prototype = {
 					value: album.title
 				}
 			],
-			onSave: function (values, modal) {
+			onSave: function(values, modal) {
 				new APIRequest("audio.editAlbum", values)
 					.setParam("ownerId", album.ownerId)
 					.setParam("albumId", album.albumId)
-					.setOnCompleteListener(function (data) {
+					.setOnCompleteListener(function(data) {
 						modal.setContent(getEmptyField("audio.editAlbumSuccess", true)).setFooter("").closeAfter(1500);
 						album.title = values.title;
 						album.notifySetDataChanged();
@@ -658,25 +658,25 @@ VKAudioAlbum.prototype = {
 	/**
 	 * Remove album
 	 */
-	deleteAlbum: function () {
+	deleteAlbum: function() {
 		var self = this;
 		new Snackbar({
-			text: Lang.get("audio.deleteAlbumDone"),
+			text: lg("audio.deleteAlbumDone"),
 			duration: 10000,
-			onClose: function () {
+			onClose: function() {
 				new APIRequest("audio.deleteAlbum", {
 					ownerId: self.ownerId,
 					albumId: self.albumId
-				}).setOnCompleteListener(function (result) {
+				}).setOnCompleteListener(function(result) {
 					$.elements.remove(self.mNode);
 				}).execute();
 			},
-			onClick: function (snackbar) {
+			onClick: function(snackbar) {
 				snackbar.close();
 			},
 			action: {
-				label: Lang.get("audio.deleteAlbumRestore"),
-				onClick: function () {
+				label: lg("audio.deleteAlbumRestore"),
+				onClick: function() {
 					$.elements.removeClass(self.mNode, "doc-deleted");
 				}
 			}
@@ -684,13 +684,13 @@ VKAudioAlbum.prototype = {
 		$.elements.addClass(this.mNode, "doc-deleted");
 	},
 
-	notifySetDataChanged: function () {
+	notifySetDataChanged: function() {
 		this.mNodeTitle.innerHTML = this.title.safe();
 	}
 
 };
 
-function VKAudioBroadcast (o) {
+function VKAudioBroadcast(o) {
 	var isUser = o.type === "profile";
 	this.audio = new VKAudio(o.status_audio);
 	this.id = isUser ? o.id : -o.id;
@@ -709,11 +709,11 @@ VKAudioBroadcast.prototype = {
 
 	mNode: null,
 
-	getId: function () {
+	getId: function() {
 		return this.id;
 	},
 
-	getNode: function () {
+	getNode: function() {
 		if (this.mNode) {
 			return this.mNode;
 		};
@@ -733,11 +733,11 @@ VKAudioBroadcast.prototype = {
 
 
 
-function RadioItem (r) {
+function RadioItem(r) {
 	this.stationId = r.stationId;
 };
 
-function RadioCity (c) {
+function RadioCity(c) {
 	this.cityId = c.cityId;
 	this.title = c.title;
 };
@@ -821,7 +821,7 @@ var Audios = {
 			/**
 			 * Invoking method for getting list of audios' user or group
 			 */
-			get: function (ownerId, offset, count, callback) {
+			get: function(ownerId, offset, count, callback) {
 				APIRequest
 					.createExecute(Audios.API.code.getAudios, { o: offset || 0, h: ownerId, c: count })
 					.setOnCompleteListener(callback)
@@ -831,7 +831,7 @@ var Audios = {
 			/**
 			 * Invoking method for getting album' user or group
 			 */
-			getAlbum: function (ownerId, albumId, count, callback) {
+			getAlbum: function(ownerId, albumId, count, callback) {
 				APIRequest
 					.createExecute(Audios.API.code.getAlbum, { o: offset || 0, h: ownerId, a: albumId || 0, c: count })
 					.setOnCompleteListener(callback)
@@ -841,7 +841,7 @@ var Audios = {
 			/**
 			 * Invoking method for getting albums' user or group
 			 */
-			getAlbums: function (ownerId, callback) {
+			getAlbums: function(ownerId, callback) {
 				APIRequest
 					.createExecute(Audios.API.code.getAlbums, { o: ownerId })
 					.setOnCompleteListener(callback)
@@ -851,7 +851,7 @@ var Audios = {
 			/**
 			 * Invoking method for getting recommendations
 			 */
-			getRecommendations: function (target, offset, callback) {
+			getRecommendations: function(target, offset, callback) {
 				new APIRequest("audio.getRecommendations", {shuffle: 1, count: Audios.API.ITEMS_PER_PAGE, offset: offset || 0, v: 5.39})
 					.setParam(typeof target === "string" ? "targetAudio" : "userId", target)
 					.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
@@ -862,7 +862,7 @@ var Audios = {
 			/**
 			 * Invoking method for getting popular audios
 			 */
-			getPopular: function (onlyEng, genreId, offset, callback) {
+			getPopular: function(onlyEng, genreId, offset, callback) {
 				new APIRequest("audio.getPopular", {onlyEng: onlyEng, count: Audios.API.ITEMS_PER_PAGE, offset: offset || 0, generId: genreId, v: 5.39})
 					.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
 					.setOnCompleteListener(callback)
@@ -872,25 +872,25 @@ var Audios = {
 			/**
 			 * Invoking method for getting broadcast list of friends and groups
 			 */
-			getBroadcasts: function (callback) {
+			getBroadcasts: function(callback) {
 				new APIRequest("audio.getBroadcastList", {filter: "all", active: 1, fields: "online,photo_100", v: 5.39})
 					.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
-					.setOnCompleteListener(function (data) {
-						callback(data.map(function (item) {
+					.setOnCompleteListener(function(data) {
+						callback(data.map(function(item) {
 							return new VKAudioBroadcast(item);
 						}));
 					})
 					.execute();
 			},
 
-			getRadio: function (callback) {
-				APIdogRequest("vlad805.getRadio", { v: 2.1 }, function (result) {
+			getRadio: function(callback) {
+				APIdogRequest("vlad805.getRadio", { v: 2.1 }, function(result) {
 
 				});
 			},
 
-			getCurrentBroadcastingTrack: function (stationId, callback) {
-				APIdogRequest("vlad805.getCurrentBroadcastingSong", { v: 2.1, stationId: stationId }, function (result) {
+			getCurrentBroadcastingTrack: function(stationId, callback) {
+				APIdogRequest("vlad805.getCurrentBroadcastingSong", { v: 2.1, stationId: stationId }, function(result) {
 
 				});
 			}
@@ -901,7 +901,7 @@ var Audios = {
 
 
 
-	Resolve: function (url) {
+	Resolve: function(url) {
 		Audios.open();
 	},
 
@@ -926,49 +926,49 @@ var Audios = {
 	/**
 	 * Check exists of playlist
 	 */
-	hasPlaylist: function (type, id) {
+	hasPlaylist: function(type, id) {
 		return !!Audios.getPlaylist(type, id);
 	},
 
 	/**
 	 * Add created playlist in local cache
 	 */
-	addPlaylist: function (type, id, playlist) {
+	addPlaylist: function(type, id, playlist) {
 		Audios.mPlaylists[type + id] = playlist;
 	},
 
 	/**
 	 * Returns playlist from local cache by type and id
 	 */
-	getPlaylist: function (type, id) {
+	getPlaylist: function(type, id) {
 		return Audios.mPlaylists[type + id];
 	},
 
 	/**
 	 * Check exists in local cache albums of user or group
 	 */
-	hasAlbums: function (ownerId) {
+	hasAlbums: function(ownerId) {
 		return !!Audios.getAlbums(ownerId);
 	},
 
 	/**
 	 * Add list of albums of user or group
 	 */
-	addAlbums: function (ownerId, items) {
+	addAlbums: function(ownerId, items) {
 		Audios.mAlbums[ownerId] = items;
 	},
 
 	/**
 	 * Returns albums from local cache
 	 */
-	getAlbums: function (ownerId) {
+	getAlbums: function(ownerId) {
 		return Audios.mAlbums[ownerId];
 	},
 
 	/**
 	 * Returns album from local cache
 	 */
-	getAlbum: function (ownerId, albumId) {
+	getAlbum: function(ownerId, albumId) {
 		return Audios.mAlbums[ownerId] && Audios.mAlbums[ownerId][albumId];
 	},
 
@@ -976,14 +976,14 @@ var Audios = {
 	 * Retruns albums asyncronized: if albums has in local cache, they will be returned in callback, if not, they will
 	 * be requested from VK
 	 */
-	getAlbumsAsync: function (ownerId, callback) {
+	getAlbumsAsync: function(ownerId, callback) {
 		var albums;
 
 		if (albums = Audios.getAlbums(ownerId)) {
 			return callback(albums);
 		};
 
-		Audios.API.invoke.getAlbums(ownerId, function (result) {
+		Audios.API.invoke.getAlbums(ownerId, function(result) {
 			albums = new VKList(result, VKAudioAlbum);
 			Audios.addAlbums(ownerId, albums);
 			callback(albums);
@@ -994,21 +994,21 @@ var Audios = {
 	 * Retruns album asyncronized: if album has in local cache, it will be returned in callback, if not, it will be
 	 * requested from VK
 	 */
-	getAlbumAsync: function (ownerId, albumId, callback) {
+	getAlbumAsync: function(ownerId, albumId, callback) {
 		var album;
 
 		if (album = Audios.getAlbum(ownerId, albumId)) {
 			return callback(album);
 		};
 
-		Audios.API.invoke.get(ownerId, audioId, 1000, function (result) {
+		Audios.API.invoke.get(ownerId, audioId, 1000, function(result) {
 			Audios.addAlbum(result.album);
 			callback(new VKPlaylist(albums.audios, APIDOG_AUDIO_PLAYLIST_OWNER_ALBUM, ownerId + "_" + albumId));
 		});
 	},
 
 
-	open: function () {
+	open: function() {
 		var act = Site.get(APIDOG_CONST_ACT),
 			ownerId = parseInt(Site.get(APIDOG_CONST_OWNER_ID) || API.userId);
 
@@ -1017,12 +1017,12 @@ var Audios = {
 		switch (act) {
 
 			case APIDOG_AUDIO_TAB_TRANSLATIONS:
-				Audios.API.invoke.getBroadcasts(function (data) {
+				Audios.API.invoke.getBroadcasts(function(data) {
 					Audios.showCustomList(APIDOG_AUDIO_TAB_TRANSLATIONS, {
 
-						title: Lang.get("audio.translationsTitle"),
+						title: lg("audio.translationsTitle"),
 
-						getItems: function () {
+						getItems: function() {
 							return data;
 						}
 
@@ -1032,7 +1032,7 @@ var Audios = {
 
 			case APIDOG_AUDIO_TAB_POPULAR:
 				var foreign = Site.get(APIDOG_CONST_FOREIGN) || 0, genreId = parseInt(Site.get(APIDOG_CONST_GENRE_ID)) || 0;
-				Audios.API.invoke.getPopular(foreign, genreId, 0, function (result) {
+				Audios.API.invoke.getPopular(foreign, genreId, 0, function(result) {
 					result = { count: 150, items: result };
 					var id = foreign + "," + genreId,
 						playlist = new VKPlaylist(result, APIDOG_AUDIO_PLAYLIST_POPULAR, id);
@@ -1043,7 +1043,7 @@ var Audios = {
 
 			case APIDOG_AUDIO_TAB_RECOMMENDATIONS:
 				var target = Site.get(APIDOG_CONST_TARGET) || ownerId;
-				Audios.API.invoke.getRecommendations(target, 0, function (result) {
+				Audios.API.invoke.getRecommendations(target, 0, function(result) {
 					var playlist = new VKPlaylist(result, APIDOG_AUDIO_PLAYLIST_RECOMMENDATIONS, target);
 					Audios.addPlaylist(APIDOG_AUDIO_PLAYLIST_RECOMMENDATIONS, target, playlist);
 					Audios.showList(playlist);
@@ -1051,15 +1051,15 @@ var Audios = {
 				break;
 
 			case APIDOG_AUDIO_TAB_ALBUMS:
-				Audios.getAlbumsAsync(ownerId, function (data) {
+				Audios.getAlbumsAsync(ownerId, function(data) {
 
 					console.log(data);
 
 					Audios.showCustomList(APIDOG_AUDIO_TAB_ALBUMS, {
 
-						title: Lang.get("audio.albumsListTitle"),
+						title: lg("audio.albumsListTitle"),
 
-						getItems: function () {
+						getItems: function() {
 							return data.getItems();
 						}
 
@@ -1078,7 +1078,7 @@ var Audios = {
 					return Audios.showList(Audios.getPlaylist(APIDOG_AUDIO_PLAYLIST_OWNER, ownerId));
 				};
 
-				Audios.API.invoke.get(ownerId, 0, 150, function (result) {
+				Audios.API.invoke.get(ownerId, 0, 150, function(result) {
 					Local.add(result.host);
 					var playlist = new VKPlaylist(result.audios, APIDOG_AUDIO_PLAYLIST_OWNER, ownerId);
 					Audios.addPlaylist(APIDOG_AUDIO_PLAYLIST_OWNER, ownerId, playlist);
@@ -1091,7 +1091,7 @@ var Audios = {
 	mNodeList: null,
 	mNodeHeadCount: null,
 
-	showPage: function (ownerId, tab) {
+	showPage: function(ownerId, tab) {
 		if (this.mTabs) {
 			$.elements.clearChild(Audios.mNodeList);
 			Audios.mSearchLine.setVisibility(Audios.needSearchLine(tab));
@@ -1105,22 +1105,22 @@ var Audios = {
 
 			list = e("div"),
 
-			items = (function (isOwner, tabs) {
-				tabs.push({ name: APIDOG_AUDIO_TAB_ALL, title: Lang.get("audio.tabAll"), content: tabFake });
+			items = (function(isOwner, tabs) {
+				tabs.push({ name: APIDOG_AUDIO_TAB_ALL, title: lg("audio.tabAll"), content: tabFake });
 				if (isOwner) {
-					tabs.push({ name: APIDOG_AUDIO_TAB_TRANSLATIONS, title: Lang.get("audio.tabTranslations"), content: tabFake });
-					tabs.push({ name: APIDOG_AUDIO_TAB_POPULAR, title: Lang.get("audio.tabPopular"), content: tabFake });
+					tabs.push({ name: APIDOG_AUDIO_TAB_TRANSLATIONS, title: lg("audio.tabTranslations"), content: tabFake });
+					tabs.push({ name: APIDOG_AUDIO_TAB_POPULAR, title: lg("audio.tabPopular"), content: tabFake });
 				};
-				tabs.push({ name: APIDOG_AUDIO_TAB_RECOMMENDATIONS, title: Lang.get("audio.tabRecommendations"), content: tabFake });
-				tabs.push({ name: APIDOG_AUDIO_TAB_ALBUMS, title: Lang.get("audio.tabAlbums"), content: tabFake });
+				tabs.push({ name: APIDOG_AUDIO_TAB_RECOMMENDATIONS, title: lg("audio.tabRecommendations"), content: tabFake });
+				tabs.push({ name: APIDOG_AUDIO_TAB_ALBUMS, title: lg("audio.tabAlbums"), content: tabFake });
 				if (isOwner) {
-					tabs.push({ name: APIDOG_AUDIO_TAB_RADIO, title: Lang.get("audio.tabRadio"), content: tabFake });
+					tabs.push({ name: APIDOG_AUDIO_TAB_RADIO, title: lg("audio.tabRadio"), content: tabFake });
 				}
 				return tabs;
 			})(ownerId == API.userId, []),
 
 			tabs = new TabHost(items, {
-				onOpenedTabChanged: function (event) {
+				onOpenedTabChanged: function(event) {
 					window.location.hash = "#audio" + (ownerId == API.userId ? "?ownerId=" + ownerId + "&" : "?") + "act=" + event.opened.getName();
 				}
 			}),
@@ -1130,7 +1130,7 @@ var Audios = {
 			search = new SearchLine({
 				onsubmit: Audios.onSearch,
 				onkeyup: Audios.onSearch,
-				placeholder: Lang.get("audio.search")
+				placeholder: lg("audio.search")
 			});
 
 			wrap = e("div", {append: [
@@ -1152,31 +1152,31 @@ var Audios = {
 		return wrap;
 	},
 
-	needSearchLine: function (tab) {
+	needSearchLine: function(tab) {
 		return tab == APIDOG_AUDIO_TAB_ALL;
 	},
 
-	onSearch: function (event) {
+	onSearch: function(event) {
 		console.log(event);
 	},
 
 	// 01/03/2016 created
-	showList: function (playlist) {
+	showList: function(playlist) {
 
-		Audios.mNodeHeadCount.innerHTML = playlist.getRealCount() + " " + Lang.get("audio", "audios", playlist.getCount());
+		Audios.mNodeHeadCount.innerHTML = playlist.getRealCount() + " " + lg("audio", "audios", playlist.getCount());
 
 		var time = 0, step = Audios.API.ITEMS_PER_PAGE, nList = this.mNodeList;
 
 		Audios.fillList(nList, playlist, 0, step);
 
-		playlist.setOnListChangedListener(function (event) {
+		playlist.setOnListChangedListener(function(event) {
 			Audios.fillList(nList, playlist, event.inserted.startId, event.inserted.endId);
 		});
 
 		Audios.preloadList(playlist);
 
 
-		window.onScrollCallback = function (event) {
+		window.onScrollCallback = function(event) {
 			if (!event.needLoading || window.audioLoadingState) {
 				return;
 			};
@@ -1188,22 +1188,22 @@ var Audios = {
      	return;
 	},
 
-	showCustomList: function (type, adapter) {
+	showCustomList: function(type, adapter) {
 		adapter = adapter || {};
 
 		Audios.mNodeHeadCount.innerHTML = adapter.title;
 
 		var nList = this.mNodeList;
 
-		adapter.getItems().forEach(function (item) {
+		adapter.getItems().forEach(function(item) {
 			console.log(item);
 			var node = item.getNode();
 			nList.appendChild(node);
 		});
 	},
 
-	preloadList: function (playlist) {
-		playlist.preload(function (onResult) {
+	preloadList: function(playlist) {
+		playlist.preload(function(onResult) {
 			switch (playlist.getType()) {
 
 				case APIDOG_AUDIO_PLAYLIST_RECOMMENDATIONS:
@@ -1222,7 +1222,7 @@ var Audios = {
 	},
 
 
-	fillList: function (node, playlist, start, step) {
+	fillList: function(node, playlist, start, step) {
 		var item;
 		for (var i = start, l = Math.min(start + step, playlist.getCount()); i < l; ++i) {
 			if (item = playlist.get(i)) {
@@ -1262,7 +1262,7 @@ var Audios = {
 
 
 
-	createList: function (data) {
+	createList: function(data) {
 		var lid = Math.floor(+new Date() / 10);
 		if (!$.isArray(data))
 			data = [data];
@@ -1272,7 +1272,7 @@ var Audios = {
 		Audios.Lists[lid] = data;
 		return {lid: lid, list: data};
 	},
-	Item: function (c, opts) {
+	Item: function(c, opts) {
 		var item = document.createElement("div"),
 			_id = c.owner_id + "_" + (c.aid || c.id),
 			controls = [];
@@ -1282,10 +1282,10 @@ var Audios = {
 		if (Audios._Uploaded && Audios._Uploaded == _id)
 			Audios._Uploaded = null;
 
-		var to = Site.Get("to");
+		var to = Site.get("to");
 
-		$.event.add(item, "click", (opts && !opts.addToAttachments ? (function (oid, aid, lid, noSelect) {
-			return function (event) {
+		$.event.add(item, "click", (opts && !opts.addToAttachments ? (function(oid, aid, lid, noSelect) {
+			return function(event) {
 				if (to && window.location.hash.indexOf("im") < 0)
 					return $.event.cancel(event);
 				if (event.ctrlKey)
@@ -1300,8 +1300,8 @@ var Audios = {
 				});
 				return $.event.cancel(event);
 			};
-		}) (c.owner_id, (c.aid || c.id), opts && opts.lid ? opts.lid : 0) : (function (oid, aid) {
-			return function (event) {
+		}) (c.owner_id, (c.aid || c.id), opts && opts.lid ? opts.lid : 0) : (function(oid, aid) {
+			return function(event) {
 				try{
 				SelectAttachments.AddAttachment({type: "audio", id: "audio" + oid + "_" + aid});
 				SelectAttachments.RemoveSelector();
@@ -1312,15 +1312,15 @@ var Audios = {
 		if (opts && opts.removeBroadcast)
 			controls.push($.elements.create("div", {
 				"class": "audio-delete",
-				onclick: (function (id) {return function (event) {
+				onclick: (function(id) {return function(event) {
 					Audios.setBroadcast("");
 					Audios.Player.TriggerBroadcast($.element("repeat-audio"), 1);
 					var parent = this.parentNode.parentNode.parentNode;
 					Site.API("status.get", {
 						user_id: id
-					}, function (data) {
+					}, function(data) {
 						var status = Site.isResponse(data).text;
-						parent.parentNode.appendChild($.elements.create("div", {"class": "profile-status" + (!status ? " tip" : ""),onclick: function (event) {Profile.EditStatus(this);},html: (status || "изменить статус")}));
+						parent.parentNode.appendChild($.elements.create("div", {"class": "profile-status" + (!status ? " tip" : ""),onclick: function(event) {Profile.EditStatus(this);},html: (status || "изменить статус")}));
 						$.elements.remove(parent);
 					});
 					$.event.cancel(event);
@@ -1328,8 +1328,8 @@ var Audios = {
 			}))
 		controls.push($.elements.create("div", {
 			"class": "audio-sprite audio-goto",
-			onclick: (function (oid, aid) {
-				return function (event) {
+			onclick: (function(oid, aid) {
+				return function(event) {
 					//window.location.hash = "#audio?act=item&ownerId=" + c.owner_id + "&audioId=" + (c.aid || c.id);
 					$.event.cancel(event);
 
@@ -1341,8 +1341,8 @@ var Audios = {
 		if (opts && opts.add)
 			controls.push($.elements.create("div", {
 				"class": "audio-add audio-sprite fr",
-				onclick: (function (oid, aid) {
-					return function (event) {
+				onclick: (function(oid, aid) {
+					return function(event) {
 						$.event.cancel(event);
 						Audios.Add(oid, aid, 1);
 						return;
@@ -1365,7 +1365,7 @@ var Audios = {
 		]}));
 
 		if (to && window.location.hash.indexOf("im") < 0) {
-			$.event.add(item, "click", function (event) {
+			$.event.add(item, "click", function(event) {
 				$.event.cancel(event);
 
 				if (IM.attachs[to])
@@ -1385,20 +1385,20 @@ var Audios = {
 
 	timeline: null,
 	volumeline: null,
-	setVolumeState: function (volume)
+	setVolumeState: function(volume)
 	{
 		Audios.volumeline.setValue(volume);
 		Audios.getPlayer().volume = volume / 100;
 		$.localStorage("audio-vol", volume);
 	},
-	getPlayer: function () {return $.element("Player"); },
+	getPlayer: function() {return $.element("Player"); },
 
-	isPlaying: function () {
+	isPlaying: function() {
 		return !Audios.getPlayer().paused;
 	},
 
 	Player: {
-		InitEvents: function (player) {
+		InitEvents: function(player) {
 			var /*timelineNode = $.element("head-player-timeline"),
 				timelineInput = $.element("head-player-timeline-input"),
 				timelineGhost = $.element("head-player-timeline-ghost"),
@@ -1414,7 +1414,7 @@ var Audios = {
 			Audios.volumeline.setMinimum(0);
 			Audios.volumeline.setMaximum(100);
 
-/*			Audios.timeline.onchange = function (byUser)
+/*			Audios.timeline.onchange = function(byUser)
 			{
 				var t = Audios.timeline.getValue();
 console.log(byUser);
@@ -1426,20 +1426,20 @@ console.log(byUser);
 				timelineGhost.style.width = Audios.timeline.handle.style.left;
 			};
 */
-			Audios.volumeline.onchange = function (event)
+			Audios.volumeline.onchange = function(event)
 			{
 				var n = Audios.volumeline.getValue();
 				Audios.setVolumeState(n);
 				volumelineGhost.style.width = Audios.volumeline.handle.style.left;
 			};
 
-			$.event.add(window, "resize", function (event)
+			$.event.add(window, "resize", function(event)
 			{
 //				Audios.timeline.recalculate();
 				Audios.volumeline.recalculate();
 			});
 
-			$.event.add(player, "timeupdate", function (event) {
+			$.event.add(player, "timeupdate", function(event) {
 				var played = this.currentTime,
 					duration = this.duration,
 					persent = (100 * played) / duration,
@@ -1452,7 +1452,7 @@ console.log(byUser);
 					$.elem(".audio-playing .audio-item-real")[0].innerHTML = $.toTime(duration);
 				} catch (e) {}
 			});
-			$.event.add(player, "progress", function (event)
+			$.event.add(player, "progress", function(event)
 			{
 				try
 				{
@@ -1488,7 +1488,7 @@ console.log(byUser);
 					console.error(e);
 				};
 			});
-			$.event.add(player, "loadedmetadata", function (event)
+			$.event.add(player, "loadedmetadata", function(event)
 			{
 				try
 				{
@@ -1497,14 +1497,14 @@ console.log(byUser);
 				catch (e)
 				{}
 			});
-			$.event.add($.element("head-player-line-wrap"), "click", function (event) {
+			$.event.add($.element("head-player-line-wrap"), "click", function(event) {
 				var pos = $.getPosition($.element("head-player-line")),
 					left = event.target == $.element("head-player-line") ? event.layerX : $.getPosition(event.target).left + event.layerX - pos.left,
 					time = (((left * 100) / pos.width) / 100) * player.duration;
 				player.currentTime = time;
 				$.event.cancel(event);
 			});
-			$.event.add(player, "ended", function (event) {
+			$.event.add(player, "ended", function(event) {
 				if (Audios.Settings & 32) {
 					var current = Audios.Current.split("_");
 					Audios.Play({
@@ -1518,7 +1518,7 @@ console.log(byUser);
 			});
 			$.elements.addClass(player, "sys-audio-inited");
 		},
-		Play: function () {
+		Play: function() {
 			$.element("Player").play();
 			var btn = $.elem(".audio-playing .audio-item-control")[0];
 			$.elements.removeClass(btn, "player-play");
@@ -1526,7 +1526,7 @@ console.log(byUser);
 			$.elements.addClass($.element("headplayer-play"), "hidden");
 			$.elements.removeClass($.element("headplayer-pause"), "hidden");
 		},
-		Pause: function () {
+		Pause: function() {
 			$.element("Player").pause();
 			var btn = $.elem(".audio-playing .audio-item-control")[0];
 			$.elements.addClass(btn, "player-play");
@@ -1534,13 +1534,13 @@ console.log(byUser);
 			$.elements.removeClass($.element("headplayer-play"), "hidden");
 			$.elements.addClass($.element("headplayer-pause"), "hidden");
 		},
-		Trigger: function () {
+		Trigger: function() {
 			if ($.element("Player").paused)
 				Audios.Player.Play();
 			else
 				Audios.Player.Pause();
 		},
-		TriggerBroadcast: function (button, state) {
+		TriggerBroadcast: function(button, state) {
 			var bit = !!(Audios.Settings & 16);
 			if (bit || state) {
 				$.elements.removeClass(button, "live-audio-on");
@@ -1553,7 +1553,7 @@ console.log(byUser);
 			}
 			$.localStorage("audio-settings", Audios.Settings);
 		},
-		TriggerRepeat: function (button) {
+		TriggerRepeat: function(button) {
 			var bit = !!(Audios.Settings & 32);
 			if (bit) {
 				$.elements.removeClass(button, "repeat-audio-on");
@@ -1564,7 +1564,7 @@ console.log(byUser);
 			}
 			$.localStorage("audio-settings", Audios.Settings);
 		},
-		TriggerPlayList: function (button) {
+		TriggerPlayList: function(button) {
 			var condition = !$.elements.hasClass($.element("audioplaylist"), "hidden")
 			if (condition) {
 				$.elements.removeClass(button, "text-audio-on");
@@ -1579,14 +1579,14 @@ console.log(byUser);
 				$.elements.removeClass($.element("audioplaylist"), "hidden");
 			}
 		},
-		Add: function (button) {
+		Add: function(button) {
 			if (!Audios.Current || Audios.Data[Audios.Current].added)
 				return;
 			var current = Audios.Current.split("_");
 			Site.API("audio.add", {
 				owner_id: current[0],
 				audio_id: current[1]
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				if (data) {
 					Audios.Data[Audios.Current].added = true;
@@ -1600,11 +1600,11 @@ console.log(byUser);
 				};
 			})
 		},
-		Share: function (button) {
+		Share: function(button) {
 			window.location.hash = "#mail?attach=audio" + Audios.Current;
 		}
 	},
-	setVolume: function (node, event) {
+	setVolume: function(node, event) {
 		console.log(node, event);
 		var pos = $.getPosition(node),
 			left = (event.layerX > 0 ? event.layerX : event.offsetX) + 5,
@@ -1612,8 +1612,8 @@ console.log(byUser);
 		Audios.setVol(val);
 		$.event.cancel(event);
 	},
-	setVol: function (val) {},
-	Play: function (object) {
+	setVol: function(val) {},
+	Play: function(object) {
 		if (!$.element("Player").canPlayType("audio/mpeg")) {
 			alert("Ваш браузер не поддерживает воспроизведение MP3 файлов!");
 			return;
@@ -1660,26 +1660,26 @@ console.log(byUser);
 		} else
 			Audios.Player.Trigger();
 	},
-	setBroadcast: function (audio_id) {
+	setBroadcast: function(audio_id) {
 		Site.API("audio.setBroadcast", {audio: audio_id}, "blank");
 	},
-	getCurrentPositionInList: function () {
+	getCurrentPositionInList: function() {
 		var list = Audios.Lists[Audios.CurrentList];
 		for (var i = 0; i < list.length; ++i)
 			if (list[i] == Audios.Current)
 				return {position: i, previous: (typeof list[i - 1] != "undefined"), next: (typeof list[i + 1] != "undefined")};
 		return {position: -1, previous: false, next: false};
 	},
-	toObject: function (str) {
+	toObject: function(str) {
 		str = str.split("_");
 		return {oid: str[0], aid: str[1]};
 	},
-	Previous: function () {
+	Previous: function() {
 		var i = Audios.getCurrentPositionInList(), l = Audios.Lists[Audios.CurrentList], u;
 		u = i.previous ? l[i.position - 1] : l[l.length - 1];
 		Audios.Play(Audios.toObject(u));
 	},
-	Next: function () {
+	Next: function() {
 		try {
 			var i = Audios.getCurrentPositionInList(), l = Audios.Lists[Audios.CurrentList], u;
 			u = i.next ? l[i.position + 1] : l.length > 1 ? l[0] : false;
@@ -1687,18 +1687,18 @@ console.log(byUser);
 				Audios.Play(Audios.toObject(u));
 		} catch (e) {} // заглушка до v6.4
 	},
-	ReCountTime: function () {
+	ReCountTime: function() {
 		var elem = $.element("Player");
 		$.element("player-playedtime").innerHTML = ((Audios.Settings & 1024) == 0) ? $.toTime(elem.currentTime) : "-" + $.toTime(elem.duration - elem.currentTime);
 	},
-	UpdateList: function (list, lid, node) {
+	UpdateList: function(list, lid, node) {
 		for (var i = 0; i < list.length; ++i)
 			node.appendChild(Audios.Item(Audios.Data[list[i]], {
 				from: 32,
 				lid: lid
 			}));
 	},
-	reinitIcons: function () {
+	reinitIcons: function() {
 		var isRadio = Audios.getRadioCurrent(),
 			a = "addClass",
 			r = "removeClass",
@@ -1711,39 +1711,39 @@ console.log(byUser);
 		$.elements[isRadio ? r : a](e("find-audio"), h);
 	},
 	MiniPlayer: {
-		Hide: function (event) {
+		Hide: function(event) {
 			var e = $.element;
 			$.elements.addClass(e("headplayer"), "hidden");
 			$.elements.removeClass(e("miniplayer"), "hidden");
 			return $.event.cancel(event);
 		},
-		Show: function (event) {
+		Show: function(event) {
 			var e = $.element;
 			$.elements.removeClass(e("headplayer"), "hidden");
 			$.elements.addClass(e("miniplayer"), "hidden");
 			$.elements.removeClass(e("headplayer-titleMini"), "hidden");
 			return $.event.cancel(event);
 		},
-		ChangeFormatTime: function (event) {
+		ChangeFormatTime: function(event) {
 			Audios.Settings = ((Audios.Settings & 1024) != 0) ? Audios.Settings - 1024 : Audios.Settings + 1024;
 			Audios.ReCountTime();
 			return $.event.cancel(event);
 		}
 	},
 	lastSearched: ["",0,0],
-	showSerachPage: function () {
+	showSerachPage: function() {
 		var e = $.e,
-			to = Site.Get("to"),
+			to = Site.get("to"),
 			parent = e("div", {append: [
 				Site.CreateHeader("Поиск"),
 				Audios.getRightPanel(),
 				form = Site.CreateInlineForm({
 					type: "search",
 					name: "q",
-					value: Site.Get("q") || Audios.lastSearched[0] || "",
+					value: Site.get("q") || Audios.lastSearched[0] || "",
 					placeholder: "Поиск..",
 					title: "Поиск",
-					onsubmit: function (event) {
+					onsubmit: function(event) {
 						var query = $.trim(this.q.value),
 							performer = !!this.performer.checked,
 							lyrics = !!this.lyrics.checked;
@@ -1775,15 +1775,15 @@ console.log(byUser);
 		if (Audios.lastSearched[0] && (q = Audios.lastSearched))
 			Audios.doSearch(q[0], q[1], q[2], 0, list);
 	},
-	doSearch: function (query, onlyPerformer, onlyWithLyrics, offset, list) {
+	doSearch: function(query, onlyPerformer, onlyWithLyrics, offset, list) {
 		Site.API("audio.search", {
 			q: query,
 			performer_only: +onlyPerformer,
 			lyrics: +onlyWithLyrics,
 			auto_complete: 1,
 			count: 40,
-			offset: Site.Get("offset")
-		}, function (data) {
+			offset: Site.get("offset")
+		}, function(data) {
 			data = Site.isResponse(data);
 			var lid = +new Date(),
 				wrap = $.e("div"),
@@ -1798,23 +1798,23 @@ console.log(byUser);
 				Audios.Lists[lid].push(id);
 				Audios.Data[id] = item;
 			};
-			wrap.appendChild(Site.PagebarV2(Site.Get("offset"), count > 1000 ? 1000 : count, 40));
+			wrap.appendChild(Site.PagebarV2(Site.get("offset"), count > 1000 ? 1000 : count, 40));
 			list = list || $.element("audio-search-list");
 			$.elements.clearChild(list);
 			list.appendChild(wrap);
 		});
 	},
-	getFriendsBroadcast: function () {
+	getFriendsBroadcast: function() {
 		Site.API("audio.getBroadcastList", {
 			filter: "all",
 			active: 1,
 			fields: "online,photo_rec,screen_name"
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			Local.AddUsers(data);
 			var parent = document.createElement("div"),
 				list = document.createElement("div"),
-				item = function (c) {
+				item = function(c) {
 					var lid = (+new Date());
 					Audios.Lists[lid] = [c.status_audio];
 					Audios.Data[c.status_audio.owner_id + "_" + c.status_audio.aid] = c.status_audio;
@@ -1841,13 +1841,13 @@ console.log(byUser);
 			Site.SetHeader("Трансляции друзей");
 		})
 	},
-	getPopular: function (offset) {
+	getPopular: function(offset) {
 		offset = +offset || 0;
 		Site.API("audio.getPopular", {
 			count: 50,
 			offset: offset,
-			genre_id: Site.Get("genreId")
-		}, function (data) {
+			genre_id: Site.get("genreId")
+		}, function(data) {
 			data = Site.isResponse(data);
 			var parent = document.createElement("div"),
 				list = document.createElement("div"),
@@ -1862,14 +1862,14 @@ console.log(byUser);
 				}));
 				Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
 			};
-			list.appendChild(Site.getPagination({offset: offset, count: 1000, step: 50, callback: function (event) {
+			list.appendChild(Site.getPagination({offset: offset, count: 1000, step: 50, callback: function(event) {
 				window.scrollTo(0, 0); // top
 				Audios.getPopular(event.offset);
 			}}));
-			parent.appendChild(Site.CreateHeader("Популярные аудиозаписи", gnr = $.e("select", {"class": "fr", append: Audios.getGenreNodeArray(), onchange: function (event) {
+			parent.appendChild(Site.CreateHeader("Популярные аудиозаписи", gnr = $.e("select", {"class": "fr", append: Audios.getGenreNodeArray(), onchange: function(event) {
 				window.location.hash = "#audio?act=popular&genreId=" + this.options[this.selectedIndex].value;
 			}})));
-			gnr.selectedIndex = (function (a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]==b)return c})(Audios.genres, Site.Get("genreId"), -1);
+			gnr.selectedIndex = (function(a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]==b)return c})(Audios.genres, Site.get("genreId"), -1);
 			parent.appendChild(Audios.getRightPanel());
 			//parent.appendChild($.e("div", {"class": "sf-wrap", append: }));
 			parent.appendChild(list);
@@ -1877,19 +1877,19 @@ console.log(byUser);
 			Site.SetHeader("Популярное");
 		})
 	},
-	getStringListFromArrayList: function (data) {
+	getStringListFromArrayList: function(data) {
 		var d = [];
 		for (var i = 0, l = data.length; i < l; ++i)
 			d.push(data[i].owner_id + "_" + (data[i].id || data[i].aid));
 		return d;
 	},
-	getRecommendations: function (offset) {
+	getRecommendations: function(offset) {
 		var offset = +offset || 0;
 		Site.API("execute", {
 			code: 'return API.audio.getRecommendations({count:50,offset:%o,user_id:%u,v:5.9});'
 					.replace(/%o/i, offset)
-					.replace(/%u/i, Site.Get("oid"))
-		}, function (data) {
+					.replace(/%u/i, Site.get("oid"))
+		}, function(data) {
 			data = Site.isResponse(data);
 			var parent = document.createElement("div"),
 				list = document.createElement("div"),
@@ -1910,7 +1910,7 @@ console.log(byUser);
 			parent.appendChild(Site.CreateHeader("Рекомендованные аудиозаписи"));
 			parent.appendChild(Audios.getRightPanel());
 			parent.appendChild(list);
-			list.appendChild(Site.getPagination({offset: offset, count: count, step: 50, callback: function (event) {
+			list.appendChild(Site.getPagination({offset: offset, count: count, step: 50, callback: function(event) {
 				window.scrollTo(0, 0); // top
 				Audios.getRecommendations(event.offset);
 			}}));
@@ -1919,13 +1919,13 @@ console.log(byUser);
 		})
 	},
 	l2a: {},
-	getAlbumsOld: function (owner_id) {
+	getAlbumsOld: function(owner_id) {
 		owner_id = owner_id || API.userId;
 		if (!Audios.Albums[owner_id] && !Audios.l2a[owner_id])
 			return Site.API("audio.getAlbums", {
 				count: 75,
 				owner_id: owner_id
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				Audios.Save([{type: 2, data: data}]);
 				Audios.getAlbums(owner_id);
@@ -1959,11 +1959,11 @@ console.log(byUser);
 		Site.Append(parent);
 		Site.SetHeader("Альбомы");
 	},
-	createAlbum: function (oid) {
+	createAlbum: function(oid) {
 		oid = oid || API.userId;
 		var Form = document.createElement("form"),
 			page = document.createElement("div");
-		Form.onsubmit = function (event) {
+		Form.onsubmit = function(event) {
 			var e = this,
 				title = e.title.value,
 				oid = e.owner_id.value;
@@ -1978,7 +1978,7 @@ console.log(byUser);
 			Site.API("audio.addAlbum", {
 				group_id: (oid < 0 ? -oid : ""),
 				title: title
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				if (data && data.album_id) {
 					Site.Alert({text: "Альбом успешно создан!"});
@@ -1997,11 +1997,11 @@ console.log(byUser);
 		Form.appendChild(page);
 		Site.Append(Form);
 	},
-	editAlbum: function (oid, aid) {
+	editAlbum: function(oid, aid) {
 		var title = Audios.Albums[oid + "_" + aid] && Audios.Albums[oid + "_" + aid].title;
 		var parent = document.createElement("div"),
 			Form = Site.CreateInlineForm({type: "text", name: "title", value: title, title: "Сохранить"});
-		Form.onsubmit = function (event) {
+		Form.onsubmit = function(event) {
 			if (!$.trim(this.title.value)) {
 				Site.Alert({text: "Пустое поле!"});
 				return false;
@@ -2012,7 +2012,7 @@ console.log(byUser);
 				owner_id: oid,
 				album_id: aid,
 				title: title
-			}, function (data) {
+			}, function(data) {
 				if (data.response && data.response == 1) {
 					Site.Alert({text: "Альбом успешно отредактирован!"});
 					Audios.Albums[o[0] + "_" + o[1]].title = title;
@@ -2029,7 +2029,7 @@ console.log(byUser);
 		Site.SetHeader("Альбом", {link: "audio?oid=" + oid + "&album=" + aid});
 	},
 
-	showModalInfoItem: function (ownerId, audioId) {
+	showModalInfoItem: function(ownerId, audioId) {
 		var w,
 			modal = new Modal({
 				title: "Аудиозапись",
@@ -2038,7 +2038,7 @@ console.log(byUser);
 					{
 						name: "ok",
 						title: "Закрыть",
-						onclick: function (event) {
+						onclick: function(event) {
 							modal.close();
 						}
 					}
@@ -2047,7 +2047,7 @@ console.log(byUser);
 			id = ownerId + "_" + audioId,
 			audio = Audios.Storage[id],
 
-			showInfo = function (audio) {
+			showInfo = function(audio) {
 				var e = $.e,
 					parent = e("div"),
 				actions = [
@@ -2069,19 +2069,19 @@ console.log(byUser);
 						label: "Редактировать",
 						url: "#audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId + "&action=edit",
 						hide: !(API.userId == ownerId || ownerId < 0 && Local.Users[ownerId] && Local.Users[ownerId].is_admin),
-						callback: function (event) {
+						callback: function(event) {
 							modal.close();
 						}
 					},
 					{
 						label: "Удалить",
-						callback: function (event) {
+						callback: function(event) {
 							var elem = this;
-							VKConfirm("Вы действительно хотите удалить эту аудиозапись?", function () {
+							VKConfirm("Вы действительно хотите удалить эту аудиозапись?", function() {
 								Site.API("audio.delete", {
 									owner_id: ownerId,
 									audio_id: audioId
-								}, function (data) {
+								}, function(data) {
 									data = Site.isResponse(data);
 									if (!data)
 										return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
@@ -2094,12 +2094,12 @@ console.log(byUser);
 					},
 					{
 						label: "Восстановить",
-						callback: function (event) {
+						callback: function(event) {
 							var elem = this;
 							Site.API("audio.restore", {
 								owner_id: ownerId,
 								audio_id: audioId
-							}, function (data) {
+							}, function(data) {
 								data = Site.isResponse(data);
 								if (!data)
 									return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
@@ -2110,7 +2110,7 @@ console.log(byUser);
 						hide: true
 					}
 				];
-				actions.forEach(function (link) {
+				actions.forEach(function(link) {
 					var attributes = {"class": "list-item"};
 					if (link.hide) attributes["class"] += " hidden";
 					if (link.url) attributes.href = link.url;
@@ -2130,7 +2130,7 @@ console.log(byUser);
 		if (!audio || audio.lyrics_id && !audio.text) {
 			Site.API("execute", {
 				code: "var a=API.audio.getById({audios:\"" + id + "\"})[0],o=a.owner_id;return{a:a,h:(o>0?API.users.getById({user_ids:o,fields:\"online\"}):API.groups.getById({group_ids:-o}))[0],l:API.audio.getLyrics({lyrics_id:a.lyrics_id}).text};"
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				data.a.text = data.l;
 				Audios.Storage[data.a.owner_id + "_" + (data.a.aid || data.a.id)] = data.a;
@@ -2141,18 +2141,18 @@ console.log(byUser);
 		};
 	},
 
-	showUploadForm: function () {
+	showUploadForm: function() {
 		var node = $.e("input", {
 			type: "file",
 			accept: "audio/mp3",
 			multiple: true,
-			onchange: function () {
+			onchange: function() {
 				uploadFiles(node, {
 					maxFiles: 5,
 					method: "audio.getUploadServer"
 				}, {
-					onTaskFinished: function (result) {
-						result.forEach(function (a) {
+					onTaskFinished: function(result) {
+						result.forEach(function(a) {
 							Audios.l2l[API.userId] = null;
 							Audios._Uploaded = a.owner_id + "_" + (a.aid || a.id);
 						});
@@ -2164,7 +2164,7 @@ console.log(byUser);
 		node.click();
 	},
 	radio: {},
-	getRadio: function () {
+	getRadio: function() {
 		var e = $.e,
 			parent = e("div", {"class": "audio-wrap"}),
 			list = e("div", {"id": "audiolist"});
@@ -2175,11 +2175,11 @@ console.log(byUser);
 		parent.appendChild(list);
 		Site.Append(parent);
 
-		var clbk = function (data) {
+		var clbk = function(data) {
 data = data.response;
 			$.elements.clearChild(list);
 
-			var cities = (function (a, b, c) {
+			var cities = (function(a, b, c) {
 				for (c in a)
 					b[a[c].cityId] = a[c].title;
 				return b;
@@ -2200,10 +2200,10 @@ data = data.response;
 		//new Vlad805API("radio.get", {count: 50, v: 2.0}).onResult(callback);
 		Site.SetHeader("Online radio");
 	},
-	getRadioCurrent: function () {
+	getRadioCurrent: function() {
 		return !isNaN(parseInt(Audios.Current)) && Audios.Current < 0 ? -Audios.Current : false;
 	},
-	getRadioItem: function (i, l) {
+	getRadioItem: function(i, l) {
 		var n = document.createElement("div"),
 			c = [],
 			station;
@@ -2211,7 +2211,7 @@ data = data.response;
 		n.className = "audio-item" + (Audios.Current == -i.stationId ? " audio-playing" : "");
 		n.id = "audio" + i.stationId;
 
-		$.event.add(n, "click", function (event) {
+		$.event.add(n, "click", function(event) {
 			var AudioPlayer;
 			AudioPlayer = $.element("Player");
 			if (!$.elements.hasClass(AudioPlayer, "sys-audio-inited"))
@@ -2236,7 +2236,7 @@ data = data.response;
 
 		c.push($.e("div", {
 			"class": "audio-sprite audio-goto",
-			onclick: function (event) {
+			onclick: function(event) {
 				$.event.cancel(event);
 				Audios.getRadioCurrentBroadcastingSong(i);
 			}
@@ -2254,13 +2254,13 @@ data = data.response;
 		]}));
 		return n;
 	},
-	getRadioCurrentBroadcastingSong: function (station) {
+	getRadioCurrentBroadcastingSong: function(station) {
 		if (!station)
 			return;
 		if (!isNaN(station))
 			station = Audios.radio[station];
 
-		var clbk = function (data) {
+		var clbk = function(data) {
 data = data.response;
 			if (data.success)
 				alert("На <" + station.title + "> сейчас играет трек <" + data.title + ">");
@@ -2274,7 +2274,7 @@ data = data.response;
 
 		//new Vlad805API("radio.getCurrentBroadcastingSong", {stationId: station.stationId, v: 2.0}).onResult();
 	},
-	getBitrate: function (audioId)
+	getBitrate: function(audioId)
 	{
 
 	}

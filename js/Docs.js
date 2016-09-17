@@ -5,7 +5,7 @@
  * Branch: release
  */
 
-function VKDocument (d) {
+function VKDocument(d) {
 	this.ownerId = d.owner_id;
 	this.documentId = d.id;
 	this.typeId = d.type;
@@ -27,7 +27,7 @@ VKDocument.prototype = {
 	getId: function() { return this.documentId; },
 	getType: function() { return "doc"; },
 
-	getNode: function (actionBlock, forceCreate) {
+	getNode: function(actionBlock, forceCreate) {
 		if (this.node && !forceCreate) {
 			return this.node;
 		};
@@ -36,7 +36,7 @@ VKDocument.prototype = {
 			context = this,
 			wrap = e("a", {
 				"class": "doc-item",
-				onclick: function () {
+				onclick: function() {
 					if (isMobile && actionBlock) {
 						actionBlock.setItemForAction(context).show();
 					};
@@ -50,7 +50,7 @@ VKDocument.prototype = {
 								e("div", {
 									title: Lang.get("docs.actionOpen"),
 									"class": "doc-i doc-i-download",
-									onclick: function (event) {
+									onclick: function(event) {
 										window.open(context.url);
 										return $.event.cancel(event);
 									}
@@ -58,7 +58,7 @@ VKDocument.prototype = {
 								context.canModify ? e("div", {
 									title: Lang.get("docs.actionEdit"),
 									"class": "doc-i doc-i-edit",
-									onclick: function (event) {
+									onclick: function(event) {
 										context.edit(this);
 										return $.event.cancel(event);
 									}
@@ -66,7 +66,7 @@ VKDocument.prototype = {
 								context.ownerId != API.userId ? e("div", {
 									title: Lang.get("docs.actionCopy"),
 									"class": "doc-i doc-i-add",
-									onclick: function (event) {
+									onclick: function(event) {
 										context.copy();
 										return $.event.cancel(event);
 									}
@@ -74,7 +74,7 @@ VKDocument.prototype = {
 								context.canModify ? e("div", {
 									title: Lang.get("docs.actionDelete"),
 									"class": "doc-i doc-i-delete",
-									onclick: function (event) {
+									onclick: function(event) {
 										context.deleteDocument(wrap);
 										return $.event.cancel(event);
 									}
@@ -112,7 +112,7 @@ VKDocument.prototype = {
 		return node;
 	},
 
-	edit: function (nodeButton) {
+	edit: function(nodeButton) {
 		var doc = this;
 		new EditWindow({
 			lang: true,
@@ -127,12 +127,12 @@ VKDocument.prototype = {
 					value: doc.title
 				}
 			],
-			onSave: function (values, modal) {
+			onSave: function(values, modal) {
 				new APIRequest("docs.edit", values)
 					.setParam("ownerId", doc.ownerId)
 					.setParam("docId", doc.documentId)
 					.setParam("accessKey", doc.accessKey)
-					.setOnCompleteListener(function (data) {
+					.setOnCompleteListener(function(data) {
 						modal.setContent(getEmptyField("docs.editSuccess", true)).setFooter("").closeAfter(1500);
 						doc.title = values.title;
 						doc.notifySetDataChanged();
@@ -144,17 +144,17 @@ VKDocument.prototype = {
 
 	},
 
-	share: function () {
+	share: function() {
 		share("doc", this.ownerId, this.documentId, this.accessKey, null, {user: true});
 	},
 
-	copy: function () {
+	copy: function() {
 		var self = this;
 		new APIRequest("docs.add", {
 			ownerId: this.ownerId,
 			docId: this.documentId,
 			accessKey: this.accessKey
-		}).setOnCompleteListener(function (data) {
+		}).setOnCompleteListener(function(data) {
 			new Snackbar({text: Lang.get("docs.infoCopied"), duration: 2500}).show();
 			Docs.mStorage[API.userId] && Docs.mStorage[API.userId].items && Docs.mStorage[API.userId].items.unshift(self);
 			self.ownerId = API.userId;
@@ -164,38 +164,38 @@ VKDocument.prototype = {
 		}).execute();
 	},
 
-	notifySetDataChanged: function () {
+	notifySetDataChanged: function() {
 		this.nodeTitle.innerHTML = this.title.safe();
 	},
 
-	fixHeight: function () {
+	fixHeight: function() {
 		var height = $.getPosition(this.node).height;
 		console.log(this.node.clientHeight, this.node.offsetHeight, this.node.scrollHeight)
 		this.node.style.height = height + "px";
 		return height;
 	},
 
-	deleteDocument: function () {
+	deleteDocument: function() {
 		var self = this, height = this.fixHeight();
 		new Snackbar({
 			text: Lang.get("docs.deleteDone"),
 			duration: 10000,
-			onClose: function () {
+			onClose: function() {
 				new APIRequest("docs.delete", {
 					ownerId: self.ownerId,
 					docId: self.documentId,
 					accessKey: self.accessKey
-				}).setOnCompleteListener(function (result) {
+				}).setOnCompleteListener(function(result) {
 					$.elements.remove(self.node);
 					APINotify.fire(DogEvent.DOCUMENT_DELETED, { document: self });
 				}).execute();
 			},
-			onClick: function (snackbar) {
+			onClick: function(snackbar) {
 				snackbar.close();
 			},
 			action: {
 				label: Lang.get("docs.deleteRestore"),
-				onClick: function () {
+				onClick: function() {
 					$.elements.removeClass(self.node, "doc-deleted");
 				}
 			}
@@ -205,15 +205,15 @@ VKDocument.prototype = {
 		}, 10);
 	},
 
-	getFooter: function () {
+	getFooter: function() {
 		return this.getSize() + " | " + $.getDate(this.date);
 	},
 
-	getSize: function () {
+	getSize: function() {
 		return this.size.getInformationValue()
 	},
 
-	getAttachmentNode: function () {
+	getAttachmentNode: function() {
 		var e = $.e,
 		self = this,
 			hc = $.elements.hasClass,
@@ -233,7 +233,7 @@ VKDocument.prototype = {
 				append: [
 					nodeFullView = $.e("div", {"class": "doc-a-gif-fullview hidden", append: [
 						nodeImage = $.e("img", {src: "about:blank", "src-gif": this.url, alt: ""}),
-						$.e("div", {"class": "doc-i-more", onclick: function (event) {
+						$.e("div", {"class": "doc-i-more", onclick: function(event) {
 							Docs.mActionBlock.setItemForAction(self).show();
 							return $.event.cancel(event);
 						}})
@@ -243,7 +243,7 @@ VKDocument.prototype = {
 						$.e("div", {"class":"doc-a-gif-title", html: this.title.safe() + " (" + this.getSize() + ")"})
 					]})
 				],
-				onclick: function (event) {
+				onclick: function(event) {
 					/*if (this.extension != "gif") {
 						return true;
 					};*/
@@ -265,7 +265,7 @@ VKDocument.prototype = {
 
 		return e("div", {
 			"class": "doc-a-wrap",
-			onclick: function () {
+			onclick: function() {
 				Docs.mActionBlock.setItemForAction(self).show();
 			},
 			id: "doc" + this.ownerId + "_" + this.documentId + "attachment",
@@ -314,7 +314,7 @@ var Docs = {
 			new APIRequest("execute", {
 				code: Docs.API.code.getDocuments,
 				o: ownerId
-			}).setOnCompleteListener(function (data) {
+			}).setOnCompleteListener(function(data) {
 				Local.add([data.host]);
 				Docs.showList(new VKList(data.docs, VKDocument), ownerId);
 			}).execute();
@@ -342,7 +342,7 @@ var Docs = {
 			offset = 0,
 			step = 50,
 
-			insertDocs = function () {
+			insertDocs = function() {
 				for (var i = offset, l = offset + step; i < l; ++i) {
 					if (!data.has(i)) {
 						break;
@@ -354,12 +354,12 @@ var Docs = {
 			};
 
 		if (canUpload) {
-			actions[Lang.get("docs.upload")] = function (event) {
+			actions[Lang.get("docs.upload")] = function(event) {
 				Docs.initUpload(groupId);
 			};
 		};
 
-		actions[Lang.get("docs.refresh")] = function (event) {Docs.mStorage[ownerId] = null;Docs.explain();};
+		actions[Lang.get("docs.refresh")] = function(event) {Docs.mStorage[ownerId] = null;Docs.explain();};
 
 		var search = new SearchLine({
 			onsubmit: fxSearch,
@@ -368,11 +368,11 @@ var Docs = {
 		});
 		parent.insertBefore(search.getNode(), parent.firstChild);
 		parent.insertBefore(Site.getPageHeader(
-			"<span id=docs-count>" + data.getCount() + " " + Lang.get("docs", "docs", data.getCount()) + "</span>",
-			Site.CreateDropDownMenu(Lang.get("general.actions"), actions)
+			"<span id=docs-count>" + data.getCount() + " " + lg("docs.docs", data.getCount()) + "</span>",
+			Site.CreateDropDownMenu(lg("general.actions"), actions)
 		), parent.firstChild);
 
-		var fxSearch = function (event) {
+		var fxSearch = function(event) {
 			/*var text = $.trim(this.q ? this.q.value : this.value);
 			$.elements.clearChild(list);
 			if (!text) {
@@ -387,7 +387,7 @@ var Docs = {
 
 		insertDocs();
 
-		window.onScrollCallback = function (event) {
+		window.onScrollCallback = function(event) {
 			if (event.needLoading && list.children.length < data.getCount()) {
 				insertDocs();
 			};
@@ -402,8 +402,8 @@ var Docs = {
 		Site.append(parent);
 	},
 
-	initUpload: function (groupId) {
-		var e = $.e("input", {type: "file", multiple: true, onchange: function (e) { Docs.onUpload(this, groupId) }});
+	initUpload: function(groupId) {
+		var e = $.e("input", {type: "file", multiple: true, onchange: function(e) { Docs.onUpload(this, groupId) }});
 		e.click();
 	},
 
@@ -456,7 +456,7 @@ var Docs = {
 					target: "_blank",
 					id: "doc" + doc.owner_id + "_" + doc.id,
 					append: [
-						e("div", {"class": "docs-delete", onclick: function (event) {
+						e("div", {"class": "docs-delete", onclick: function(event) {
 							Docs["delete"](this.parentNode, doc.owner_id, doc.id);
 							return $.event.cancel(event);
 						}}),
@@ -475,7 +475,7 @@ var Docs = {
 					"class": "docs-item-dale",
 					id: "doc" + doc.owner_id + "_" + doc.id,
 					append: [
-						e("div", {"class": "docs-delete", onclick: function (event) {
+						e("div", {"class": "docs-delete", onclick: function(event) {
 							Docs["delete"](this.parentNode, doc.owner_id, doc.id);
 							return $.event.cancel(event);
 						}}),
@@ -529,7 +529,7 @@ var Docs = {
 	},
 
 	getById: function(ownerId, docId) {
-		new APIRequest("docs.getById", {docs: ownerId + "_" + docId}).setOnCompleteListener(function (data) {
+		new APIRequest("docs.getById", {docs: ownerId + "_" + docId}).setOnCompleteListener(function(data) {
 			console.log(data);
 		}).execute();
 	}

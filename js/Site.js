@@ -38,108 +38,21 @@ var Site = {
 
 	APIRequestCallbacks: [],
 	APIRequestCallbacksCount: -1,
+
 	API: function(method, params, callback) {
-
-
-
 		return new APIRequest(method, params).setOnCompleteListener(callback).execute();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		if (Site.CaptchaState)
-			return;
-		params = params || {};
-
-		if (typeof callback === "function") {
-			var now = ++Site.APIRequestCallbacksCount;
-			Site.APIRequestCallbacks[now] = callback;
-			callback = "Site.APIRequestCallbacks[" + now + "]";
-		};
-
-		if (~location.protocol.indexOf("s")) {
-			params.https = 1;
-		};
-
-		if (API.access_token && !params.access_token) {
-			params.access_token = API.access_token;
-		};
-
-		if (!params.v) {
-			params.v = 4.99;
-		};
-
-		params.callback = callback;
-		params.random = Math.random();
-		params["lang"] = window.Lang && Lang.lang == "gop" ? "ru" : Lang.lang || "ru";
-
-		if (Site.isEnabledLoggingAPIRequest) {
-			Site.logAPIReuqest(now, method, params);
-		};
-
-		if (API.SettingsBitmask & 4)
-			return Site.proxy(method, params, Site.APIRequestCallbacks[now]);
-		var url = httpBuildQuery(params);
-		if (url.length < 4096 - 5 - 32) {
-			var elem = document.createElement("script"),
-				query = "/method/" + method + "?" + url,
-				sig = md5(query);
-			elem.type = "text/javascript";
-			elem.addEventListener("load", function (event) {
-				$.elements.remove(elem);
-				if (Site.isEnabledLoggingAPIRequest) Site.logAPIReuqest(now);
-			});
-			elem.addEventListener("error", function (event) {
-				console.log(event);
-			});
-			elem.src = "https://api.vk.com" + query + "&sig=" + sig;
-			document.getElementsByTagName("head")[0].appendChild(elem);
-		} else
-			Site.proxy(method, params, Site.APIRequestCallbacks[now]);
-		return now;
 	},
+
 	APIv5: function (method, params, callback) {
-		return Site.API("execute", {code: "return API." + method + "(" + (function (params, pairs, key) {
-			for (key in params) {
-				pairs.push(key + ":" + (!isNaN(params[key]) ? null == params[key] || "" == params[key] ? "\"\"" :  params[key] : "\"" + params[key].replace(/"/igm, "\\\"").replace(/\n/img, "\\n") + "\""));
-			};
-			return pairs.length ? "{" + pairs.join(",") + "}" : "";
-		})(params, []) + ");"}, callback);
+		return new APIRequest(method, params).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(d) {
+			callback({response: d});
+		}).setOnErrorListener(function(e) {
+			callback({error: d});
+		}).execute();
 	},
 
 	isResponse: function (data) {
-		if (data)
-			return data;
-		else
-			try {
-				switch (data.error.error_code) {
-					case 5:
-						window.location.href = "/authorize.php?act=logout";
-						return;
-
-					case 14:
-						Site.showCaptcha(data.error);
-						break;
-
-					default:
-						Site.Alert({
-							text: "Ошибка от API:<br/><tt>" + (data.error.error_text || data.error.error_msg) + "</tt>"
-						});
-						break;
-				}
-			} catch (e) {}
+		return data.response || data;
 	},
 
 	showCaptcha: function (p) {
@@ -1347,7 +1260,7 @@ var Site = {
 	/**
 	 * @deprecated
 	 */
-	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:result },
+	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:c },
 
 	/**
 	 * @deprecated

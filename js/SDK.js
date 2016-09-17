@@ -1150,7 +1150,7 @@ function UpdateCounters () {
 		Site.setCounters(data.c);
 		Site.showNewNotifications(data.n);
 
-		var friends = Friends.friends[API.uid] && Friends.friends[API.uid].items || [],
+		var friends = Friends.friends[API.userId] && Friends.friends[API.userId].items || [],
 			f = data.f,
 			fo = f.online,
 			fom = f.online_mobile,
@@ -1162,12 +1162,12 @@ function UpdateCounters () {
 			friends[i].online_mobile = ~fom.indexOf(id);
 			friends[i].online_app = !~fo.indexOf(id);
 		};
-		Friends.friends[API.uid].items = friends;
+		//Friends.friends[API.userId].items = friends;
 
-		ThemeManager._cb.onintrvaleddatarecieved && ThemeManager._cb.onintrvaleddatarecieved(ThemeManager.getBundle(), {
+		/*ThemeManager._cb.onintrvaleddatarecieved && ThemeManager._cb.onintrvaleddatarecieved(ThemeManager.getBundle(), {
 			counters: data.c,
 			friendsOnline: data.f
-		});
+		});*/
 	}).execute();
 };
 var stfo = setInterval(setFakeOnline, 30 * 1000);
@@ -2251,7 +2251,7 @@ function share(type, ownerId, itemId, accessKey, callback, access) {
 					targetType = getRadioGroupSelectedValue(chooseForm.targetType);
 
 					if (targetType == APIDOG_SHARE_TARGET_WALL) {
-						return nextStep(targetId = API.uid);
+						return nextStep(targetId = API.userId);
 					};
 
 					clearWrapper();
@@ -2639,8 +2639,8 @@ function VKComment (context, c, ownerId) {
 
 	this.hasReply = !!this.replyToCommentId;
 	this.canEdit = !!c.can_edit;
-	this.canDelete = API.uid == this.userId || (ownerId > 0 && API.uid == ownerId || ownerId < 0 && Local.Users[ownerId] && Local.Users[ownerId].is_admin);
-	this.canReport = ownerId > 0 && API.uid != this.userId || ownerId < 0 && Local.Users[ownerId] && !Local.Users[ownerId].is_admin;
+	this.canDelete = API.userId == this.userId || (ownerId > 0 && API.userId == ownerId || ownerId < 0 && Local.Users[ownerId] && Local.Users[ownerId].is_admin);
+	this.canReport = ownerId > 0 && API.userId != this.userId || ownerId < 0 && Local.Users[ownerId] && !Local.Users[ownerId].is_admin;
 
 	this.isSticker = this.attachments.length && this.attachments[0].type == "sticker";
 
@@ -2785,7 +2785,7 @@ VKComment.prototype = {
 						]})
 						: null
 				]}),
-				e("div", {"class": "vkcomment-content", html: Mail.Emoji(Site.Escape(this.text))}),
+				e("div", {"class": "vkcomment-content", html: this.text.safe().emoji()}),
 				e("div", {"class": "vkcomment-attachments", append: Site.Attachment(this.attachment)}),
 				getLikeButton("comment", this.context.object.ownerId, this.commentId, null, this.likes, this.isLiked, 0, null, {right: true}),
 				e("div", {"class": "vkcomment-footer", append: this.getFooter()})
@@ -3629,14 +3629,8 @@ DropDownMenu.prototype = {
 		return this;
 	},
 
-	toggle: function() {
-		var isOpened = $.elements.hasClass(this.mNodeList, DropDownMenu.CLASS_OPENED),
-			lh = parseInt($.getStyle(this.mNodeList).lineHeight),
-			count = this.mNodeList.children.length;
-
-		$.elements.toggleClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
-
-		this.mNodeList.style.height = !isOpened ? (count * lh) + "px" : 0;
+	isOpened: function() {
+		return $.elements.hasClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
 	},
 
 	open: function() {
@@ -3644,12 +3638,24 @@ DropDownMenu.prototype = {
 			count = this.mNodeList.children.length;
 
 		$.elements.addClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
-		this.mNodeList.style.height = (count * lh) + "px";
+		this.recalcHeight();
 	},
 
 	close: function() {
 		$.elements.removeClass(this.mNodeList, DropDownMenu.CLASS_OPENED);
 		this.mNodeList.style.height = 0;
+	},
+
+	toggle: function() {
+		this.isOpened() ? this.close() : this.open();
+	},
+
+	recalcHeight: function() {
+		var lh = parseInt($.getStyle(this.mNodeList).lineHeight), count = 0;
+		Array.prototype.forEach.call(this.mNodeList.children, function(itemMenu) {
+			count += +!$.elements.hasClass(itemMenu, "hidden");
+		});
+		this.mNodeList.style.height = (count * lh) + "px";
 	},
 
 	update: function() {
