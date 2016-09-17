@@ -45,7 +45,9 @@ var Site = {
 
 	APIv5: function (method, params, callback) {
 		return new APIRequest(method, params).setWrapper(APIDOG_REQUEST_WRAPPER_V5).setOnCompleteListener(function(d) {
-			callback({response: callback});
+			callback({response: d});
+		}).setOnErrorListener(function(e) {
+			callback({error: d});
 		}).execute();
 	},
 
