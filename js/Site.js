@@ -51,6 +51,7 @@ var Site = {
 		}).execute();
 	},
 
+	// test
 	isResponse: function (data) {
 		return data.response || data;
 	},
