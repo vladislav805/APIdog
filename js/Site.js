@@ -52,7 +52,7 @@ var Site = {
 	},
 
 	isResponse: function (data) {
-		return data;
+		return data.response || data;
 	},
 
 	showCaptcha: function (p) {
