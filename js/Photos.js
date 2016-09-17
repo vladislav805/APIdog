@@ -30,19 +30,19 @@ VKPhoto.prototype = {
 	getAttachId: function() {
 		return this.getType() + this.getId();
 	},
-	getType: function () { return "photo" },
-	getId: function () { return this.ownerId + "_" + this.photoId },
+	getType: function() { return "photo" },
+	getId: function() { return this.ownerId + "_" + this.photoId },
 
 	/**
 	 * Returns the largest photo (original)
 	 *
 	 * @return   {String}   URL photo
 	 */
-	getMaxSizePhotoURL: function () {
+	getMaxSizePhotoURL: function() {
 		return this.photo2560 || this.photo1280 || this.photo807 || this.photo604;
 	},
 
-	getNode: function () {
+	getNode: function() {
 		//return $("<a href='/photo" + this.getId() + "' onclick='return go(this, event);'><img src='" + this.photo807 + "' alt='' /></a>");
 	},
 
@@ -86,13 +86,13 @@ VKPhotoAlbum.prototype = {
 };
 
 var Photos = {
-	Resolve: function (url) {
+	Resolve: function(url) {
 		var albums = /^photos(-?\d+)?$/img,
 			album = /^photos(-?\d+)_(-?\d+)$/img,
 			photo = /^photo(-?\d+)_(\d+)$/img;
 		if (albums.test(url)) {
-			var id = /^photos(-?\d+)?$/img.exec(url); id = id[1] || API.uid;
-			switch(Site.Get("act")) {
+			var id = /^photos(-?\d+)?$/img.exec(url); id = id[1] || API.userId;
+			switch(Site.get("act")) {
 				case "all":			return Photos.getAll(id); break;
 				case "comments":	return Photos.getAllComments(id); break;
 				case "tagged":		return Photos.getUserTagged(id); break;
@@ -102,24 +102,24 @@ var Photos = {
 			}
 		} else if (album.test(url)) {
 			var id = /^photos(-?\d+)_(-?\d+)$/img.exec(url), owner_id = id[1], album_id = id[2];
-			switch(Site.Get("act")){
+			switch(Site.get("act")){
 				case "comments": return Photos.getAllComments(owner_id, album_id); break;
 				case "upload":   return Photos.getUploadForm(owner_id, album_id); break;
-				default:         return Photos.requestAlbum(owner_id, album_id, Site.Get("offset"));
+				default:         return Photos.requestAlbum(owner_id, album_id, getOffset());
 			}
 		} else {
 			var id = /^photo(-?\d+)_(\d+)$/img.exec(url),
 				owner_id = id[1],
 				photo_id = id[2],
-				access_key = Site.Get("access_key"),
-				list = Site.Get("list");
-			switch(Site.Get("act")){
+				access_key = Site.get("access_key"),
+				list = Site.get("list");
+			switch(Site.get("act")){
 				default:      return Photos.getShow(owner_id, photo_id, access_key, list);
 			}
 		}
 	},
 
-	loadYandexMaps: function (callback)
+	loadYandexMaps: function(callback)
 	{
 		var YandexAPI = "//api-maps.yandex.ru/2.1/?lang=ru_RU",
 			scripts = document.getElementsByTagName("script");
@@ -130,18 +130,18 @@ var Photos = {
 		{
 			type: "text/javascript",
 			src: YandexAPI,
-			onload: function (event) { callback() }
+			onload: function(event) { callback() }
 		}));
 	},
 
-	showMapWithAllPhotos: function (ownerId)
+	showMapWithAllPhotos: function(ownerId)
 	{
 		var e = $.e,
 			wrap,
 			mapNode,
 			map,
 			status,
-			loadPhotos = function (offset)
+			loadPhotos = function(offset)
 			{
 				Site.API("photos.getAll",
 				{
@@ -150,7 +150,7 @@ var Photos = {
 					offset: offset,
 					extended: 1
 				},
-				function (data)
+				function(data)
 				{
 					data = Site.isResponse(data);
 					var count = data.shift();
@@ -162,16 +162,16 @@ var Photos = {
 						onComplete();
 				});
 			},
-			syncSize = function ()
+			syncSize = function()
 			{
 				var h = $.getPosition(document.documentElement).clientHeight + "px";
 				wrap.style.height = h;
 				mapNode.style.height = h;
 				map.container.fitToViewport();
 			},
-			addPhotos = function (photos)
+			addPhotos = function(photos)
 			{
-				photos.forEach(function (photo)
+				photos.forEach(function(photo)
 				{
 					if (photo.hasOwnProperty("lat"))
 						insertPhotoIntoMap(photo);
@@ -179,13 +179,13 @@ var Photos = {
 				items = items.concat(photos);
 				syncSize();
 			},
-			setStatus = function (text)
+			setStatus = function(text)
 			{
 				status.innerHTML = text;
 			},
 			items = [],
 			points = [],a = 0,
-			insertPhotoIntoMap = function (photo)
+			insertPhotoIntoMap = function(photo)
 			{
 				var m = Math.min(photo.width, photo.height),
 					k = (30 * 100 / m),
@@ -209,10 +209,10 @@ var Photos = {
 				map.geoObjects.add(point);
 				point._id = points.push(point);
 			},
-			onComplete = function ()
+			onComplete = function()
 			{
 				setStatus("Фотографии загружены");
-				setTimeout(function ()
+				setTimeout(function()
 				{
 					setStatus(points.length + " " + $.textCase(points.length, ["фотография", "фотографии", "фотографий"]) + " на карте");
 				}, 2000);
@@ -223,9 +223,9 @@ var Photos = {
 			status = e("div", {"class": "photos-map-status"})
 		]});
 
-		Photos.loadYandexMaps(function ()
+		Photos.loadYandexMaps(function()
 		{
-			ymaps.ready(function (event)
+			ymaps.ready(function(event)
 			{
 				setStatus("Яндекс.Карты загружены");
 				map = new ymaps.Map(mapNode, {
@@ -239,10 +239,10 @@ var Photos = {
 					.add("typeSelector", {position: {top: 5, left: 5}})
 					.add("zoomControl", {position: {top: 70, left: 5}});
 
-				window.onResizeCallback = function () { syncSize() };
+				window.onResizeCallback = function() { syncSize() };
 				document.body.style.overflow = "hidden";
 				document.documentElement.style.overflow = "hidden";
-				window.onLeavePage = function ()
+				window.onLeavePage = function()
 				{
 					document.body.style.overflow = "auto";
 					document.documentElement.style.overflow = "auto";
@@ -259,7 +259,7 @@ var Photos = {
 	/* Helper */
 
 
-	v5normalize: function (photo) {
+	v5normalize: function(photo) {
 		photo.id         = photo.pid        || photo.id;
 		photo.album_id   = photo.album_id   || photo.aid;
 		photo.date       = photo.date       || photo.created;
@@ -275,32 +275,32 @@ var Photos = {
 	},
 
 
-	getAttachment: function (photo, options) {
+	getAttachment: function(photo, options) {
 		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: Site.getAddress(true)});
 	},
-	getAttachmentAlbum: function (album) {
+	getAttachmentAlbum: function(album) {
 		return $.e("a", {href: "#photos" + album.owner_id + "_" + album.id, "class": "attachments-album", append: [
 			$.e("img", {src: getURL(album.thumb.photo_604 || album.thumb.photo_big)}),
 			$.e("div", {"class": "attachments-album-footer sizefix", append: [
 				$.e("div", {"class": "fr", html:album.size}),
-				$.e("div", {"class": "attachments-album-title sizefix", html: Site.Escape(album.title)}),
+				$.e("div", {"class": "attachments-album-title sizefix", html: album.title.safe()}),
 			]})
 		]});
 	},
 
-	getToParam: function (t) {
-		var to = Site.Get("to");
+	getToParam: function(t) {
+		var to = Site.get("to");
 		return (to ? ["?", "&"][t || 0] + "to=" + to : "");
 	},
-	getTabs: function (owner_id) {
+	getTabs: function(owner_id) {
 		var tabs = [
 			["photos" + owner_id + "?act=all" + Photos.getToParam(1), Lang.get("photos", "albums_all_photos")],
 			["photos" + owner_id + Photos.getToParam(0), Lang.get("photos", "albums")]
 		];
-		var to = Site.Get("to");
+		var to = Site.get("to");
 		if (owner_id > 0 && !to)
 			tabs.push(["photos" + owner_id + "?act=tagged", Lang.get("photos", "albums_tagged")]);
-		if (owner_id == API.uid && Site.Counters && Site.Counters.photos > 0 && !to)
+		if (owner_id == API.userId && Site.Counters && Site.Counters.photos > 0 && !to)
 			tabs.push(["photos" + owner_id + "?act=new_tags", "Отметки <i class=count>" + Site.Counters.photos + "</i>"]);
 		return Site.CreateTabPanel(tabs);
 	},
@@ -309,33 +309,33 @@ var Photos = {
 	/* Albums */
 
 
-	getAlbums: function (owner_id) {
-		var offset = Site.Get("offset");
+	getAlbums: function(owner_id) {
+		var offset = getOffset();
 		Site.Loader();
 		Site.API("execute", {
 			code: 'return API.photos.getAlbums({owner_id:%u,offset:%o,need_system:1,need_covers:1,count:30,v:5.8});'
 					.replace(/%u/i, owner_id)
 					.replace(/%o/i, offset)
-		}, function (data) {
+		}, function(data) {
 			var data = Site.isResponse(data),
 				count = data.count,
 				albums = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div"),
-				to = Site.Get("to");
+				parent = $.e("div"),
+				list = $.e("div"),
+				to = Site.get("to");
 			for (var i = 0, l = albums.length; i < l; ++i)
 				list.appendChild(Photos.itemAlbum(albums[i], {}));
 			var menu = {
-				"Все комментарии": function (event) {window.location.hash = "#photos" + owner_id + "?act=comments"}
+				"Все комментарии": function(event) {window.location.hash = "#photos" + owner_id + "?act=comments"}
 			};
-			if ((Local.Users[owner_id] && Local.Users[owner_id].gid && Local.Users[owner_id].is_admin) || owner_id == API.uid) {
-				menu[Lang.get("photos", "albums_actions_create")] = function (event) {
+			if ((Local.Users[owner_id] && Local.Users[owner_id].gid && Local.Users[owner_id].is_admin) || owner_id == API.userId) {
+				menu[Lang.get("photos", "albums_actions_create")] = function(event) {
 					Photos.createAlbum(owner_id);
 				};
 			};
 			parent.appendChild(Photos.getTabs(owner_id));
 			parent.appendChild(
-				Site.CreateHeader(count + " " + Lang.get("photos", "albums_count", count),
+				Site.getPageHeader(count + " " + Lang.get("photos", "albums_count", count),
 				!to ? Site.CreateDropDownMenu(Lang.get("photos", "albums_actions"), menu) : null
 			));
 			if (to)
@@ -346,7 +346,7 @@ var Photos = {
 			Site.SetHeader(Lang.get("photos", "albums"), !to ? {} : {link: "im?to=" + to});
 		});
 	},
-	itemAlbum: function (c, opts) {
+	itemAlbum: function(c, opts) {
 		var img = new Image(), e = $.e;
 		img.src = getURL(c.thumb_src);
 		return e("a", {
@@ -358,7 +358,7 @@ var Photos = {
 					e("div", {"class": "albums-size", html: c.size})
 				]}),
 				e("div", {"class": "albums-info", append: [
-					e("div", {"class": "bold", html: Site.Escape(c.title)}),
+					e("div", {"class": "bold", html: c.title.safe()}),
 					e("div", {"class": "albums-created", html: (c.updated ? Lang.get("photos", "album_updated") + " " + $.getDate(c.updated) : "")})
 				]})
 			]
@@ -366,8 +366,8 @@ var Photos = {
 	},
 
 	// refactored 10.01.2016
-	createAlbum: function (ownerId) {
-		var privacyChoises = Lang.get("photos.new_album_private").map(function (v, i) { return {value: i, html: v} });
+	createAlbum: function(ownerId) {
+		var privacyChoises = Lang.get("photos.new_album_private").map(function(v, i) { return {value: i, html: v} });
 
 		new EditWindow({
 			lang: true,
@@ -398,7 +398,7 @@ var Photos = {
 					items: privacyChoises
 				}
 			],
-			onSave: function (values, modal) {
+			onSave: function(values, modal) {
 
 				if (ownerId < 0) {
 					values.group_id = -ownerId;
@@ -406,7 +406,7 @@ var Photos = {
 
 				values.v = 5.29;
 
-				Site.APIv5("photos.createAlbum", values, function (data) {
+				Site.APIv5("photos.createAlbum", values, function(data) {
 					data = Site.isResponse(data);
 					modal.close();
 					if (data)
@@ -418,7 +418,7 @@ var Photos = {
 
 	albumsInfo: {},
 	albumsContent: {},
-	requestAlbum: function (owner_id, album_id, offset) {
+	requestAlbum: function(owner_id, album_id, offset) {
 		offset = offset || 0;
 		if (Photos.albumsInfo[owner_id + "_" + album_id] && Photos.albumsContent[owner_id + "_" + album_id])
 			//if (!offset || offset + 31 < Photos.albumsContent[owner_id + "_" + album_id].length)
@@ -429,11 +429,11 @@ var Photos = {
 				.replace(/%o/g, owner_id)
 				.replace(/%a/g, album_id)
 				.replace(/%q/g, offset)
-		}, function (data) {
+		}, function(data) {
 			Photos.getAlbum(owner_id, album_id, Site.isResponse(data) /*, offset*/ );
 		})
 	},
-	chateAlbum: function (owner_id, album_id, info, content, offset) {
+	chateAlbum: function(owner_id, album_id, info, content, offset) {
 		Photos.albumsInfo[owner_id + "_" + album_id] = info;
 		Photos.albumsContent[owner_id + "_" + album_id] = content;
 	},
@@ -442,56 +442,56 @@ var Photos = {
 	/* Photos in albums */
 
 
-	getAll: function (owner_id) {
-		var offset = +Site.Get("offset");
+	getAll: function(owner_id) {
+		var offset = +getOffset();
 		Site.Loader();
 		Site.API("execute", {
 			code: 'return API.photos.getAll({owner_id:%u,offset:%o,extended:1,count:30,v:5});'
 					.replace(/%u/i, owner_id)
 					.replace(/%o/i, offset)
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			var count = data.count,
 				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
+				parent = $.e("div"),
+				list = $.e("div");
 			parent.appendChild(Photos.getTabs(owner_id));
-			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("photos", "photos_count", count)));
+			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
 			if (count == 0)
-				list.appendChild(Site.EmptyField(Lang.get("photos", "photos_empty")));
+				list.appendChild(getEmptyField(Lang.get("photos", "photos_empty")));
 			for (var i = 0, l = photos.length; i < l; ++i) {
 				if (photos[i] == null)
 					break;
 				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
 			}
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 			Site.Append(parent);
 			Site.SetHeader(Lang.get("photos", "photos_all"), {link: "photos" + owner_id});
 		});
 	},
-	getAlbum: function (owner_id, album_id, data, offset) {
+	getAlbum: function(owner_id, album_id, data, offset) {
 		var info = data[1],
 			content = data[0];
 		Photos.chateAlbum(owner_id, album_id, info, content, offset);
 		var count = content.count,
 			photos = content.items,
-			title = Site.Escape(info.title),
-			parent = document.createElement("div"),
-			list = document.createElement("div"),
-			offset = +Site.Get("offset"),
+			title = info.title.safe(),
+			parent = $.e("div"),
+			list = $.e("div"),
+			offset = +getOffset(),
 			menu = {},
-			to = Site.Get("to");
-		menu[Lang.get("photos", "photos_comments_album")] = ((function (owner_id, album_id) {return function (event) {window.location.hash = "#photos" + owner_id + "?act=comments&album_id=" + album_id;}})(owner_id, album_id));
+			to = Site.get("to");
+		menu[Lang.get("photos", "photos_comments_album")] = ((function(owner_id, album_id) {return function(event) {window.location.hash = "#photos" + owner_id + "?act=comments&album_id=" + album_id;}})(owner_id, album_id));
 		if (album_id > 0) {
-			menu[Lang.get("photos", "photos_edit_album")] = ((function (owner_id, album_id) {return function (event) {Photos.editAlbumPage(owner_id, album_id)};})(owner_id, album_id));
-			menu[Lang.get("photos", "photos_delete_album")] = ((function (owner_id, album_id) {
-				return function (event) {
-					VKConfirm(Lang.get("photos", "photos_delete_album_confirm"), function () {
+			menu[Lang.get("photos", "photos_edit_album")] = ((function(owner_id, album_id) {return function(event) {Photos.editAlbumPage(owner_id, album_id)};})(owner_id, album_id));
+			menu[Lang.get("photos", "photos_delete_album")] = ((function(owner_id, album_id) {
+				return function(event) {
+					VKConfirm(Lang.get("photos", "photos_delete_album_confirm"), function() {
 						Site.API("photos.deleteAlbum", {
 							owner_id: owner_id,
 							album_id: album_id
-						}, function (data) {
+						}, function(data) {
 							if (Site.isResponse(data) == 1) {
 								Site.Alert({
 									text: Lang.get("photos", "photos_delete_album_success")
@@ -503,45 +503,45 @@ var Photos = {
 				};
 			})(owner_id, album_id));
 		}
-		parent.appendChild(Site.CreateHeader(count + " " + Lang.get("photos", "photos_count", count),
+		parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count),
 			!to ? Site.CreateDropDownMenu("Действия", menu) : null
 		));
-		if ((owner_id == API.uid || info.can_upload) && !to && album_id > 0)
-			parent.appendChild(Site.CreateTopButton({tag: "div", title: Lang.get("photos", "photos_upload"), onclick: function () {
+		if ((owner_id == API.userId || info.can_upload) && !to && album_id > 0)
+			parent.appendChild(Site.CreateTopButton({tag: "div", title: Lang.get("photos", "photos_upload"), onclick: function() {
 				Photos.getUploadForm(owner_id, album_id);
 			}}));
 		if (!count)
-			list.appendChild(Site.EmptyField(Lang.get("photos", "photos_empty")));
+			list.appendChild(getEmptyField(Lang.get("photos", "photos_empty")));
 		for (var i = offset, l = offset + 30; i < l; ++i) {
 			if (photos[i] == null)
 				break;
 			list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: true}));
 		}
 		parent.appendChild(list);
-		parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 		Site.Append(parent);
 		Site.SetHeader(Lang.get("photos", "album"), {link: "photos" + owner_id + Photos.getToParam(0)});
 	},
-	getPrivacySelect: function (name, defaultValue) {
-		var select = document.createElement("select");
+	getPrivacySelect: function(name, defaultValue) {
+		var select = $.e("select");
 		select.name = name;
 		var types = Lang.get("photos", "new_album_private"), obj;
 		for (var i = 0, l = types.length; i < l; ++i) {
 			obj = {html: types[i], value: i};
 			if (i == defaultValue)
 				obj.selected = true;
-			select.appendChild($.elements.create("option", obj));
+			select.appendChild($.e("option", obj));
 		}
 		return select;
 	},
-	getTip: function (text) {
+	getTip: function(text) {
 		return $.e("div", {"class": "tip tip-form", html: text});
 	},
-	editAlbumPage: function (ownerId, albumId) {
+	editAlbumPage: function(ownerId, albumId) {
 		var album = Photos.albumsInfo[ownerId + "_" + albumId],
-			parent = document.createElement("div"),
-			Form = document.createElement("form"),
-			toInt = function (str) {
+			parent = $.e("div"),
+			Form = $.e("form"),
+			toInt = function(str) {
 				return typeof str === "number" ? str : {
 					all: 0,
 					friends: 1,
@@ -551,7 +551,7 @@ var Photos = {
 				}[str.type];
 			};
 
-		var privacyChoises = Lang.get("photos.new_album_private").map(function (v, i) { return {value: i, html: v} });
+		var privacyChoises = Lang.get("photos.new_album_private").map(function(v, i) { return {value: i, html: v} });
 
 		new EditWindow({
 			lang: true,
@@ -586,14 +586,14 @@ var Photos = {
 					value: toInt(album.privacy_comment)
 				}
 			],
-			onSave: function (values, modal) {
+			onSave: function(values, modal) {
 
 				values.owner_id = ownerId;
 				values.album_id = albumId;
 
 				values.v = 5.29;
 
-				Site.APIv5("photos.editAlbum", values, function (data) {
+				Site.APIv5("photos.editAlbum", values, function(data) {
 					data = Site.isResponse(data);
 					modal.close();
 					var a = Photos.albumsInfo[ownerId + "_" + albumId];
@@ -606,28 +606,28 @@ var Photos = {
 			}
 		});
 	},
-	getUserTagged: function (owner_id) {
+	getUserTagged: function(owner_id) {
 		Site.APIv5("photos.getUserPhotos", {
 			user_id: owner_id,
-			offset: Site.Get("offset"),
+			offset: getOffset(),
 			count: 40,
 			extended: 1,
 			sort: 0,
 			v: 5.0
-		}, function (data) {
+		}, function(data) {
 			if (!data.response) {
-				Site.Append(Site.EmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
+				Site.Append(getEmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
 				Site.SetHeader("Назад", {link: "photos" + owner_id});
 			}
 			data = Site.isResponse(data);
 			var count = data.count,
 				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
+				parent = $.e("div"),
+				list = $.e("div");
 			parent.appendChild(Photos.getTabs(owner_id));
-			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("photos", "photos_count", count)));
+			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
 			if (count == 0)
-				list.appendChild(Site.EmptyField(Lang.get("photos", "photos_empty")));
+				list.appendChild(getEmptyField(Lang.get("photos", "photos_empty")));
 			Photos.lists["tags" + owner_id] = [];
 			for (var i = 0, l = photos.length; i < l; ++i) {
 				if (photos[i] == null)
@@ -636,26 +636,26 @@ var Photos = {
 				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
 			}
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 40));
 			Site.Append(parent);
 			Site.SetHeader("Отмеченные фотографии", {link: "photos" + owner_id});
 		});
 	},
-	getNewTags: function () {
+	getNewTags: function() {
 		Site.APIv5("photos.getNewTags", {
-			offset: Site.Get("offset"),
+			offset: getOffset(),
 			count: 40,
 			v: 5.0
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			var count = data.count,
 				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Photos.getTabs(API.uid));
-			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("photos", "photos_count", count)));
+				parent = $.e("div"),
+				list = $.e("div");
+			parent.appendChild(Photos.getTabs(API.userId));
+			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
 			if (count == 0)
-				list.appendChild(Site.EmptyField(Lang.get("photos", "photos_empty")));
+				list.appendChild(getEmptyField(Lang.get("photos", "photos_empty")));
 			//Photos.lists["newtags"] = [];
 			for (var i = 0, l = photos.length; i < l; ++i) {
 				if (photos[i] == null)
@@ -664,16 +664,16 @@ var Photos = {
 				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false, list: "newtags"}));
 			}
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 40));
 			Site.Append(parent);
-			Site.SetHeader("Новые отметки", {link: "photos" + API.uid});
+			Site.SetHeader("Новые отметки", {link: "photos" + API.userId});
 		})
 	},
 	photos: {},
 	access_keys: {},
 	lists: {},
-	createList: function (list_id, photos) {
-		Photos.lists[list_id] = (function (data) {
+	createList: function(list_id, photos) {
+		Photos.lists[list_id] = (function(data) {
 			for (var ids = [], i = 0, l = data.length; i < l; ++i) {
 				data[i] = Photos.v5normalize(data[i]);
 				ids.push(data[i].owner_id + "_" + data[i].id);
@@ -683,18 +683,18 @@ var Photos = {
 		})(photos);
 		return list_id;
 	},
-	addPhotoChate: function (c) {
+	addPhotoChate: function(c) {
 		Photos.photos[c.owner_id + "_" + c.id] = c;
 		if (c.access_key)
 			Photos.access_keys[c.owner_id + "_" + c.id] = c.access_key;
 	},
-	itemPhoto: function (c, opts) {
+	itemPhoto: function(c, opts) {
 		opts = opts || {};
-		var item = document.createElement("a"),
+		var item = $.e("a"),
 			list = opts && opts.list,
 			access_key = c.access_key,
 			params = {},
-			to = Site.Get("to");
+			to = Site.get("to");
 		c = Photos.v5normalize(c);
 		item.className = "photos-item";
 		if (access_key)
@@ -730,7 +730,7 @@ var Photos = {
 		]}));
 		item.appendChild($.e("div", {"class": "photos-minilike", id: "minilike" + c.owner_id + "_" + (c.id || c.pid)}))
 		if (to && window.location.hash.indexOf("im") < 0)
-			$.event.add(item, "click", function (event) {
+			$.event.add(item, "click", function(event) {
 				$.event.cancel(event);
 
 				if (IM.attachs[to])
@@ -744,26 +744,26 @@ var Photos = {
 			});
 		return item;
 	},
-	getUploadForm: function (ownerId, albumId) {
-		var node = $.e("input", {type: "file", multiple: true, accept: "image/*", onchange: function () {
+	getUploadForm: function(ownerId, albumId) {
+		var node = $.e("input", {type: "file", multiple: true, accept: "image/*", onchange: function() {
 			Photos.upload(ownerId, albumId, node);
 		}});
 		node.click();
 	},
 
-	upload: function (ownerId, albumId, node) {
+	upload: function(ownerId, albumId, node) {
 		uploadFiles(node, {
 			maxFiles: 50,
 			method: "photos.getUploadServer",
 			params: { group_id: ownerId < 0 ? -ownerId : 0, album_id: albumId }
 		}, {
-			onTaskFinished: function (result) {
+			onTaskFinished: function(result) {
 
 				Site.Alert({text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"});
 
 				var hasObject = !!Photos.albumsContent[ownerId + "_" + albumId];
 
-				result.forEach(function (p) {
+				result.forEach(function(p) {
 					Photos.photos[ownerId + "_" + p.id] = Photos.v5normalize(p);
 					if (hasObject) {
 						Photos.albumsContent[ownerId + "_" + albumId].count++;
@@ -780,39 +780,39 @@ var Photos = {
 	/* Comments */
 
 
-	getAllComments: function (owner_id) {
+	getAllComments: function(owner_id) {
 		Site.Loader();
 		Site.API("execute", {
 			code: 'var c=API.photos.getAllComments({owner_id:%h%,album_id:%a%,count:30,offset:%o%,need_likes:1,v:5}),p=[],i=0;while(i<c.items.length){p.push("%h%_"+c.items[i].pid);i=i+1;}return[c,API.users.get({user_ids:c.items@.from_id+c.items@.reply_to_user,fields:"photo_rec,screen_name,online,first_name_dat,last_name_dat",v:5.0}),API.photos.getById({photos:p,extended:1,v:5.0})];'
 					.replace(/%h%/ig, owner_id)
-					.replace(/%a%/ig, Site.Get("album_id"))
-					.replace(/%o%/ig, Site.Get("offset"))
-		}, function (data) {
+					.replace(/%a%/ig, Site.get("album_id"))
+					.replace(/%o%/ig, getOffset())
+		}, function(data) {
 			data = Site.isResponse(data);
 			var comments = data[0],
 				count = comments.count,
 				comments = comments.items,
-				users = Local.AddUsers(data[1]),
-				photos = (function (photos) {
+				users = Local.add(data[1]),
+				photos = (function(photos) {
 					var data = {};
 					for (var i = 0, l = photos.length; i < l; ++i)
 						data[photos[i].owner_id + "_" + (photos[i].id || photos[i].pid)] = photos[i];
 					return data;
 				})(data[2]),
-				parent = document.createElement("div"),
-				list = document.createElement("div");
+				parent = $.e("div"),
+				list = $.e("div");
 			for (var i = 0, l = comments.length; i < l; ++i)
 				list.appendChild(Photos.itemComment(comments[i], owner_id, comments[i].pid, {photo: photos[owner_id + "_" + comments[i].pid]}));
-			parent.appendChild(Site.CreateHeader(Lang.get("photos", "photos_all")));
+			parent.appendChild(Site.getPageHeader(Lang.get("photos", "photos_all")));
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 			Site.Append(parent);
 			Site.SetHeader(Lang.get("photos", "photos_all"), {link: "photos" + owner_id});
 		})
 	},
 	comments: {},
-	itemComment: function (comment, owner_id, photo_id, opts){
-		var Item = document.createElement("div"),
+	itemComment: function(comment, owner_id, photo_id, opts){
+		var Item = $.e("div"),
 			from_id = comment.from_id,
 			comment_id = comment.id || comment.cid,
 			replyId = comment.reply_to_user,
@@ -822,42 +822,42 @@ var Photos = {
 		Item.id = "photo-comment" + owner_id + "_" + photo_id + "_" + comment_id;
 		Item.className = "comments";
 		var user = Local.Users[from_id] || {}, actions = [];
-		actions.push($.e("span", {"class": "a", html: Lang.get("comment.reply"), onclick: function (event) {
+		actions.push($.e("span", {"class": "a", html: Lang.get("comment.reply"), onclick: function(event) {
 			Photos.reply(owner_id, photo_id, comment_id, from_id);
 		}}));
 		actions.push($.e("span", {"class": "tip", html: " | "}));
 		if (comment.can_edit) {
-			actions.push($.elements.create("span", {"class": "a", html: Lang.get("comment.edit"), onclick: function () {
+			actions.push($.e("span", {"class": "a", html: Lang.get("comment.edit"), onclick: function() {
 				Photos.editComment(owner_id, comment_id);
 			}}));
-			actions.push($.elements.create("span", {"class": "tip", html: " | "}));
+			actions.push($.e("span", {"class": "tip", html: " | "}));
 		}
 		if (
-			owner_id > 0 && owner_id == API.uid ||
+			owner_id > 0 && owner_id == API.userId ||
 			owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin ||
-			from_id == API.uid
+			from_id == API.userId
 		) {
-			actions.push($.e("span", {"class": "a", html: Lang.get("comment.delete"), onclick: (function (owner_id,comment_id,node) {
-				return function (event) {
-					VKConfirm(Lang.get("comment.delete_confirm"), function () {
+			actions.push($.e("span", {"class": "a", html: Lang.get("comment.delete"), onclick: (function(owner_id,comment_id,node) {
+				return function(event) {
+					VKConfirm(Lang.get("comment.delete_confirm"), function() {
 						Site.API("photos.deleteComment", {
 							owner_id: owner_id,
 							comment_id: comment_id
-						}, function (data) {
+						}, function(data) {
 							data = Site.isResponse(data);
 							if (!data)
 								return;
-							node.parentNode.insertBefore($.elements.create("div", {
+							node.parentNode.insertBefore($.e("div", {
 								id: "photo_comment_deleted_" + owner_id + "_" + comment_id,
 								"class": "comments comments-deleted",
 								append: [
 									document.createTextNode(Lang.get("comment.deleted") + " "),
-									$.e("span", {"class": "a", html: Lang.get("comment.restore"), onclick: (function (owner_id, comment_id, node) {
-										return function (event) {
+									$.e("span", {"class": "a", html: Lang.get("comment.restore"), onclick: (function(owner_id, comment_id, node) {
+										return function(event) {
 											Site.API("photos.restoreComment", {
 												owner_id: owner_id,
 												comment_id: comment_id
-											}, function (data) {
+											}, function(data) {
 												data = Site.isResponse(data);
 												if (data) {
 													$.elements.remove($.element("photo_comment_deleted_" + owner_id + "_" + comment_id));
@@ -874,16 +874,16 @@ var Photos = {
 				};
 			})(owner_id, comment_id, Item)}));
 		};
-		if (from_id != API.uid) {
+		if (from_id != API.userId) {
 			if (actions.length)
-				actions.push($.elements.create("span", {"class": "tip", html: " | "}));
-			actions.push($.elements.create("span", {"class": "a", html: Lang.get("comment.report"), onclick: function (event) {
-				this.parentNode.insertBefore($.elements.create("form", {
-					onsubmit: function (event) {return false;},
+				actions.push($.e("span", {"class": "tip", html: " | "}));
+			actions.push($.e("span", {"class": "a", html: Lang.get("comment.report"), onclick: function(event) {
+				this.parentNode.insertBefore($.e("form", {
+					onsubmit: function(event) {return false;},
 					"class": "sf-wrap",
 					append: [
 						Photos.getReportSelect(2),
-/**/                    $.elements.create("input", {type: "button", value: "Готово", onclick: function (event) {
+/**/                    $.e("input", {type: "button", value: "Готово", onclick: function(event) {
 							Photos.reportComment(owner_id, comment_id, photo_id);
 							return false;
 						}})
@@ -898,8 +898,8 @@ var Photos = {
 			$.e("div", {
 				"class": "wall-in",
 				append: [
-					(opts && opts.photo ? $.elements.create("div", {"class": "photos-comments-attachedphoto", append: [Photos.itemPhoto(opts.photo, {likes: true, comments: true})]}) : $.elements.create("div")),
-					$.e("a", {href: "#" + user.screen_name, "class": "comments-left", append: [$.elements.create("img", {src: getURL(user.photo || user.photo_rec || user.photo_50)})]}),
+					(opts && opts.photo ? $.e("div", {"class": "photos-comments-attachedphoto", append: [Photos.itemPhoto(opts.photo, {likes: true, comments: true})]}) : $.e("div")),
+					$.e("a", {href: "#" + user.screen_name, "class": "comments-left", append: [$.e("img", {src: getURL(user.photo || user.photo_rec || user.photo_50)})]}),
 					$.e("div", {
 						"class": "comments-right",
 						append: [
@@ -912,8 +912,8 @@ var Photos = {
 									href: "#" + reply.screen_name,
 									html: reply.name || reply.first_name_dat + " " + reply.last_name_dat})
 								: null,
-							$.e("div", {"class": "comments-content", html: Mail.Emoji(Site.Format(comment.text) || ""), id: "photo_comment_" + owner_id + "_" + comment_id}),
-							$.e("div", {"class": "comments-attachments", append: [Site.Attachment(comment.attachments, "photo_comment" + owner_id + "_" + comment_id)]}),
+							$.e("div", {"class": "comments-content", html: Mail.Emoji(Site.Format(comment.text) || ""), id: "photo_comment_" + owner_id + "_" + comment_id}), // TODO format
+							$.e("div", {"class": "comments-attachments", append: Site.Attachment(comment.attachments, "photo_comment" + owner_id + "_" + comment_id)}),
 							$.e("div",{
 								"class":"comments-footer",
 								append:[
@@ -929,7 +929,7 @@ var Photos = {
 		);
 		return Item;
 	},
-	editComment: function (owner_id, comment_id) {
+	editComment: function(owner_id, comment_id) {
 		var textNode = $.element("photo_comment_" + owner_id + "_" + comment_id);
 		textNode.innerHTML = '';
 		textNode.appendChild(Site.CreateWriteForm({
@@ -937,7 +937,7 @@ var Photos = {
 			noleft: true,
 			name: "text",
 			value: Photos.comments[owner_id + "_" + comment_id].text,
-			onsubmit: function (event) {
+			onsubmit: function(event) {
 				var text = this.text && $.trim(this.text.value);
 				if (!text) {
 					Site.Alert({text: "Введите текст!"});
@@ -948,22 +948,22 @@ var Photos = {
 					comment_id: comment_id,
 					message: text,
 					attachments: Wall.AttachmentToString(Photos.comments[owner_id + "_" + comment_id].attachments)
-				}, function (data) {
+				}, function(data) {
 					data = Site.isResponse(data);
 					if (!data)
 						return;
 					Photos.comments[owner_id + "_" + comment_id].text = text;
-					$.element("photo_comment_" + owner_id + "_" + comment_id).innerHTML = Mail.Emoji(Site.Format(text));
+					$.element("photo_comment_" + owner_id + "_" + comment_id).innerHTML = Mail.Emoji(Site.Format(text)); // TODO format
 				})
 				return false;
 			}
 		}, owner_id, comment_id))
 	},
-	reportComment: function (owner_id, comment_id, photo_id) {
+	reportComment: function(owner_id, comment_id, photo_id) {
 		Site.API("photos.reportComment", {
 			owner_id: owner_id,
 			comment_id: comment_id
-		}, function (data) {
+		}, function(data) {
 			if (data.response) {
 				var e = $.element("photo-comment" + owner_id + "_" + photo_id + "_" + comment_id)
 				$.elements.clearChild(e);
@@ -972,23 +972,23 @@ var Photos = {
 			}
 		});
 	},
-	getCommentNode: function (node, photoData, data, opts) {
+	getCommentNode: function(node, photoData, data, opts) {
 		var owner_id = photoData.owner_id,
 			photo_id = photoData.photo_id,
 			access_key = photoData.access_key,
 			photo = Photos.photos[owner_id + "_" + photo_id],
 			comments = data.items,
 			count = data.count,
-			parent = document.createElement("div"),
-			list = document.createElement("div");
+			parent = $.e("div"),
+			list = $.e("div");
 		list.id = "photo_comments_list";
-/**/    parent.appendChild(Site.CreateHeader("Комментарии <i class=count>" + (count) + "</i>"))
-		parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+/**/    parent.appendChild(Site.getPageHeader("Комментарии <i class=count>" + (count) + "</i>"))
+		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 		for (var i = 0, l = comments.length; i < l; ++i) {
 			list.appendChild(Photos.itemComment(comments[i], owner_id, photo_id));
 		}
 		parent.appendChild(list);
-		parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 		if (opts && opts.can_comment)
 			parent.appendChild(Site.CreateWriteForm({
 				asAdmin: (owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin),
@@ -997,7 +997,7 @@ var Photos = {
 				reply: true,
 				allowAttachments: 30,
 				owner_id: owner_id,
-				onsubmit: function (event) {
+				onsubmit: function(event) {
 					event.preventDefault();
 					var text = this.text && this.text.value,
 						attachments = this.attachments && this.attachments.value || "",
@@ -1017,7 +1017,7 @@ var Photos = {
 						attachments: attachments,
 						from_group: fromGroup,
 						reply_to_comment: replyComment
-					}, function (data) {
+					}, function(data) {
 						data = Site.isResponse(data);
 						if (data) {
 							var newOffset = Math.floor(count / 30) * 30;
@@ -1029,7 +1029,7 @@ var Photos = {
 			}, owner_id, photo_id));
 		node.appendChild(parent);
 	},
-	reply: function (ownerId, photoId, commentId, toId){
+	reply: function(ownerId, photoId, commentId, toId){
 		var area = $.element("photo-comment-writearea"),
 			to = Local.Users[toId],
 			reply = $.element("wall-comments-reply" + ownerId + "_" + photoId),
@@ -1047,7 +1047,7 @@ var Photos = {
 		$.elements.clearChild(replyUI);
 		replyUI.appendChild(e("div", {append: [
 			e("a", {href: "#" + to.screen_name, html: (to.name || to.first_name_dat + " " + to.last_name_dat)}),
-			e("div", {"class": "feed-close a", onclick: function (event) {
+			e("div", {"class": "feed-close a", onclick: function(event) {
 				area.value = area.value.replace(new RegExp("^\[" + to.screen_name + "|" + (to.name || to.first_name) + "\], " ,"img"), "");
 				reply.value = "";
 				$.elements.clearChild(replyUI);
@@ -1059,7 +1059,7 @@ var Photos = {
 	/* Viewer v3.0 */
 
 
-	getShow: function (owner_id, photo_id, access_key, list) {
+	getShow: function(owner_id, photo_id, access_key, list) {
 		if (list && Photos.lists[list] && (list = Photos.lists[list])) {
 			return Photos.getViewer(list, Photos.getCurrentPositionInViewedList(list, {owner_id: owner_id, id: photo_id}, {place: null}));
 		} else {
@@ -1080,7 +1080,7 @@ var Photos = {
 						.replace(/%o%/ig, owner_id)
 						.replace(/%p%/ig, photo_id)
 						.replace(/%a%/ig, access_key ? "_" + access_key : "")
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				var photos = data[0],
 					list = list || data[1],
@@ -1098,14 +1098,14 @@ var Photos = {
 					Photos.photos[photos.items[i].owner_id + "_" + photos.items[i].id] = photos.items[i];
 				}
 				Photos.photos[item.owner_id + "_" + item.id] = item;
-				var name = String(Site.Get("list"));
+				var name = String(Site.get("list"));
 				list = Photos.lists[list];
 				var pos = (/^mail/igm.test(name)) ? list : {owner_id: owner_id, id: photo_id};
 				return Photos.getViewer(list, Photos.getCurrentPositionInViewedList(list, pos));
 			})
 		}
 	},
-	getCurrentPositionInViewedList: function (list, object) {
+	getCurrentPositionInViewedList: function(list, object) {
 		for (var i = 0, l = list.length, o = object.owner_id, p = (object.id || object.pid), c = -1; i < l && c == -1; ++i)
 			if (list[i].list == object || list[i].owner_id == o && (list[i].id == p || list[i].pid == p))
 				c = i;
@@ -1113,65 +1113,65 @@ var Photos = {
 			{current: c, previous: list[c - 1] ? c - 1 : false, next: list[c + 1] ? c + 1 : false} :
 			{current: -1, previous: false, next: false, photo: Photos.photos[object.owner_id + "_" + object.id]};
 	},
-	getViewer: function (list, position, objects) {
+	getViewer: function(list, position, objects) {
 		var previous   = list[position.previous],
 			next       = list[position.next],
 			photo      = list[position.current === -1 ? -1 : position.current] || position.photo,
 			owner_id   = photo.owner_id,
 			album_id   = photo.album_id || photo.aid,
 			photo_id   = photo.id || photo.pid,
-			access_key = photo.access_key || Site.Get("access_key") || "",
+			access_key = photo.access_key || Site.get("access_key") || "",
 			place      = objects && objects.place,
-			parent     = document.createElement("div"),
-			header     = document.createElement("div"),
-			frame      = document.createElement("div"),
-			shower     = document.createElement("div"),
-			headerFull = document.createElement("div"),
-			footerFull = document.createElement("div"),
+			parent     = $.e("div"),
+			header     = $.e("div"),
+			frame      = $.e("div"),
+			shower     = $.e("div"),
+			headerFull = $.e("div"),
+			footerFull = $.e("div"),
 			makeLike   = Photos.getLikeEffect(owner_id, photo_id),
-			footer     = document.createElement("div"),
-			comments   = document.createElement("div"),
+			footer     = $.e("div"),
+			comments   = $.e("div"),
 			like       = Wall.LikeButton("photo", owner_id, photo_id, photo.likes || {}, {}, access_key),
-			links      = (function (a,b,c,d,e,f,g,h,i,j,k,l){for(;e<f;++e){l={};if(a[c+d[e]]==g)continue;l[j]=(((((l[i]=((((100*d[e])/a[i])*a[i])/100))*100)/a[i])*a[j])/100);l[k]=a[c+d[e]];b[h](l);};return b;})(photo,[],"photo_",[75,130,604,807,1280,2560],0,6,undefined,"push","width","height","url",{}),
+			links      = (function(a,b,c,d,e,f,g,h,i,j,k,l){for(;e<f;++e){l={};if(a[c+d[e]]==g)continue;l[j]=(((((l[i]=((((100*d[e])/a[i])*a[i])/100))*100)/a[i])*a[j])/100);l[k]=a[c+d[e]];b[h](l);};return b;})(photo,[],"photo_",[75,130,604,807,1280,2560],0,6,undefined,"push","width","height","url",{}),
 			actions    = {},
 			headerText = Lang.get("photos", "photo_noun") + " " + (position.current + 1 || 1) + Lang.get("photos", "photo_count_of") + (position.current != -1 ? list.length : 1);
 		header.id    = "photo_actions_head";
 		frame.className = "photo-frame";
 // Prepare actions box
-//actions["Fullscreen"] = function (event) {Photos.setFullViewMode(true);};
-		if ((owner_id > 0 && owner_id == API.uid) || (owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin)) {
+//actions["Fullscreen"] = function(event) {Photos.setFullViewMode(true);};
+		if ((owner_id > 0 && owner_id == API.userId) || (owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin)) {
 			if (album_id != -6 && album_id != -15 || (Local.Users[owner_id] && Local.Users[owner_id].is_admin))
-				actions[Lang.get("photos", "photo_actions_edit")]   = function (event) {Photos.editPhoto(owner_id, photo_id);};
-			if ((owner_id === API.uid || owner_id < 0 && (Local.Users[owner_id] && Local.Users[owner_id].is_admin)) && album_id === -6)
-				actions[Lang.get("photos.photo_actions_set_profile_photo")] = function (event) {Photos.setProfilePhoto(owner_id, photo_id);};
-			actions[Lang.get("photos", "photo_actions_delete")] = function (event) {Photos.deletePhoto(owner_id, photo_id, access_key, header);};
-//actions[Lang.get("photos", "photo_actions_move")]   = function (event) {Photos.movePhoto(owner_id, photo_id);};
-//actions[Lang.get("photos", "photo_actions_addTag")] = function (event) {Photos.addTagPhoto(owner_id, photo_id);};
+				actions[Lang.get("photos", "photo_actions_edit")]   = function(event) {Photos.editPhoto(owner_id, photo_id);};
+			if ((owner_id === API.userId || owner_id < 0 && (Local.Users[owner_id] && Local.Users[owner_id].is_admin)) && album_id === -6)
+				actions[Lang.get("photos.photo_actions_set_profile_photo")] = function(event) {Photos.setProfilePhoto(owner_id, photo_id);};
+			actions[Lang.get("photos", "photo_actions_delete")] = function(event) {Photos.deletePhoto(owner_id, photo_id, access_key, header);};
+//actions[Lang.get("photos", "photo_actions_move")]   = function(event) {Photos.movePhoto(owner_id, photo_id);};
+//actions[Lang.get("photos", "photo_actions_addTag")] = function(event) {Photos.addTagPhoto(owner_id, photo_id);};
 			if (album_id != -6 && album_id != -3)
-				actions[Lang.get("photos", "photo_actions_cover")]  = function (event) {Photos.makeCover(owner_id, album_id, photo_id);};
+				actions[Lang.get("photos", "photo_actions_cover")]  = function(event) {Photos.makeCover(owner_id, album_id, photo_id);};
 		} else {
-			actions[Lang.get("photos", "photo_actions_report")] = function (event) {Photos.reportPhoto(owner_id, photo_id);};
+			actions[Lang.get("photos", "photo_actions_report")] = function(event) {Photos.reportPhoto(owner_id, photo_id);};
 		}
-		if (owner_id != API.uid)
-			actions[Lang.get("photos", "photo_actions_save")]   = function (event) {Photos.savePhoto(owner_id, photo_id, access_key);};
+		if (owner_id != API.userId)
+			actions[Lang.get("photos", "photo_actions_save")]   = function(event) {Photos.savePhoto(owner_id, photo_id, access_key);};
 //if (photo.tags && photo.tags.count > 0)
-//	actions[Lang.get("photos", "photo_actions_tags")]   = function (event) {};
+//	actions[Lang.get("photos", "photo_actions_tags")]   = function(event) {};
 //if (album_id != -3)
-//		actions["Оценили"]                                  = function (event) {window.location.hash = "#photo" + owner_id + "_" + photo_id + (access_key ? "?access_key=" + access_key + "&" : "?") + "act=likes"};
-		actions["Поделиться"]                              = function (event) {Photos.share(owner_id, photo_id, access_key, photo.can_repost)};
-		actions[Lang.get("photos", "photo_actions_download")]   = function (event) {Photos.downloadPhoto(owner_id, photo_id, access_key, links);};
-		actions[Lang.get("photos", "photo_actions_download_original")]  = function (event) {
+//		actions["Оценили"]                                  = function(event) {window.location.hash = "#photo" + owner_id + "_" + photo_id + (access_key ? "?access_key=" + access_key + "&" : "?") + "act=likes"};
+		actions["Поделиться"]                              = function(event) {Photos.share(owner_id, photo_id, access_key, photo.can_repost)};
+		actions[Lang.get("photos", "photo_actions_download")]   = function(event) {Photos.downloadPhoto(owner_id, photo_id, access_key, links);};
+		actions[Lang.get("photos", "photo_actions_download_original")]  = function(event) {
 			var url = photo.photo_2560 || photo.photo_1280 || photo.photo_807 || photo.photo_604;
 			window.open(url);
 		};
-		header.appendChild(Site.CreateHeader(
+		header.appendChild(Site.getPageHeader(
 			headerText,
 			Site.CreateDropDownMenu(Lang.get("photos", "photo_actions"), actions)
 		));
 		headerFull.className = "photo-view-full-header";
 		headerFull.appendChild($.e("div", {
 			"class": "fr photo-view-full-header-close",
-			onclick: function () {
+			onclick: function() {
 				Photos.setFullViewMode(false);
 			},
 			html: Lang.get("photos.photo_view_full_close")
@@ -1179,19 +1179,19 @@ var Photos = {
 
 		footerFull.appendChild(Photos.getFooterPanelFullView(owner_id, photo_id, access_key));
 		if (photo.deleted) {
-			header.appendChild($.elements.create("div", {
+			header.appendChild($.e("div", {
 				"class": "photo-deleted",
 				html: Lang.get("photos", "photo_action_deleted")
 			}));
 		}
 	// Photo-block
-		headerFull.appendChild($.elements.create("div", {"class": "photo-view-full-header-title", html: headerText}))
+		headerFull.appendChild($.e("div", {"class": "photo-view-full-header-title", html: headerText}))
 		shower.className = "photo-shower";
 		shower.appendChild(makeLike);
 		shower.appendChild(Photos.getMoveablePanelViewer([previous, photo, next]));
 
 
-		var onClickPhoto = function (percent)
+		var onClickPhoto = function(percent)
 		{
 
 			if (percent >= 60 && next) {
@@ -1207,16 +1207,16 @@ var Photos = {
 			}
 		};
 
-		Photos.touchEvent(shower, function (event)
+		Photos.touchEvent(shower, function(event)
 		{
 			var element = shower,
 				x = event.clientX - element.offsetLeft,
 				percent = (100 * x) / $.getPosition(element).width;
 			onClickPhoto(percent);
 		},
-		function (event)
+		function(event)
 		{
-			Photos.likePhoto(owner_id, photo_id, access_key, function (photo, likes) {
+			Photos.likePhoto(owner_id, photo_id, access_key, function(photo, likes) {
 				var button = getLikeButton("photo", owner_id, photo_id, accessKey, likes.count, likes.me, 0, null, {right: true}),
 				likeParent = $.element("like_photo_" + photo.owner_id + "_" + photo.photo_id);
 				$.elements.clearChild(likeParent);
@@ -1229,7 +1229,7 @@ var Photos = {
 				}
 			});
 		}, 550);
-		window.onKeyDownCallback = function (event)
+		window.onKeyDownCallback = function(event)
 		{
 			if (event.target.tagName == "TEXTAREA" || event.target.tagName == "INPUT")
 			{
@@ -1255,7 +1255,7 @@ var Photos = {
 /*			new Vlad805API("place.getByCoordinaties", {
 				lat: photo.lat,
 				"long": photo["long"]
-			}).onResult(function (data) {
+			}).onResult(function(data) {
 				if (!data)
 					return;
 				data = data.items[0];
@@ -1270,12 +1270,12 @@ var Photos = {
 		]}));
 		footer.appendChild($.e("div", {"class": "photo-album", append: [
 			$.e("span", {"class": "tip", html: Lang.get("photos.photo_view_album")}),
-			$.e("a", {href: "#photos" + owner_id + "_" + album_id, html: Site.Escape(Photos.albumsInfo[owner_id + "_" + album_id] && Photos.albumsInfo[owner_id + "_" + album_id].title) || "< Альбом >"})
+			$.e("a", {href: "#photos" + owner_id + "_" + album_id, html: ((Photos.albumsInfo[owner_id + "_" + album_id] && Photos.albumsInfo[owner_id + "_" + album_id].title) || "< Альбом >").safe()})
 		]}));
 		var authorLink, authorID;
-		footer.appendChild($.elements.create("div", {"class": "photo-uploader", append: [
-			$.elements.create("span", {"class": "tip", html: Lang.get("photos.photo_view_owner")}),
-			(authorLink = $.elements.create("a", {
+		footer.appendChild($.e("div", {"class": "photo-uploader", append: [
+			$.e("span", {"class": "tip", html: Lang.get("photos.photo_view_owner")}),
+			(authorLink = $.e("a", {
 				html: (owner_id < 0 ? (photo.user_id == 100 ? Local.Users[owner_id] && Local.Users[owner_id].name || "DELETED" : Local.Users[photo.user_id] && Local.Users[photo.user_id].first_name + " " + Local.Users[photo.user_id].last_name || "DELETED DELETED") : Local.Users[owner_id] && Local.Users[owner_id].first_name + " " + Local.Users[owner_id].last_name || "DELETED DELETED"),
 				href: "#" + (owner_id < 0 ? (photo.user_id == 100 ? Local.Users[owner_id] && Local.Users[owner_id].screen_name || "club" + -owner_id : Local.Users[photo.user_id] && Local.Users[photo.user_id].screen_name || "id" + photo.user_id) : Local.Users[owner_id] && Local.Users[owner_id].screen_name || "id" + owner_id)
 			}))
@@ -1298,16 +1298,16 @@ var Photos = {
 			Site.API(
 				need > 0 ? "users.get" : "groups.getById",
 				need > 0 ? {user_ids: need, fields: "screen_name,online"} : {group_ids: -need},
-				function (data) {
+				function(data) {
 					data = Site.isResponse(data);
-					Local.AddUsers(data);
+					Local.add(data);
 					data = data[0];
 					authorLink.href = "#" + data.screen_name;
 					authorLink.innerHTML = data.name || data.first_name + " " + data.last_name + Site.isOnline(data);
 				}
 			);
 		}
-		var loadComments = function (event) {
+		var loadComments = function(event) {
 			if (event != false) {
 				this.value = Lang.get("photos.photo_view_load_comments_loading");
 				this.disabled = true;
@@ -1317,11 +1317,11 @@ var Photos = {
 						.replace(/%h%/ig, owner_id)
 						.replace(/%p%/ig, photo_id)
 						.replace(/%a%/ig, access_key)
-						.replace(/%o%/ig, Site.Get("offset"))
+						.replace(/%o%/ig, getOffset())
 						.replace(/%g%/ig, owner_id < 0 && !Local.Users[owner_id] ? ",API.groups.getById({group_id:" + (-owner_id) + ",v:5.0})" : "")
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
-				Local.AddUsers(data[1]);
+				Local.add(data[1]);
 				$.elements.clearChild(comments);
 				return Photos.getCommentNode(comments, {
 					owner_id: owner_id,
@@ -1330,10 +1330,10 @@ var Photos = {
 				}, data[0], {can_comment: photo.can_comment});
 			})
 		};
-		comments.appendChild($.elements.create("div", {"class": "button-block", html: Lang.get("photos.photo_view_load_comments"), onclick: (function (owner_id, photo_id, access_key) {
+		comments.appendChild($.e("div", {"class": "button-block", html: Lang.get("photos.photo_view_load_comments"), onclick: (function(owner_id, photo_id, access_key) {
 			return loadComments;
 		})(owner_id, photo_id, access_key)}));
-		if (Site.Get("offset", true) != undefined) {
+		if (Site.get("offset", true) != undefined) {
 			loadComments(false);
 		}
 		footerFull.className = "photo-view-full-footer";
@@ -1345,13 +1345,13 @@ var Photos = {
 			parent.appendChild(nodes[i]);
 		Site.Append(parent);
 		Photos.onResizedWindowUpdateMarginsPhotosMoveableFullScreenView();
-		var f = Site.Get("from");
+		var f = Site.get("from");
 		Site.SetHeader(Lang.get("photos", "photo_noun"), f ? {link: f} : null);
 		if (photo.tags && photo.tags.count > 0 || !photo.tags)
 			Photos.tagsPhoto(owner_id, photo_id, access_key);
 	},
 
-	share: function (ownerId, photoId, accessKey, canRepost) {
+	share: function(ownerId, photoId, accessKey, canRepost) {
 		share("photo", ownerId, photoId, accessKey, actionAfterShare, {
 			wall: canRepost,
 			user: true,
@@ -1359,26 +1359,26 @@ var Photos = {
 		});
 	},
 
-	tagsPhoto: function (owner_id, photo_id, access_key) {
-		Site.APIv5("photos.getTags", {owner_id: owner_id, photo_id: photo_id, access_key: access_key, v: 5.10}, function (data) {
+	tagsPhoto: function(owner_id, photo_id, access_key) {
+		Site.APIv5("photos.getTags", {owner_id: owner_id, photo_id: photo_id, access_key: access_key, v: 5.10}, function(data) {
 			data = data.response;
 			if (!data || data && !data.length)
 				return;
 			var users = [], u;
 			for (var i = 0, l = data.length; i < l; ++i) {
 				u = data[i];
-				users.push($.elements.create("span", {
+				users.push($.e("span", {
 					"class": "a",
 					//href: "#id" + u.user_id,
 					html: u.tagged_name,
-					onclick: (function (position) {return function (event) {
+					onclick: (function(position) {return function(event) {
 						var photo = $.element("photo__current"), tip = photo.lastChild;
 						if (photo.firstChild == photo.lastChild) {
-							tip = document.createElement("div");
+							tip = $.e("div");
 							photo.appendChild(tip);
 						} else
 							$.elements.clearChild(photo.lastChild);
-						var square = document.createElement("div"), percent = "%";
+						var square = $.e("div"), percent = "%";
 						square.className = "photo-tag-square";
 						square.style.top = position[0][1] + percent;
 						square.style.left = position[0][0] + percent;
@@ -1386,7 +1386,7 @@ var Photos = {
 						square.style.height = (position[1][1] - position[0][1]) + percent;
 						tip.appendChild(square);
 
-						var e = $.elements.create,
+						var e = $.e,
 							blocks = [];
 						for (var i = 0; i < 4; ++i)
 							blocks.push(e("div", {"class": "photo-tag-blocked"}));
@@ -1410,7 +1410,7 @@ var Photos = {
 						blocks[3].style.left = position[0][0] + percent;
 						blocks[3].style.width = (position[1][0] - position[0][0]) + percent;
 						blocks[3].style.height = (100 - position[1][1]) + percent;
-						var closeTip = function (event) {
+						var closeTip = function(event) {
 							$.elements.remove(tip);
 							return $.event.cancel(event);
 						};
@@ -1422,16 +1422,16 @@ var Photos = {
 						return false;
 					}})([[u.x, u.y], [u.x2, u.y2]])
 				}));
-				if (u.user_id == API.uid && !u.viewed) {
+				if (u.user_id == API.userId && !u.viewed) {
 					users.push(document.createTextNode(" "));
-					users.push($.e("span", {"class": "a", html: "[подтвердить отметку]", onclick: (function (o,p,t){
-						return function (event) {
+					users.push($.e("span", {"class": "a", html: "[подтвердить отметку]", onclick: (function(o,p,t){
+						return function(event) {
 							var elem = this;
 							Site.API("photos.confirmTag", {
 								owner_id: o,
 								photo_id: p,
 								tag_id: t
-							}, function (data) {
+							}, function(data) {
 								data = Site.isResponse(data);
 								$.elements.remove(elem.previousSibling);
 								$.elements.remove(elem);
@@ -1439,16 +1439,16 @@ var Photos = {
 						};
 					})(owner_id, photo_id, (u.id || u.tag_id))}));
 				};
-				if (u.user_id == API.uid || owner_id == API.uid) {
+				if (u.user_id == API.userId || owner_id == API.userId) {
 					users.push(document.createTextNode(" "));
-					users.push($.e("span", {"class": "a", html: "[x]", onclick: (function (o,p,t){
-						return function (event) {
+					users.push($.e("span", {"class": "a", html: "[x]", onclick: (function(o,p,t){
+						return function(event) {
 							var elem = this;
 							Site.API("photos.removeTag", {
 								owner_id: o,
 								photo_id: p,
 								tag_id: t
-							}, function (data) {
+							}, function(data) {
 								data = Site.isResponse(data);
 								$.elements.remove(elem.previousSibling.previousSibling);
 								$.elements.remove(elem.previousSibling);
@@ -1460,54 +1460,54 @@ var Photos = {
 				users.push(document.createTextNode(", "));
 			}
 			users.length = users.length - 1;
-			$.element("photo_tags_" + owner_id + "_" + photo_id).appendChild($.elements.create("div", {append: users}));
+			$.element("photo_tags_" + owner_id + "_" + photo_id).appendChild($.e("div", {append: users}));
 		});
 	},
-	setFullViewMode: function (state) {
+	setFullViewMode: function(state) {
 		var e = document.getElementsByTagName("html")[0], c = "photo-view-full";
 		if (state)
 			$.elements.addClass(e, c)
 		else
 			$.elements.removeClass(e, c)
 	},
-	getFooterPanelFullView: function (owner_id, photo_id, access_key) {
-		var panel = document.createElement("div"),
+	getFooterPanelFullView: function(owner_id, photo_id, access_key) {
+		var panel = $.e("div"),
 			photo = Photos.photos[owner_id + "_" + photo_id],
-			item = function (icon, count, fx) {
-				return $.elements.create("div", {"class": "photo-view-full-footer-item sizefix", onclick: fx, append: [
-					$.elements.create("div", {"class": "photo-view-full-footer-wrap", append: [
-						$.elements.create("div", {"class": "photo-view-full-icons photo-view-full-icon-" + icon}),
-						$.elements.create("span", {html: (count > 0 ? " " + count : ""), id: "photofullview" + owner_id + "_" + photo_id})
+			item = function(icon, count, fx) {
+				return $.e("div", {"class": "photo-view-full-footer-item sizefix", onclick: fx, append: [
+					$.e("div", {"class": "photo-view-full-footer-wrap", append: [
+						$.e("div", {"class": "photo-view-full-icons photo-view-full-icon-" + icon}),
+						$.e("span", {html: (count > 0 ? " " + count : ""), id: "photofullview" + owner_id + "_" + photo_id})
 					]})
 				]});
 			};
 		panel.style.height = "100%";
-		panel.appendChild(item("like", photo.likes && photo.likes.count || 0, function (event) {
-			Likes.Like(null, "photo", owner_id, photo_id, access_key, function (data) {
+		panel.appendChild(item("like", photo.likes && photo.likes.count || 0, function(event) {
+			Likes.Like(null, "photo", owner_id, photo_id, access_key, function(data) {
 				var e = $.element("photofullview" + owner_id + "_" + photo_id);
 				e.innerHTML = data.likes.count > 0 ? " " + data.likes.count : "";
 				e.previousSibling.className = "photo-view-full-icons photo-view-full-icon-like" + (data.likes.user_likes ? "-active" : "");
 			});
 		}));
-		panel.appendChild(item("comment", photo.comments && photo.comments.count || 0, function (event) {
+		panel.appendChild(item("comment", photo.comments && photo.comments.count || 0, function(event) {
 			Photos.setFullViewMode(0);
 			Site.Go(window.location.hash += "?&offset=0");
 			window.scrollTo(0, 590);
 		}));
-		panel.appendChild(item("people", photo.tags && photo.tags.count || 0, function (event) {
+		panel.appendChild(item("people", photo.tags && photo.tags.count || 0, function(event) {
 			if (photo.tags && photo.tags.count > 0)
 				Photos.setFullViewMode(0);
 		}));
 		return panel;
 	},
 	alreadySaved: {},
-	savePhoto: function (owner_id, photo_id, access_key) {
-		var save = function () {
+	savePhoto: function(owner_id, photo_id, access_key) {
+		var save = function() {
 			Site.API("photos.copy", {
 				owner_id: owner_id,
 				photo_id: photo_id,
 				access_key: access_key
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				if (data > 0) {
 					Site.Alert({text: "Сохранено в альбом &quot;Сохраненные фотографии&quot;"});
@@ -1519,7 +1519,7 @@ var Photos = {
 			VKConfirm("Вы только что сохранили эту фотографию к себе в альбом. Хотите сделать это еще раз?", save);
 		} else save();
 	},
-	editPhoto: function (owner_id, photo_id) {
+	editPhoto: function(owner_id, photo_id) {
 		var photo = Photos.photos[owner_id + "_" + photo_id],
 			description = $.element("photo_description_" + owner_id + "_" + photo_id),
 			textDescription = photo.text;
@@ -1529,16 +1529,16 @@ var Photos = {
 			noleft: true,
 			name: "caption",
 			value: textDescription,
-			onsubmit: function (event) {
+			onsubmit: function(event) {
 				var text =$.trim(this.caption.value);
 				Site.API("photos.edit", {
 					owner_id: owner_id,
 					photo_id: photo_id,
 					caption:  text
-				}, function (data) {
+				}, function(data) {
 					if (data.response) {
 						$.elements.clearChild(description);
-						description.appendChild($.elements.create("div", {html: Site.Format(text)}));
+						description.appendChild($.e("div", {html: Site.Format(text)}));
 						Photos.photos[owner_id + "_" + photo_id].text = text;
 					} else
 						Site.isResponse(data);
@@ -1547,10 +1547,10 @@ var Photos = {
 			}
 		}));
 	},
-	getReportSelect: function (type) {
-		var parent = document.createElement("div"),
-			tip    = document.createElement("div"),
-			//select = document.createElement("select"),
+	getReportSelect: function(type) {
+		var parent = $.e("div"),
+			tip    = $.e("div"),
+			//select = $.e("select"),
 			reasons = "это спам|детская порнография|экстремизм|насилие|пропаганда наркотиков|материал для взрослых|оскорбление"
 				.split("|");
 		tip.className = "tip";
@@ -1558,24 +1558,24 @@ var Photos = {
 		parent.appendChild(tip);
 		//select.name = "reason";
 		for (var i = 0, l = reasons.length; i < l; ++i)
-			parent.appendChild($.elements.create("label", {append: [
-				$.elements.create("input", {type: "radio", name: "reason", value: i}),
+			parent.appendChild($.e("label", {append: [
+				$.e("input", {type: "radio", name: "reason", value: i}),
 				document.createTextNode(" " + reasons[i])
 			]}));
 		//parent.appendChild(select);
 		return parent;
 	},
-	reportPhoto: function (owner_id, photo_id) {
+	reportPhoto: function(owner_id, photo_id) {
 		var photo = Photos.photos[owner_id + "_" + photo_id],
-			Form = document.createElement("form"),
-			body = document.createElement("div");
-		Form.appendChild(Site.CreateHeader("Составление жалобы на фотографию"));
+			Form = $.e("form"),
+			body = $.e("div");
+		Form.appendChild(Site.getPageHeader("Составление жалобы на фотографию"));
 		body.className = "sf-wrap";
-		body.appendChild($.elements.create("img", {"class": "fr", src: photo.photo_130}));
+		body.appendChild($.e("img", {"class": "fr", src: photo.photo_130}));
 		body.appendChild(Photos.getReportSelect());
-		body.appendChild($.elements.create("input", {type: "submit", value: "Пожаловаться"}));
+		body.appendChild($.e("input", {type: "submit", value: "Пожаловаться"}));
 		Form.appendChild(body);
-		Form.onsubmit = function (event) {
+		Form.onsubmit = function(event) {
 			if (!this.reason)
 				return false;
 			var reasons = this.reason,
@@ -1593,7 +1593,7 @@ var Photos = {
 				owner_id: owner_id,
 				photo_id: photo_id,
 				reason:   reason
-			}, function (data) {
+			}, function(data) {
 				if (data.response)
 					Site.Go(window.location.hash);
 			})
@@ -1601,13 +1601,13 @@ var Photos = {
 		};
 		Site.Append(Form);
 	},
-	deletePhoto: function (owner_id, photo_id, access_key, node) {
-		VKConfirm(Lang.get("photos", "photo_action_delete"), function () {
+	deletePhoto: function(owner_id, photo_id, access_key, node) {
+		VKConfirm(Lang.get("photos", "photo_action_delete"), function() {
 			Site.API("photos.delete", {
 				owner_id: owner_id,
 				photo_id: photo_id,
 				access_key: access_key
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				if (data) {
 					var bl;
@@ -1616,7 +1616,7 @@ var Photos = {
 						append: [
 							$.e("span", {html: Lang.get("photos", "photo_action_deleted")}),
 							document.createTextNode(" "),
-							$.e("span", {"class": "a", html: "Восстановить", onclick: function (event) {
+							$.e("span", {"class": "a", html: "Восстановить", onclick: function(event) {
 								Photos.restorePhoto(owner_id, photo_id, access_key, bl);
 							}})
 						]
@@ -1625,12 +1625,12 @@ var Photos = {
 			})
 		});
 	},
-	restorePhoto: function (ownerId, photoId, accessKey, node) {
+	restorePhoto: function(ownerId, photoId, accessKey, node) {
 		Site.API("photos.restore", {
 			owner_id: ownerId,
 			photo_id: photoId,
 			access_key: accessKey
-		}, function (data) {
+		}, function(data) {
 			if (Site.isResponse(data)) {
 				$.elements.remove(node);
 				Photos.photos[owner_id + "_" + photo_id].deleted = true;
@@ -1639,13 +1639,13 @@ var Photos = {
 			}
 		})
 	},
-	makeCover: function (owner_id, album_id, photo_id) {
-		VKConfirm(Lang.get("photos", "photo_action_makeCover"), function () {
+	makeCover: function(owner_id, album_id, photo_id) {
+		VKConfirm(Lang.get("photos", "photo_action_makeCover"), function() {
 			Site.API("photos.makeCover", {
 				owner_id: owner_id,
 				album_id: album_id,
 				photo_id: photo_id
-			}, function (data) {
+			}, function(data) {
 				data = Site.isResponse(data);
 				if (data) {
 					Site.Alert({text: Lang.get("photos", "photo_action_makedCover")});
@@ -1653,10 +1653,10 @@ var Photos = {
 			});
 		});
 	},
-	downloadPhoto: function (owner_id, photo_id, access_key, links) {
-		var parent = document.createElement("div"),
-			item = function (url, width, height) {
-				return $.elements.create("a", {href: url, target: "_blank", html: parseInt(width) + "&times;" + parseInt(height)});
+	downloadPhoto: function(owner_id, photo_id, access_key, links) {
+		var parent = $.e("div"),
+			item = function(url, width, height) {
+				return $.e("a", {href: url, target: "_blank", html: parseInt(width) + "&times;" + parseInt(height)});
 			};
 		parent.id = "photo_downloadlinks" + owner_id + "_" + photo_id;
 		parent.className = "profile-lists";
@@ -1664,23 +1664,23 @@ var Photos = {
 			var link = links[i];
 			parent.appendChild(item(link.url, link.width, link.height));
 		};
-		parent.appendChild($.elements.create("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}))
+		parent.appendChild($.e("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}))
 		new Modal({
 			title: "Прямые ссылки на фото",
 			content: parent,
 			noPadding: true,
-			footer: [ { name: "close", title: "Закрыть", onclick: function () { this.close() } } ]
+			footer: [ { name: "close", title: "Закрыть", onclick: function() { this.close() } } ]
 		}).show();
 		Site.API("execute", {
 			code: 'return API.photos.getById({photos:"%id%",photo_sizes:1})[0].sizes;'
 					.replace(/%id%/ig, owner_id + "_" + photo_id + (access_key ? "_" + access_key : ""))
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			if (!data)
 				return;
 			$.elements.clearChild(parent);
 
-			data.sort(function (a, b)
+			data.sort(function(a, b)
 			{
 				return a.width > b.width ? -1 : a.width < b.width ? 1 : 0;
 			});
@@ -1691,18 +1691,18 @@ var Photos = {
 			}
 		})
 	},
-	setProfilePhoto: function (ownerId, photoId) {
+	setProfilePhoto: function(ownerId, photoId) {
 		Site.API("execute", {
 			code: "return API.photos.reorderPhotos({owner_id:%o,photo_id:%p,after:API.photos.get({owner_id:%o,album_id:-6,rev:1,count:1,v:5.28}).items[0].id,v:5.28});".replace(/%o/img, ownerId).replace(/%p/img, photoId)
-		}, function (data) {
+		}, function(data) {
 			if (data.response)
 				Site.Alert({text: Lang.get("photos.successfully_setted_profile_photo")});
 		});
 	},
-	likePhoto: function (owner_id, photo_id, access_key, onCompleteCallback) {
+	likePhoto: function(owner_id, photo_id, access_key, onCompleteCallback) {
 		Site.API("execute", {
 			code: 'var p={type:"photo",access_key:"' + access_key + '",item_id:' + photo_id + ',owner_id:' + owner_id + '},me=API.likes.isLiked(p),act;if(me==0)act=API.likes.add(p);else act=API.likes.delete(p);return [(-me)+1,act.likes];'
-		}, function (result) {
+		}, function(result) {
 			data = Site.isResponse(result);
 			if (onCompleteCallback && typeof onCompleteCallback === "function")
 				onCompleteCallback({owner_id: owner_id, photo_id: photo_id}, {count: data[1], me: data[0]})
@@ -1712,17 +1712,17 @@ var Photos = {
 	/* Event Helpers */
 
 
-	initTouchEventPhoto: function (node) {
-		node.onclick = function (event) {
+	initTouchEventPhoto: function(node) {
+		node.onclick = function(event) {
 			return false;
 		};
 		var id = node.href.split("#")[1].replace(/photo/i, "").split("_"),
 			owner_id = parseInt(id[0]),
 			photo_id = parseInt(id[1]);
-		Photos.touchEvent(node, function (event) {
+		Photos.touchEvent(node, function(event) {
 			window.location.href = node.href;
-		}, function (event) {
-			Photos.likePhoto(owner_id, photo_id, "", function (photo, likes) {
+		}, function(event) {
+			Photos.likePhoto(owner_id, photo_id, "", function(photo, likes) {
 				var link = $.element("minilike" + photo.owner_id + "_" + photo.photo_id),
 					count = $.element("minilike-count_" + photo.owner_id + "_" + photo.photo_id),
 					icon = count.previousSibling;
@@ -1742,7 +1742,7 @@ var Photos = {
 		});
 
 	},
-	isTouch: function () {
+	isTouch: function() {
 		var agent = navigator.userAgent.toLowerCase();
 		return !!(agent.indexOf("iphone") >= 0 || agent.indexOf("ipad") >= 0 || agent.indexOf("android") >= 0);
 	},
@@ -1756,7 +1756,7 @@ var Photos = {
 		var isiOS = Photos.isTouch(),
 			action;
 		delay = delay == null ? 500 : delay;
-		$.event.add(node, isiOS == true ? "touchend" : "click", function (event) {
+		$.event.add(node, isiOS == true ? "touchend" : "click", function(event) {
 			var now = new Date().getTime(),
 				lastTouch = node.getAttribute("lasttouch") || now + 1,
 				delta = now - lastTouch;
@@ -1766,7 +1766,7 @@ var Photos = {
 					onDoubleTapCallback(event);
 			} else {
 				node.setAttribute("lasttouch", now);
-				action = setTimeout(function () {
+				action = setTimeout(function() {
 					if (onTapCallback != null && typeof onTapCallback == "function")
 						onTapCallback(event);
 					clearTimeout(action);
@@ -1778,12 +1778,12 @@ var Photos = {
 
 	/* UI Effects */
 
-	getLikeEffect: function (owner_id, photo_id) {
-		return $.elements.create("div", {"class": "photo-likeeffect", id: "photo_like_effect" + owner_id + "_" + photo_id});
+	getLikeEffect: function(owner_id, photo_id) {
+		return $.e("div", {"class": "photo-likeeffect", id: "photo_like_effect" + owner_id + "_" + photo_id});
 	},
-	getMoveablePanelViewer: function (photos) {
-		var moveable = document.createElement("div"),
-			getId = function (photo) {
+	getMoveablePanelViewer: function(photos) {
+		var moveable = $.e("div"),
+			getId = function(photo) {
 				return photo ?
 					photo.owner_id + "_" + photo.id +
 					(photo.access_key || photo.list ? "?access_key=" + photo.access_key + "&list=" + photo.list : "")
@@ -1807,22 +1807,22 @@ var Photos = {
 				})
 			}));
 		}
-		(function (element, photos) {
+		(function(element, photos) {
 			var start    = {x: 0, y: 0},
 				end      = {x: 0, y: 0},
 				is       = {up: false, right: false, down: false, left: false, count: 0, norelease: false, ts: 0},
-				getTouch = function (event){
+				getTouch = function(event){
 					var touch = (event.touches[0] || event.changedTouches[0]);
 					return {x: touch.pageX, y: touch.pageY};
 				},
-				addEvent = function (nameEvent, fx) {
+				addEvent = function(nameEvent, fx) {
 					$.event.add(element, nameEvent, fx);
 				},
 				p = -33.33,
-				getCurrentPosition = function (node) {
+				getCurrentPosition = function(node) {
 					return p;
 				},
-				setCurrentPosition = function (node, value) {
+				setCurrentPosition = function(node, value) {
 					p = value;
 					node.style.mozTransform = "translateX(" + value + "%)";
 					node.style.webkitTransform = "translateX(" + value + "%)";
@@ -1831,20 +1831,20 @@ var Photos = {
 					node.style.transform = "translateX(" + value + "%)";
 				};
 			setCurrentPosition(element, -33.33);
-			addEvent("touchstart", function (event) {
+			addEvent("touchstart", function(event) {
 				var touch = getTouch(event);
 				start = touch;
 				$.event.cancel(event);
 				is.count = 0;
 				is.ts = Math.floor(+new Date() / 1000);
 			});
-			addEvent("touchmove", function (event) {
+			addEvent("touchmove", function(event) {
 				var touch = getTouch(event),
 					parent = element.parentNode,
 					elementPosition = $.getPosition(element),
 					widthItem = elementPosition.width,
 					heightItem = elementPosition.height,
-					module = function (n) {return n > 0 ? n : -n;};
+					module = function(n) {return n > 0 ? n : -n;};
 				var current = getCurrentPosition(element);
 				//current = +current;
 				if (is.count > 7) {
@@ -1871,7 +1871,7 @@ var Photos = {
 				}
 				is.count++;
 			})
-			addEvent("touchend", function (event) {
+			addEvent("touchend", function(event) {
 				var touch = getTouch(event);
 				end = touch;
 				var current = getCurrentPosition(element);
@@ -1880,13 +1880,13 @@ var Photos = {
 				if ((is.left || is.right) && current < -44.444 && photos.next || current > -22.222 && photos.previous) {
 					setCurrentPosition(element, -((current < -44.44 ? 66.667 : 0)));
 					//element.style.transform = "translateX(" +  + ")";
-					setTimeout(function () {
+					setTimeout(function() {
 						window.location.hash = "photo" + (current < -44.444 ? photos.next : photos.previous);
 					}, 200);
 				} else {
 					setCurrentPosition(element, -33.333);
 //                  element.style.transform = "translateX(-33.33%)";
-					setTimeout(function () {
+					setTimeout(function() {
 						$.elements.removeClass(element, "photo-view-moveable-dropped");
 					}, 200);
 				}
@@ -1902,7 +1902,7 @@ var Photos = {
 		});
 		return moveable;
 	},
-	onResizedWindowUpdateMarginsPhotosMoveableFullScreenView: function (event) {
+	onResizedWindowUpdateMarginsPhotosMoveableFullScreenView: function(event) {
 		return;
 		var imgs = document.querySelectorAll(".photo-view-full .photo-view-item"),
 			widthClient = document.documentElement.clientWidth,

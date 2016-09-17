@@ -1060,7 +1060,7 @@ var Settings = {
 		return form;
 	},
 	getUploadProfilePhotoForm: function () {
-		var user = Local.Users[API.uid],
+		var user = Local.Users[API.userId],
 			e = $.e,
 			sbm,
 			wrap = e("div", {"class": "settings-photo"}),
@@ -1517,7 +1517,7 @@ function APIdogTheme (t) {
 	this.title = t.title;
 	this.updated = t.updated;
 	this.file = t.file;
-	this.isAuthor = API.uid == t.authorId;
+	this.isAuthor = API.userId == t.authorId;
 	this.authorId = t.authorId;
 	this.installs = t.installs;
 	this.isPrivate = t.isPrivate;

@@ -22,16 +22,15 @@ var Apps = {
 	},
 
 	getActivity: function(startFrom) {
-		Site.APIv5("apps.getActivity", {
+		new APIRequest("apps.getActivity", {
 			fields: "photo_50,screen_name,online,sex",
 			v: 5.18,
 			count: 30,
-			start_from: startFrom || "",
-			platform: Site.Get("platform") || "web"
-		},
-		function(data) {
-			!startFrom ? Apps.pageActivity() : Apps.writeActivity(Site.isResponse(data), {created: !startFrom});
-		});
+			startFrom: startFrom || "",
+			platform: Site.get("platform") || "web"
+		}).setOnCompleteListener(function(data) {
+			!startFrom ? Apps.pageActivity() : Apps.writeActivity(data, {created: !startFrom});
+		}).execute();
 	},
 
 	pageActivity: function() {
@@ -40,7 +39,7 @@ var Apps = {
 			list = e("div", {id: "apps-activity"});
 
 		page.appendChild(Site.getPageHeader("Активность друзей"));
-		list.appendChild(Site.EmptyField("Загрузка активности друзей.."));
+		list.appendChild(getEmptyField("Загрузка активности друзей.."));
 
 		page.appendChild(list);
 		Site.append(page);
@@ -67,7 +66,7 @@ var Apps = {
 		};
 
 		if (!data.count) {
-			list.appendChild(Site.EmptyField("Ваши друзья не совершали никаких действий в последнее время"));
+			list.appendChild(getEmptyField("Ваши друзья не совершали никаких действий в последнее время"));
 			return;
 		};
 
@@ -116,7 +115,7 @@ var Apps = {
 		wrap = e("div", {"class": "profile-info", append: [
 			e("div", {"class": "profile-left", append: e("img", {src: getURL(app.icon_50)})}),
 			e("div", {"class": "profile-right", append: [
-				e("strong", {html: Site.Escape(app.title)}),
+				e("strong", {html: app.title.safe()}),
 				app.published_date ? e("div", {"class": "tip", html: "Опубликовано " + $.getDate(app.published_date)}) : null,
 				app.members_count ? e("div", {"class": "tip", html: "Установили: " + app.members_count + " " + $.textCase(app.members_count, ["человек", "человека", "человек"])}) : null,
 				e("div", {"class": "tip", html: "Тип приложения: " + app.section}),

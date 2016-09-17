@@ -20,7 +20,7 @@
 		"menuBlog":"Блог",
 		"menuAbout":"О проекте",
 		"pageGoToUp":"Наверх",
-		"footer":"APIdog v6.5 &copy; 2016<br>ver.20160820 morning build",
+		"footer":"APIdog v6.5 &copy; 2016<br>ver.20160910 night build",
 		"loadingSite":"Загрузка...",
 		"loadingAuthors":"Владислав Велюга, Антон Карпович, Александр Ткачук, Тарас Дацюк, Оксана Эриксон, Илья Ворчук, Надя Иванова"
 	},
@@ -1613,7 +1613,12 @@
 		"titlePlace": "Отметка на карте",
 
 		"modalCheckinsTitle": "%n %h",
-		"modalCheckins": ["отметка", "отметки", "отметок"]
+		"modalCheckins": ["отметка", "отметки", "отметок"],
+
+		"photosTitle": "%n %p",
+		"photosCount": ["фотография", "фотографии", "фотографий"],
+		"photosEmpty": "Рядом с этим местом нет фотографий",
+		"photosHeader": "Фотографии рядом"
 	},
 	"support":{
 		"support":"Поддержка",

@@ -569,7 +569,7 @@ var SelectAttachments = {
 				return false;
 			}
 			Site.APIv5("polls.create", {
-				owner_id: (owner_id < 0 ? owner_id : API.uid),
+				owner_id: (owner_id < 0 ? owner_id : API.userId),
 				question: title,
 				is_anonymous: +is_anonymous,
 				add_answers: items,
