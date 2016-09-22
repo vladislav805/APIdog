@@ -1056,6 +1056,7 @@ sendDeprecated();
 
 
 		case "apidog.createOrder":
+			require_once "zero.paid.php";
 
 			$productId = (int) $_REQUEST["productId"];
 			$product = APIdogProduct::getProductById($productId);
