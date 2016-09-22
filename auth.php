@@ -26,7 +26,7 @@
 					setCookie($key, null, -1, "/");
 				};
 
-				@session_destroy();
+				session_destroy();
 
 				header("Location: auth.php");
 				break;

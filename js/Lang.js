@@ -12,6 +12,10 @@ var Lang = {
 		APIdogRequest("apidog.getLanguageData", {}, function(result) {
 			Lang.data = result.data;
 			callback && callback();
+		}, function() {
+			console.error("FATAL: language data not loaded");
+		}, function(percent) {
+			Loader.main.setTitle("Loading language data... (" + parseInt(percent) + "%)");
 		});
 	},
 

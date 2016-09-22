@@ -455,7 +455,7 @@ String.prototype.emoji = function() {
 window.APIdogAPIDomain	= "apidog.ru";
 window.APIdogAPIPath	= "/6.5/api-v2.php?method=";
 
-function APIdogRequest (method, params, callback, fallback) {
+function APIdogRequest(method, params, callback, fallback, progress) {
 	params = params || {};
 	params.authKey = API.userAuthKey;
 	var xhr = new XMLHttpRequest(),
@@ -464,7 +464,8 @@ function APIdogRequest (method, params, callback, fallback) {
 	xhr.open("POST", location.protocol + "\/\/" + window.APIdogAPIDomain + window.APIdogAPIPath + method, true);
 	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	xhr.onreadystatechange = function(event) {
-		if (xhr.DONE == xhr.readyState) {
+
+		if (xhr.readyState == xhr.DONE) {
 			if (xhr.status == 200) {
 				var json = JSON.parse(xhr.responseText);
 				if (json.response && !json.response.errorId) {
@@ -477,6 +478,12 @@ function APIdogRequest (method, params, callback, fallback) {
 			};
 		};
 	};
+
+	progress && (xhr.onprogress = function(event) {
+		console.log(event.loaded,event.total, event.loaded * 100 / event.total)
+		progress(event.loaded * 100 / event.total);
+	});
+
 	xhr.send(postFields);
 };
 
@@ -4340,11 +4347,11 @@ Snackbar.prototype = {
  */
 function Modal(o) {
 	o = o || {};
+	var self = this;
 	this.modal = $.e("div", {"class": 'modal modal-animation'});
 	this.title = $.e("h1", {"class": 'modal-title'});
 	this.body = $.e("div", {"class": 'modal-content'});
 	this.footer = $.e("div", {"class": 'modal-footer'});
-	var self = this;
 	this.block = $.e("div", {"class": 'modal-block', onclick: o.uncloseableByBlock ? null : function() { self.close() }});
 	this.wrap = $.e("div", {"class": 'modal-wrap'});
 
@@ -4354,8 +4361,8 @@ function Modal(o) {
 
 	this.wrap.appendChild(this.modal);
 	this.wrap.appendChild(this.block);
-console.log(this, this._init);
-	self._init();
+
+	this._init();
 	this._setOptions(o);
 	this._windowStateChanged();
 };

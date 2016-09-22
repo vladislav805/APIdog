@@ -43,40 +43,16 @@
 
 			$b = $s["bitmask"];
 			$langId = (int) $s["lang"];
-			$lang = ["ru", "en", "ua", 999 => "gop"][$s["lang"]];
 			output(!$s ? throwError(30) : [
 				"userId" => (int) $userId,
-				"settings" => !$extended ? [
+				"settings" => [
 					"userId" => $userId,
 					"bitmask" => (int) $s["bitmask"],
 					"bitmaskNotifications" => (int) $s["notifications"],
 					"language" => [
 						"id" => $langId,
-						"file" => "/lang/" . $langId . ".json"
+						"file" => "https://apidog.ru/6.5/lang/" . $langId . ".json"
 					]
-				] : [
-					"userId" => $userId,
-					"bitmask" => (int) $s["bitmask"],
-					"bitmaskNotifications" => (int) $s["notifications"],
-					"language" => [
-						"id" => $langId,
-						"file" => "/lang/" . $langId . ".json"
-					],
-					"enableOnline" => (boolean) ($b & 1),
-					"enableReadMessages" => (boolean) ($b & 2),
-					"enableProxy" => (boolean) ($b & 4),
-					"enableLongpoll" => (boolean) ($b & 8),
-					"enableEditLinks" => (boolean) ($b & 16),
-					"enableTouch" => (boolean) ($b & 32),
-					"enableSoundsNotify" => (boolean) ($b & 64),
-					"enableFixedHead" => (boolean) ($b & 128),
-					"enableFakeOnline" => (boolean) ($b & 256),
-					"enableDoubleClick" => !((boolean) ($b & 512)),
-					"enableFriendsNotifications" => (boolean) ($b & 1024),
-					"enableSendingTyping" => (boolean) ($b & 2048),
-					"enabledMessages" => (boolean) ($b & 4096),
-					"enabledNoImages" => (boolean) ($b & 8192),
-//					"_hide_online" => (boolean) ($b & 256)
 				]
 			]);
 			break;
@@ -205,10 +181,16 @@
 				$langId = 0;
 			};
 
+			$languageFile = "lang/" . $langId . ".json";
+
 			// сделано так для большей оптимизации, ибо каждый раз разбирать строку в json, чтобы ее снова собирать в json -- имхо, глупо
 			header("Content-type: application/json; charset=utf-8");
+
+			$size = filesize($languageFile) + 22;
+			header("Content-Length: " . $size);
+
 			print "{\"response\":{\"data\":";
-			readFile("lang/" . $langId . ".json");
+			readFile($languageFile);
 			print "}}";
 			break;
 
@@ -1030,7 +1012,7 @@ sendDeprecated();
 
 
 
-			$page = file_get_contents("http://new.vk.com/dev/" . $p, false, stream_context_create([
+			$page = file_get_contents("http://vk.com/dev/" . $p, false, stream_context_create([
 				"http" => [
 					"method" => "GET",
 					"header" => "Content-Type: application/x-www-form-urlencoded\r\nCookie: audio_vol=98; remixflash=17.0.0; remixscreen_depth=24; remixdt=0; audio_time_left=0; remixlang=0; remixfeed=*.*.*.*.*.*.*.*; remixrt=0; remixretina=1; remixsrt=1; remixshow_fvbar=1; remixrefkey=6dec4cd87064697ab1; remixtst=a3234fe9; remixmdevice=1440/900/1/!!!!!!!"

@@ -260,7 +260,11 @@
 		$callback = $_REQUEST["callback"];
 		$json = json_encode(["response" => $data], JSON_UNESCAPED_UNICODE);
 		header("Content-type: " . ($callback ? "text/javascript" : "application/json") . "; charset=utf-8");
-		exit(($callback ? $callback . "(" : "") . $json . ($callback ? ");" : ""));
+		$data = ($callback ? $callback . "(" : "") . $json . ($callback ? ");" : "");
+		header("Content-Length: " . mb_strlen($data));
+		print $data;
+
+		exit;
 	};
 
 	/**
