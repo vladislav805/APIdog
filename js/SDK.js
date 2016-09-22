@@ -2118,7 +2118,7 @@ ExtensionRequest.prototype = {
 
 };
 
-receiveEvent("onAPIRequestExecuted", function(data) {
+window.receiveEvent && receiveEvent("onAPIRequestExecuted", function(data) {
 	APIQueue.get(data.requestId).mRequest._onResponse(data.requestResult);
 });
 
@@ -4340,11 +4340,11 @@ Snackbar.prototype = {
  */
 function Modal(o) {
 	o = o || {};
-	var self = this;
 	this.modal = $.e("div", {"class": 'modal modal-animation'});
 	this.title = $.e("h1", {"class": 'modal-title'});
 	this.body = $.e("div", {"class": 'modal-content'});
 	this.footer = $.e("div", {"class": 'modal-footer'});
+	var self = this;
 	this.block = $.e("div", {"class": 'modal-block', onclick: o.uncloseableByBlock ? null : function() { self.close() }});
 	this.wrap = $.e("div", {"class": 'modal-wrap'});
 
@@ -4354,11 +4354,12 @@ function Modal(o) {
 
 	this.wrap.appendChild(this.modal);
 	this.wrap.appendChild(this.block);
-
-	this._init();
+console.log(this, this._init);
+	self._init();
 	this._setOptions(o);
 	this._windowStateChanged();
 };
+
 Modal.prototype = {
 
 	/**
@@ -4504,7 +4505,7 @@ Modal.prototype = {
 			if (~Object.prototype.toString.call(fromNodeAnimation).toLowerCase().indexOf("html")) {
 				fromNodeAnimation = this.computeFrom(fromNodeAnimation);
 			};
-console.log(fromNodeAnimation);
+
 			this._showAnimate(fromNodeAnimation);
 		};
 
