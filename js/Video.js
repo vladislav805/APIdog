@@ -985,6 +985,7 @@ var Video = {
 		var wrap = $.e("div");
 		window.onResizeCallback = Video.onChangeBodySizeEvent;
 		if (!video.files || video.files && (video.files.external || video.files.flv_320 || video.files.flv_240)) {
+			var u = video.player.replace(/^http:/ig, "https:").replace(/&__ref=[^&]+&/ig, "&");
 			wrap.id = "__video_player_wrap";
 			wrap.appendChild($.e("iframe", {
 				frameborder: 0,
