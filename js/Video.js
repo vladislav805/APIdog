@@ -81,21 +81,21 @@ var Video = {
 		var list = /^videos(-?\d+)?$/ig,
 			album = /^videos(-?\d+)_(\d+)$/ig,
 			item = /^video(-?\d+)_(\d+)$/ig,
-			act = Site.Get("act");
+			act = getAct();
 		if (list.test(url)) {
-			var owner_id = /^videos(-?\d+)?$/ig.exec(url)[1] || API.uid;
+			var owner_id = /^videos(-?\d+)?$/ig.exec(url)[1] || API.userId;
 			switch (act) {
 				case "albums":  return Video.getAlbums(owner_id); break;
 				case "search":  return Video.search(); break;
 				case "tags":    return Video.getUserVideos(owner_id); break;
 				case "newtags": return Video.getNewTags(); break;
-				case "add":     return Video.addPage(+Site.Get("gid")); break;
-				case "upload":  return Video.uploadPage(+Site.Get("gid")); break;
+				case "add":     return Video.addPage(+Site.get("gid")); break;
+				case "upload":  return Video.uploadPage(+Site.get("gid")); break;
 				default:        return Video.getVideos(owner_id); break;
 			}
 		} else if (album.test(url)) {
 			var ids = /^videos(-?\d+)_(\d+)$/ig.exec(url),
-				owner_id = ids[1] || API.uid,
+				owner_id = ids[1] || API.userId,
 				album_id = ids[2];
 			switch (act) {
 				default:        return Video.getVideos(owner_id, album_id); break;
@@ -104,7 +104,7 @@ var Video = {
 			var ids = /^video(-?\d+)_(\d+)$/ig.exec(url),
 				owner_id = ids[1],
 				video_id = ids[2],
-				access_key = Site.Get("access_key");
+				access_key = Site.get("access_key");
 			switch (act) {
 				case "report":  return Video.reportVideo(owner_id, video_id); break;
 				case "edit":    return Video.editVideo(owner_id, video_id, access_key); break;
@@ -115,20 +115,20 @@ var Video = {
 
 	getTabs: function (owner_id) {
 		var tabs = [
-			["videos" + (owner_id != API.uid ? owner_id : ""), Lang.get("videos.tabs_videos")],
-			["videos" + (owner_id != API.uid ? owner_id : "") + "?act=albums", Lang.get("videos.tabs_albums")]
+			["videos" + (owner_id != API.userId ? owner_id : ""), lg("videos.tabs_videos")],
+			["videos" + (owner_id != API.userId ? owner_id : "") + "?act=albums", lg("videos.tabs_albums")]
 		];
 		if (owner_id > 0) {
-			tabs.push(["videos" + (owner_id != API.uid ? owner_id : "") + "?act=tags", Lang.get("videos.tabs_tags")]);
+			tabs.push(["videos" + (owner_id != API.userId ? owner_id : "") + "?act=tags", lg("videos.tabs_tags")]);
 		};
-		if (owner_id == API.uid) {
-			tabs.push(["videos?act=search", Lang.get("videos.tabs_search")]);
+		if (owner_id == API.userId) {
+			tabs.push(["videos?act=search", lg("videos.tabs_search")]);
 		};
 		return Site.CreateTabPanel(tabs);
 	},
 
 	getVideos: function (owner_id, album_id) {
-		var offset = Site.Get("offset"), p = {
+		var offset = getOffset(), p = {
 			owner_id: owner_id,
 			width: 130,
 			count: 20,
@@ -148,16 +148,16 @@ var Video = {
 			parent.appendChild(Video.getTabs(owner_id));
 
 			parent.appendChild(Site.CreateHeader(
-				count + " " + Lang.get("videos", "videos", count),
-				album_id && owner_id == API.uid
+				count + " " + lg("videos", "videos", count),
+				album_id && owner_id == API.userId
 					? Site.CreateDropDownMenu(
-						Lang.get("general.actions"),
+						lg("general.actions"),
 						(function () {
 							var p = {};
-							p[Lang.get("videos.action_edit_album")] = function (event) {
+							p[lg("videos.action_edit_album")] = function (event) {
 								Video.editAlbumPage(owner_id, album_id);
 							};
-							p[Lang.get("videos.action_delete_album")] = function (event) {
+							p[lg("videos.action_delete_album")] = function (event) {
 								Video.deleteAlbum(owner_id, album_id);
 							};
 							return p;
@@ -166,19 +166,19 @@ var Video = {
 			));
 
 
-			if (owner_id == API.uid || owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin)
+			if (owner_id == API.userId || owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin)
 				list.appendChild(Site.CreateTopButton({
 					tag: "div",
 					//link: "videos?act=upload" + (owner_id < 0 ? "&gid=" + (-owner_id) : ""),
-					title: Lang.get("videos.action_video_add_my"),
+					title: lg("videos.action_video_add_my"),
 					onclick: function (event) { Video.newVideo(owner_id < 0 ? -owner_id : 0) }
 				}));
 
 			if (Video.deleted) {
 				var deletedVideoId = Video.deleted;
 				parent.appendChild($.e("div", {"class": "photo-deleted", append: [
-					document.createTextNode(Lang.get("videos.info_video_deleted")),
-					$.e("span", {"class": "a", html: Lang.get("videos.action_video_restore"), onclick: function (event) {
+					document.createTextNode(lg("videos.info_video_deleted")),
+					$.e("span", {"class": "a", html: lg("videos.action_video_restore"), onclick: function (event) {
 						return Video.restoreVideo(deletedVideoId);
 					}})
 				]}));
@@ -190,11 +190,11 @@ var Video = {
 					list.appendChild(Video.item(i));
 				});
 			else
-				list.appendChild(Site.EmptyField(Lang.get("videos.videos_empty")));
+				list.appendChild(Site.EmptyField(lg("videos.videos_empty")));
 			parent.appendChild(list);
 			parent.appendChild(Site.PagebarV2(offset, count, 20));
 			Site.Append(parent);
-			Site.SetHeader(Lang.get("videos.videos_header"));
+			Site.SetHeader(lg("videos.videos_header"));
 		});
 	},
 
@@ -230,20 +230,20 @@ var Video = {
 				]}),
 				e("div", {"class": "videos-right", append: [
 					e("strong", {html: Site.Escape(v.title)}),
-					e("div", {"class": "videos-mark", html: v.views ? formatNumber(v.views) + " " + Lang.get("videos", "views", v.views) : ""}),
+					e("div", {"class": "videos-mark", html: v.views ? formatNumber(v.views) + " " + lg("videos", "views", v.views) : ""}),
 					v.comments ? e("div", {"class": "videos-mark", append: [
 						e("div", {"class": "wall-comments wall-icons"}),
 						e("strong", {html: " " + v.comments}),
 					]}) : null,
 					v.placer_id ? e("div", {append: [
-						document.createTextNode((Lang.get("videos.video_tagged")[Local.Users[v.placer_id].sex || 2]) + " " + Local.Users[v.placer_id].first_name + " " + Local.Users[v.placer_id].last_name + " " + Site.getDate(v.tag_created))
+						document.createTextNode((lg("videos.video_tagged")[Local.Users[v.placer_id].sex || 2]) + " " + Local.Users[v.placer_id].first_name + " " + Local.Users[v.placer_id].last_name + " " + Site.getDate(v.tag_created))
 					]}) : null,
 					v.files && !v.files.external ? e("div", {"class": "videos-mark", html: (function(f,r){var m=0,i,o="";for(i in f)if(m<r(i))m=r(o=i);return o.replace("_"," ").toUpperCase()})(v.files,function(s){return s.replace(/(flv|mp4)_/img,"")})}) : null
 				]})
 			]
 		});
 		Video.videos[ownerId + "_" + videoId] = v;
-		var to = Site.Get("to");
+		var to = Site.get("to");
 		if (to && window.location.hash.indexOf("im") < 0) {
 			$.event.add(item, "click", function (event) {
 				$.event.cancel(event);
@@ -265,16 +265,16 @@ var Video = {
 		var host;
 		new Modal({
 			noPadding: true,
-			title: Lang.get("videos.newVideoWindowTitle"),
+			title: lg("videos.newVideoWindowTitle"),
 			content: (host = new TabHost([
 				{
 					name: "add",
-					title: Lang.get("videos.newVideoTabAdd"),
+					title: lg("videos.newVideoTabAdd"),
 					content: Video.getAddVideoForm(groupId)
 				},
 				{
 					name: "upload",
-					title: Lang.get("videos.newVideoTabUpload"),
+					title: lg("videos.newVideoTabUpload"),
 					content: Video.getUploadVideoForm(groupId)
 				}
 			], {
@@ -285,7 +285,7 @@ var Video = {
 			footer: [
 				{
 					name: "add",
-					title: Lang.get("videos.upload_create"),
+					title: lg("videos.upload_create"),
 					onclick: function () {
 						var s = host.getSelectedTab(), modal = this;
 						if (s.name == "add") {
@@ -306,7 +306,7 @@ var Video = {
 							};
 
 							if (!params.link) {
-								Site.Alert({text: Lang.get("videos.error_insert_link")});
+								Site.Alert({text: lg("videos.error_insert_link")});
 								return;
 							};
 
@@ -337,14 +337,14 @@ var Video = {
 								s.content.method = "post";
 								s.content.target = "__video-upload";
 
-								s.content.appendChild(tip(Lang.get("videos.upload_select_file")));
+								s.content.appendChild(tip(lg("videos.upload_select_file")));
 								s.content.appendChild(Site.CreateFileButton("video_file", {fullwidth: true}));
-								s.content.appendChild(e("input", {type: "submit", value: Lang.get("videos.upload_upload")}));
+								s.content.appendChild(e("input", {type: "submit", value: lg("videos.upload_upload")}));
 								s.content.appendChild(e("iframe", {src: "about:blank", name: "__video-upload", id: "__video-upload", width: "100%", height: 200, frameborder: 0, onload: function () {
 									try {
 										if (getFrameDocument(this).location.href == "about:blank")
 											return;
-										Site.Alert({text: Lang.get("videos.upload_success")});
+										Site.Alert({text: lg("videos.upload_success")});
 									} catch (e) {
 										console.error(e.toString());
 									}
@@ -356,7 +356,7 @@ var Video = {
 				},
 				{
 					name: "close",
-					title: Lang.get("general.cancel"),
+					title: lg("general.cancel"),
 					onclick: function () {
 
 					}
@@ -370,19 +370,19 @@ var Video = {
 		var e = $.e,
 			form = e("form", {"class": "sf-wrap sf-wrap-forcePadding"}),
 			tip = function (text) {return e("div", {"class": "tip", html: text});};
-		form.appendChild(tip(Lang.get("videos.upload_link")));
+		form.appendChild(tip(lg("videos.upload_link")));
 		form.appendChild(e("input", {type: "url", name: "url", required: true}));
-		form.appendChild(tip(Lang.get("videos.upload_title")));
+		form.appendChild(tip(lg("videos.upload_title")));
 		form.appendChild(e("input", {type: "text", name:"title"}));
-		form.appendChild(tip(Lang.get("videos.upload_description")));
+		form.appendChild(tip(lg("videos.upload_description")));
 		form.appendChild(e("textarea", {name: "description"}));
 		form.appendChild(e("label", {append: [
 			e("input", {type: "checkbox", name: "wallpost"}),
-			document.createTextNode(Lang.get("videos.upload_is_wallpost"))
+			document.createTextNode(lg("videos.upload_is_wallpost"))
 		]}));
 		form.appendChild(e("label", {append: [
 			e("input", {type: "checkbox", name: "repeat"}),
-			document.createTextNode(Lang.get("videos.upload_is_repeat"))
+			document.createTextNode(lg("videos.upload_is_repeat"))
 		]}));
 
 		return form;
@@ -394,22 +394,22 @@ var Video = {
 			form = e("form", {"class": "sf-wrap sf-wrap-forcePadding"}),
 			tip = function (text) {return e("div", {"class": "tip", html: text});};
 
-		form.appendChild(tip(Lang.get("videos.upload_title")));
+		form.appendChild(tip(lg("videos.upload_title")));
 		form.appendChild(e("input", {type: "text", name:"title"}));
 
-		form.appendChild(tip(Lang.get("videos.upload_description")));
+		form.appendChild(tip(lg("videos.upload_description")));
 		form.appendChild(e("textarea", {name: "description"}));
 
 		if (!groupId) {
 			form.appendChild(e("label", {append: [
 				e("input", {type: "checkbox", name: "wallpost"}),
-				document.createTextNode(Lang.get("videos.upload_is_wallpost"))
+				document.createTextNode(lg("videos.upload_is_wallpost"))
 			]}));
 		};
 
 		form.appendChild(e("label", {append: [
 			e("input", {type: "checkbox", name: "repeat"}),
-			document.createTextNode(Lang.get("videos.upload_is_repeat"))
+			document.createTextNode(lg("videos.upload_is_repeat"))
 		]}));
 
 		return form;
@@ -420,7 +420,7 @@ var Video = {
 	getAlbums: function (owner_id) {
 		Site.APIv5("video.getAlbums", {
 			owner_id: owner_id,
-			offset: Site.Get("offset"),
+			offset: getOffset(),
 			count: 40,
 			extended: 1,
 			v: 5.14
@@ -431,16 +431,16 @@ var Video = {
 				r = data,
 				count = data.count || 0,
 				data = data.items,
-				p = Site.Get("move") ? {move: Site.Get("move")} : null;
+				p = Site.get("move") ? {move: Site.get("move")} : null;
 			parent.appendChild(Video.getTabs(owner_id));
 			parent.appendChild(Site.CreateHeader(
-				"<span id=vac>" + count + "</span> " + Lang.get("videos", "albums", count),
-				owner_id == API.uid ? $.e("span", {href: "#videos" + owner_id + "?act=create", html: Lang.get("videos.albums_new"), "class": "fr a", onclick: function (event) {
+				"<span id=vac>" + count + "</span> " + lg("videos", "albums", count),
+				owner_id == API.userId ? $.e("span", {href: "#videos" + owner_id + "?act=create", html: lg("videos.albums_new"), "class": "fr a", onclick: function (event) {
 					Video.showCreateAlbum(list, owner_id, this);
 				}}) : null
 			));
 			if (r.error && r.error_code == 204) {
-				list.appendChild(Site.EmptyField(Lang.get("videos.error_access_denied")));
+				list.appendChild(Site.EmptyField(lg("videos.error_access_denied")));
 			} else
 				if (count)
 					for (var i = 0, l = data.length; i < l; ++i) {
@@ -449,12 +449,12 @@ var Video = {
 						list.appendChild(Video.itemAlbum(v, p));
 					}
 				else
-					list.appendChild(Site.EmptyField(Lang.get("videos.albums_empty")));
+					list.appendChild(Site.EmptyField(lg("videos.albums_empty")));
 
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 40));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 40));
 			Site.Append(parent);
-			Site.SetHeader(Lang.get("videos.albums_header"), {link: "videos" + (owner_id != API.uid ? owner_id : "")});
+			Site.SetHeader(lg("videos.albums_header"), {link: "videos" + (owner_id != API.userId ? owner_id : "")});
 		});
 	},
 
@@ -465,15 +465,15 @@ var Video = {
 				var title = $.trim(this.title.value);
 
 				if (!title) {
-					Site.Alert({text: Lang.get("videos.error_album_create")});
+					Site.Alert({text: lg("videos.error_album_create")});
 					return false;
 				};
 				Site.APIv5("video.addAlbum", {group_id: owner_id < 0 ? -owner_id : 0, title: title, v: 5.14}, function (data) {
 					if (data.error) {
 						var t;
 						switch (data.error.error_code) {
-							case 204: t = Lang.get("videos.error_access_denied"); break;
-							case 302: t = Lang.get("videos.error_album_max"); break;
+							case 204: t = lg("videos.error_access_denied"); break;
+							case 302: t = lg("videos.error_album_max"); break;
 							default: t = data.error.error_msg; break;
 						}
 						return Site.Alert({text: t});
@@ -506,8 +506,8 @@ var Video = {
 				e("div", {"class": "videos-right", append: [
 					Site.CreateInlineForm({
 						name: "title",
-						title: Lang.get("videos.upload_create"),
-						placeholder: Lang.get("videos.error_album_empty_title"),
+						title: lg("videos.upload_create"),
+						placeholder: lg("videos.error_album_empty_title"),
 						type: "text",
 						onsubmit: onSubmit
 					})
@@ -527,7 +527,7 @@ var Video = {
 		}
 
 		parent.appendChild(Video.getTabs(owner_id));
-		parent.appendChild(Site.CreateHeader(Lang.get("videos.albums_edit_header")));
+		parent.appendChild(Site.CreateHeader(lg("videos.albums_edit_header")));
 		parent.appendChild(e("div", {
 			"class": "videos-item videos-item-album",
 			id: "_videos_editor_" + owner_id + "_" + album_id,
@@ -542,13 +542,13 @@ var Video = {
 					Site.CreateInlineForm({
 						name: "title",
 						value: album.title,
-						title: Lang.get("general.save"),
-						placeholder: Lang.get("videos.albums_edit_title"),
+						title: lg("general.save"),
+						placeholder: lg("videos.albums_edit_title"),
 						type: "text",
 						onsubmit: function (event) {
 							var title = $.trim(this.title.value);
 							if (!title) {
-								Site.Alert({text: Lang.get("videos.error_album_empty_title")});
+								Site.Alert({text: lg("videos.error_album_empty_title")});
 								return false;
 							}
 							Video.editAlbum(owner_id, album_id, title);
@@ -577,12 +577,12 @@ var Video = {
 	},
 
 	deleteAlbum: function (ownerId, albumId) {
-		VKConfirm(Lang.get("videos.confirm_album_delete"), function () {
+		VKConfirm(lg("videos.confirm_album_delete"), function () {
 			Site.APIv5("video.deleteAlbum", {owner_id: ownerId, album_id: albumId, v: 5.14}, function (data) {
 				if (!data)
 					return Site.Alert({text: "error #" + data.error.error_code + " (" + data.error.error_msg + ")"});
-				Site.Alert({text: Lang.get("videos.info_album_deleted")});
-				window.location.hash = "#videos" + (ownerId != API.uid ? ownerId : "") + "?act=albums";
+				Site.Alert({text: lg("videos.info_album_deleted")});
+				window.location.hash = "#videos" + (ownerId != API.userId ? ownerId : "") + "?act=albums";
 			});
 		});
 	},
@@ -605,7 +605,7 @@ var Video = {
 				]}),
 				e("div", {"class": "videos-right", append: [
 					e("strong", {html: Site.Escape(v.title)}),
-					e("div", {"class": "tip", html: Lang.get("photos", "album_updated") + " " + $.getDate(v.updated_time)})
+					e("div", {"class": "tip", html: lg("photos", "album_updated") + " " + $.getDate(v.updated_time)})
 				]})
 			],
 			onclick: o.move ? function (event) {
@@ -615,7 +615,7 @@ var Video = {
 					group_id: ownerId < 0 ? -ownerId : ""
 				}, function (data) {
 					if (data.response) {
-						Site.Alert({text: Lang.get("videos.info_album_moved").replace(/%s/igm, Site.Escape(v.title))});
+						Site.Alert({text: lg("videos.info_album_moved").replace(/%s/igm, Site.Escape(v.title))});
 						window.location.hash = "#video" + ownerId + "_" + o.move;
 					};
 				});
@@ -625,7 +625,7 @@ var Video = {
 
 	getNewTags: function () {
 		Site.Loader();
-		var offset = Site.Get("offset");
+		var offset = getOffset();
 		Site.API("execute", {
 			code: 'var v=API.video.getNewTags({count:30,offset:%o%,v:5.18});return {videos:v,users:API.users.get({user_ids:v.items@.placer_id,field:"online,sex"})};'
 				.replace(/%o%/, offset)
@@ -636,13 +636,13 @@ var Video = {
 				data = data.videos,
 				count = data.count,
 				data = data.items;
-			parent.appendChild(Video.getTabs(API.uid));
+			parent.appendChild(Video.getTabs(API.userId));
 			parent.appendChild(Site.CreateHeader(
 				count
-					? Lang.get("videos.videos_tags_header")
+					? lg("videos.videos_tags_header")
 						.replace(/%d/img, count)
-						.replace(/%s/img, Lang.get("videos", "videos__tags", count))
-					: Lang.get("videos.videos_tags") ));
+						.replace(/%s/img, lg("videos", "videos__tags", count))
+					: lg("videos.videos_tags") ));
 			if (count)
 				for (var i = 0, l = data.length; i < l; ++i)
 					parent.appendChild(Video.item(data[i]));
@@ -650,12 +650,12 @@ var Video = {
 				parent.appendChild(Site.EmptyField());
 			parent.appendChild(Site.PagebarV2(offset, count, 30));
 			Site.Append(parent);
-			Site.SetHeader(Lang.get("videos.videos_tags"), {link: "videos"});
+			Site.SetHeader(lg("videos.videos_tags"), {link: "videos"});
 		})
 	},
 
 	getUserVideos: function (owner_id) {
-		var offset = Site.Get("offset");
+		var offset = getOffset();
 		Site.API("execute", {
 			code: 'var v=API.video.getUserVideos({user_id:%u%,count:30,offset:%o%,v:5.18});return {videos:v,newTags:API.video.getNewTags().count};'
 				.replace(/%u%/ig, owner_id)
@@ -669,35 +669,35 @@ var Video = {
 				count = data.count,
 				data = data.items;
 			parent.appendChild(Video.getTabs(owner_id));
-			parent.appendChild(Site.CreateHeader(count + " " + Lang.get("videos", "videos", count)));
+			parent.appendChild(Site.CreateHeader(count + " " + lg("videos", "videos", count)));
 			if (newTags)
-				parent.appendChild(Site.CreateTopButton({tag: "a", link: "videos?act=newtags", title: Lang.get("videos.videos_tags") + " (" + newTags + ")"}))
+				parent.appendChild(Site.CreateTopButton({tag: "a", link: "videos?act=newtags", title: lg("videos.videos_tags") + " (" + newTags + ")"}))
 			if (count)
 				for (var i = 0, l = data.length; i < l; ++i)
 					list.appendChild(Video.item(data[i]));
 			else
-				list.appendChild(Site.EmptyField(Lang.get("videos.tags_user_no")));
+				list.appendChild(Site.EmptyField(lg("videos.tags_user_no")));
 			parent.appendChild(list);
 			parent.appendChild(Site.PagebarV2(offset, count, 30));
 			Site.Append(parent);
-			Site.SetHeader(Lang.get("videos.tags_header"));
+			Site.SetHeader(lg("videos.tags_header"));
 		})
 	},
 
 	search: function () {
 		var params = {
-			q: decodeURIComponent($.trim(Site.Get("q") || "")),
-			sort: Site.Get("sort"),
-			hd: Site.Get("hd"),
-			adult: Site.Get("adult"),
+			q: decodeURIComponent($.trim(Site.get("q") || "")),
+			sort: Site.get("sort"),
+			hd: Site.get("hd"),
+			adult: Site.get("adult"),
 			filters: (function (f, s) {
 				if (f("mp4") == 1) s.push("mp4");
 				if (f("youtube") == 1) s.push("youtube");
 				s.push(f("length"));
 				return s.join(",");
-			})(Site.Get, []),
+			})(Site.get, []),
 			count: 30,
-			offset: Site.Get("offset"),
+			offset: getOffset(),
 			v: 5.18
 		};
 		if (!$.element("__video-search"))
@@ -705,7 +705,7 @@ var Video = {
 		else
 			Site.APIv5("video.search", params, function (data) {
 				if (data.error && data.error.error_code == 100) {
-					return Site.Alert({text: Lang.get("videos.error_search_empty_query")});
+					return Site.Alert({text: lg("videos.error_search_empty_query")});
 				};
 				return Video.getSearchResults(Site.isResponse(data));
 			});
@@ -713,12 +713,12 @@ var Video = {
 
 	searchPage: function () {
 		var parent = document.createElement("div"),
-			l = Lang.get,
+			l = lg,
 			list = document.createElement("div"),
 			form = Site.CreateInlineForm({
 			type: "search",
 			name: "q",
-			value: decodeURIComponent(Site.Get("q") || ""),
+			value: decodeURIComponent(Site.get("q") || ""),
 			placeholder: l("videos.search_placeholder"),
 			title: l("videos.search_search"),
 			onsubmit: Video.searchSubmit
@@ -737,13 +737,13 @@ var Video = {
 
 		list.id = "__video-search";
 
-		parent.appendChild(Video.getTabs(API.uid));
+		parent.appendChild(Video.getTabs(API.userId));
 		parent.appendChild(Site.CreateHeader(l("videos.search_search"), e("span", {id: "__video-search-count", html: "", "class": "fr"})));
 		parent.appendChild(form);
 		parent.appendChild(list);
 
 		Site.Append(parent);
-		Site.SetHeader(Lang.get("videos.search_videos"), {link: "videos"});
+		Site.SetHeader(lg("videos.search_videos"), {link: "videos"});
 	},
 
 	searchSubmit: function (event) {
@@ -768,8 +768,8 @@ var Video = {
 		for (var i = 0, l = data.length; i < l; ++i)
 			parent.appendChild(Video.item(data[i]));
 
-		$.element("__video-search-count").innerHTML = Lang.get("videos", "search_result_found", count) + " " + formatNumber(count) + " " + Lang.get("videos", "videos", count);
-		parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 30));
+		$.element("__video-search-count").innerHTML = lg("videos", "search_result_found", count) + " " + formatNumber(count) + " " + lg("videos", "videos", count);
+		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 		list.appendChild(parent);
 	},
 
@@ -816,8 +816,8 @@ var Video = {
 				header      = Video.getHeader(video, {access_key: access_key, tags: tags}),
 				player      = Video.getAPIdogPlayer(video),
 				footer      = Video.getFooter(video, tags),
-				comments    = Video.getComments(owner_id, video_id, access_key, video.comments, owner_id == API.uid || video.can_comment || !!video.privacy_comment),
-				from		= Site.Get("from") ? decodeURIComponent(Site.Get("from")) : false;
+				comments    = Video.getComments(owner_id, video_id, access_key, video.comments, owner_id == API.userId || video.can_comment || !!video.privacy_comment),
+				from		= Site.get("from") ? decodeURIComponent(Site.get("from")) : false;
 
 			Video.videos[owner_id + "_" + video_id] = video;
 
@@ -827,7 +827,7 @@ var Video = {
 			parent.appendChild(comments);
 
 			Site.Append(parent);
-			Site.SetHeader(Lang.get("videos.video_header"), {link: from ? from : "videos" + (owner_id == API.uid ? "" : owner_id)});
+			Site.SetHeader(lg("videos.video_header"), {link: from ? from : "videos" + (owner_id == API.userId ? "" : owner_id)});
 
 
 			if (player.firstChild.tagName.toLowerCase() == "video") {
@@ -872,7 +872,7 @@ var Video = {
 
 	hasMineInVideo: function (tags) {
 		for (var i = 0, l = tags.length; i < l; ++i)
-			if (tags[i].user_id == API.uid)
+			if (tags[i].user_id == API.userId)
 				return tags[i].tag_id;
 		return false;
 	},
@@ -884,9 +884,9 @@ var Video = {
 			videoId     = video.id || video.video_id,
 			tagId       = Video.hasMineInVideo(options.tags || []),
 			accessKey   = options.access_key,
-			l           = Lang.get,
-			hasMine		= ~video.inAlbums.indexOf(-2) || API.uid == video.owner_id;
-		if (!accessKey && API.uid == video.owner_id)
+			l           = lg,
+			hasMine		= ~video.inAlbums.indexOf(-2) || API.userId == video.owner_id;
+		if (!accessKey && API.userId == video.owner_id)
 			if (!tagId)
 				actions[l("videos.action_video_tag_me")]    = function (event) {Video.addMyTag(ownerId, videoId, this)};
 			else
@@ -910,7 +910,7 @@ var Video = {
 			var tab = window.open(video.player.replace(/^http:/ig, "https:"), "_blank");
 			tab.focus();
 		};
-		return Site.CreateHeader(Site.Escape(video.title), Site.CreateDropDownMenu(Lang.get("general.actions"), actions));
+		return Site.CreateHeader(video.title.safe(), Site.CreateDropDownMenu(lg("general.actions"), actions));
 	},
 
 	// modernized 07.01.2016
@@ -940,17 +940,17 @@ var Video = {
 			})(video.files, {}), {toTop: true})}) );
 		};
 		if (description) {
-			parent.appendChild(e("div", {"class": "tip", html: Lang.get("videos.video_description")}));
-			parent.appendChild(e("div", {html: Site.Format(Site.Escape(description))}));
+			parent.appendChild(e("div", {"class": "tip", html: lg("videos.video_description")}));
+			parent.appendChild(e("div", {html: Site.Format(description.safe())}));
 		};
-		parent.appendChild(e("div", {append: [e("span", {"class": "tip", html: Lang.get("videos.video_uploaded")}), document.createTextNode($.getDate(date))]}));
+		parent.appendChild(e("div", {append: [e("span", {"class": "tip", html: lg("videos.video_uploaded")}), document.createTextNode($.getDate(date))]}));
 		parent.appendChild(e("div", {"class": "wall-likes likes", id:"like_video_" + owner_id + "_" + video.id, append: [Wall.LikeButton("video", owner_id, video.id, video.likes, 0, o.access_key || null)]}));
 		parent.appendChild(e("div", {append: [
-			e("span", {"class": "tip", html: Lang.get("videos.video_author")}),
+			e("span", {"class": "tip", html: lg("videos.video_author")}),
 			e("a", {href: "#" + owner.screen_name, html: (owner.name || owner.first_name + " " + owner.last_name + Site.isOnline(owner))})
 		]}));
 		parent.appendChild(e("div", {append: [
-			e("span", {"class": "tip", html: Lang.get("videos.video_views")}),
+			e("span", {"class": "tip", html: lg("videos.video_views")}),
 			document.createTextNode(formatNumber(views))
 		]}));
 		if (tags && tags.length) {
@@ -960,9 +960,9 @@ var Video = {
 					return document.createTextNode(", ");
 				},
 				item = function (item) {
-					return e("a", {href: "#id" + item.user_id, html: Site.Escape(item.tagged_name)})
+					return e("a", {href: "#id" + item.user_id, html: item.tagged_name.safe()})
 				};
-			taglist.appendChild(e("span", {"class": "tip", html: Lang.get("videos.video_on_video")}));
+			taglist.appendChild(e("span", {"class": "tip", html: lg("videos.video_on_video")}));
 			for (var i = 0, l = tags.length; i < l; ++i) {
 				taglist.appendChild(item(tags[i]));
 				if (i != l - 1)
@@ -1003,9 +1003,9 @@ var Video = {
 	},
 
 	deleteVideo: function (ownerId, videoId, accessKey) {
-		VKConfirm(Lang.get("videos.confirm_video_delete"), function () {
+		VKConfirm(lg("videos.confirm_video_delete"), function () {
 			var method, params;
-			if (ownerId == API.uid) {
+			if (ownerId == API.userId) {
 				method = "video.delete";
 				params = {
 					owner_id: ownerId,
@@ -1015,7 +1015,7 @@ var Video = {
 			} else {
 				method = "video.removeFromAlbum";
 				params = {
-					target_id: API.uid,
+					target_id: API.userId,
 					album_id: -2,
 					owner_id: ownerId,
 					video_id: videoId
@@ -1023,9 +1023,9 @@ var Video = {
 			};
 			Site.API(method, params, function (data) {
 				if (data.response) {
-					Site.Alert({text: Lang.get("videos.info_video_deleted")});
+					Site.Alert({text: lg("videos.info_video_deleted")});
 					Video.deleted = {owner_id: ownerId, video_id: videoId};
-					if (ownerId == API.uid)
+					if (ownerId == API.userId)
 						window.location.hash = "#videos" + ownerId;
 				}
 			});
@@ -1035,7 +1035,7 @@ var Video = {
 	addVideo: function (ownerId, videoId, accessKey) {
 		Site.API("video.add", {owner_id: ownerId, video_id: videoId, access_key: accessKey || ""}, function (data) {
 			if (data.response) {
-				Site.Alert({text: Lang.get("videos.info_video_added")});
+				Site.Alert({text: lg("videos.info_video_added")});
 			}
 		});
 	},
@@ -1044,7 +1044,7 @@ var Video = {
 	editVideo: function (ownerId, videoId, accessKey) {
 
 		var video = Video.videos[ownerId + "_" + videoId],
-			privacyChoises = Lang.get("videos.video_edit_privacy").map(function (v, i) { return {value: i, html: v} }),
+			privacyChoises = lg("videos.video_edit_privacy").map(function (v, i) { return {value: i, html: v} }),
 			convertPrivacyToInteger = function (privacy) {
 				return {all: 0, friends: 1, friends_of_freinds: 2, nobody: 3}[privacy.type] || -1;
 			},
@@ -1129,7 +1129,7 @@ var Video = {
 
 	getComments: function (ownerId, videoId, accessKey, count, canComment) {
 		var parent = $.e("div", {id: "__video-comments"}),
-			btn = Site.CreateNextButton({link: window.location.hash, text: Lang.get("videos.comments_header_button").replace(/%s/ig, count), click: function (event) {
+			btn = Site.CreateNextButton({link: window.location.hash, text: lg("videos.comments_header_button").replace(/%s/ig, count), click: function (event) {
 				Video.createCommentNode({
 					ownerId: ownerId,
 					videoId: videoId,
@@ -1151,7 +1151,7 @@ var Video = {
 		list.id = "__video-comments-list";
 		list.appendChild(Site.EmptyField("<img src='\/\/static.apidog.ru\/im-attachload.gif' alt='' \/>"));
 
-		parent.appendChild(Site.CreateHeader(Lang.get("videos.comments_header").replace(/%s/ig, o.count)))
+		parent.appendChild(Site.CreateHeader(lg("videos.comments_header").replace(/%s/ig, o.count)))
 		parent.appendChild(list);
 
 		Video.loadComments({
@@ -1191,7 +1191,7 @@ var Video = {
 					parent.appendChild(Video.itemComment(data[i], o.owner_id, o.video_id));
 				}
 			else
-				parent.appendChild(Site.EmptyField(Lang.get("videos.comments_noone")));
+				parent.appendChild(Site.EmptyField(lg("videos.comments_noone")));
 			if (o.offset + 30 < count + 30) {
 				parent.appendChild(Site.getPagination({
 					count: count,
@@ -1228,7 +1228,7 @@ var Video = {
 					attachments = this.attachments && this.attachments.value || "";
 
 				if (!$.trim(text)) {
-					Site.Alert({text: Lang.get("videos.error_comments_empty_comment")});
+					Site.Alert({text: lg("videos.error_comments_empty_comment")});
 					return false;
 				}
 
@@ -1244,8 +1244,8 @@ var Video = {
 						list.appendChild(Video.itemComment({
 							id: data,
 							data: Math.round(+new Date() / 1000),
-							user_id: API.uid,
-							from_id: (this.as_admin && this.as_admin.checked) ? ownerId : API.uid,
+							user_id: API.userId,
+							from_id: (this.as_admin && this.as_admin.checked) ? ownerId : API.userId,
 							text: text,
 							likes: {count: 0, user_likes: 0},
 							attachments: []
@@ -1268,15 +1268,15 @@ var Video = {
 		item.className = "comments";
 		var user = Local.Users[from_id] || {}, actions = [];
 		if (comment.can_edit) {
-			actions.push(e("span", {"class": "a", html: Lang.get("comment.edit"), onclick: function () {
+			actions.push(e("span", {"class": "a", html: lg("comment.edit"), onclick: function () {
 				Video.editComment(owner_id, comment_id);
 			}}));
 			actions.push(e("span", {"class": "tip", html: " | "}));
 		}
-		if (owner_id > 0 && owner_id == API.uid || owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin || from_id == API.uid) {
-			actions.push(e("span", {"class": "a", html: Lang.get("comment.delete"), onclick: (function (owner_id, comment_id, node) {
+		if (owner_id > 0 && owner_id == API.userId || owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin || from_id == API.userId) {
+			actions.push(e("span", {"class": "a", html: lg("comment.delete"), onclick: (function (owner_id, comment_id, node) {
 				return function (event) {
-					VKConfirm(Lang.get("comment.delete_confirm"), function () {
+					VKConfirm(lg("comment.delete_confirm"), function () {
 						Site.API("video.deleteComment", {
 							owner_id: owner_id,
 							comment_id: comment_id
@@ -1288,8 +1288,8 @@ var Video = {
 								id: "video_comment_deleted_" + owner_id + "_" + comment_id,
 								"class": "comments comments-deleted",
 								append: [
-									document.createTextNode(Lang.get("comment.deleted") + " "),
-									e("span", {"class": "a", html: Lang.get("comment.restore"), onclick: (function (owner_id, comment_id, node) {
+									document.createTextNode(lg("comment.deleted") + " "),
+									e("span", {"class": "a", html: lg("comment.restore"), onclick: (function (owner_id, comment_id, node) {
 										return function (event) {
 											Site.API("video.restoreComment", {
 												owner_id: owner_id,
@@ -1311,10 +1311,10 @@ var Video = {
 				};
 			})(owner_id, comment_id, item)}));
 		}
-		if (from_id != API.uid) {
+		if (from_id != API.userId) {
 			if (actions.length)
 				actions.push(e("span", {"class": "tip", html: " | "}));
-			actions.push(e("span", {"class": "a", html: Lang.get("comment.report"), onclick: function (event) {
+			actions.push(e("span", {"class": "a", html: lg("comment.report"), onclick: function (event) {
 				this.parentNode.insertBefore($.elements.create("form", {
 					onsubmit: function (event) {return false;},
 					"class": "sf-wrap",
@@ -1341,8 +1341,8 @@ var Video = {
 						"class": "comments-right",
 						append: [
 							e("a", {"class": "bold", href: "#" + user.screen_name, html: (user.name || (user.first_name + " " + user.last_name + " " + Site.isOnline(user)))}),
-							e("div", {"class": "comments-content", html: Mail.Emoji(Site.Format(Site.Escape(comment.text)) || ""), id: "video_comment_" + owner_id + "_" + comment_id}),
-							e("div", {"class": "comments-attachments", append: [Site.Attachment(comment.attachments, "video_comment" + owner_id + "_" + comment_id)]}),
+							e("div", {"class": "comments-content", html: Site.Format((comment.text || "").safe()).emoji(), id: "video_comment_" + owner_id + "_" + comment_id}),
+							e("div", {"class": "comments-attachments", append: Site.Attachment(comment.attachments, "video_comment" + owner_id + "_" + comment_id)}),
 							e("div",{
 								"class":"comments-footer",
 								append:[
@@ -1351,7 +1351,7 @@ var Video = {
 									e("div", {
 										"class": "wall-likes likes",
 										id: "like_video_comment_" + owner_id + "_" + comment_id,
-										append:[Wall.LikeButton("video_comment", owner_id, comment_id, comment.likes)]
+										append: getLikeButton("video_comment", owner_id, comment_id, "", comment.likes && comment.likes.count, comment.likes && comment.likes.user_likes, 0)
 									})
 								]
 							})
@@ -1371,7 +1371,7 @@ var Video = {
 				var e = $.element("video-comment" + ownerId + "_" + videoId + "_" + commentId)
 				$.elements.clearChild(e);
 				$.elements.addClass(e, "comments-deleted");
-				e.innerHTML = Lang.get("comment.reported");
+				e.innerHTML = lg("comment.reported");
 			}
 		});
 	},
@@ -1386,7 +1386,7 @@ var Video = {
 			onsubmit: function (event) {
 				var text = this.text && $.trim(this.text.value);
 				if (!text) {
-					Site.Alert({text: Lang.get("videos.error_comments_empty_comment")});
+					Site.Alert({text: lg("videos.error_comments_empty_comment")});
 					return false;
 				}
 				Site.API("video.editComment", {
@@ -1417,26 +1417,26 @@ var Video = {
 		});
 	},
 	addMyTag: function (ownerId, videoId, button) {
-		Video.putTag(ownerId, videoId, API.uid, function (data) {
+		Video.putTag(ownerId, videoId, API.userId, function (data) {
 			if (!data)
 				return;
-			button.parentNode.insertBefore($.e("div", {"class": "dd-item", html: Lang.get("videos.tags_delete_mine"), onclick: function (event) {
+			button.parentNode.insertBefore($.e("div", {"class": "dd-item", html: lg("videos.tags_delete_mine"), onclick: function (event) {
 				Video.removeTag(ownerId, videoId, data.tag_id);
 			}}), button);
-			Site.Alert({text: Lang.get("videos.info_tag_created")});
+			Site.Alert({text: lg("videos.info_tag_created")});
 			$.elements.remove(button);
 		})
 	},
 	removeTag: function (ownerId, videoId, tagId) {
-		VKConfirm(Lang.get("videos.confirm_tag_delete"), function () {
+		VKConfirm(lg("videos.confirm_tag_delete"), function () {
 			Site.API("video.removeTag", {
 				owner_id: ownerId,
 				video_id: videoId,
 				tag_id: tagId
 			}, function (data) {
 				if (data.response) {
-					Site.Alert({text: Lang.get("videos.info_tag_deleted")});
-					button.parentNode.insertBefore($.e("div", {"class": "dd-item", html: Lang.get("videos.action_video_tag_me"), onclick: function (event) {
+					Site.Alert({text: lg("videos.info_tag_deleted")});
+					button.parentNode.insertBefore($.e("div", {"class": "dd-item", html: lg("videos.action_video_tag_me"), onclick: function (event) {
 						Video.addMyTag(ownerId, videoId, this);
 					}}), button);
 					$.elements.remove(button);
@@ -1462,7 +1462,7 @@ var Video = {
 			}, function (data) {
 				data = Site.isResponse(data);
 				if (data === 1) {
-					Site.Alert({text: Lang.get("videos.info_report_sent")});
+					Site.Alert({text: lg("videos.info_report_sent")});
 					Site.Loader();
 					window.location.hash = "#video" + owner_id + "_" + video_id;
 				}
@@ -1471,19 +1471,19 @@ var Video = {
 		};
 		var selecttype = document.createElement("select"),
 			tip = function (text) {return e("div", {"class": "tip", html: text});},
-			types = Lang.get("videos.report_types");
+			types = lg("videos.report_types");
 		for (var current in types)
 			selecttype.appendChild(e("option", {value: current, html: types[current]}));
 		selecttype.name = "type";
 		form.className = "sf-wrap";
-		form.appendChild(tip(Lang.get("videos.report_type")));
+		form.appendChild(tip(lg("videos.report_type")));
 		form.appendChild(selecttype);
-		form.appendChild(tip(Lang.get("videos.report_comment")));
+		form.appendChild(tip(lg("videos.report_comment")));
 		form.appendChild(e("textarea", {name: "comment"}));
-		form.appendChild(e("input", {type: "submit", value: Lang.get("videos.report_send")}));
-		parent.appendChild(Site.CreateHeader(Lang.get("videos.report_header")));
+		form.appendChild(e("input", {type: "submit", value: lg("videos.report_send")}));
+		parent.appendChild(Site.CreateHeader(lg("videos.report_header")));
 		parent.appendChild(form);
 		Site.Append(parent);
-		Site.SetHeader(Lang.get("videos.report_header_short"), {link: "video" + owner_id + "_" + video_id});
+		Site.SetHeader(lg("videos.report_header_short"), {link: "video" + owner_id + "_" + video_id});
 	}
 };
