@@ -186,8 +186,8 @@ var Search = {
 					"params": ages,
 					"onchange": function() {
 						var curVal = this.options[this.selectedIndex].value;
-						if (this.form.age_to < curVal) {
-							this.form.age_to = curVal;
+						if (this.form.age_to.value < curVal) {
+							this.form.age_to.value = curVal;
 						}
 					}
 				},
@@ -198,8 +198,8 @@ var Search = {
 					"params": ages,
 					"onchange": function() {
 						var curVal = this.options[this.selectedIndex].value;
-						if (this.form.age_from > curVal) {
-							this.form.age_from = curVal;
+						if (this.form.age_from.value > curVal) {
+							this.form.age_from.value = curVal;
 						}
 					}
 				},
@@ -228,9 +228,14 @@ var Search = {
 							isLeap = !isNaN(+new Date(selectedYear + "-02-29")),
 							days = [0, 31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.form.birth_month.options[this.form.birth_month.selectedIndex].value],
 							nodes = this.form.birth_day;
-						for (var i = 1, l = nodes.options.length; i < l; ++i)
-							if (nodes.options[i + 1])
+						for (var i = 1, l = nodes.options.length; i < l; ++i) {
+							if (nodes.options[i + 1]) {
 								nodes.options[i + 1].hidden = i >= days;
+								if (i >= days && nodes.options[i + 1].selected) {
+									this.form.birth_day.selectedIndex = 0;
+								}
+							}
+						}
 					}
 				},
 				{
