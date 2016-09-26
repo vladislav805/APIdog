@@ -5,16 +5,16 @@
  */
 
 var Polls = {
-	getAttachment: function (poll, id) {
+	getAttachment: function(poll, id) {
 		var e = $.e;
 		return e("div", {"class": "attachments-poll", append: [
 				e("div", {"class": "wall-icons wall-icon-poll"}),
 				e("span", {"class": "tip", html: " " + Lang.get("polls.poll") + " "}),
-				e("strong", {append: e("a", {href: "#" + id, html: Site.Escape(poll.question)}) })
+				e("strong", {append: e("a", {href: "#" + id, html: poll.question.safe()}) })
 			]
 		});
 	},
-	getFullAttachment: function (poll) {
+	getFullAttachment: function(poll) {
 		var e = $.e,
 			ownerId = poll.owner_id,
 			pollId = poll.id || poll.poll_id,
@@ -22,7 +22,7 @@ var Polls = {
 			list = e("div", {"class": "poll-answers"}),
 			isBoard = poll.is_board || 0,
 			answerId = poll.answer_id;
-		var getItem = function (obj) {
+		var getItem = function(obj) {
 			var id = (obj.id || obj.answer_id), goToVoters = (!poll.anonymous ? function(event){
 				window.location.hash = "#poll" + ownerId + "_" + pollId + "?answerId=" + id;
 				return cancelEvent(event);
@@ -34,7 +34,7 @@ var Polls = {
 					e("div", {"class": "poll-line-count tip fr", html: obj.rate + "% (" + obj.votes + ")", onclick: goToVoters}),
 					e("div", {
 						"class": "poll-option-item" + (!answerId ? " a" : "") + (id == answerId ? " poll-selected" : ""),
-						html: Site.Escape(obj.text)
+						html: obj.text.safe()
 					}),
 					e("div", {
 						"class": "poll-line",
@@ -42,7 +42,7 @@ var Polls = {
 						onclick: goToVoters
 					})
 				],
-				onclick: function (event) {
+				onclick: function(event) {
 					$.event.cancel(event);
 					if (answerId)
 						return;
@@ -51,7 +51,7 @@ var Polls = {
 						poll_id: pollId,
 						answer_id: id,
 						is_board: parseInt(isBoard)
-					}, function (data) {
+					}, function(data) {
 						data = Site.isResponse(data);
 						if (data)
 							Polls.update(ownerId, pollId, isBoard);
@@ -72,7 +72,7 @@ var Polls = {
 				}),
 				e("strong", {
 					style: "color: gray",
-					html: Lang.get("polls.poll") + " &laquo;" + Site.Escape(poll.question) + "&raquo;"
+					html: Lang.get("polls.poll") + " &laquo;" + poll.question.safe() + "&raquo;"
 				})
 			]
 		}));
@@ -84,13 +84,13 @@ var Polls = {
 			list.appendChild(e("a", {
 				"class": "tip",
 				html: Lang.get("polls.cancel_my_vote"),
-				onclick: function (event) {
+				onclick: function(event) {
 					Site.API("polls.deleteVote", {
 						owner_id: ownerId,
 						poll_id: pollId,
 						answer_id: answerId,
 						is_board: parseInt(isBoard)
-					}, function (data){
+					}, function(data){
 						data = Site.isResponse(data);
 						if (data)
 							Polls.update(ownerId, pollId, isBoard);
@@ -101,7 +101,7 @@ var Polls = {
 		form.appendChild(list);
 		return form;
 	},
-	update: function (ownerId, pollId, isBoard) {
+	update: function(ownerId, pollId, isBoard) {
 		var node = $.element("poll" + ownerId + "_" + pollId);
 		node.style.opacity = 0.5;
 		node.appendChild($.e("div", {
@@ -112,7 +112,7 @@ var Polls = {
 			owner_id: ownerId,
 			poll_id: pollId,
 			is_board: parseInt(isBoard)
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			if (isBoard)
 				data.isBoard = 1;
@@ -121,10 +121,10 @@ var Polls = {
 		});
 	},
 	polls: {},
-	getPoll: function (ownerId, pollId) {
-
+	getPoll: function(ownerId, pollId) {
+		// wtf here is empty? O_o
 	},
-	getAnswer: function (ownerId, pollId, answerId) {
+	getAnswer: function(ownerId, pollId, answerId) {
 		var poll, answers;
 		poll = Polls.polls[ownerId + "_" + pollId];
 		if (!poll) return false;
@@ -134,18 +134,19 @@ var Polls = {
 				return answers[i];
 		return false;
 	},
-	getList: function (ownerId, pollId, answerId) {
+	getList: function(ownerId, pollId, answerId) {
 		var has = !!(Polls.polls[ownerId + "_" + pollId]),
-			onlyFriends = +!!+Site.Get("onlyFriends");
+			onlyFriends = +!!+Site.get("onlyFriends");
 		Site.Loader();
 		Site.API("execute", {
-			code: ("var p,u;" + (!has ? "p=API.polls.getById({owner_id:%o,poll_id:%p,v:5.29});" : "") + "u=API.polls.getVoters({owner_id:%o,poll_id:%p,answer_ids:%a,fields:\"photo_50,online,screen_name\",offset:%q,count:75,v:5.29,friends_only:%f});return{p:p,u:u};")
-				.replace(/%o/img, ownerId)
-				.replace(/%p/img, pollId)
-				.replace(/%a/img, answerId)
-				.replace(/%q/img, Site.Get("offset"))
-				.replace(/%f/img, onlyFriends)
-		}, function (data) {
+			code: ("var p,u,o=Args.o,p=Args.p,a=Args.a,i=Args.i;if(!Args.n){p=API.polls.getById({owner_id:o,poll_id:p,v:5.29});};u=API.polls.getVoters({owner_id:o,poll_id:p,answer_ids:a,fields:Args.q,offset:i,count:75,v:5.29,friends_only:f});return{p:p,u:u};"),
+				o: ownerId,
+				p: pollId,
+				a: answerId,
+				i: getOffset(),
+				f: onlyFriends,
+				q: "photo_50,online,screen_name"
+		}, function(data) {
 			data = Site.isResponse(data);
 			if (data.p)
 				Polls.polls[ownerId + "_" + pollId] = data.p;
@@ -170,7 +171,7 @@ var Polls = {
 					append: [
 						fr = e("input", {
 							type: "checkbox",
-							onchange: function (event) {
+							onchange: function(event) {
 								window.location.hash = "#poll" + ownerId + "_" + pollId + "?answerId=" + answerId + "&onlyFriends=" + (+this.checked);
 							}
 						}),
@@ -183,7 +184,7 @@ var Polls = {
 			users = users.items;
 			parent.appendChild(Site.CreateHeader(Lang.get("polls.voters") + " &laquo;" + answer.text + "&raquo;", check));
 			parent.appendChild(tabs);
-			Array.prototype.forEach.call(users, function (u) {
+			Array.prototype.forEach.call(users, function(u) {
 				list.appendChild(Templates.getMiniUser(u));
 			});
 
