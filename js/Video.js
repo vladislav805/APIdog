@@ -106,7 +106,6 @@ var Video = {
 				video_id = ids[2],
 				access_key = Site.get("access_key");
 			switch (act) {
-				case "report":  return Video.reportVideo(owner_id, video_id); break;
 				case "edit":    return Video.editVideo(owner_id, video_id, access_key); break;
 				default:        return Video.getVideo(owner_id, video_id, access_key); break;
 			}
@@ -1315,18 +1314,7 @@ var Video = {
 			if (actions.length)
 				actions.push(e("span", {"class": "tip", html: " | "}));
 			actions.push(e("span", {"class": "a", html: lg("comment.report"), onclick: function (event) {
-				this.parentNode.insertBefore($.elements.create("form", {
-					onsubmit: function (event) {return false;},
-					"class": "sf-wrap",
-					append: [
-						Photos.getReportSelect(2),
-/**/                    e("input", {type: "button", value: "Готово", onclick: function (event) {
-							Video.reportComment(owner_id, comment_id, video_id);
-							return false;
-						}})
-					],
-				}), this);
-				$.elements.addClass(this, "hidden");
+				new ReportWindow("video.reportComment", owner_id, "commentId", comment_id, null, false).show();
 			}}));
 		}
 		user.screen_name = user.screen_name || (user.uid || user.id ? "id" + (user.uid || user.id) : "club" + (-user.gid || -user.id));
@@ -1361,19 +1349,6 @@ var Video = {
 			})
 		);
 		return item;
-	},
-	reportComment: function (ownerId, commentId, videoId) {
-		Site.API("video.reportComment", {
-			owner_id: ownerId,
-			comment_id: commentId
-		}, function (data) {
-			if (data.response) {
-				var e = $.element("video-comment" + ownerId + "_" + videoId + "_" + commentId)
-				$.elements.clearChild(e);
-				$.elements.addClass(e, "comments-deleted");
-				e.innerHTML = lg("comment.reported");
-			}
-		});
 	},
 	editComment: function (owner_id, comment_id) {
 		var textNode = $.element("video_comment_" + owner_id + "_" + comment_id);
@@ -1444,46 +1419,7 @@ var Video = {
 			});
 		});
 	},
-	showReportVideo: function (ownerId, videoId) {
-		window.location.hash = "#video" + ownerId + "_" + videoId + "?act=report";
-	},
-	reportVideo: function (owner_id, video_id) {
-		var parent = document.createElement("div"),
-			form = document.createElement("form"),
-			e = $.e;
-		form.onsubmit = function (event) {
-			var type = this.type.options[this.type.selectedIndex].value,
-				comment = this.comment.value;
-			Site.API("video.report", {
-				owner_id: owner_id,
-				video_id: video_id,
-				type: type,
-				comment: comment
-			}, function (data) {
-				data = Site.isResponse(data);
-				if (data === 1) {
-					Site.Alert({text: lg("videos.info_report_sent")});
-					Site.Loader();
-					window.location.hash = "#video" + owner_id + "_" + video_id;
-				}
-			});
-			return false;
-		};
-		var selecttype = document.createElement("select"),
-			tip = function (text) {return e("div", {"class": "tip", html: text});},
-			types = lg("videos.report_types");
-		for (var current in types)
-			selecttype.appendChild(e("option", {value: current, html: types[current]}));
-		selecttype.name = "type";
-		form.className = "sf-wrap";
-		form.appendChild(tip(lg("videos.report_type")));
-		form.appendChild(selecttype);
-		form.appendChild(tip(lg("videos.report_comment")));
-		form.appendChild(e("textarea", {name: "comment"}));
-		form.appendChild(e("input", {type: "submit", value: lg("videos.report_send")}));
-		parent.appendChild(Site.CreateHeader(lg("videos.report_header")));
-		parent.appendChild(form);
-		Site.Append(parent);
-		Site.SetHeader(lg("videos.report_header_short"), {link: "video" + owner_id + "_" + video_id});
+	showReportVideo: function (ownerId, videoId, accessKey) {
+		new ReportWindow("video.report", ownerId, "videoId", videoId, accessKey, true).show();
 	}
 };

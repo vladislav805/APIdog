@@ -878,18 +878,7 @@ var Photos = {
 			if (actions.length)
 				actions.push($.e("span", {"class": "tip", html: " | "}));
 			actions.push($.e("span", {"class": "a", html: Lang.get("comment.report"), onclick: function(event) {
-				this.parentNode.insertBefore($.e("form", {
-					onsubmit: function(event) {return false;},
-					"class": "sf-wrap",
-					append: [
-						Photos.getReportSelect(2),
-/**/                    $.e("input", {type: "button", value: "Готово", onclick: function(event) {
-							Photos.reportComment(owner_id, comment_id, photo_id);
-							return false;
-						}})
-					],
-				}), this);
-				$.elements.addClass(this, "hidden");
+				new ReportWindow("photos.reportComment", owner_id, "commentId", comment_id, access_key, false).show();
 			}}));
 		}
 
@@ -959,19 +948,7 @@ var Photos = {
 			}
 		}, owner_id, comment_id))
 	},
-	reportComment: function(owner_id, comment_id, photo_id) {
-		Site.API("photos.reportComment", {
-			owner_id: owner_id,
-			comment_id: comment_id
-		}, function(data) {
-			if (data.response) {
-				var e = $.element("photo-comment" + owner_id + "_" + photo_id + "_" + comment_id)
-				$.elements.clearChild(e);
-				$.elements.addClass(e, "comments-deleted");
-				e.innerHTML = Lang.get("comment.reported");
-			}
-		});
-	},
+
 	getCommentNode: function(node, photoData, data, opts) {
 		var owner_id = photoData.owner_id,
 			photo_id = photoData.photo_id,
@@ -1150,7 +1127,7 @@ var Photos = {
 			if (album_id != -6 && album_id != -3)
 				actions[Lang.get("photos", "photo_actions_cover")]  = function(event) {Photos.makeCover(owner_id, album_id, photo_id);};
 		} else {
-			actions[Lang.get("photos", "photo_actions_report")] = function(event) {Photos.reportPhoto(owner_id, photo_id);};
+			actions[Lang.get("photos", "photo_actions_report")] = function(event) {Photos.reportPhoto(owner_id, photo_id, access_key);};
 		}
 		if (owner_id != API.userId)
 			actions[Lang.get("photos", "photo_actions_save")]   = function(event) {Photos.savePhoto(owner_id, photo_id, access_key);};
@@ -1565,42 +1542,11 @@ var Photos = {
 		//parent.appendChild(select);
 		return parent;
 	},
-	reportPhoto: function(owner_id, photo_id) {
-		var photo = Photos.photos[owner_id + "_" + photo_id],
-			Form = $.e("form"),
-			body = $.e("div");
-		Form.appendChild(Site.getPageHeader("Составление жалобы на фотографию"));
-		body.className = "sf-wrap";
-		body.appendChild($.e("img", {"class": "fr", src: photo.photo_130}));
-		body.appendChild(Photos.getReportSelect());
-		body.appendChild($.e("input", {type: "submit", value: "Пожаловаться"}));
-		Form.appendChild(body);
-		Form.onsubmit = function(event) {
-			if (!this.reason)
-				return false;
-			var reasons = this.reason,
-				reason;
-			for (var i = 0, l = reasons.length; i < l; ++i)
-				if (reasons[i].checked) {
-					reason = i;
-					break;
-				}
-			if (reason == undefined) {
-				Site.Alert({text: "Пожалуйста, выберите причину"});
-				return false;
-			}
-			Site.API("photos.report", {
-				owner_id: owner_id,
-				photo_id: photo_id,
-				reason:   reason
-			}, function(data) {
-				if (data.response)
-					Site.Go(window.location.hash);
-			})
-			return false;
-		};
-		Site.Append(Form);
+
+	reportPhoto: function(ownerId, photoId, accessKey) {
+		new ReportWindow("photos.report", ownerId, "photoId", photoId, accessKey, false).show();
 	},
+
 	deletePhoto: function(owner_id, photo_id, access_key, node) {
 		VKConfirm(Lang.get("photos", "photo_action_delete"), function() {
 			Site.API("photos.delete", {

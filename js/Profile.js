@@ -43,10 +43,6 @@ var Profile = {
 				return Groups.ShowContacts(screenName);
 
 			// deprecated
-			case "report":
-				return Profile.ShowReportPage(screenName);
-
-			// deprecated
 			case "photo":
 				var group = Local.getUserByDomain(screenName);
 				if (!group || group && !group.is_admin)
@@ -970,50 +966,7 @@ var Profile = {
 	},
 
 
-	ShowReportPage: function (screen_name) {
-		Site.API("users.get", {
-			user_ids: screen_name,
-			fields: "photo_rec,online,screen_name",
-			name_case: "gen"
-		}, function (data) {
-			user = Site.isResponse(data)[0];
-			Local.AddUsers([user]);
-			var Form = document.createElement("form");
-			Form.appendChild(Site.CreateHeader(Lang.get("profiles.report_head")));
-			var page = document.createElement("div");
-			page.className = "sf-wrap";
-			page.appendChild(e("input", {type: "hidden", name: "user_id", value: user.userId}));
-			page.appendChild(e("div", {html: Lang.get("profiles.report_tip"), "class":"tip"}));
-			var types = Lang.get("profiles.report_types");
-			page.appendChild(e("select", {
-				name: "reason",
-				append: (function (a,b,c,d,e,f,g,h){for(;b<g;++b)f.push(h(e,{value:a[b][c],html:a[b][d]}));return f;})(types,0,0,1,"option",[],types.length,e)
-			}));
-			page.appendChild(e("div", {html: Lang.get("profiles.report_comment"), "class": "tip"}));
-			page.appendChild(e("textarea", {name: "comment"}));
-			page.appendChild(e("input", {type: "submit", value: Lang.get("profiles.report_submit")}));
-			Form.appendChild(page);
-			Form.onsubmit = function (event) {
-				if (this.reason.options[this.reason.selectedIndex].value == "0") {
-					Site.Alert({text: Lang.get("profiles.report_error_reason")});
-					return false;
-				}
-				var userId = this.user_id.value;
-				Site.API("users.report", {
-					user_id: userId,
-					type: this.reason.options[this.reason.selectedIndex].value,
-					comment: $.trim(this.comment.value)
-				}, function (data) {
-					console.log(data);
-					if (data.response == 1) {
-						window.location.href = "#id" + userId;
-						Site.Alert({text: Lang.get("profiles.report_success")});
-					}
-				});
-				return false;
-			};
-			Site.Append(Form);
-			Site.SetHeader(Lang.get("profiles.report_head"), {link: user.screen_name});
-		});
+	showReportWindow: function(userId) {
+		new ReportWindow("users.report", 0, "userId", userId, null, true).show();
 	}
 };
