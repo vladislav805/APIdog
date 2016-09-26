@@ -4346,48 +4346,54 @@ Snackbar.prototype = {
  * @param   {Object}   o   Options
  */
 function Modal(o) {
-	o = o || {};
-	var self = this;
-	this.modal = $.e("div", {"class": 'modal modal-animation'});
-	this.title = $.e("h1", {"class": 'modal-title'});
-	this.body = $.e("div", {"class": 'modal-content'});
-	this.footer = $.e("div", {"class": 'modal-footer'});
-	this.block = $.e("div", {"class": 'modal-block', onclick: o.uncloseableByBlock ? null : function() { self.close() }});
-	this.wrap = $.e("div", {"class": 'modal-wrap'});
-
-	this.modal.appendChild(this.title);
-	this.modal.appendChild(this.body);
-	this.modal.appendChild(this.footer);
-
-	this.wrap.appendChild(this.modal);
-	this.wrap.appendChild(this.block);
-
+	this._options = o || {};
 	this._init();
-	this._setOptions(o);
-	this._windowStateChanged();
 };
 
 Modal.prototype = {
+
+	_construct: function() {
+		this.modal = $.e("div", {"class": "modal modal-animation"});
+		this.title = $.e("h1", {"class": "modal-title"});
+		this.body = $.e("div", {"class": "modal-content"});
+		this.footer = $.e("div", {"class": "modal-footer"});
+		this.block = $.e("div", {"class": "modal-block", onclick: this._options.uncloseableByBlock ? null : function() { self.close() }});
+		this.wrap = $.e("div", {"class": "modal-wrap"});
+
+		this.modal.appendChild(this.title);
+		this.modal.appendChild(this.body);
+		this.modal.appendChild(this.footer);
+
+		this.wrap.appendChild(this.modal);
+		this.wrap.appendChild(this.block);
+	},
 
 	/**
 	 * Initialize modal window
 	 * @return   {Modal}
 	 */
 	_init: function() {
-		var s = this;
+
+		this._construct();
+
+		var s = this, self = this;
 		$.elements.addClass(this.wrap, "hidden");
 		$.event.add(this.body, "scroll", function(event) {
 			s._onScroll(event);
 		});
-		var self = this;
+
 		$.event.add(window, "resize", function(event) {
 			self._onResizeDocument(event);
 		});
+
 		if (isEnabled(128)) {
 			this.modal.style.marginTop = "50px";
 			this.hasMarginTop = true;
 		};
-		return this._insert();
+
+		this._setOptions();
+		this._windowStateChanged();
+		this._insert();
 	},
 
 	/**
@@ -4408,7 +4414,8 @@ Modal.prototype = {
 	 * Set options of modal
 	 * @param   {Modal}
 	 */
-	_setOptions: function(o) {
+	_setOptions: function() {
+		var o = this._options || {};
 		if (o.title) {
 			this.title.innerHTML = o.title;
 		};
@@ -4858,6 +4865,156 @@ ProgressBar.prototype = {
  */
 function PrivacyWindow () {
 
+};
+
+
+/**
+ * [ReportWindow description]
+ * @param {String}	method    [description]
+ * @param {int}		ownerId   [description]
+ * @param {String}	itemKey   [description]
+ * @param {int}		itemId    [description]
+ * @param {String}	accessKey [description]
+ */
+function ReportWindow(method, ownerId, itemKey, itemId, accessKey, needComment) {
+	this._options = {};
+	this._method = method;
+
+	this._params = { ownerId: ownerId };
+	this._params[itemKey] = itemId;
+	if (accessKey) {
+		this._params.accessKey = accessKey;
+	};
+
+	this.needComment = needComment;
+	this._init();
+	this.initReport();
+};
+ReportWindow.prototype = Modal.prototype;
+
+ReportWindow.prototype.initReport = function() {
+	var e = $.e, self = this;
+
+	this
+		.setTitle(lg("report.modalTitle"))
+		.setContent(this.getForm())
+		.setButtons(this.getButtons())
+		.show();
+};
+
+ReportWindow.prototype.getSelectedIndex = function() {
+	var f = this.form.elements.report, selected = -1;
+	for (var i = 0, l = f.length; i < l; ++i) {
+		if (f[i].checked) {
+			selected = i;
+			break;
+		}
+	};
+	return selected;
+};
+
+ReportWindow.prototype.isValid = function() {
+	return ~this.getSelectedIndex();
+};
+
+ReportWindow.prototype.getForm = function() {
+	var e = $.e,
+		self = this,
+		fields,
+		form = e("form", {
+			onsubmit: function(event) {
+				event.preventDefault();
+
+				self.send();
+
+				return false;
+			},
+
+			append: [
+				e("blackqoute", {html: lg("report.modalDescription")}),
+				fields = e("div", {"class": "sf-wrap", append: this.getListOrReasons()})
+			]
+		});
+
+	if (this.needComment) {
+		fields.appendChild(e("div", {append: [
+			e("div", {"class": "tip", html: lg("report.modalComment")}),
+			e("textarea", {name: "comment"})
+		]}));
+	};
+
+	return this.form = form;
+};
+
+ReportWindow.prototype.getListOrReasons = function() {
+	var items = (lg(this._method !== "users.report" ? "report.modalReasons" : "report.modalReasonsUser") || []),
+		result = [], item;
+	for (var key in items) {
+		item = items[key];
+		result.push($.e("label", { append: [
+			$.e("input", {type: "radio", name: "report", value: key}),
+			$.e("span", {html: item})
+		] }));
+	};
+	return result;
+};
+
+ReportWindow.prototype.getButtons = function() {
+	var self = this;
+	return [
+		{
+			name: "ok",
+			title: lg("report.modalOkButton"),
+			onclick: function() {
+				self.send();
+			}
+		},
+		{
+			name: "cancel",
+			title: lg("general.cancel"),
+			onclick: function() {
+				this.close();
+			}
+		}
+	];
+};
+
+ReportWindow.prototype.send = function() {
+	if (!this.isValid()) {
+		return false;
+	};
+
+	var self = this;
+
+	this.sendRequest(function() {
+		self
+			.setContent(lg("report.modalSuccess"))
+			.setButtons([{
+				name: "close",
+				title: lg("general.close"),
+				onclick: function(event) {
+					this.close();
+				}
+			}])
+			.closeAfter(2000);
+	});
+};
+
+ReportWindow.prototype.sendRequest = function(callback) {
+	this._params.reason = this.getSelectedIndex();
+	if (this.needComment) {
+		this._params.comment = this.form.comment.value.trim();
+	};
+
+	new APIRequest(this._method, this._params)
+		.setWrapper(APIDOG_REQUEST_WRAPPER_V5)
+		.setOnCompleteListener(function(result) {
+			callback(true);
+		})
+		.setOnErrorListener(function(result) {
+			callback(false);
+		})
+		.execute();
 };
 
 /**
