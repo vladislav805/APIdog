@@ -2632,7 +2632,7 @@ console.log(params)
 
 function VKComment (context, c, ownerId) {
 	this.context = context;
-
+	this.ownerId = ownerId;
 	this.commentId = c.id;
 	this.userId = c.from_id;
 	this.date = c.date;
@@ -2684,44 +2684,7 @@ VKComment.prototype = {
 		},
 
 		reportComment: function(c) {
-			var modal,
-				form,
-				selected,
-				nodes = Lang.get("comment.reportReasons").map(function(item, index) {
-					return $.e("label", {append: [
-						$.e("input", {type: "radio", name: "reason", value: index}),
-						$.e("span", {"class": "tip", html: item})
-					]});
-				});
-
-			nodes.unshift($.e("span", {"class": "tip", html: Lang.get("comment.reportInfo")}));
-
-			modal = new Modal({
-				title: Lang.get("comment.reportTitle"),
-				content: form = $.e("form", {"class": "sf-wrap", append: nodes}),
-				footer: [
-					{
-						name: "ok",
-						title: Lang.get("comment.reportButton"),
-						onclick: function() {
-							selected = getRadioGroupSelectedValue(form.reason);
-
-							if (selected == null)
-								return;
-
-							c.reportCommentRequest(selected);
-							this.close();
-						}
-					},
-					{
-						name: "cancel",
-						title: Lang.get("comment.cancel"),
-						onclick: function() {
-							this.close();
-						}
-					},
-				]
-			}).show();
+			new ReportWindow("wall.reportComment", c.ownerId, "commentId", c.commentId, null, false).show();
 		},
 
 		reportCommentDone: function() {
