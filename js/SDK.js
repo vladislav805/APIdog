@@ -2558,17 +2558,20 @@ Comments.prototype = {
 	},
 
 	loadComments: function(offset) {
-		var that = this, code = 'var c=API.%m({owner_id:%h,%f:%i,offset:%o,count:40,extended:1,need_likes:1,v:5.38});c.profiles=c.profiles+API.users.get({user_ids:c.items@.reply_to_user,fields:"first_name_dat,last_name_dat"});return c;'.schema({
-			m: this.api.get.method,
-			f: this.api.get.itemField,
-			h: this.object.ownerId,
-			i: this.object.itemId,
-			o: offset
-		});
+		var that = this;
 
 		this.offset = offset;
 
-		new APIRequest("execute", {code: code}).setOnCompleteListener(function(result) {
+		new APIRequest("execute", {
+			code: 'var o=Args.o,h=Args.h,i=Args.i,c=API.%m({owner_id:h,%f:i,offset:o,count:40,extended:1,need_likes:1,v:5.38});c.profiles=c.profiles+API.users.get({user_ids:c.items@.reply_to_user,fields:Args.q});return c;'.schema({
+				m: this.api.get.method,
+				f: this.api.get.itemField
+			}),
+			o: offset,
+			h: this.object.ownerId,
+			i: this.object.itemId,
+			q: "first_name_dat,last_name_dat"
+		}).setOnCompleteListener(function(result) {
 			that.loadCommentsDone.call(that, result);
 		}).execute();
 	},
@@ -2866,7 +2869,7 @@ var
 	APIDOG_ATTACHMENT_STICKER = 2048;
 
 /**
- * CommentWriteForm
+ * WriteForm
  * Created 12.01.2016
  * Modified 13.01.2016
  */
