@@ -3220,11 +3220,6 @@ img.wall-left {
 	background: rgb(233, 236, 238);
 }
 
-.wall-poll {
-	padding: 3px 9px;
-	border-left: 2px solid rgb(102, 135, 177);
-	margin: 5px 0;
-}
 .wall-repostbtn {
 	margin: 0 7px 8px;
 }
@@ -3233,36 +3228,65 @@ img.wall-left {
 	text-align: center;
 }
 
+.wall-poll {
+	border-left: 2px solid rgb(102, 135, 177);
+	margin: 7px 0;
+	overflow: hidden;
+}
+
 .poll-wrap {
 	position: relative;
 }
+
+.poll-top {
+	line-height: 35px;
+	padding: 0 10px;
+}
+
 .poll-top strong {
-	color: rgb(102, 118, 143);
+	font-size: 16px;
 }
+
 .poll-option {
-	padding: 4px 0;
-}
-.poll-option-item {
-	line-height: 24px;
-	color: gray;
-}
-.poll-line-count {
-	font-size: small;
-	line-height: 24px;
-	cursor: pointer;
-}
-.poll-line {
-	height: 4px;
+	line-height: 30px;
+	padding: 0 8px;
+	margin: 4px 8px;
+	position: relative;
+	background: rgba(95, 127, 186, .05);
+	border-radius: 3px;
 	overflow: hidden;
-	background: rgba(95, 127, 186, .3);
-	border-radius: 2px;
 }
+
+.poll-option-info {
+	position: relative;
+	z-index: 10;
+	color: black;
+}
+
 .poll-line-in {
 	width: 0;
-	background: rgb(95, 127, 186);
+	background: rgba(95, 127, 186, .4);
+	height: 30px;
+	position: absolute;
+	top: 0;
 	left: 0;
-	height: 100%;
+	z-index: 1;
 }
+
+.poll-line-count {
+	font-size: small;
+	cursor: pointer;
+}
+
+.poll-removeVote {
+	float: right;
+	line-height: 30px;
+	padding: 0 14px;
+	border: 1px solid rgba(95, 127, 186, .2);
+	border-radius: 3px;
+	margin: 5px 0 0;
+}
+
 .poll-updater {
 	left: 50%;
 	top: 50%;
@@ -3278,13 +3302,14 @@ img.wall-left {
 	padding: 5px 0;
 	border-radius: 5px;
 }
+
 .poll-selected {
 	font-weight: 900;
 }
+
 .poll-selected::after {
-	content: " (Ваш выбор)";
+	content: " <<";
 	display: inline;
-	color: #ccc;
 }
 
 .polls-create-item {
