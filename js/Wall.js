@@ -6,12 +6,12 @@
 
 var Wall = {
 	Storage: {},
-	Resolve: function (url) {
+	Resolve: function(url) {
 		Site.Loader();
 		if (/^wall(-?\d+)$/.test(url)) {
 			var ownerId = parseInt(/^wall(-?\d+)$/.exec(url)[1]),
 				offset = getOffset();
-			switch (Site.Get("act")) {
+			switch (getAct()) {
 				case "suggested":
 					Wall.getRequestExtraWall(ownerId, offset, Wall.FILTER_SUGGESTED);
 					break;
@@ -27,16 +27,7 @@ var Wall = {
 			var ids = /wall(-?\d+)_(\d+)/.exec(url),
 				ownerId = ids[1],
 				postId = ids[2];
-			switch (Site.Get("act")) {
-				// deprecated 10.01.2016
-				case "likes":
-					Wall.ListLikes(ownerId, postId, Site.Get("params"));
-					break;
-
-				case "reposts":
-					Wall.getReposts(ownerId, postId, getOffset());
-					break;
-
+			switch (getAct()) {
 				case "edit":
 					Wall.edit(ownerId, postId);
 					break;
@@ -44,157 +35,36 @@ var Wall = {
 				default:
 					return Wall.getItem(ownerId, postId);
 			};
-		} else {
-
-			// deprecated 10.01.2016
-			switch (Site.Get("act")) {
-				case "shareToGroup":
-					Site.APIv5("groups.get", {
-						extended: 1,
-						filter: "admin,editor",
-						count: 75,
-						v: 5.29
-					}, function (data) {
-						data = Site.isResponse(data);
-						Local.AddUsers(data.items);
-						Wall.sharePostToGroup(data.items, Site.Get("object"));
-					});
-					break;
-				case "likesComment":
-					var ownerId = Site.Get("ownerId"),
-						commentId = Site.Get("commentId"),
-						offset = getOffset(),
-						postId = Site.Get("from");
-					Site.API("likes.getList", {
-						type: "comment",
-						owner_id: ownerId,
-						item_id: commentId,
-						count: 50,
-						offset: offset,
-						fields: "online,photo_50,screen_name",
-						extended: 1
-					}, function (data) {
-						data = Site.isResponse(data);
-						Local.AddUsers(data.items);
-						Wall.showCommentLikes({
-							ownerId: ownerId,
-							commentId: commentId,
-							postId: postId,
-							offset: offset,
-							items: data.items,
-							count: data.count
-						});
-					});
-					break;
-			};
 		};
-	},
-	sharePostToGroup: function (groups, object) {
-		var e = $.e,
-			wrap = e("div"),
-			items = [e("option", {value: 0, html: "-- не выбрано --"})],
-			item = function (g) {
-				items.push(e("option", {value: g.id, html: Site.Escape(g.name)}));
-			},
-			nGroup,
-			nMessage;
-		wrap.appendChild(Site.CreateHeader("Репост записи в сообщество"));
-
-		Array.prototype.forEach.call(groups, item);
-
-		wrap.appendChild(e("form", {
-			"class": "sf-wrap",
-			append: [
-				e("div", {"class": "tip tip-form", html: "Группа:"}),
-				nGroup = e("select", {name: "group", append: items}),
-				e("div", {"class": "tip tip-form", html: "Сообщение (необязательно):"}),
-				nMessage = e("textarea", {name: "message"}),
-				e("input", {type: "submit", value: "Репост!"})
-			],
-			onsubmit: function (event) {
-				event.preventDefault();
-
-				var groupId = nGroup.options[nGroup.selectedIndex].value,
-					message = $.trim(nMessage.value);
-
-				if (!groupId) {
-					Site.Alert({text: "Выберите сообщество!"});
-					return false;
-				};
-
-				Site.API("wall.repost", {
-					group_id: groupId,
-					object: object,
-					message: message
-				}, function (data) {
-					data = Site.isResponse(data);
-					if (!data)
-						return;
-					Site.Alert({text: "Запись успешно скопирована на стену группы"});
-					window.location.hash = "#wall-" + groupId + "_" + data.post_id;
-				});
-
-				return false;
-			}
-		}));
-
-		Site.SetHeader("Репост записи в сообщество", {link: object});
-		Site.Append(wrap);
-	},
-
-	showCommentLikes: function (o) {
-		var e = $.e,
-			h = o.ownerId,
-			c = o.commentId,
-			a = o.count,
-			i = o.items,
-			f = o.postId,
-			w = e("div"),
-			l = e("div"),
-			o = o.offset,
-			t = a > 0
-				? "Комментарий понравился " + a + " пользовате" + $.textCase(a, ["лю", "лям", "лям"])
-				: "Комментарий никому не понравился";
-
-		Array.prototype.forEach.call(i, function (u) {
-			l.appendChild(Templates.getMiniUser(u));
-		});
-
-		w.appendChild(Site.CreateHeader(a > 0 ? t : "Оценившие комментарий"));
-		w.appendChild(l);
-		w.appendChild(Site.PagebarV2(o, a, 50))
-
-		Site.Append(w);
-		Site.SetHeader("Оценившие комментарий", {link: "wall" + h + "_" + f})
 	},
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! v6.4 оставить
 
-	CreateSelectAttachmentsMenu: function (from, allowed, form) {
+	CreateSelectAttachmentsMenu: function(from, allowed, form) {
 		var needed = {};
 		if (allowed & 2)
-			needed["Фотографию"] = function () {SelectAttachments.CreateSelector("photo", from)};
+			needed["Фотографию"] = function() {SelectAttachments.CreateSelector("photo", from)};
 		if (allowed & 4)
-			needed["Документ"] = function () {SelectAttachments.CreateSelector("doc", from)};
+			needed["Документ"] = function() {SelectAttachments.CreateSelector("doc", from)};
 		// if (allowed & 8)
-		//  needed["Видеозапись"] = function () {SelectAttachments.CreateSelector("video")};
+		//  needed["Видеозапись"] = function() {SelectAttachments.CreateSelector("video")};
 		if (allowed & 16)
-			needed["Аудиозапись"] = function () {SelectAttachments.CreateSelector("audio")};
+			needed["Аудиозапись"] = function() {SelectAttachments.CreateSelector("audio")};
 		if (allowed & 32)
-			needed["Карту"] = function () {SelectAttachments.CreateSelector("map")};
+			needed["Карту"] = function() {SelectAttachments.CreateSelector("map")};
 		if (allowed & 64)
-			needed["Опрос"] = function () {SelectAttachments.CreateSelector("poll", from)};
+			needed["Опрос"] = function() {SelectAttachments.CreateSelector("poll", from)};
 		if (allowed & 128)
-			needed["Таймер"] = function () { Wall.choosePublishDate(form); };
+			needed["Таймер"] = function() { Wall.choosePublishDate(form); };
 		var elem = Site.CreateDropDownMenu("Прикрепить", needed, {toTop: true});
 		$.elements.addClass(elem, "fr");
 		elem.style.padding = "6px 8px 7px";
 		return allowed != 0 ? elem : $.elements.create("div");
 	},
 
-	RequestWall: function (ownerId, opts) {
+	RequestWall: function(ownerId, opts) {
 		opts = opts || {};
-		var callback = function (data) {
+		var callback = function(data) {
 			console.log(data);
 			var e = $.e,
 				parent = e("div", {
@@ -207,14 +77,14 @@ var Wall = {
 				data = Site.isResponse(data) || {},
 				wall = data && data.items || [],
 				count = data.count;
-			if (data.profiles) Local.AddUsers(data.profiles);
-			if (data.groups) Local.AddUsers(data.groups);
-			parent.appendChild(Site.CreateHeader("Стена <i>" + count + " " + $.textCase(count, ["запись", "записи", "записей"]) + "<\/i>"));
+			if (data.profiles) Local.add(data.profiles);
+			if (data.groups) Local.add(data.groups);
+			parent.appendChild(Site.getPageHeader("Стена <i>" + count + " " + $.textCase(count, ["запись", "записи", "записей"]) + "<\/i>"));
 			if (opts.can_post || opts.canSuggest) {
 				var params = {
 					name: "message",
 					nohead: true,
-					onsubmit: function (event) {
+					onsubmit: function(event) {
 						event.preventDefault();
 						var text = Site.AddSlashes(this.message.value).replace(/\n/ig, "\\n").replace(/"/ig, "\\\""),
 							t = this.message,
@@ -224,7 +94,7 @@ var Wall = {
 						if (!text && !attachments) {
 							Site.Alert({
 								text: "Введите текст!",
-								click: function (event) {t.focus();}
+								click: function(event) {t.focus();}
 							});
 							return false;
 						};
@@ -256,7 +126,7 @@ var Wall = {
 						if (publishDate) {
 							q.push("publish_date:" + publishDate);
 						};
-						if (ownerId == API.uid && !(API.SettingsBitmask & 1) && !publishDate) {
+						if (ownerId == API.userId && !(API.SettingsBitmask & 1) && !publishDate) {
 							var cnf = new Modal({
 								title: "Постинг на стену",
 								content: "<strong>Внимание!</strong> Вы используете offline режим на нашем сайте, но хотите написать пост себе на стену. При написании поста себе на стену Ваш аккаунт станет онлайн на 15 минут. Вы уверены, что хотите опубликовать запись и стать онлайн? Вы можете отправить пост с таймером на 5 минут (или выбрать дату самостоятельно): в таком случае дата последнего захода не изменится и онлайн на аккаунте не появится<br \/><strong>Отправить<\/strong> &mdash; отправить сразу, будет онлайн<br \/><strong>Отложка<\/strong> &mdash; отправить отложкой, пост будет доступен только через  минут<br \/><strong>Отмена<\/strong> &mdash; не отправлять вообще",
@@ -264,7 +134,7 @@ var Wall = {
 									{
 										name: "post",
 										title: "Отправить",
-										onclick: function (event) {
+										onclick: function(event) {
 											sendPost(q, t);
 											cnf.close();
 										}
@@ -272,7 +142,7 @@ var Wall = {
 									{
 										name: "timer",
 										title: "Отложка",
-										onclick: function (event) {
+										onclick: function(event) {
 											q.push("publish_date:" + parseInt((Date.now() / 1000) + (5 * 60)));
 											sendPost(q, t);
 											cnf.close();
@@ -281,7 +151,7 @@ var Wall = {
 									{
 										name: "cancel",
 										title: "Отмена",
-										onclick: function (event) {
+										onclick: function(event) {
 											cnf.close();
 										}
 									}
@@ -294,11 +164,11 @@ var Wall = {
 					},
 					allowAttachments: 126 + 128
 				};
-				var sendPost = function (q, t) {
+				var sendPost = function(q, t) {
 
 					Site.API("execute", {
 						code:"var p=API.wall.post({" + q.join(",") + "}).post_id;return API.wall.getById({posts:\"" + ownerId + "_\"+p})[0];"
-					}, function (result) {
+					}, function(result) {
 						var data = Site.isResponse(result),
 							list = $.element("wall-list" + ownerId);
 						list.insertBefore(Wall.itemPost(data, data.to_id, data.id, {deleteBtn: true}), list.firstChild);
@@ -307,7 +177,7 @@ var Wall = {
 					SelectAttachments.RemoveSelector();
 					SelectAttachments.ClearAttachments();
 				d};
-				if (ownerId > 0 && ownerId == API.uid)
+				if (ownerId > 0 && ownerId == API.userId)
 					params.friends_only = true;
 				if (ownerId < 0 && Local.Users[ownerId] && Local.Users[ownerId].is_admin){
 					if (Local.Users[ownerId].type == "page")
@@ -331,7 +201,7 @@ var Wall = {
 			if (opts && opts.extra)
 				$.elements.append(parent, Wall.getExtraLinks(ownerId, opts.extra));
 			parent.appendChild(list);
-			parent.appendChild(Site.PagebarV2(Site.Get("offset"), count, 25));
+			parent.appendChild(Site.PagebarV2(getOffset(), count, 25));
 			return opts.data ? parent : Site.Append(parent);
 		};
 		if (opts.data)
@@ -342,7 +212,7 @@ var Wall = {
 
 	},
 
-	choosePublishDate: function (form) {
+	choosePublishDate: function(form) {
 		var dateChooser,
 			modal = new Modal({
 				width: 400,
@@ -352,7 +222,7 @@ var Wall = {
 					{
 						name: "ok",
 						title: "ОК",
-						onclick: function () {
+						onclick: function() {
 							var val = dateChooser.getValue();
 							form.publishDate.value = val;
 							$.elements.removeClass(form.timerUI, "hidden");
@@ -363,7 +233,7 @@ var Wall = {
 					{
 						name: "cancel",
 						title: "Отмена",
-						onclick: function () {
+						onclick: function() {
 							modal.close();
 						}
 					}
@@ -377,7 +247,7 @@ var Wall = {
 		};
 	},
 
-	getExtraLinks: function (ownerId, extra) {
+	getExtraLinks: function(ownerId, extra) {
 		var g = Local.Users[ownerId], d = [], e = $.e, l = Lang.get;
 //		if (ownerId > 0 || ownerId < 0 && !g.is_admin)
 //			return d;
@@ -402,22 +272,22 @@ var Wall = {
 	FILTER_SUGGESTED: "suggests",
 	FILTER_POSTPONED: "postponed",
 
-	getRequestExtraWall: function (ownerId, offset, type) {
+	getRequestExtraWall: function(ownerId, offset, type) {
 		Site.API("execute", {
 			code: "return API.wall.get({owner_id:%h,count:25,offset:%o,filter:\"%t\",extended:1,v:5.31});".schema({
 				h: ownerId,
 				o: offset,
 				t: type
 			})
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			if (!data) return;
 			return Wall.showExtraWall(ownerId, type, data, offset);
 		});
 	},
 
-	showExtraWall: function (ownerId, type, result, offset) {
-		Local.AddUsers(result.profiles.concat(result.groups));
+	showExtraWall: function(ownerId, type, result, offset) {
+		Local.add(result.profiles.concat(result.groups));
 		var e = $.e,
 			wrap = e("div"),
 			list = e("div"),
@@ -425,12 +295,12 @@ var Wall = {
 			items = result.items,
 			item = Wall.itemPost;
 		if (items.length)
-			items.forEach(function (post) {
+			items.forEach(function(post) {
 				list.appendChild(item(post, post.owner_id, post.id, {extra: true, type: type}));
 			});
 		else
 			list.appendChild(Site.EmptyField("ТУТ НИЧЕГО НЕТ"));
-		wrap.appendChild(Site.CreateHeader(Lang.get("wall.filter_" + type).replace("(%i)", "")));
+		wrap.appendChild(Site.getPageHeader(Lang.get("wall.filter_" + type).replace("(%i)", "")));
 		wrap.appendChild(list);
 		wrap.appendChild(Site.PagebarV2(offset, count, 25));
 		Site.Append(wrap);
@@ -447,8 +317,8 @@ var Wall = {
 		}).setOnCompleteListener(function(data) {
 			console.log(data);
 			Site.setCounters(data.a);
-			Local.AddUsers(data.profiles);
-			Local.AddUsers(data.groups);
+			Local.add(data.profiles);
+			Local.add(data.groups);
 
 			if (data.post && data.post.errorId) {
 				Site.append(getEmptyField("Запись недоступна"));
@@ -464,20 +334,20 @@ var Wall = {
 					canComment: post.comments && post.comments.can_post,
 					isAdmin: Local.Users[ownerId] && Local.Users[ownerId].is_admin
 				}),
-				head = Site.getPageHeader("Пост на стене", (function () {
+				head = Site.getPageHeader("Пост на стене", (function() {
 					var obj = {};
 					if (post.can_edit)
-						obj["Редактировать"] = function (event) {
+						obj["Редактировать"] = function(event) {
 							return Wall.editPost(ownerId, postId);
 						};
 
 					if (post.can_pin && post.can_delete)
-						obj[post.is_pinned ? "Открепить" : "Закрепить"] = function (event) {
+						obj[post.is_pinned ? "Открепить" : "Закрепить"] = function(event) {
 							return Wall.togglePin(post.is_pinned, ownerId, postId);
 						};
 
-					if (post.can_delete || ownerId == API.uid)
-						obj["Удалить"] = function (event) {
+					if (post.can_delete || ownerId == API.userId)
+						obj["Удалить"] = function(event) {
 							return Wall.deletePost(ownerId, postId);
 						};
 					return Site.CreateDropDownMenu(Lang.get("general.actions"), obj);
@@ -490,7 +360,7 @@ var Wall = {
 			wrap.appendChild($.e("div", {append: Wall.itemPost(post, ownerId, postId, {item: !0})}));
 			wrap.appendChild(comments);
 
-			var from = decodeURIComponent(Site.Get("from"));
+			var from = decodeURIComponent(Site.get("from"));
 
 			Site.setHeader(
 				"Запись на стене",
@@ -504,7 +374,7 @@ var Wall = {
 			Site.append(wrap);
 
 			var reply;
-			if (reply = Site.Get("reply")) {
+			if (reply = Site.get("reply")) {
 				Wall.scrollToComment(ownerId, postId, reply);
 			};
 		}).execute();
@@ -512,7 +382,7 @@ var Wall = {
 
 
 
-	itemPost: function (post, ownerId, postId, opts) {
+	itemPost: function(post, ownerId, postId, opts) {
 		opts = opts || {};
 		ownerId = post.source_id || post.owner_id || post.to_id;
 		postId = post.id || post.post_id;
@@ -562,7 +432,7 @@ var Wall = {
 		if ((opts.deleteBtn || opts.extra) && (post.can_delete || post.can_edit)) {
 			wrap.appendChild(e("div", {
 				"class": "feed-close a",
-				onclick: function (event) {
+				onclick: function(event) {
 					return Wall.deletePost(ownerId, postId);
 				}
 			}));
@@ -703,7 +573,7 @@ var Wall = {
 				{
 					"class": "fr a",
 					html: "Опубликовать сейчас",
-					onclick: function (event)
+					onclick: function(event)
 					{
 						var btn = this;
 						Site.API("wall.post",
@@ -711,7 +581,7 @@ var Wall = {
 							owner_id: ownerId,
 							post_id: postId
 						},
-						function (result)
+						function(result)
 						{
 							result = Site.isResponse(result);
 							if (!result) return;
@@ -744,13 +614,11 @@ var Wall = {
 		return parent;
 	},
 
-	getPostSource: function (data, from)
-	{
+	getPostSource: function(data, from) {
 		var e = $.e,
 			isUser = !from.name,
 			isFemale = from.sex === 1;
-		switch (data.data)
-		{
+		switch (data.data) {
 			case "profile_photo":
 				return e("span", {
 					"class": "tip",
@@ -759,31 +627,26 @@ var Wall = {
 		};
 	},
 
-	edit: function (ownerId, postId)
-	{
+	edit: function(ownerId, postId) {
 		var id = ownerId + "_" + postId;
-		if (!Wall.posts[id])
-		{
-			Site.API("execute",
-			{
-				code: "return API.wall.getById({posts:\"%i\",extended:1,v:5.29});"
-					.replace(/%i/i, id)
-			},
-			function (result)
-			{
+		if (!Wall.posts[id]) {
+			Site.API("execute", {
+				code: "return API.wall.getById({posts:Args.id,extended:1,v:5.29});",
+				id: id
+			}, function(result) {
 				result = Site.isResponse(result);
-				if (!result || result.items && !result.items.length)
-				{
+				if (!result || result.items && !result.items.length) {
 					Site.Alert({ text: "Ошибка" });
 					return;
 				};
 
-				Local.AddUsers(result.profiles.concat(result.groups));
+				Local.add(result.profiles.concat(result.groups));
 				Wall.posts[id] = result.items[0];
 				Wall.edit(ownerId, postId);
 			});
 			return;
 		};
+
 		var post = Wall.posts[id],
 			e = $.e,
 			wrap = e("div"),
@@ -797,77 +660,62 @@ var Wall = {
 			signer,
 			saver;
 
-		form.appendChild(text = e("textarea",
-		{
+		form.appendChild(text = e("textarea", {
 			name: "text",
 			html: post.text,
 			style: "height: 280px;"
 		}));
 
-		if (ownerId < 0)
-		{
-			form.appendChild(e("label",
-			{
+		if (ownerId < 0) {
+			form.appendChild(e("label", {
 				append: [
-					signer = e("input",
-					{
-						type: "checkbox",
-						name: "signer"
-					}),
-					e("span",
-					{
+					signer = e("input", { type: "checkbox", name: "signer" }),
+					e("span", {
 						html: " подпись автора " + (post.post_type === Wall.POST_TYPE_SUGGESTED ? " (" + getName(u) + ")" : "")
 					})
 				]
 			}));
-			if (post.signer_id)
+
+			if (post.signer_id) {
 				signer.checked = true;
+			}
 		};
 
-		var a = Site.CreateDropDownMenu("Прикрепить",
-		{
-			"Фотографию": function () {SelectAttachments.CreateSelector("photo", ownerId)},
-			"Документ": function () {SelectAttachments.CreateSelector("doc", ownerId)},
-			"Аудиозапись": function () {SelectAttachments.CreateSelector("audio")},
-			"Карту": function () {SelectAttachments.CreateSelector("map")},
-			"Опрос": function () {SelectAttachments.CreateSelector("poll", ownerId)}
-		},
-		{
-			toTop: true
-		});
+		var a = Site.CreateDropDownMenu("Прикрепить", {
+			"Фотографию": function() {SelectAttachments.CreateSelector("photo", ownerId)},
+			"Документ": function() {SelectAttachments.CreateSelector("doc", ownerId)},
+			"Аудиозапись": function() {SelectAttachments.CreateSelector("audio")},
+			"Карту": function() {SelectAttachments.CreateSelector("map")},
+			"Опрос": function() {SelectAttachments.CreateSelector("poll", ownerId)}
+		}, { toTop: true });
+
 		$.elements.addClass(a, "fr");
 		a.style.padding = "6px 8px 7px";
 		form.appendChild(a);
-		form.appendChild(saved = e("input",
-		{
+		form.appendChild(saved = e("input", {
 			type: "button",
 			value: Lang.get("general.save"),
-			onclick: function (event)
-			{
+			onclick: function(event) {
 				event.preventDefault();
 				submit(1, this);
 			}
 		}));
-		if (ownerId < 0 && host.is_admin)
-		{
-			form.appendChild(e("input",
-			{
+
+		if (ownerId < 0 && host.is_admin) {
+			form.appendChild(e("input", {
 				type: "button",
 				value: Lang.get("wall.publish"),
-				onclick: function (event)
-				{
+				onclick: function(event) {
 					event.preventDefault();
 					submit(2, this);
 				}
 			}));
 		};
 
-		var submit = function (type, button)
-		{
+		var submit = function(type, button) {
 			var f = {message: text.value.trim(), attachments: attachments, signed: signer.checked ? 1 : 0};
-			if (!f.message && !f.attachments)
-			{
-				Site.Alert({text: "Нельзя оставлять пустым пост!", click: function () { text.focus() }});
+			if (!f.message && !f.attachments) {
+				Site.Alert({text: "Нельзя оставлять пустым пост!", click: function() { text.focus() }});
 				return;
 			};
 
@@ -882,37 +730,36 @@ var Wall = {
 			};
 			button.value += "...";
 
-			if (post.post_type == "postpone")
+			if (post.post_type == "postpone") {
 				params.publish_date = post.date;
+			};
 
-			Site.API(["wall.edit", "wall.post"][type - 1],
-			params,
-			function (result) {
+			Site.API(["wall.edit", "wall.post"][type - 1], params, function(result) {
 				result = Site.isResponse(result);
 				button.value = oldBtn;
 				button.disabled = false;
 				if (type == 1) Site.Alert({text: "saved"});
 				if (type == 2) {
 					window.location.hash = post.post_type === Wall.POST_TYPE_SUGGESTED ? "#wall" + ownerId + "?act=suggested" : "#wall" + ownerId + "_" + result.post_id;
-				}
+				};
 			});
 			return!1;
 		};
 
-		wrap.appendChild(Site.CreateHeader("Редактирование записи"));
+		wrap.appendChild(Site.getPageHeader("Редактирование записи"));
 		wrap.appendChild(form);
 
-		Site.Append(wrap);
-		Site.SetHeader("Редактирование записи", {link: (ownerId > 0 ? "id" + ownerId : "club" + Math.abs(ownerId))});
+		Site.append(wrap);
+		Site.setHeader("Редактирование записи", {link: (ownerId > 0 ? "id" + ownerId : "club" + Math.abs(ownerId))});
 	},
 
 // што блеать это за пиздец?!
 	editPost:function(oid,pid){
-		Site.SetHeader("Редактирование записи", {fx: function () {Site.Go("wall" + oid + "_" + pid);}, link: "wall" + oid + "_" + pid});
+		Site.SetHeader("Редактирование записи", {fx: function() {Site.Go("wall" + oid + "_" + pid);}, link: "wall" + oid + "_" + pid});
 		var Parent=document.createElement("div"),
 			Form=document.createElement("form"),
 			post=Wall.Storage["wall"+oid+"_"+pid];
-		Parent.appendChild(Site.CreateHeader("Редактирование записи"));
+		Parent.appendChild(Site.getPageHeader("Редактирование записи"));
 		Form.className="sf-wrap";
 		var tip=function(l){
 			return $.elements.create("div",{"class":"tip",html:l});
@@ -923,7 +770,7 @@ var Wall = {
 			Form.appendChild(tip("Прикрепления"));
 			Form.appendChild($.elements.create("input",{type:"text",value:Wall.AttachmentToString(post.attachments),name:"attachments"}));
 		}
-		if(post.owner_id<0&&API.uid!=post.from_id){
+		if(post.owner_id<0&&API.userId!=post.from_id){
 			var opts={type:"checkbox",value:1,name:"sign"};
 			if(post.signer_id)
 				opts.checked = true;
@@ -943,7 +790,7 @@ var Wall = {
 				var textElem = this.text;
 				Site.Alert({
 					text: "Ошибка! Поля не могут быть пустыми!",
-					click: function (event) {
+					click: function(event) {
 						textElem.focus();
 					}
 				});
@@ -967,22 +814,22 @@ var Wall = {
 		return false;
 	},
 
-	togglePin: function (isPinned, ownerId, postId) {
+	togglePin: function(isPinned, ownerId, postId) {
 		Site.API(!isPinned ? "wall.pin" : "wall.unpin", {
 			owner_id: ownerId,
 			post_id: postId
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			Site.Alert({text: "Пост " + (!isPinned ? "закреплен" : "откреплен")});
 			Site.Go(window.location.hash);
 		});
 	},
 
-	restorePost: function (ownerId, postId) {
+	restorePost: function(ownerId, postId) {
 		Site.API("wall.restore", {
 			owner_id: ownerId,
 			post_id: postId
-		}, function (data) {
+		}, function(data) {
 			var e = $.element("wall-post" + ownerId + "_"+ postId);
 			$.elements.removeClass(e.firstChild, "hidden");
 			$.elements.remove($.element("wall-deleted" + ownerId + "_" + postId));
@@ -990,12 +837,12 @@ var Wall = {
 		return false;
 	},
 
-	deletePost: function (ownerId, postId) {
-		VKConfirm("Вы уверены, что хотите удалить эту запись?", function () {
+	deletePost: function(ownerId, postId) {
+		VKConfirm("Вы уверены, что хотите удалить эту запись?", function() {
 			Site.API("wall.delete", {
 				owner_id: ownerId,
 				post_id: postId
-			}, function (data) {
+			}, function(data) {
 				if (!data.response)
 					return;
 				var e = $.element("wall-post" + ownerId + "_" + postId);
@@ -1011,7 +858,7 @@ var Wall = {
 						$.e("a", {
 							href: "#wall" + ownerId + "_" + postId,
 							html: "Восстановить",
-							onclick: function (event) {
+							onclick: function(event) {
 								return Wall.restorePost(ownerId, postId);
 							}
 						})
@@ -1023,7 +870,7 @@ var Wall = {
 	},
 
 	// deprecated 10.01.2016, instead - getAttachmentIdsByObjects
-	AttachmentToString: function (a) {
+	AttachmentToString: function(a) {
 		if (!a)
 			return "";
 		for (var i = 0, b = []; i < a.length; ++i)
@@ -1051,163 +898,56 @@ var Wall = {
 	},
 
 
-	getComments: function (comments, ownerId, postId, opts) {
+	getComments: function(comments, ownerId, postId, opts) {
 
-if (API.uid == 23048942) {
-	return new Comments({
-		type: "wall",
-		ownerId: ownerId,
-		postId: postId,
-	}, comments, {
-		get: {
-			method: "wall.getComments",
-			itemField: "post_id"
-		},
-		add: {
-			method: "wall.addcomment",
-			text: "text",
-			attachments: "attachments",
-			itemField: "post_id",
-			callback: function () {
+		return new Comments({
+			type: "wall",
+			ownerId: ownerId,
+			postId: postId,
+		}, comments, {
+			get: {
+				method: "wall.getComments",
+				itemField: "post_id"
+			},
+			add: {
+				method: "wall.addcomment",
+				text: "text",
+				attachments: "attachments",
+				itemField: "post_id",
+				callback: function() {
 
-			}
-		},
-		edit: {
-			method: "wall.editComment",
-			text: "text",
-			attachments: "attachments",
-			callback: function () {
-
-			}
-		},
-		remove: {
-			method: "wall.deleteComment",
-			callback: function () {
-
-			}
-		},
-		restore: {
-			method: "wall.restoreComment",
-			callback: function () {
-
-			}
-		},
-		report: {
-			method: "wall.reportComment",
-			callback: function () {
-
-			}
-		}
-	}).getNode();
-};
-
-		opts = opts || {};
-		var e = $.e,
-			wrap = e("div"),
-			list = e("div", {id: "wall-comments" + ownerId + "_" + postId});
-		wrap.appendChild(Site.CreateHeader(comments.count ? "Комментарии <i class=count>" + comments.count + "<\/i>":"Комментариев нет"));
-		wrap.appendChild(list);
-		if (comments.count) {
-			Array.prototype.forEach.call(comments.items, function (comment) {
-				list.appendChild(Wall.ItemComment(comment, ownerId, postId, opts));
-			});
-			wrap.appendChild(Site.PagebarV2(Site.Get("offset"), comments.count, 50));
-		} else
-			list.appendChild(Site.EmptyField(opts.canComment ? "Комментариев нет" : "Автор ограничил возможность комментирования записи"));
-		if (opts && opts.canComment)
-			wrap.appendChild(Site.CreateWriteForm({
-				name: "message",
-				title: "Добавить комментарий",
-				id: "wall-comments-area" + ownerId + "_" + postId,
-				allowAttachments: 30,
-				owner_id: ownerId,
-				asAdmin: opts.isAdmin,
-				reply: true,
-				smiles: true,
-				ctrlEnter: true,
-				onsubmit: function (event) {
-					event.preventDefault();
-					var text = this.message.value.trim(),
-						fromGroup = this.as_admin ? (this.as_admin.checked ? 1 : 0) : 0,
-						attachments = this.attachments ? (this.attachments.value) : "",
-						elem = this.message,
-						reply = this.reply_cid && this.reply_cid.value || "",
-						form = this;
-					if (!text && !attachments) {
-						Site.Alert({
-							text: "Введите текст!",
-							click: function (event) {
-								elem.focus();
-							}
-						});
-						return false;
-					};
-					Site.API("wall.addComment", {
-						owner_id: ownerId,
-						post_id: postId,
-						text: text,
-						from_group: fromGroup,
-						attachments: attachments,
-						reply_to_comment: reply
-					}, function (result) {
-
-						// UI
-						form.reply_cid.value = "";
-						form.message.value = "";
-						form.attachments.value = "";
-						$.elements.clearChild($.element("im-listattachments"));
-
-						// Response
-						data = Site.isResponse(result);
-						var att = attachments.split(","),
-							cmnt = {
-								from_id: fromGroup ? ownerId : API.uid,
-								id: (data.comment_id || data.cid),
-								text: text,
-								can_edit: true,
-								can_delete: true,
-								date: Math.round(+new Date()/1000),
-								likes: {
-									count: 0,
-									user_likes: false,
-									can_like: true
-								}
-							};
-
-						if (list.children && list.children.length == 1 && $.elements.hasClass(list.firstChild, "msg-empty")) {
-							$.elements.clearChild(list);
-						};
-
-						if (attachments.length) {
-							var a = [], b, c = {
-								photo: Photos.photos,
-								video: Video.videos,
-								audio: Audios.Data,
-								doc: Docs.docs
-							};
-							cmnt.attachments = att.map(function (i) {
-								if (!i) return;
-								b = /(photo|video|audio|doc)(-?\d+_\d+)/img.exec(i);
-								i = {type: b[1]};
-								i[b[1]] = c[b[1]][b[2]];
-								return i;
-							});
-						}
-
-						if (reply) {
-							cmnt.reply_to_comment = reply;
-							cmnt.reply_to_user = Wall.comments[ownerId + "_" + reply].from_id;
-						};
-						list.appendChild(Wall.ItemComment(cmnt, ownerId, postId, {}));
-
-					})
-					return false;
 				}
-			}, ownerId, postId));
-		return wrap;
+			},
+			edit: {
+				method: "wall.editComment",
+				text: "text",
+				attachments: "attachments",
+				callback: function() {
+
+				}
+			},
+			remove: {
+				method: "wall.deleteComment",
+				callback: function() {
+
+				}
+			},
+			restore: {
+				method: "wall.restoreComment",
+				callback: function() {
+
+				}
+			},
+			report: {
+				method: "wall.reportComment",
+				callback: function() {
+
+				}
+			}
+		}).getNode();
 	},
 	comments:{},
-	scrollToComment: function (ownerId, postId, commentId) {
+	scrollToComment: function(ownerId, postId, commentId) {
 		var id = "wall-comment" + ownerId + "_" + postId + "_" + commentId,
 			node = $.element(id),
 			scroll,
@@ -1223,7 +963,7 @@ if (API.uid == 23048942) {
 	},
 
 	// deprecated 10.01.2016
-	ItemComment: function (comment, ownerId, postId, opts) {
+	ItemComment: function(comment, ownerId, postId, opts) {
 		ownerId = +ownerId;
 		var e = $.e,
 			commentId = comment.id,
@@ -1238,7 +978,7 @@ if (API.uid == 23048942) {
 			reply = Local.Users[replyId] || {},
 
 			canEdit = comment.can_edit,
-			canDelete = canEdit || ownerId === API.uid || fromId === API.uid || (Local.Users[ownerId] && Local.Users[ownerId].is_admin) || (Local.Users[fromId] && Local.Users[fromId].is_admin);
+			canDelete = canEdit || ownerId === API.userId || fromId === API.userId || (Local.Users[ownerId] && Local.Users[ownerId].is_admin) || (Local.Users[fromId] && Local.Users[fromId].is_admin);
 			wrap = e("div", {
 				id: "wall-comment" + ownerId + "_" + postId + "_" + commentId,
 				"class": "comments"
@@ -1290,7 +1030,7 @@ if (API.uid == 23048942) {
 										e("a",{
 											href: "#wall" + ownerId + "_" + postId + "?reply=" + commentId,
 											html: "Ответить",
-											onclick: function (event) {
+											onclick: function(event) {
 												$.event.cancel(event);
 												return Wall.reply(ownerId, postId, commentId, fromId);
 											}
@@ -1305,7 +1045,7 @@ if (API.uid == 23048942) {
 											? e("span",{
 												"class": "a",
 												html: "Редактировать",
-												onclick: function (event) {
+												onclick: function(event) {
 													return Wall.editComment(ownerId, comment);
 												}})
 											: null,
@@ -1314,7 +1054,7 @@ if (API.uid == 23048942) {
 											? e("span",{
 												"class": "a",
 												html: "Удалить",
-												onclick: function (event) {
+												onclick: function(event) {
 													return Wall.deleteComment(ownerId, postId, commentId);
 												}})
 											: null
@@ -1337,7 +1077,7 @@ if (API.uid == 23048942) {
 		}));
 		return wrap;
 	},
-	reply: function (ownerId, postId, commentId, toId){
+	reply: function(ownerId, postId, commentId, toId){
 		var area = $.element("wall-comments-area" + ownerId + "_" + postId),
 			to = Local.Users[toId],
 			reply = $.element("wall-comments-reply" + ownerId + "_" + postId),
@@ -1355,7 +1095,7 @@ if (API.uid == 23048942) {
 		$.elements.clearChild(replyUI);
 		replyUI.appendChild(e("div", {append: [
 			e("a", {href: "#" + to.screen_name, html: (to.name || to.first_name_dat + " " + to.last_name_dat)}),
-			e("div", {"class": "feed-close a", onclick: function (event) {
+			e("div", {"class": "feed-close a", onclick: function(event) {
 				area.value = area.value.replace(new RegExp("^\[" + to.screen_name + "|" + (to.name || to.first_name) + "\], " ,"img"), "");
 				reply.value = "";
 				$.elements.clearChild(replyUI);
@@ -1364,7 +1104,7 @@ if (API.uid == 23048942) {
 	},
 
 	// deprecated 10.01.2016
-	editComment: function (ownerId, comment) {
+	editComment: function(ownerId, comment) {
 		var textNode = $.element("wall-cmt" + ownerId + "_" + comment.id);
 		textNode.innerHTML = "";
 		textNode.appendChild(Site.CreateWriteForm({
@@ -1373,7 +1113,7 @@ if (API.uid == 23048942) {
 			ctrlEnter: true,
 			name: "text",
 			value: comment.text,
-			onsubmit: function (event) {
+			onsubmit: function(event) {
 				var text = this.text && $.trim(this.text.value);
 				if (!text) {
 					Site.Alert({text: "Введите текст!"});
@@ -1384,7 +1124,7 @@ if (API.uid == 23048942) {
 					comment_id: comment.id,
 					message: text,
 					attachments: Wall.AttachmentToString(comment.attachments)
-				}, function (data) {
+				}, function(data) {
 					data = Site.isResponse(data);
 					if (!data)
 						return;
@@ -1401,7 +1141,7 @@ if (API.uid == 23048942) {
 		Site.API("wall.restoreComment",{
 			owner_id: ownerId,
 			comment_id: commentId
-		}, function (data) {
+		}, function(data) {
 			if (data.response) {
 				var elem = $.element("wall-comment" + ownerId + "_" + postId + "_" + commentId);
 				$.elements.removeClass(elem.querySelector(".wall-in"), "hidden");
@@ -1412,11 +1152,11 @@ if (API.uid == 23048942) {
 	},
 
 	// deprecated 10.01.2016
-	deleteComment: function (ownerId, postId, commentId) {
+	deleteComment: function(ownerId, postId, commentId) {
 		Site.API("wall.deleteComment",{
 			owner_id: ownerId,
 			comment_id: commentId
-		}, function (data) {
+		}, function(data) {
 			data = Site.isResponse(data);
 			if(data === 1){
 				var elem = $.element("wall-comment" + ownerId + "_" + postId + "_" + commentId);
@@ -1430,7 +1170,7 @@ if (API.uid == 23048942) {
 						}),
 						$.e("a", {
 							html: "Восстановить",
-							onclick: function (event) {
+							onclick: function(event) {
 								return Wall.restoreComment(ownerId, postId, commentId);
 							}
 						})
@@ -1441,114 +1181,7 @@ if (API.uid == 23048942) {
 		return false;
 	},
 
-	// deprecated 10.01.2016
-	ListLikes:function(oid,pid,params){
-		params=(""+params||"00").split("");
-		var filter=parseInt(params[0]),
-			friends_only=parseInt(params[1])?1:0;
-		Site.API("likes.getList",{
-			type:"post",
-			owner_id:oid,
-			item_id:pid,
-			filter:["likes","copies"][filter],
-			friends_only:friends_only,
-			offset:Site.Get("offset"),
-			count:50,
-			extended:1,
-			fields:"photo_rec,online,screen_name",
-			name_case:"dat"
-		},function(data){
-			data=Site.isResponse(data);
-			var Parent=document.createElement("div"),
-				List=document.createElement("div"),
-				Users=data.items,
-				Count=data.count;
-			Parent.appendChild(
-				Site.CreateHeader(
-					Count>0?"Понравилось "+Count+" "+$.TextCase(Count,!friends_only?["пользователю","пользователям","пользователям"]:["другу","друзьям","друзьям"]):"Никому не понравилось",
-					$.elements.create("a",{
-						href:"#wall"+oid+"_"+pid,
-						html:"Назад к посту",
-						"class":"fr"
-					})
-				)
-			);
-			var onchange=function(event){
-				window.location.hash="#wall"+oid+"_"+pid+"?act=likes&params="+parseInt(((""+params||"00").split(""))[0])+(this.checked?1:0);
-			};
-			Parent.appendChild(Site.CreateTabPanel([
-				["wall"+oid+"_"+pid+"?act=likes&params=0"+friends_only,"Мне нравится"],
-				["wall"+oid+"_"+pid+"?act=reposts", "Репосты"]
-			]));
-			var Form=document.createElement("form");
-			Form.className="sf-wrap";
-			var opts={type:"checkbox",name:"friends_only",onchange:onchange};
-			if(friends_only)
-				opts.checked=true;
-			Form.appendChild($.elements.create("label",{
-				append:[
-					$.elements.create("input",opts),
-					$.elements.create("span",{html:" показать только друзей"})
-				]
-			}))
-			Parent.appendChild(Form);
-			if(Users.length>0)
-				for(var i=0;i<Users.length;++i){
-					var profile=Users[i].type=="profile";
-					List.appendChild($.elements.create("a",{
-						"class":"miniprofiles-item",
-						href:"#"+Users[i].screen_name,
-						append:[
-							$.elements.create("img",{
-								src:getURL(profile?Users[i].photo_rec:Users[i].photo),
-								"class":"miniprofiles-left"
-							}),
-							$.elements.create("div",{
-								html:profile?Users[i].first_name+" "+Users[i].last_name+" "+Site.isOnline(Users[i]):Users[i].name,
-								"class":"miniprofiles-right"
-							})
-						]
-					}));
-				}
-			else
-				List.appendChild($.elements.create("div",{
-					"class":"msg-empty",
-					html:
-					[["Эта запись никому не понравилась. Пока что..","Эта запись ни одному из Ваших друзей не понравилась"][friends_only],
-					["Этой записью еще никто не поделился","Ни один из Ваших друзей не поделился этой записью"][friends_only]] [filter]
-				}))
-			Parent.appendChild(List);
-			Parent.appendChild(Site.PagebarV2(Site.Get("offset"),Count,50));
-			Site.Append(Parent);
-			Site.SetHeader("Оценили", {link: "wall" + oid + "_" + pid})
-		})
-	},
-	getReposts: function (ownerId, postId, offset) {
-		Site.APIv5("wall.getReposts", {
-			owner_id: ownerId,
-			post_id: postId,
-			count: 50,
-			offset: offset,
-			v: 5.0
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div");
-			parent.appendChild(Site.CreateTabPanel([
-				["wall" + ownerId + "_" + postId + "?act=likes&params=00", "Мне нравится"],
-				["wall" + ownerId + "_" + postId + "?act=reposts", "Репосты"]
-			]));
-			var items = data.items,
-				users = Local.AddUsers(data.profiles.concat(data.groups));
-			parent.appendChild(Site.CreateHeader("Репосты"));
-			for (var i = 0, l = items.length; i < l; ++i)
-				parent.appendChild(Wall.itemPost(items[i], items[i].owner_id, items[i].id, {}));
-			// пагинация не работает, ибо не возвращается count: 03/05/2015
-			//parent.appendChild(Site.PagebarV2(offset, count, 20));
-			Site.Append(parent);
-			Site.SetHeader("Список репостов", {link: "wall" + ownerId + "_" + postId});
-		})
-	},
-	GeoAttachment: function (geo, needmap) {
+	GeoAttachment: function(geo, needmap) {
 		var coord = geo.coordinates.split(" "),
 			parent = document.createElement("div"),
 			map = document.createElement("div"),
@@ -1581,7 +1214,7 @@ if (API.uid == 23048942) {
 		}));
 		return parent;
 	},
-	getAttachment: function (post) {
+	getAttachment: function(post) {
 		post = post || {};
 		return $.e("a", {
 			href: "#wall" + (post.owner_id || post.source_id || post.to_id) + "_" + (post.id || post.pid) + "?from=" + window.location.hash,
@@ -1592,7 +1225,7 @@ if (API.uid == 23048942) {
 			]
 		});
 	},
-	getAttachmentReply: function (ownerId, postId, commentId) {
+	getAttachmentReply: function(ownerId, postId, commentId) {
 		return $.e("a", {
 			href: "#wall" + ownerId + "_" + postId + "?reply=" + commentId + "&from=" + window.location.hash,
 			"class": "attachments-post",
@@ -1602,7 +1235,7 @@ if (API.uid == 23048942) {
 			]
 		});
 	},
-	getMessageAttachment: function (post) {
+	getMessageAttachment: function(post) {
 		var post = Wall.itemPost(post, post.owner_id, post.id, {message: true});
 		return post;
 	}
