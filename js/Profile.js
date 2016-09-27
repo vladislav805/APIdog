@@ -1,7 +1,10 @@
 /**
  * APIdog v6.5
  *
- * upd: -1
+ * TODO
+ * 		1. rename field can_post taken wall-module
+ * 		2. work with adding/removing friends in Profile.getDisplayActions()
+ * 		3. rewrite method `getRelationship` and `ShowFullInfo`
  */
 
 var Profile = {
@@ -27,22 +30,6 @@ var Profile = {
 				return Groups.Stat.Request(screenName);
 
 			// deprecated
-			case "followers":
-				return Profile.Followers(screenName);
-
-			// deprecated
-			case "subscriptions":
-				return Profile.Subscriptions(screenName, (Site.Get("type") ? 1 : 0));
-
-			// deprecated
-			case "links":
-				return Groups.ShowLinks(screenName);
-
-			// deprecated
-			case "contacts":
-				return Groups.ShowContacts(screenName);
-
-			// deprecated
 			case "photo":
 				var group = Local.getUserByDomain(screenName);
 				if (!group || group && !group.is_admin)
@@ -56,7 +43,11 @@ var Profile = {
 		}
 	},
 
-
+	/**
+	 * Вывод на экран страницы пользователя
+	 * @param  {Object} user Объект пользователя
+	 * @param  {Object} wall Данные стены
+	 */
 	display: function (user, wall) {
 		var e = $.e,
 			wrap = e("div", {"class": "profile"}),
@@ -308,6 +299,10 @@ var Profile = {
 		Site.append(wrap);
 	},
 
+	/**
+	 * Возвращает поля для создания дропдаун меню
+	 * @param  {Object} user Объект пользователя
+	 */
 	getDisplayActions: function(user) {
 		var result = {}, isActive = !user.deactivated, status = user.friend_status;
 
@@ -423,6 +418,11 @@ var Profile = {
 		return result;
 	},
 
+	/**
+	 * Делает запрос на добавление в ЧС или удаление из ЧС
+	 * @param  {Object}   user     Объект пользователя
+	 * @param  {Function} callback Пользовательский колбэк
+	 */
 	toggleBlock: function(user, callback) {
 		var toBlock = !user.blacklisted_by_me;
 		new APIRequest(toBlock ? "account.banUser" : "account.unbanUser", {
@@ -439,6 +439,11 @@ var Profile = {
 		}).execute();
 	},
 
+	/**
+	 * Делает запрос на добавление в закладки или удаление из закладок
+	 * @param  {Object}   user     Объект пользователя
+	 * @param  {Function} callback Пользовательский колбэк
+	 */
 	toggleFavorite: function(user, callback) {
 		var toFavorite = !user.is_favorite;
 		new APIRequest(toFavorite ? "fave.addUser" : "fave.removeUser", {
@@ -484,6 +489,10 @@ var Profile = {
 			  });
 	},
 
+	/**
+	 * Заменяет поле со статусом на текстовое поле
+	 * Context: DOMNode
+	 */
 	editStatus: function(){
 		if (this.dataset.opened === "opened") {
 			return;
@@ -557,6 +566,7 @@ var Profile = {
 		]});
 
 	},
+
 	ShowFullInfo:function(screen_name){
 		Site.API("execute",{
 			code:'var user=API.users.get({user_ids:"' + screen_name + '",fields:"photo_rec,online,last_seen,timezone,contacts,sex,rate,connections,activities,interests,movies,tv,books,games,about,quotes,music,schools,relatives,relation,education,screen_name,city,country,status,personal,home_town,first_name_gen,site,maiden_name",v:5.8})[0];var u=user.relatives@.id;if(user.relation_partner)u.push(user.relation_partner.id);return [user,API.users.get({user_ids:u,fields:"sex,online,screen_name,first_name_ins,last_name_ins,first_name_acc,last_name_acc,first_name_abl,last_name_abl"})];'
@@ -777,14 +787,6 @@ var Profile = {
 		});
 	},
 
-	// fallback
-	FindIDByScreenName:function(a,c){c=Local.Users;if(/^(id|club)\d+$/img.test(a)){return(/^(id|club)(\d+)$/img.exec(a))[2];}else{for(var b in c){if(c[b].a == a){return(c[b].userId || -c[b].gid || (c[b].name ? -c[b].id : c[b].id))}}};return 0;},
-
-	// fallback
-	ItemListProfile: function (user) {
-		return Templates.getMiniUser(user);
-	},
-
 	/**
 	 * Открывает модальное окно, загружает и выводит информацию о подписчиках юзера screenName
 	 * @param  {String} screenName Скрин нейм пользователя
@@ -965,7 +967,10 @@ var Profile = {
 		}).execute();
 	},
 
-
+	/**
+	 * Открывает модальное окно жалобы
+	 * @param  {int} userId Пользователь, на которого жалуемся
+	 */
 	showReportWindow: function(userId) {
 		new ReportWindow("users.report", 0, "userId", userId, null, true).show();
 	}
