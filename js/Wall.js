@@ -360,13 +360,13 @@ var Wall = {
 			wrap.appendChild($.e("div", {append: Wall.itemPost(post, ownerId, postId, {item: !0})}));
 			wrap.appendChild(comments);
 
-			var from = decodeURIComponent(Site.get("from"));
+			var from = Site.get("from");
 
+			from = from && decodeURIComponent(from) || from;
+console.log(from)
 			Site.setHeader(
 				"Запись на стене",
-				from != "0"
-					? from
-					: ownerId in Local.Users
+				from || ownerId in Local.Users && Local.Users[ownerId].screen_name
 						? Local.Users[ownerId].screen_name
 						: (ownerId > 0 ? "id" + ownerId : "club" + (-ownerId))
 			);
