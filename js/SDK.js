@@ -4319,11 +4319,12 @@ function Modal(o) {
 Modal.prototype = {
 
 	_construct: function() {
+		var modal = this;
 		this.modal = $.e("div", {"class": "modal modal-animation"});
 		this.title = $.e("h1", {"class": "modal-title"});
 		this.body = $.e("div", {"class": "modal-content"});
 		this.footer = $.e("div", {"class": "modal-footer"});
-		this.block = $.e("div", {"class": "modal-block", onclick: this._options.uncloseableByBlock ? null : function() { self.close() }});
+		this.block = $.e("div", {"class": "modal-block", onclick: !this._options.uncloseableByBlock ? function() { modal.close() } : null});
 		this.wrap = $.e("div", {"class": "modal-wrap"});
 
 		this.modal.appendChild(this.title);
