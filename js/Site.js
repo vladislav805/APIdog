@@ -107,7 +107,7 @@ var Site = {
 		"friends,messages,photos,videos,groups,notifications".split(",").forEach(function (name) {
 			var value = data[name];
 			if (value > 0) {
-				g("menu-" + name).setAttribute("data-count", value);
+				g("menu-" + name).setAttribute("data-count", parseInt(value).toK());
 			} else {
 				g("menu-" + name).removeAttribute("data-count");
 			};
@@ -116,7 +116,7 @@ var Site = {
 	},
 
 	setMailCounter: function(count) {
-		g("menu-messages").setAttribute("data-count", count);
+		g("menu-messages").setAttribute("data-count", parseInt(count).toK());
 		Site.counters.messages = count;
 	},
 
