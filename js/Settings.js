@@ -946,7 +946,12 @@ var Settings = {
 
 			new APIRequest("account.saveProfileInfo", params).setOnCompleteListener(function (data) {
 				if (data.changed) {
-					new Snackbar({text: Lang.get("settings.saved")}).show();
+					data = data.response;
+					if (!data.name_request) {
+						new Snackbar({text: Lang.get("settings.saved")}).show();
+					} else {
+						new Snackbar({text: "ВКонтакте вернул ошибку (status=" + data.status + "): " + data.lang, duration: 10000}).show();
+					}
 				} else {
 					Site.Alert({text: "Что-то пошло не так..\nОтвет от API:\n\n" + JSON.stringify(data)});
 				};
