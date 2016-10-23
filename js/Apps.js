@@ -5,14 +5,6 @@
  * Branch: release
  */
 
-var _initqueue = [];
-
-function onInited (fx) {
-	fx && _initqueue.push(fx) || (function(a,b,c){for (b=-1,c=a.length;++b<c;){a[b]()}})(_initqueue);
-};
-
-
-
 var Apps = {
 	RequestPage: function() {
 		switch (getAct()) {

@@ -1,0 +1,31 @@
+/* --- pages --- */
+
+.pages-history-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.pages-history-table td {
+	border-collapse: collapse;
+	border: 1px solid rgb(204, 204, 204);
+	padding: 4px 6px;
+}
+
+.page-edit-access {
+	border: 2px solid rgb(223, 223, 223);
+	margin: 10px;
+	background: rgb(234, 236, 240);
+	padding-top: 0;
+}
+
+.pages-edit-access-tip {
+	line-height: 28px;
+}
+
+.pages-footer {
+	padding: 10px 16px;
+}
+
+.pages-footer-item {
+	line-height: 20px;
+}

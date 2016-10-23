@@ -1,0 +1,220 @@
+.attacher-typeList-item {
+	line-height: 32px;
+	padding: 0 12px;
+	cursor: pointer;
+}
+
+.attacher-list-albums {
+	padding-top: 4px;
+	margin: 0 4px;
+}
+
+.attacher-album-item,
+.attacher-photo-item {
+	display: inline-block;
+	width: 25%;
+	height: 120px;
+	cursor: pointer;
+	position: relative;
+}
+
+.attacher-album-title {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	color: rgba(255, 255, 255, 1);
+	padding: 30px 8px 8px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	background: -webkit-linear-gradient(to bottom, transparent, rgba(0, 0, 0, .6));
+	background: -moz-linear-gradient(to bottom, transparent, rgba(0, 0, 0, .6));
+	background: -ms-linear-gradient(to bottom, transparent, rgba(0, 0, 0, .6));
+	background: -o-linear-gradient(to bottom, transparent, rgba(0, 0, 0, .6));
+	background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .6));
+}
+
+.attacher-photo-item {
+	overflow: hidden;
+	margin: 5px 0;
+}
+
+.attacher-photo-item img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	max-width: 90%;
+	margin: auto;
+}
+
+.attacher-photo-checkbox {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0,0,.5);
+    border-radius: 40px;
+    transition: all ease-in-out .2s;
+}
+
+.attacher-photo-checkbox::before,
+.attacher-photo-checkbox::after {
+	content: "";
+	display: block;
+	width: 12px;
+	height: 4px;
+	background: rgba(255, 255, 255, .4);
+	transform: translate(8px, 19px) rotate(45deg);
+}
+
+.attacher-photo-checkbox::after {
+	transform: translate(15px, 14px) rotate(-45deg);
+	width: 20px;
+}
+
+.attacher-photo-checkbox-checked {
+	background: rgba(0, 0, 0, .9);
+}
+
+.attacher-photo-checkbox-checked::before,
+.attacher-photo-checkbox-checked::after {
+	background: rgba(255, 255, 255, .95);
+}
+
+.attacher-list-documents .doc-actions {
+	display: none !important;
+}
+
+
+.attacher-formfile-wrap {
+	position: relative;
+	height: 280px;
+	padding: 20px;
+}
+
+.attacher-formfile-label {
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: flex;
+	-webkit-justify-content: center;
+	-ms-justify-content: center;
+	justify-content: center;
+	-webkit-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+}
+
+.attacher-formfile-field {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+@media screen and (max-width: 512px) {
+	.attacher-album-item,
+	.attacher-photo-item {
+		width: 33.3333%;
+		height: 90px;
+	}
+}
+
+.attacher-button-wrap {
+	position: relative;
+}
+
+.attacher-typeList {
+	position: absolute;
+	top: 30px;
+	background: rgba(255, 255, 255, 1);
+	border-radius: 2px;
+	left: 0;
+	z-index: 200;
+	box-shadow: 0 0 2px rgba(0, 0, 0, .4);
+	display: none;
+}
+
+.attacher-typeList-opened {
+	display: block;
+	-webkit-animation: attacherTypeListOpen .1s ease-out;
+	-o-animation: attacherTypeListOpen .1s ease-out;
+	animation: attacherTypeListOpen .1s ease-out;
+}
+
+@-webkit-keyframes attacherTypeListOpen {
+	from {
+		opacity: 0;
+		-webkit-transform: translateY(10px);
+		-ms-transform: translateY(10px);
+		-o-transform: translateY(10px);
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		-webkit-transform: translateY(0);
+		-ms-transform: translateY(0);
+		-o-transform: translateY(0);
+		transform: translateY(0);
+	}
+}
+@-o-keyframes attacherTypeListOpen {
+	from {
+		opacity: 0;
+		-webkit-transform: translateY(10px);
+		-ms-transform: translateY(10px);
+		-o-transform: translateY(10px);
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		-webkit-transform: translateY(0);
+		-ms-transform: translateY(0);
+		-o-transform: translateY(0);
+		transform: translateY(0);
+	}
+}
+@-moz-keyframes attacherTypeListOpen {
+	from {
+		opacity: 0;
+		-webkit-transform: translateY(10px);
+		-ms-transform: translateY(10px);
+		-o-transform: translateY(10px);
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		-webkit-transform: translateY(0);
+		-ms-transform: translateY(0);
+		-o-transform: translateY(0);
+		transform: translateY(0);
+	}
+}
+@keyframes attacherTypeListOpen {
+	from {
+		opacity: 0;
+		-webkit-transform: translateY(10px);
+		-ms-transform: translateY(10px);
+		-o-transform: translateY(10px);
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		-webkit-transform: translateY(0);
+		-ms-transform: translateY(0);
+		-o-transform: translateY(0);
+		transform: translateY(0);
+	}
+}

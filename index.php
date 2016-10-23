@@ -48,8 +48,8 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="application-name" content="APIdog" />
 		<meta name="msapplication-tooltip" content="Неофициальный клиент ВКонтакте offline" />
-
-		<link rel="stylesheet" href="css/default.css" />
+		<!--link rel="stylesheet" href="css/default.css" /-->
+		<link rel="stylesheet" href="css/Base.css" />
 		<link rel="yandex-tableau-widget" href="manifest.json?7" />
 		<link rel="icon" href="favicon.png?1" />
 		<link rel="shortcut icon" href="favicon.png?1" />
@@ -71,7 +71,7 @@
 				<div class="loadScreen-label">v6.5 alpha</div>
 				<div class="loadScreen-animation"></div>
 				<div class="loadScreen-title">Loading...</div>
-				<div class="loadScreen-away"><a href="/migrate.php">switch 6.4</a></div>
+				<div class="loadScreen-away"><a href="/migrate.php" style="color: white; text-align: center">switch 6.4</a></div>
 			</div>
 			<div class="loadScreen-footer">
 				<p>APIdog v6.5 &copy; 2012&ndash;2016</p>
@@ -192,13 +192,11 @@
 				</section>
 			</div>
 		</div>
-		<script src="lib/lib1.3.0.js"></script>
-		<script src="lib/hammer.js"></script>
-		<script src="lib/assembler.php"></script>
+		<pre style="position: fixed; bottom: 0; right: 0; background: rgba(255, 255, 255, .5); pointer-events: none; padding: 1px 5px; line-height: 20px; font-size: 9px; z-index: 10000000" id="module-log"></pre>
+		<script src="js/Base.js"></script>
 		<noscript>
 			<img src="//mc.yandex.ru/watch/19029880" style="position:absolute; left:-9999px;" alt="" />
 		</noscript>
-		<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-73434682-1', 'auto');</script>
 	</body>
 </html><!-- APIdog Corp. --><!-- Have fun since 8 august 2012 until now! -->
 

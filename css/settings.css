@@ -1,0 +1,85 @@
+/* --- settings --- */
+
+.settings label {
+	display: block;
+	padding: 7px 12px;
+}
+
+.settings label:first-child {
+	padding-top: 0;
+}
+
+.settings label input[type=checkbox] {
+	vertical-align: middle;
+}
+
+.settings input[type=button] {
+	margin: 6px 0 9px 12px;
+}
+
+.settings-activitytable{
+	border:1px;
+	border-collapse:collapse;
+	border-spacing:0;
+	width:100%;
+}
+
+.settings-activitytable td{
+	border:1px solid black;
+	padding:3px 6px;
+}
+
+/* edit profile info */
+.settings-photo {
+	padding: 6px 16px;
+	overflow: hidden;
+}
+
+.settings-photo-left {
+	float: left;
+	width: 140px;
+	overflow: hidden;
+}
+
+.settings-photo-left img {
+	max-width: 100%;
+}
+
+.settings-photo-right {
+	margin-left: 156px;
+}
+
+.settings-photo-line {
+	border: 1px solid rgb(95, 127, 186);
+	height: 15px;
+}
+
+.settings-photo-line-loaded {
+	background: rgb(95, 127, 186);
+	height: 100%;
+	display: inline-block;
+}
+
+.settings-photo-warning {
+	margin: 4px 0;
+}
+
+/* --- smiles --- */
+
+.settings-smile {
+	display: inline-block;
+	padding: 5px;
+	opacity: .3;
+	cursor: pointer;
+	transition: opacity .1s ease-in-out;
+}
+
+.settings-smile-active,
+.settings-smile:hover {
+	opacity: 1;
+}
+
+.settings-smile img {
+	width: 24px;
+	height: 24px;
+}

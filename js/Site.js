@@ -157,7 +157,7 @@ var Site = {
 	getStickerAttachment: function (sticker) {
 		return $.e("img", {
 			style: "margin: 4px 0",
-			src: (isEnabled(4) ? "\/\/static.apidog.ru\/proxed\/stickers\/%sb.png" : IM.STICKERS_SCHEMA_IMAGE).schema({s: sticker.id}),
+			src: (isEnabled(4) ? "\/\/static.apidog.ru\/proxed\/stickers\/%sb.png" : STICKERS_SCHEMA_IMAGE).schema({s: sticker.id}),
 			alt: "Стикер"
 		});
 	},
@@ -209,7 +209,6 @@ var Site = {
 			Friends:    /^friends?$/ig,
 			Feed:       /^feed$/ig,
 			Wall:       /^wall(-?\d+)?(_\d+)?$/ig,
-			Poll:       /^poll(-?\d+)_(\d+)$/ig,
 			Photos:     /^((photos(-?\d+)?(_-?\d+)?)|(photo(-?\d+)_(\d+)))$/ig,
 			Video:      /^((videos(-?\d+)?(_-?\d+)?)|(video(-?\d+)_(\d+)))$/ig,
 			Audios:     /^audios?(-?\d+)?(_(\d+))?$/ig,
@@ -225,23 +224,43 @@ var Site = {
 			Notes:      /^(notes(\d+)?|note(\d+)_(\d+))$/ig,
 			Pages:      /^(pages|page(-?\d+)_(\d+))$/ig,
 			Apps:       /^apps$/ig,
-			Questions:  /^questions$/ig,
 			Snapster:	/^chronicle$/ig,
-			Offers:     /^offers$/ig,
 			Polls:      /^poll(-?\d+)_(\d+)$/ig,
 			Dev:		/^dev(\/([A-Za-z0-9\._]+))?$/ig,
-			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig,
-			Blog:		/^blog$/ig
+			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig
+		};
+
+		var modulesAssoc = {
+			Friends: "friends",
+			Feed: "feed",
+			Wall: "wall",
+			Photos: "photos",
+			Video: "video",
+			Audios: "audio",
+			Groups: "groups",
+			Docs: "documents",
+			Search: "search",
+			Settings: "settings",
+			Board: "board",
+			Fave: "fave",
+			Gifts: "gifts",
+			Places: "places",
+			Notes: "notes",
+			Pages: "pages",
+			Apps: "apps",
+			Snapster: "snapster",
+			Polls: "polls",
+			Dev: "vkutils"
+			//Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig,
 		};
 
 		if (/^([^\/]+)\/([^\?]+)/img.test(url)) {
 			var r = /^([^\/]+)\/([^\?]+)/img.exec(url);
 			switch (r[1]) {
 				case "dev": return Dev.explain(r[2]);
-				case "stickers": return Settings.store.getItem(r[2]);
-				case "analyzes": return Analyzes.open.apply(window, r[2].split("/"));
+//				case "stickers": return Settings.store.getItem(r[2]);
+//				case "analyzes": return Analyzes.open.apply(window, r[2].split("/"));
 				case "images": return window.location.href = "//vk.com/" + url;
-				case "support": return Support.open(url);
 				default: return Feed.searchByOwner(r[1], r[2], Site.Get("offset"));
 			};
 		};
@@ -265,44 +284,45 @@ var Site = {
 				.replace(/^public(\d+)$/ig, "club$1")
 				.replace(/^album(-?\d+)_(-?\d+)$/ig, "photos$1_$2")
 				.replace(/^write(\d+)$/img, "im?to=$1");
-		Audios.MiniPlayer.Hide();
+//		Audios.MiniPlayer.Hide();
 		$.elements.removeClass($.element("wrap"), "menu-opened");
-		if (reg.Poll.test(url)) {
+		if (reg.Polls.test(url)) {
 			var poll = reg.Polls.exec(url), answerId = Site.Get("answerId");
-			return !answerId ? Polls.getPoll(poll[1], poll[2]) : Polls.getList(poll[1], poll[2], answerId);
+			return ModuleManager.load("polls", function() {!answerId ? Polls.getPoll(poll[1], poll[2]) : Polls.getList(poll[1], poll[2], answerId)})
 		}
+
 		if (reg.Photos.test(url))
-			return Photos.Resolve(url);
+			return ModuleManager.load("photos", function() {Photos.Resolve(url);});
 		if (reg.Video.test(url))
-			return Video.Resolve(url);
+			return ModuleManager.load("video", function() {Video.Resolve(url)});
 		if (reg.Audios.test(url))
-			return Audios.Resolve(url);
+			return ModuleManager.load("audio", function() {Audios.Resolve(url)});
 		if (reg.Wall.test(url))
-			return Wall.Resolve(url);
+			return ModuleManager.load("wall", function() {Wall.Resolve(url);});
 		if (reg.Places.test(url))
-			return Places.explain(url);
+			return ModuleManager.load("places", function() {Places.explain(url);});
 		if (reg.Friends.test(url))
-			return Friends.explain(Site.Get("id"));
+			return ModuleManager.load("friends", function() {Friends.explain(Site.Get("id"));});
 		if ((/^mail$/ig.test(url) || /^im$/ig.test(url)))
-			return IM.Resolve(url);
+			return ModuleManager.load(["mail", "im"], function() {IM.Resolve(url)});
 		if (reg.Pages.test(url))
-			return Pages.explain(url);
+			return ModuleManager.load("pages", function() {Pages.explain(url);});
 		if (reg.Docs.test(url))
-			return Docs.explain(url);
-		if (reg.Analyzes.test(url))
-			return Analyzes.open();
-		if (reg.Support.test(url))
-			return Support.open(url);
+			return ModuleManager.load("documents", function() {Docs.explain(url);});
 		for (var current in reg) {
 			if (reg[current].test(url)) {
 				var id = url.replace(new RegExp(current, "igm"), "");
 				if (!id)
 					id = API.uid;
-				window[current].RequestPage(id);
+				ModuleManager.load(modulesAssoc[current], function() {console.log("callback!"); window[current].RequestPage(id);});
 				return;
 			}
 		}
-		return Site.requestPageByScreenName(url);
+		ModuleManager.load(["profiles", "groups", "apps"], function() {
+			console.log(123);
+			Site.requestPageByScreenName(url);
+		});
+		return;
 	},
 
 	requestPageByScreenName: function(screenName) {

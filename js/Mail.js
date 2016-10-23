@@ -61,10 +61,7 @@ function VKMessage (m) {
 	};
 };
 
-var APIDOG_DIALOG_PEER_USER = "u",
-	APIDOG_DIALOG_PEER_CHAT = "c",
-	APIDOG_DIALOG_PEER_GROUP = "g",
-	APIDOG_DIALOG_PEER_CHAT_MAX_ID = 2000000000;
+
 
 VKMessage.prototype = {
 

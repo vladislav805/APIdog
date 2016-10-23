@@ -41,11 +41,7 @@ var Video = {
 
 	// added 10.01.2016
 	initVideoJSLibrary: function (callback) {
-		var script = $.e("script", {src: "/includes/videojs.js", onload: function () { callback() }}),
-			styles = $.e("link", {rel: "stylesheet", href: "/includes/videojs.css"});
-
-		getHead().appendChild(script);
-		getHead().appendChild(styles);
+		ModuleManager.load("videojs", callback);
 	},
 
 	getAttachment: function (video, o) {
@@ -943,7 +939,7 @@ var Video = {
 			parent.appendChild(e("div", {html: Site.Format(description.safe())}));
 		};
 		parent.appendChild(e("div", {append: [e("span", {"class": "tip", html: lg("videos.video_uploaded")}), document.createTextNode($.getDate(date))]}));
-		parent.appendChild(e("div", {"class": "wall-likes likes", id:"like_video_" + owner_id + "_" + video.id, append: [Wall.LikeButton("video", owner_id, video.id, video.likes, 0, o.access_key || null)]}));
+		parent.appendChild(e("div", {"class": "wall-likes likes", id:"like_video_" + owner_id + "_" + video.id, append: getLikeButton("video", owner_id, video.id, video.likes, 0, o.access_key || null)}));
 		parent.appendChild(e("div", {append: [
 			e("span", {"class": "tip", html: lg("videos.video_author")}),
 			e("a", {href: "#" + owner.screen_name, html: (owner.name || owner.first_name + " " + owner.last_name + Site.isOnline(owner))})
@@ -1374,7 +1370,7 @@ var Video = {
 					if (!data)
 						return;
 					Video.comments[owner_id + "_" + comment_id].text = text;
-					$.element("video_comment_" + owner_id + "_" + comment_id).innerHTML = Mail.Emoji(Site.Format(Site.Escape(text)));
+					$.element("video_comment_" + owner_id + "_" + comment_id).innerHTML = Site.Format(text.safe()).emoji();
 				})
 				return false;
 			}

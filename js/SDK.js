@@ -166,22 +166,6 @@ function httpBuildQuery (array, noEncode) {
 	};
 };
 
-function includeScripts (scripts, onLoad) {
-	if (!Array.isArray(scripts))
-		scripts = [scripts];
-
-	var loaded = 0, all = scripts.length, e = $.e, head = getHead();
-	scripts.forEach(function(script) {
-		head.appendChild(e("script", {
-			src: script,
-			onload: function(event) {
-				if ($.elements.remove(this) && ++loaded == all)
-					onLoad();
-			}
-		}));
-	});
-};
-
 function setSelectionRange(input, start, end) {
 	if (input.setSelectionRange) {
 		input.setSelectionRange(start, end);
@@ -487,21 +471,18 @@ function APIdogRequest(method, params, callback, fallback, progress) {
 	xhr.send(postFields);
 };
 
-window.addEventListener("DOMContentLoaded", function() {
-	identifyDeviceByCSS();
-	window.addEventListener("hashchange", function(event) {
-		if (window.NoHashChange != true)
-			Site.Go(window.location.hash);
-		window.NoHashChange = false;
-	});
-});
-
 /* Events */
 
-window.addEventListener("load", function(event) {
+function init(event) {
 	if (APIdogNoInitPage) {
 		return;
 	};
+
+	identifyDeviceByCSS();
+	window.addEventListener("hashchange", function(event) {
+		console.info("hash changed", window.location.hash);
+			Site.Go(window.location.hash);
+	});
 
 	window.CONST_MENU_HEIGHT = $.getPosition(g("_menu")).height;
 
@@ -509,7 +490,7 @@ window.addEventListener("load", function(event) {
 		Lang.lang = API.settings.languageId;
 	};
 
-	(function(d,w,c){(w[c]=w[c]||[]).push(function(){try{w.yaCounter19029880=new Ya.Metrika({id:19029880,trackHash:!0})}catch(e){}});var n=d.getElementsByTagName("script")[0],s=d.createElement("script"),f=function(){n.parentNode.insertBefore(s,n);};s.type="text/javascript";s.async=!0;s.src=(d.location.protocol=="https:"?"https:":"http:")+"//mc.yandex.ru/metrika/watch.js";if(w.opera=="[object Opera]")d.addEventListener("DOMContentLoaded",f,!1);else f()})(document,window,"yandex_metrika_callbacks");
+
 
 	menu.initTouchEvents();
 
@@ -623,7 +604,7 @@ window.addEventListener("load", function(event) {
 		$.elements.removeClass(opened, "dd-open");
 	});
 
-});
+};
 
 function startFirstRequestAPI() {
 	Loader.main.setTitle("Requesting user info...");
@@ -673,10 +654,10 @@ function startFirstRequestAPI() {
 		API.access = data.a;
 
 		// сохранить доступные стикеры
-		data.s && data.s.items && IM.saveStickers(data.s.items);
+//		data.s && data.s.items && IM.saveStickers(data.s.items);
 
 		// сохранить последние использованные стикеры
-		data.l && IM.saveLastStickers(data.l);
+//		data.l && IM.saveLastStickers(data.l);
 
 		// показать счетчики в меню
 		data.c && Site.setCounters(data.c);
@@ -685,7 +666,7 @@ function startFirstRequestAPI() {
 		data.b && (API.userBalance = data.b);
 
 		// показать дни рождения под меню
-		(friends = data.f) && (Local.add(friends.items) && Friends.showBirthdays(friends.items));
+//		(friends = data.f) && (Local.add(friends.items) && Friends.showBirthdays(friends.items));
 
 		if (!APIdogNoInitPage) {
 			setInterval(UpdateCounters, 60000);
@@ -724,6 +705,12 @@ function startFirstRequestAPI() {
 			$.elements.appendToBody($.e("div", {style: "background: rgba(255, 0, 0, .8); color: rgb(255, 255, 255); line-height: 50px; display: block !important; height: 50px !important; opacity: 1 !important; visibility: visible !important; margin: 0 !important; padding: 0 16px; position: fixed !important; bottom: 0 !important; width: 100% !important; left: 0 !important; right: 0 !important;", html: "Мы обнаружили включенный AdBlock в Вашем браузере! Пожалуйста, если Вам нравится наш сайт, отключите его. <a onclick=\"showAdBlockWindow(event); return false;\" href=\"#\">Почему я должен это сделать?</a>"}));
 		};*/
 	}).execute();
+};
+
+var _initqueue = [];
+
+function onInited (fx) {
+	fx && _initqueue.push(fx) || (function(a,b,c){for (b=-1,c=a.length;++b<c;){a[b]()}})(_initqueue);
 };
 
 var Loader = {
@@ -1004,24 +991,6 @@ var DogEvent = {
 	INTERNAL_SETTINGS_CHANGED: 3200
 
 };
-
-
-
-var
-	APIDOG_CONST_ACCESS_TOKEN = "access_token",
-	APIDOG_CONST_VERSION = "v",
-	APIDOG_CONST_LANG = "lang",
-	APIDOG_CONST_RANDOM = "random",
-	APIDOG_CONST_ACT = "act",
-	APIDOG_CONST_OWNER_ID = "ownerId",
-	APIDOG_CONST_TARGET = "target",
-	APIDOG_CONST_GENRE_ID = "genreId",
-	APIDOG_CONST_FOREIGN = "foreign";
-
-
-
-
-
 
 
 function getBrowserFeatures () {
@@ -1325,14 +1294,14 @@ function truncate (text, options) {
 		textRemaining = text.substring(indexSplit),
 
 		nodeSmall = $.e("span", {
-			html: Mail.Emoji(Site.Format(textSmall))
+			html: Site.Format(textSmall).emoji()
 		}),
 		nodeEllipsis = $.e("span", {
 			html: "… "
 		}),
 		nodeRemaining = $.e("span", {
 			"class": "hidden",
-			html: Mail.Emoji(Site.Format(textRemaining))
+			html: Site.Format(textRemaining).emoji()
 		}),
 		nodeButton = $.e("a", {
 			"class": "wall-showMoreButton",
@@ -1606,31 +1575,7 @@ APIRequest.createExecute = function(code, params) {
 	return new APIRequest("execute", params);
 };
 
-var
-	APIDOG_REQUEST_DEFAULT_VERSION = 4.99,
 
-	APIDOG_REQUEST_VIA_DIRECT = 0,
-	APIDOG_REQUEST_VIA_PROXY = 1,
-	APIDOG_REQUEST_VIA_EXTENSION = 2,
-
-	APIDOG_REQUEST_WRAPPER_V5 = 2,
-
-	APIDOG_REQUEST_ERROR_API = 3,
-	APIDOG_REQUEST_ERROR_INTERNAL = 4,
-
-	APIDOG_REQUEST_STATE_CREATED = 0,
-	APIDOG_REQUEST_STATE_PREPARED = 1,
-	APIDOG_REQUEST_STATE_REQUESTED = 2,
-	APIDOG_REQUEST_STATE_LOADED = 3,
-
-	APIDOG_REQUEST_API_ERROR_INVALID_TOKEN = 5,
-	APIDOG_REQUEST_API_ERROR_CAPTCHA = 14,
-	APIDOG_REQUEST_API_ERROR_RUNTIME = 13,
-
-	APIDOG_REQUEST_FAILED_BY_UNKNOWN = 1,
-	APIDOG_REQUEST_FAILED_BY_NETWORK_PROBLEMS = 2,
-	APIDOG_REQUEST_FAILED_BY_APIDOG_DOWN = 3,
-	APIDOG_REQUEST_FAILED_BY_VK_DOWN = 3;
 
 APIRequest.prototype = {
 
@@ -2139,31 +2084,14 @@ window.receiveEvent && receiveEvent("onAPIRequestExecuted", function(data) {
 
 
 
-var
-	APIDOG_TIME_INTERVAL_DAY = 24 * 60 * 60;
+
 
 function timeInterval(t) {
 	var d = Math.ceil(Date.now() / 1000);
 	return Math.max(d, t) - Math.min(d, t);
 };
 
-var
-	APIDOG_SETTINGS_AUTOREAD = 2,
-	APIDOG_SETTINGS_PROXY = 4,
-	APIDOG_SETTINGS_LONGPOLL = 8,
-	APIDOG_SETTINGS_SEND_TYPING = 2048,
-	APIDOG_SETTINGS_SEND_BY_ENTER = 8192,
-	APIDOG_SETTINGS_DIALOGS_REVERSE = 32768;
 
-var
-	APIDOG_SHARE_STEP_CHOOSE_TARGET_TYPE = 1,
-	APIDOG_SHARE_STEP_CHOOSE_TARGET_ID = 2,
-	APIDOG_SHARE_STEP_ADD_COMMENT = 3,
-	APIDOG_SHARE_STEP_DO_SHARE = 4,
-
-	APIDOG_SHARE_TARGET_WALL = 0,
-	APIDOG_SHARE_TARGET_TYPE_MESSAGE = 1,
-	APIDOG_SHARE_TARGET_TYPE_GROUP = 2;
 
 function share(type, ownerId, itemId, accessKey, callback, access) {
 
@@ -2848,25 +2776,7 @@ niy();
 
 };
 
-var
-	APIDOG_SETTING_ONLY_FRIENDS = 1,
-	APIDOG_SETTING_FROM_GROUP = 2,
-	APIDOG_SETTING_SIGNED = 4,
-	APIDOG_SETTING_EXPORT_TWITTER = 8,
-	APIDOG_SETTING_EXPORT_FACEBOOK = 16,
 
-	APIDOG_ATTACHMENT_PHOTO = 1,
-	APIDOG_ATTACHMENT_VIDEO = 2,
-	APIDOG_ATTACHMENT_AUDIO = 4,
-	APIDOG_ATTACHMENT_DOCUMENT = 8,
-	APIDOG_ATTACHMENT_MAP = 16,
-	APIDOG_ATTACHMENT_POLL = 32,
-	APIDOG_ATTACHMENT_LINK = 64,
-	APIDOG_ATTACHMENT_NOTE = 128,
-	APIDOG_ATTACHMENT_PAGE = 256,
-	APIDOG_ATTACHMENT_ALBUM = 512,
-	APIDOG_ATTACHMENT_TIMER = 1024,
-	APIDOG_ATTACHMENT_STICKER = 2048;
 
 /**
  * WriteForm
@@ -3355,13 +3265,6 @@ function likers(type, ownerId, itemId, accessKey, onlyReposts, options) {
 };
 
 
-var
-	APIDOG_UI_EW_TYPE_ITEM_SIMPLE = 0,
-	APIDOG_UI_EW_TYPE_ITEM_TEXTAREA = 1,
-	APIDOG_UI_EW_TYPE_ITEM_SELECT = 2,
-	APIDOG_UI_EW_TYPE_ITEM_CHECKBOX = 3,
-	APIDOG_UI_EW_TYPE_ITEM_RADIO = 4;
-	APIDOG_UI_EW_TYPE_ITEM_CUSTOM = 5;
 
 
 /**
@@ -3761,6 +3664,14 @@ function getEmptyField (text, lang) {
 // created 10.01.2016
 // need refactoring
 function uploadFiles (node, o, callbacks) {
+
+	if (!ModuleManager.isModuleLoaded("uploader")) {
+		ModuleManager.load("uploader", function() {
+			uploadFiles(node, o, callbacks);
+		});
+		return;
+	}
+
 	o = o || {};
 	var upload,
 		index = 0,

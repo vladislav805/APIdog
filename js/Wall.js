@@ -1015,7 +1015,7 @@ console.log(from)
 						e("div",{
 							"class": "comments-content n-f",
 							id: "wall-cmt" + ownerId + "_" + commentId,
-							html: Mail.Emoji(Site.Format(comment.text) || "")
+							html: (Site.Format(comment.text) || "").emoji()
 						}),
 						e("div", {
 							"class": "comments-attachments",
@@ -1129,7 +1129,7 @@ console.log(from)
 					if (!data)
 						return;
 					comment.text = text;
-					textNode.innerHTML = Mail.Emoji(Site.Format(text));
+					textNode.innerHTML = Site.Format(text).emoji();
 				})
 				return false;
 			}

@@ -1,0 +1,78 @@
+/* --- snapster --- */
+
+.snapster-item {
+	overflow: hidden;
+	border-top: 1px solid rgb(237, 237, 237);
+}
+.snapster-item:first-child {
+	border-top: none;
+}
+.snapster-head {
+	overflow: hidden;
+	padding: 4px 12px;
+}
+.snapster-head-time {
+	float: right;
+	line-height: 40px;
+	font-size: x-small;
+	color: gray;
+}
+.snapster-head-photo {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	overflow: hidden;
+	float: left;
+}
+.snapster-head-photo img {
+	max-width: 100%;
+}
+.snapster-head-content {
+	line-height: 40px;
+	display: inline-block;
+	padding: 0 12px;
+}
+.snapster-content img {
+	max-width: 100%;
+	max-height: 500px;
+	max-height: 80vh;
+	display: block;
+	margin: 0 auto;
+}
+.snapster-footer {
+	overflow: hidden;
+	padding: 6px 12px;
+}
+.snapster-footer-actions {
+	overflow: hidden;
+}
+.snapster-footer-actions-like {
+	width: 35px;
+	height: 35px;
+	background: url(//static.apidog.ru/snapster-like.png) no-repeat 0 center;
+	-webkit-background-size: 70px;
+	-moz-background-size: 70px;
+	-o-background-size: 70px;
+	background-size: 70px;
+	opacity: .6;
+	-webkit-transition: opacity .3s ease-out;
+	-moz-transition: opacity .3s ease-out;
+	transition: opacity .3s ease-out;
+	cursor: pointer;
+	margin-right: 12px;
+}
+.snapster-footer-actions-like:hover,
+.snapster-footer-actions-like-active {
+	opacity: 1;
+}
+.snapster-footer-actions-like-active {
+	background-position: -35px 0;
+}
+.snapster-footer-actions-likes {
+	line-height: 33px;
+	cursor: pointer;
+	color: #66768F;
+}
+.snapster-shortComment-item {
+	padding: 4px 0;
+}

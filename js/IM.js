@@ -1854,9 +1854,11 @@ console.log(p);
 		}
 	},
 	setSmileTab: null,
-	STICKERS_SCHEMA_THUMBNAIL: "\/\/vk.com\/images\/store\/stickers\/%c\/thumb_22.png",
-	STICKERS_SCHEMA_IMAGE: "\/\/vk.com\/images\/stickers\/%s/128b.png",
-	STICKERS_SCHEMA_BACKGROUND: "\/\/vk.com\/images\/store\/stickers\/%s\/background.png",
+
+	// temporary
+	STICKERS_SCHEMA_THUMBNAIL: STICKERS_SCHEMA_THUMBNAIL,
+	STICKERS_SCHEMA_IMAGE: STICKERS_SCHEMA_IMAGE,
+	STICKERS_SCHEMA_BACKGROUND: STICKERS_SCHEMA_BACKGROUND,
 
 	getEmotionsTabs: function (contents) {
 		var tabs = document.createElement("div"), e = $.elements.create, selectedIndex = 0, nodes = [], item;
@@ -2347,13 +2349,7 @@ console.log(p);
 		}));
 	},
 	loadYandexMapsAPILibrary: function (fx) {
-		var YandexAPI = "//api-maps.yandex.ru/2.1/?lang=ru_RU",
-			scripts = document.getElementsByTagName("script"),
-			s = $.e("script", {type: "text/javascript", src: YandexAPI, onload: function (event) {fx()}});
-		for (var i = 0; i < scripts.length; ++i)
-			if (scripts[i].src == YandexAPI)
-				return fx();
-		document.getElementsByTagName("head")[0].appendChild(s);
+		ModuleManager.load(["http://api-maps.yandex.ru/2.1/?lang=ru_RU&q=YandexMaps.js"], fx);
 	},
 	attachMap: function (to) {
 		if (IM.geo[to]) {

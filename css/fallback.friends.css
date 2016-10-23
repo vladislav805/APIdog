@@ -1,0 +1,132 @@
+/* --- friends --- */
+
+.friends-item {
+	overflow: hidden;
+	display: block;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
+	margin: 0 15px;
+	border-bottom: 1px solid #E9ECEE;
+	padding: 10px 0;
+	-webkit-transition: all 200ms ease;
+	-moz-transition: all 200ms ease;
+	-ms-transition: all 200ms ease;
+	-o-transition: all 200ms ease;
+	transition: all 200ms ease;
+}
+
+.friends-item:last-child {
+	border-bottom: none;
+}
+
+.friends-left {
+	float: left;
+	border-radius: 4px;
+	width: 44px;
+	height: 44px;
+}
+
+.friends-right {
+	margin-left: 54px;
+	line-height: 18px;
+}
+
+.friends-add {
+	margin: 3px 0;
+}
+
+.friends-action {
+	padding: 3px 0;
+	display: block;
+}
+
+.friends-actions {
+	margin: 5px 0 0;
+}
+
+.friends-actions a {
+	font-size: 12px;
+}
+
+.friends-actions a:hover {
+	text-decoration: underline;
+}
+
+.friends-hidden {
+	height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	margin-bottom: 0;
+	border-bottom: 0;
+
+	transition: height 200ms ease;
+}
+
+.friends-animation {
+	transition: all 200ms ease;
+}
+
+.friends-calendar-wrap {
+	white-space: nowrap;
+	overflow: hidden;
+}
+.friends-calendar-table-wrap {
+	display: inline-block;
+	width: 100%;
+	vertical-align: top;
+}
+.friends-calendar {
+	border-collapse: collapse;
+	margin: 0 auto;
+}
+.friends-calendar caption {
+	font-weight: 900;
+	padding: 5px;
+	color: rgb(102, 118, 143);
+	font-size: 16px;
+}
+.friends-calendar td {
+	border: 1px solid rgb(89, 125, 163);
+	vertical-align: top;
+}
+.friends-calendar-day {
+	min-height: 40px;
+	width: 40px;
+	padding: 6px;
+	position: relative;
+}
+.friends-calendar img {
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: block;
+}
+.friends-calendar-n {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	padding: 4px 5px;
+	color: rgb(255, 255, 255);
+	background: rgb(89, 125, 163);
+	-webkit-border-radius: 0 0 5px 0;
+	-moz-border-radius: 0 0 5px 0;
+	border-radius: 0 0 5px 0;
+}
+
+
+._checkbox {
+	width: 22px;
+	height: 30px;
+	display: inline-block;
+}
+
+.mp-checked {
+	background: #EAECF0;
+	line-height: 30px;
+}
+.miniprofiles-checked,
+.mp-checked ._checkbox {
+	background: url(https://static.apidog.ru/check.png) no-repeat center center;
+}

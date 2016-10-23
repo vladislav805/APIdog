@@ -4,6 +4,10 @@
  * upd: -1
  */
 
+if (!window.Photos) {
+	Photos = { getToParam: function() { var to = Site.get("to"); return (to ? ["?", "&"][t || 0] + "to=" + to : ""); } };
+}
+
 var Friends = {
 	List: null,
 	Lists: null,

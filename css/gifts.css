@@ -1,0 +1,149 @@
+/* --- gifts --- */
+
+.gifts-head {
+	line-height: 22px;
+	color: rgb(95, 127, 186);
+	font-size: 14px;
+	padding: 2px 12px;
+	font-weight: normal;
+	border-bottom: 1px solid rgba(95, 127, 186, 0.4);
+	margin-top: 3px;
+}
+
+.gift-item {
+	overflow: hidden;
+	border-bottom: 1px solid rgba(95, 127, 186, .3);
+	padding: 6px 12px;
+}
+
+.gift-item:last-child {
+	border-bottom: none;
+}
+
+.gift-photo {
+	float: left;
+}
+
+.gift-photo img {
+	width: 50px;
+	height: 50px;
+	border-radius: 2px;
+}
+
+.gift-right {
+	margin-left: 62px;
+}
+
+.gift-sender a {
+	font-weight: 900;
+}
+
+.gift-footer * {
+	display: inline-block;
+}
+
+.gift-footer *:after {
+	content: " | ";
+	white-space: pre;
+	display: inline-block;
+}
+
+.gift-footer *:last-child:after {
+	content: "";
+}
+
+.gift-preview {}
+
+.gift-message {
+	text-align: center;
+}
+
+.gift-image {
+	display: block;
+	margin: 5px auto;
+}
+
+.gifts-category-item .gift-image {
+	width: 96px;
+	height: 96px;
+}
+
+.gifts-price-wrap {
+	position: absolute;
+	bottom: 5px;
+	width: 100%;
+	left: 0;
+	right: 0;
+}
+
+.gifts-price {
+	display: inline-block;
+	margin: 0 auto;
+	background: rgba(215, 226, 232, .8);
+	color: rgb(75, 100, 130);
+	font-weight: 900;
+	padding: 0 6px;
+	line-height: 18px;
+	font-size: 11px;
+	border-radius: 3px;
+}
+
+.gifts-category-item {
+	overflow: hidden;
+}
+
+.gifts-category-title {
+	overflow: hidden;
+	padding: 6px 12px;
+	border-bottom: 2px solid rgb(235, 238, 242);
+	color: rgb(95, 127, 186);
+	font-weight: 900;
+	cursor: pointer;
+}
+
+.gifts-category-preview {
+	height: 108px;
+	cursor: pointer;
+}
+
+.gifts-item {
+	display: inline-block;
+	margin: 1px 4px;
+	position: relative;
+}
+
+.gifts-disabled {
+	opacity: .5;
+}
+
+.gifts-category-preview,
+.gifts-category-items {
+	text-align: center;
+	overflow: hidden;
+	padding: 6px 0;
+}
+
+.gifts-category-preview .gift-item {
+	width: 20%;
+}
+
+.gifts-category-preview img {
+	max-width: 100%;
+}
+
+.gifts-category-items,
+.gifts-category-opened .gifts-category-preview {
+	height: 0;
+	padding: 0;
+}
+
+.gifts-category-items a.gifts-item:hover {
+	background: rgba(235, 238, 242, .8);
+	-webkit-transition: background 100ms ease-in;
+	transition: background 100ms ease-in;
+}
+
+.gifts-category-opened .gifts-category-items {
+	height: auto;
+	padding: 6px 0;
+}

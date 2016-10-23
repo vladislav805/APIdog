@@ -348,7 +348,10 @@ return false;
 					self.onMetaData(res.count, res.count <= self.cache.length);
 					reset();
 					self.cache = self.cache.concat(res.items);
-					self.show(Fave.MAX_INSERTING);
+
+					ModuleManager.load("wall", function() {
+						self.show(Fave.MAX_INSERTING);
+					});
 				})
 				.execute();
 		},
@@ -387,7 +390,9 @@ return false;
 					self.onMetaData(res.count, res.count <= self.cache.length);
 					reset();
 					self.cache = self.cache.concat(res.items);
-					self.show(Fave.MAX_INSERTING);
+					ModuleManager.load("photos", function() {
+						self.show(Fave.MAX_INSERTING);
+					});
 				})
 				.execute();
 		},
@@ -430,7 +435,9 @@ return false;
 					self.onMetaData(res.count, res.count <= self.cache.length);
 					reset();
 					self.cache = self.cache.concat(res.items);
-					self.show(Fave.MAX_INSERTING);
+					ModuleManager.load("video", function() {
+						self.show(Fave.MAX_INSERTING);
+					});
 				})
 				.execute();
 		},

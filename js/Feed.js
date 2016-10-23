@@ -42,7 +42,9 @@ var Feed = {
 					code: "API.notifications.markAsViewed();return API.notifications.get({count:40,start_time:Args.start,filters:Args.filters,v:5.52});",
 					start: start,
 					filters: "wall,mentions,comments,likes,reposts,followers,friends"
-				}).setOnCompleteListener(Notifications.getItems).execute();
+				}).setOnCompleteListener(function(data) {
+					ModuleManager.load("notifications", function() {Notifications.getItems(data)});
+				}).execute();
 
 			case "friends":
 				Site.APIv5("newsfeed.get", {start_time: start, count: 30, filters: "friend", v: 5.14}, Feed.getFriends);

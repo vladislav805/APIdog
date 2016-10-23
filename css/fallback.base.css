@@ -1,0 +1,95 @@
+.hider {
+	background: #F2F2F2;
+	color: #66768F;
+	padding: 0 12px;
+	font-weight: 700;
+	z-index: 999;
+	line-height: 40px;
+	clear: both;
+	text-decoration: none;
+}
+
+.hider * {
+	color: inherit;
+}
+
+.hider-title-content {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding-right: 10px;
+	font-size: inherit;
+}
+
+.hider-right{
+	float: right;
+}
+
+.hider-content {
+	overflow: hidden;
+}
+
+.tabs{
+	margin:8px 12px;
+}
+.tab{
+	padding:4px 7px;
+	display:inline-block !important;
+	margin:0 7px 0 0;
+	text-align:center;
+	-webkit-tap-highlight-color:rgba(255, 255, 255, 0) !important;
+	-webkit-focus-ring-color:rgba(255, 255, 255, 0) !important;
+	outline:none !important;
+}
+.tab i {
+	font-style: normal;
+}
+.tab:hover{
+	background:rgb(242, 244, 247);
+}
+.tab-sel{
+	color:#fff !important;
+	background:#6987A7 !important;
+	padding:4px 7px;
+	border-radius:2px;
+}
+.tab-link{
+	margin:2px 4px;
+	padding:2px 4px;
+	display:inline-block;
+}
+.pagebar{
+	display:inline-block;
+	padding:6px 10px 4px;
+	cursor:pointer;
+	border-bottom:3px solid transparent;
+}
+.pagebar:hover{
+	background:#e8e8e8;
+	border-bottom-color:#e8e8e8;
+}
+.pagebar-current,
+.pagebar-current:hover{
+	border-bottom: 3px solid #d0d0d0;
+	font-weight: 900;
+}
+
+
+
+/* ----- Tooltip ----- */
+
+.tooltip{
+	background:url(https://static.apidog.ru/im-v6.png) no-repeat;
+	width:5px;
+	height:9px;
+}
+.tooltip-left{background-position:0 0;}
+.tooltip-right{background-position:-5px 0;}
+.tooltip-top{background-position:0 0;width:9px;height:5px;}
+.tooltip-bottom{background-position:0 -5px;width:9px;height:5px;}
+
+
+.hider-title select {
+	background: transparent;
+	border: 0;
+}

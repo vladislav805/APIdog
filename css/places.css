@@ -1,0 +1,43 @@
+/* --- places --- */
+
+.maps-map {
+	margin: 0 auto;
+	display: block;
+	max-width: 650px;
+	max-height: 450px;
+	width: 100%;
+	min-width: 200px;
+	height: 350px;
+}
+
+.maps-head {
+	overflow: hidden;
+	background: #F2F4F7;
+	padding: 10px 14px;
+}
+
+.maps-head-title {
+	overflow: hidden;
+	margin-bottom: 12px;
+	line-height: 32px;
+}
+
+.maps-rightblock {
+	text-align: right;
+	font-size: x-small;
+	line-height: 16px;
+}
+
+.maps-lefticon {
+	float: left;
+	margin-right: 8px;
+}
+
+.maps-head strong {
+	color: #66768F;
+	line-height: 31px;
+}
+
+.maps-checkins {
+	line-height: 31px;
+}

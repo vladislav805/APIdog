@@ -101,7 +101,7 @@ var Notifications = {
 			id = reply.id,
 			from_id = reply.from_id || API.uid,
 			user = Local.Users[from_id] || {},
-			text = Mail.Emoji(Site.Format(reply.text)),
+			text = Site.Format(reply.text).emoji(),
 			attachments = Site.Attachment(reply.attachments, "comment");
 		return e("div", {id: "notifications-comment-" + owner_id + "_" + id, append: [
 			e("a", {"class": "comments-left", href: "#" + user.screen_name, append:
@@ -208,7 +208,7 @@ var Notifications = {
 				case "wall":
 				case "wall_publish":
 					user = _users[feed.from_id];
-					var text = Mail.Emoji(Site.Format(feed.text)),
+					var text = Site.Format(feed.text).emoji(),
 						attachments = Site.Attachment(feed.attachments);
 					left.appendChild(Notifications.getPhotoLinkProfile(user));
 					right.appendChild(e("div", {append: [
@@ -292,7 +292,7 @@ var Notifications = {
 						(feed.to_id < 0 ? e("a", {href: "#" + owner.screen_name, html: owner.name}) : null)
 					]}));
 					right.appendChild(e("div", {append: [
-						e("div", {"class": "n-f", html: Mail.Emoji(Site.Format(feed.text))}),
+						e("div", {"class": "n-f", html: Site.Format(feed.text).emoji()}),
 						Site.Attachment(feed.attachments)
 					]}));
 					post = post || feed || {};
@@ -360,7 +360,7 @@ var Notifications = {
 						(feed.to_id < 0 ? e("a", {href: "#" + owner.screen_name, html: owner.name}) : null)
 					]}));
 					right.appendChild(e("div", {append: [
-						e("div", {"class": "n-f", html: Mail.Emoji(Site.Format(feed.text))}),
+						e("div", {"class": "n-f", html: Site.Format(feed.text).emoji()}),
 						Site.Attachment(feed.attachments)
 					]}));
 					console.log(feed)
@@ -456,7 +456,7 @@ var Notifications = {
 						(feed.to_id < 0 ? e("a", {href: "#" + owner.screen_name, html: owner.name}) : null)
 					]}));
 					right.appendChild(e("div", {append: [
-						e("div", {"class": "n-f", html: Mail.Emoji(Site.Format(feed.text))}),
+						e("div", {"class": "n-f", html: Site.Format(feed.text).emoji()}),
 						Site.Attachment(feed.attachments)
 					]}));
 					right.appendChild(e("div", {"class": "notifications-date", html: $.getDate(date)}));

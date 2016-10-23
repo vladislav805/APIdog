@@ -1,0 +1,303 @@
+.dialogs-item {
+	display: block;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
+	color: rgb(107, 136, 182);
+	cursor: pointer;
+	border-right: 5px solid transparent;
+}
+
+.dialogs-item-new {
+	border-right-color: rgb(107, 136, 182);
+}
+
+.dialogs-item-left,
+.dialogs-item-right {
+	display: block;
+}
+
+.dialogs-item-left {
+	padding: 10px 12px;
+	position: relative;
+	float: left;
+}
+
+.dialogs-item-left img {
+	width: 44px;
+	height: 44px;
+	border-radius: 22px;
+}
+
+.dialogs-item-right {
+	margin-left: 80px;
+	padding: 9px 12px 9px 0;
+	vertical-align: middle;
+	border-bottom: 1px solid rgba(107, 136, 182, .4);
+}
+
+.dialogs-date {
+	float: right;
+	color: #ADC1C9;
+	font-size: 10px;
+	line-height: 22px;
+}
+
+.dialogs-name {
+	font-weight: 900;
+}
+
+.dialogs-content {
+
+}
+
+.dialogs-head {
+	line-height: 22px;
+}
+
+.dialogs-chat .dialogs-head strong::before {
+	display: block;
+	width: 22px;
+	height: 22px;
+	content: "";
+	background-size: 21px;
+	background-repeat: no-repeat;
+	float: left;
+	margin-right: 4px;
+}
+
+.dialogs-unread {
+	border-radius: 22px;
+	line-height: 22px;
+	font-size: 10px;
+	font-weight: 900;
+	text-align: center;
+	padding: 0;
+	/*background: rgb(213, 221, 229);*/
+	background: rgb(223, 95, 100);
+	color: white;
+	position: absolute;
+	bottom: 6px;
+	right: 6px;
+	width: 22px;
+	height: 22px;
+}
+
+/*.dialogs-unread:before {
+	display: inline;
+	content: "+";
+	float: left;
+}*/
+
+.dialogs-unread:empty {
+	display: none;
+}
+
+.dialogs-text {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	margin-top: 4px;
+	line-height: 22px;
+}
+.dialogs-miniphoto {
+	float: left;
+	vertical-align: middle;
+	margin-right: 15px;
+	width: 22px;
+	height: 22px;
+	border-radius: 22px;
+}
+
+.dialogs-minitext {
+	line-height: 22px;
+}
+
+.dialogs-state {
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	width: 20px;
+	height: 22px;
+	float: left;
+	margin-right: 4px;
+}
+.dialogs-state-readed {
+	width: 22px;
+}
+
+.im-textfield-wrap {
+	padding: 8px 12px;
+}
+
+.im-textfield {
+	-webkit-appearance: none;
+	width: 100%;
+	display: block;
+	margin: 0 0 8px;
+	border-radius: 3px;
+	border: 1px solid #D4D7E2;
+	outline: none;
+	resize: none;
+	padding: 4px 5px;
+	height: 55px;
+	font-size: 12px;
+}
+
+.im-wrapper {
+	position: relative;
+}
+
+.im-formsend {
+	position: relative;
+	padding: 10px 12px;
+}
+
+.im-formsend::after {
+	display: block;
+	content: "";
+	clear: both;
+}
+
+.im-formsend-title {
+	cursor: pointer;
+}
+
+.im-actionspace-right input {
+	margin-right: 0;
+}
+
+.im-actionbutton {
+	width: 30px;
+	height: 30px;
+}
+
+.imdialog-list-wrapper {
+	overflow: auto;
+}
+
+#g-messages-list {
+	border-collapse: collapse;
+}
+
+
+
+.imdialog-list {
+	background: #f2f5f7;
+	width: 100%;
+}
+.imdialog-list td {
+	padding: 9px 12px;
+}
+.imdialog-item {
+	padding: 4px 8px;
+	overflow: hidden;
+	margin: 4px 8px;
+	position: relative;
+	min-height: 24px;
+}
+.imdialog-item-attachments {
+	margin-top: 4px;
+	text-align: left;
+	clear: both;
+}
+.imdialog-item-attachments:empty {
+	margin-top: 0;
+}
+.imdialog-photo,
+.imdialog-photo img {
+	width: 35px;
+	height: 35px;
+	vertical-align: top;
+	padding-right: 0 !important;
+}
+.imdialog-photo img {
+	border-radius: 17.5px;
+}
+.imdialog-wrap {
+	border: 1px solid #d1dae3;
+	border-radius: 4px;
+	background: #ffffff;
+	display: inline-block;
+	position: relative;
+	margin: 8px 16px;
+}
+.imdialog-item.imdialog-unread {
+	background: rgba(225, 231, 236, .6);
+}
+.imdialog-item .audio-item-title {
+	white-space: normal;
+}
+.imdialog-item.imdialog-important {
+
+}
+.imdialog-item.imdialog-selected {
+	background: rgba(210, 216, 221, .6);
+}
+.imdialog-item-sticker .imdialog-wrap {
+	border: none !important;
+	background: transparent !important;
+}
+.imdialog-arrow {
+	position: absolute;
+	left: -5px;
+	top: 10px;
+	background: url(https://static.apidog.ru/v6.2/im-arrows.png) no-repeat 0 0;
+	width: 5px;
+	height: 9px;
+}
+.imdialog-content {
+	padding: 7px;
+	position: relative;
+	/* word-break: break-all;  see 5 lines down */
+	word-wrap: break-word;
+	overflow: hidden;
+}
+.imdialog-content a {
+	word-break: keep-all;
+}
+.imdialog-time {
+	line-height: 12px;
+	vertical-align: bottom;
+	text-align: right;
+	color: #aaaaaa;
+	float: right;
+	font-size: 10px;
+	margin: 2px 0 2px 6px;
+}
+.imdialog-time .imdialog-sending {
+	-webkit-transform: scale(0.4) translate(-14px, -50%);
+	-moz-transform: scale(0.4) translate(-14px, -50%);
+	-ms-transform: scale(0.4) translate(-14px, -50%);
+	-o-transform: scale(0.4) translate(-14px, -50%);
+	transform: scale(0.4) translate(-14px, -50%);
+	width: 33px;
+	height: 0;
+	margin-top: -4px;
+}
+/*.imdialog-my .imdialog-time {
+	text-align: right;
+	padding: 0 12px 0 0;
+	float: left;
+}*/
+
+.imdialog-my .imdialog-wrap {
+	float: right !important;
+	border: 1px solid #d1dad3;
+	background: #dae3ed;
+	/*text-align: right;*/
+}
+.imdialog-my .imdialog-arrow {
+	left: auto !important;
+	right: -5px;
+	background-position: -5px 0;
+}
+.imdialog-item-sticker .imdialog-arrow {
+	display: none;
+}
+.imdialog-icons {
+	background: url(https://static.apidog.ru/v6.2/im-attachments.png) no-repeat;
+	width: 30px;
+	height: 30px;
+	display: inline-block;
+	opacity: .7;
+}

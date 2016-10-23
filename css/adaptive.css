@@ -1,0 +1,160 @@
+/* Mobile */
+
+@media screen and (min-width: 1000px) {
+
+	.head-menuIcon {
+		display: none;
+	}
+
+	.head-content {
+		margin: 0 220px 0 0;
+	}
+
+	.head-logo {
+
+	}
+
+}
+
+@media screen and (max-width: 1000px) {
+
+	.dog-menu {
+		width: 210px;
+		padding: 5px 0;
+		margin-left: -216px;
+		-webkit-transition: transform .15s ease-in-out;
+		transition: transform .15s ease-in-out;
+		position: fixed;
+		z-index: 10;
+		overflow: auto;
+		background: rgb(255, 255, 255);
+		box-shadow: 0 3px 6px rgba(0, 0, 0, .16), 0 3px 6px rgba(0 ,0 ,0 , .23);
+		bottom: 0;
+		top: 50px;
+	}
+
+	.menu-pan {
+		-webkit-transition: none;
+		transition: none;
+	}
+
+	.menu-opened .dog-menu {
+		-webkit-transform: translateX(216px);
+		transform: translateX(216px);
+	}
+
+	.dog-page-fixed .menu {
+		margin-top: 0 !important;
+	}
+
+	.head-wrap {
+		width: 100%;
+	}
+
+	.dog-content {
+		margin-left: 0;
+	}
+
+	.dog-wrapper,
+	.dog-page {
+		width: 100%;
+		padding: 0;
+		font-family:tahoma, arial, verdana, sans-serif, Lucida Sans;
+	}
+
+
+
+
+	/* deprecated */
+	.alert{width:100%;max-width:100%;left:0;right:0}
+}
+
+
+
+@media screen and (max-width:550px){
+	.photos-item {
+		width: 23%;
+		height: 86px;
+	}
+	.photos-item:nth-child(5) {
+		display: none !important;
+	}
+}
+
+@media screen and (max-width: 500px) {
+	.head-user-name{
+		display: none;
+	}
+
+	.head-user {
+		width: 50px;
+	}
+
+	.head-user-photo {
+		margin: 10px;
+	}
+
+	.hat-page-name,
+	.head-player{
+		margin-right: 54px;
+	}
+
+	.head-content {
+		margin: 0 100px 0 50px;
+	}
+
+
+	.photos-item {
+		height: 70px;
+	}
+	.group-info-name {
+		float: none;
+		padding-right: 0;
+	}
+}
+
+@media screen and (max-width: 400px) {
+	.photos-item {
+		width: 31%;
+		height: 86px;
+	}
+	.photos-item:nth-child(4) {
+		display: none !important;
+	}
+}
+
+@media screen and (max-width:280px){
+	.head-player-button{
+		padding: 10px 7px;
+	}
+	.hat-page-name{
+		margin-right: 41px;
+	}
+	.head,
+	.hat-content,
+	.head-player,
+	.hat-arrow,
+	.hat-profile,
+	.hat-page-name,
+	.page-name,
+	.hat-menu-icon{
+		height: 40px !important;
+	}
+	.dog-page-fixed {
+		margin-top: 40px !important;
+	}
+	.menu{
+		margin-top: -40px !important;
+	}
+	.dog-page-fixed .menu {
+		margin-top: 0 !important;
+	}
+	.photos-item {
+		width: 48%;
+		height: 86px;
+	}
+	.profile-photos .photos-item {
+		width:31%;
+		height: 56px;
+	}
+}
