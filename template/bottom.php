@@ -19,7 +19,7 @@
 			"authKey" => "",
 			"settings" => [
 				"bitmask" => 0,
-				"languageId" => USER_LANGUAGE_ID
+				"languageId" => defined("USER_LANGUAGE_ID") ? USER_LANGUAGE_ID : 0
 			]
 		]);
 		if ($user["lng"]) {

@@ -207,7 +207,7 @@
 <!--div class="menu-notify-wrap"><strong class="menu-notify">Информация</strong><div style="padding: 5px"><b>Три</b> официальные группы APIdog были заблокированы.<br><a href="#wall23048942_3628">Подробнее (1) &raquo;</a><br><a href="#wall-104924272_2">Подробнее (2) &raquo;</a><br><a href="#wall23048942_3894">FAQ &raquo;</a></div></div-->
 <!--
 <div class="avmn-wrap">
-	<div class="avmn"><?=$speech["ads_title"];?></div>
+	<div class="avmn">< ?=$speech["ads_title"];? ></div>
 
 	<div id="MarketGidScriptRootC592365">
 		<div id="MarketGidPreloadC592365">

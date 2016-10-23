@@ -73,7 +73,7 @@
 			return $langId;
 		};
 
-		$list = strToLower($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+		$list = isSet($_SERVER["HTTP_ACCEPT_LANGUAGE"]) ? strToLower($_SERVER["HTTP_ACCEPT_LANGUAGE"]) : null;
 
 		if ($list) {
             if (preg_match_all("/([a-z]{1,8}(?:-[a-z]{1,8})?)(?:;q=([0-9.]+))?/", $list, $list)) {

@@ -167,7 +167,7 @@
 			$session = Settings::getSessionById($authId);
 			if ($session == -1)
 				throwError(10);
-			if ($session->getUserId() != userId)
+			if (is_object($session) && $session->getUserId() != userId)
 				throwError(11);
 			output($session->kill());
 			break;
@@ -774,8 +774,8 @@ sendDeprecated();
 				$tmp .= fgets($fp, 128);
 			fclose($fp);
 
-			if (ereg("Content-Length: ([0-9]+)", $tmp, $size))
-				$size = (int) $size[1];
+			if (preg_match("Content-Length: ([0-9]+)", $x, $size))
+				$size = $size[1];
 			else
 				$size = -1;
 			if ($size < 0 || $size > 5 * MB)

@@ -71,9 +71,7 @@
 	function getUserDataForNonStdPages () {
 		$user = getSessionByAuthKey(getAuthKey());
 
-		if ($user) {
-			$JavaScriptUserObject = prepareJavaScriptUserObject($user);
-		};
+		$JavaScriptUserObject = $user ? prepareJavaScriptUserObject($user) : null;
 
 		return ["usr" => $JavaScriptUserObject, "lng" => getLang(-1, "nonstdsite") ];
 	};

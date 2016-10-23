@@ -18,6 +18,7 @@
 			 * Завершение сессии
 			 */
 			case "logout":
+				session_start();
 				$authKey = getAuthKey();
 				SQLquery("DELETE FROM `auth` WHERE `hash` = '$authKey' LIMIT 1", 0);
 				closeDatabase();
