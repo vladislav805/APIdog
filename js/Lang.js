@@ -8,9 +8,28 @@
 var Lang = {
 	data: null,
 
+	KEY_LOCAL_STORAGE: "_langCache",
+	KEY_LOCAL_VERSION: "_langVersion",
+
 	load: function(callback) {
+		var cache;
+		if (cache = $.localStorage(Lang.KEY_LOCAL_STORAGE)) {
+			if (parseInt($.localStorage(Lang.KEY_LOCAL_VERSION)) > window.languageModify) {
+				Lang.data = JSON.parse(cache);
+console.log("Lang<>: language data was get from cache");
+				return callback();
+			} else {
+console.log("Lang<>: language data was expired. Updating...");
+			}
+		};
+
+console.log("Lang<>: update language data");
 		APIdogRequest("apidog.getLanguageData", {}, function(result) {
 			Lang.data = result.data;
+			var date = parseInt(Date.now() / 1000);
+			$.localStorage(Lang.KEY_LOCAL_STORAGE, JSON.stringify(Lang.data));
+			$.localStorage(Lang.KEY_LOCAL_VERSION, date);
+console.log("Lang<>: language data was loaded and cached in " + date);
 			callback && callback();
 		}, function() {
 			console.error("FATAL: language data not loaded");
