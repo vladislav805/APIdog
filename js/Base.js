@@ -228,7 +228,7 @@ function mlog(t){
 
 var Modules = {
 	/* Service */
-	"sdk": { files: ["lib/lib1.3.0.js", "lib/sugar.min.js", "js/Constants.js", "js/SDK.js", "js/Site.js", "lib/VisibilityJSAPI.min.js", "css/base.css", "css/ui-elements.css"] },
+	"sdk": { files: ["lib/lib1.3.0.min.js", "lib/sugar.min.js", "js/Constants.js", "js/SDK.js", "js/Site.js", "lib/VisibilityJSAPI.min.js", "css/base.css", "css/ui-elements.css"] },
 	"lang": { files: ["js/Lang.js"] },
 	"longpoll": { files: ["js/LongPoll.js"] },
 	"uploader": { files: ["js/VKUpload.js"] },
@@ -242,7 +242,7 @@ var Modules = {
 	"photos": { files: ["js/Photos.js", "css/fallback.photos.css"], dependency: ["likes", "comments"] },
 	"audio": { files: ["js/Audios.js", "css/audio.css"] },
 	"video": { files: ["js/Video.js", "css/fallback.video.css"], dependency: ["likes"] },
-	"videojs": { files: ["/includes/videojs.js", "/includes/videojs.css", "comments"]},
+	"videojs": { files: ["/includes/videojs.js", "/includes/videojs.css"], dependency: ["comments"]},
 	"documents": { files: ["js/Docs.js", "css/documents.css"] },
 	"snapster": { files: ["js/Snapster.js"], dependency: "photos" },
 
