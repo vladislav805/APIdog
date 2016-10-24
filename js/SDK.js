@@ -359,6 +359,7 @@ function init(event) {
 	};
 
 	identifyDeviceByCSS();
+	$.elements.addClass(getBody(), isMobile ? "mobile" : "pc");
 	window.addEventListener("hashchange", function(event) {
 		console.info("hash changed", window.location.hash);
 			Site.Go(window.location.hash);
@@ -479,6 +480,8 @@ function init(event) {
 
 		$.elements.removeClass(opened, "dd-open");
 	});
+
+	$.getDate = function(n,t){n=+n+(window._timeOffset||0);var t=typeof t=="undefined"?1:t,i=new Date,e;i.setTime(n*1e3);var r=new Date,o=i.getDate(),s=i.getMonth(),f=i.getFullYear(),c=i.getHours(),u=i.getMinutes(),v=i.getSeconds(),l=r.getDate(),a=r.getMonth(),h=r.getFullYear(),y=r.getHours(),p=r.getMinutes(),w=r.getSeconds();if(u=u<10?"0"+u:u,l==o&&a==s&&h==f){if(t==2)return c+":"+u;e=Lang.get("general.todayS")}else e=l-1==o&&a==s&&h==f?Lang.get("general.yesterdayS"):o+" "+Lang.get("general.months")[s]+" "+(h==f?"":f);return t==1&&(e+=Lang.get("general.dateAt")+c+":"+u),e};
 
 };
 
@@ -873,8 +876,6 @@ window.onTyping;
 window.onChatUpdated;
 window.vkLastCheckNotifications = getUnixTime();
 window.isMobile = /(mobile?|android|ios|bada|j2me|wp|phone)/ig.test(navigator.userAgent.toLowerCase());
-
-$.elements.addClass(getBody(), isMobile ? "mobile" : "pc");
 
 var Local = {
 	Users: {},
@@ -1300,15 +1301,6 @@ ExtendedModal.prototype = {
 };
 
 
-
-
-
-
-
-
-
-
-$.getDate = function(n,t){n=+n+(window._timeOffset||0);var t=typeof t=="undefined"?1:t,i=new Date,e;i.setTime(n*1e3);var r=new Date,o=i.getDate(),s=i.getMonth(),f=i.getFullYear(),c=i.getHours(),u=i.getMinutes(),v=i.getSeconds(),l=r.getDate(),a=r.getMonth(),h=r.getFullYear(),y=r.getHours(),p=r.getMinutes(),w=r.getSeconds();if(u=u<10?"0"+u:u,l==o&&a==s&&h==f){if(t==2)return c+":"+u;e=Lang.get("general.todayS")}else e=l-1==o&&a==s&&h==f?Lang.get("general.yesterdayS"):o+" "+Lang.get("general.months")[s]+" "+(h==f?"":f);return t==1&&(e+=Lang.get("general.dateAt")+c+":"+u),e}
 setInterval(function() {
 	Array.prototype.forEach.call(document.querySelectorAll(".__autodate"), function(i) {
 		i.innerHTML = Site.getDate(+i.getAttribute("data-unix"));
@@ -1376,6 +1368,8 @@ function APIRequest (method, params) {
 	this.params = params || {};
 	this.queueId = APIQueue.add(this);
 	this.mTime = Date.now();
+	this.mSendVia = APIDOG_REQUEST_VIA_DIRECT;
+	this.mState = APIDOG_REQUEST_STATE_CREATED;
 	this._init();
 };
 
@@ -1392,13 +1386,13 @@ APIRequest.prototype = {
 	/**
 	 * Way of requesting
 	 */
-	mSendVia: APIDOG_REQUEST_VIA_DIRECT,
+	mSendVia: null,
 
 	/**
 	 * Current state of request
 	 * Do not modify manually!
 	 */
-	mState: APIDOG_REQUEST_STATE_CREATED,
+	mState: null,
 
 	/**
 	 * Listener, which will be called, when request returns correct response
