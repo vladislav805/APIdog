@@ -535,7 +535,7 @@ var Docs = {
 	}
 };
 
-onInited(function() {
+ModuleManager.eventManager.addEventListener("Docs", function() {
 	Docs.mActionBlock = new ActionBlock([
 		{ name: "opn", label: lg("docs.actionOpen"), onClick: function(item) { window.open(item.url); } },
 		{ name: "cpy", label: lg("docs.actionCopy"), onClick: function(item) { item.copy(); } },
