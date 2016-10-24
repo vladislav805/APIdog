@@ -405,8 +405,6 @@ var Site = {
 
 	_ldr: null,
 	Loader: function (isReturn) {
-//		var elem = Site._ldr ? Site._ldr : (Site._ldr = $.e("div", {style: "padding: 90px 0", append: Mail.getMaterialLoader()}));
-//		var elem = Site._ldr ? Site._ldr : (Site._ldr = $.e("div", {style: "padding: 90px 0", append: $.e("div", {"class": "loader-line"})}));
 		var elem = Site._ldr ? Site._ldr : (Site._ldr = $.e("div", {style: "padding: 90px 0", append: $.e("div", {"class": "loader-svg"})}));
 		return !isReturn ? Site.Append(elem) : elem;
 	},
@@ -1114,7 +1112,7 @@ var Site = {
 							if (!smbx) return;
 							$.elements.toggleClass(smbx, "hidden");
 						}}) : null,
-						Wall.CreateSelectAttachmentsMenu(opts.owner_id, at, Form),
+//						Wall.CreateSelectAttachmentsMenu(opts.owner_id, at, Form),
 						$.e("input",{type: "submit", name: "submitbtn", value: lg("general.send")}),
 						ownerId && postId ? $.e("div", {id: "wall-comments-replyUI" + ownerId + "_" + postId}) : null,
 						$.e("span", {append: additionally}),
@@ -1122,7 +1120,7 @@ var Site = {
 						at ? $.e("input",{type:"hidden",value: "", name:"geo", id:"im-geo"}) : null,
 						at ? $.e("div", {id: "im-listattachments"}) : null,
 						at ? $.e("div", {id: "im-selectattach"}) : null,
-						opts.smiles ? (smbx = IM.insertSmilesNode(null, txtr)) : null
+//						opts.smiles ? (smbx = IM.insertSmilesNode(null, txtr)) : null
 					]
 				})
 			]
@@ -1221,36 +1219,14 @@ var Site = {
 	},
 
 	getDate: function (unix) {
+		var date = new Date(unix * 1000);
 		var now = parseInt(+new Date() / 1000);
-		if (now < unix)
-			return "только что";
-		var interval = now - unix;
-		if (interval > (12 * 60 * 60))
-			return $.getDate(unix);
-		else {
-			if (interval < 5)
-				return "только что";
-			var h = Math.floor(interval / 60 / 60),
-				m = Math.floor(interval / 60 % 60),
-				w = [];
-			if (h) {
-				w.push(h > 5 ? h : [null, "один", "два", "три", "четыре", "пять"][h]);
-				w.push($.TextCase(h, ["час", "часа", "часов"]));
-			}
-			if (m && !h) {
-				w.push(m);
-				w.push($.TextCase(m, ["минуту", "минуты", "минут"]));
-			}
-			if (!m && !h) {
-				var s = Math.floor(interval % 60);
-				w.push(s);
-				w.push($.TextCase(s, ["секунду", "секунды", "секунд"]));
-			}
-			w.push("назад");
-			return w.join(" ");
-		}
+		return date.relative(function(num, unit, ms, loc) {
+			if (unit == 3 && num > 1 || unit > 3) {
+				return "{d} {month}" + (unit >= 7 ? " {yyyy}" : "") + " {h}:{mm}";
+			};
+		});
 	},
-
 
 	showCaptchaBox: function (o) {
 		var t, form = $.e("form", {"class": "form-captcha", append: [
@@ -1282,71 +1258,18 @@ var Site = {
 	 * @deprecated
 	 */
 	Get: function (a, b) { var c=Site.get(a);return!b&&!c?0:c },
-
-	/**
-	 * @deprecated
-	 */
 	getAddress: function(o) { return getAddress(o); },
-
-	/**
-	 * @deprecated
-	 */
 	getScrolled: function(){return getScroll()},
-
-	/**
-	 * @deprecated
-	 */
 	SetHeader: function(a,b){Site.setHeader(a,b)},
-
-	/**
-	 * @deprecated
-	 */
 	Append: function(a) { Site.append(a) },
-
-	/**
-	 * @deprecated
-	 */
 	EmptyField: function(a) { return getEmptyField(a) },
-
-	/**
-	 * @deprecated
-	 */
 	Escape: function(a) { return String(a).safe() },
-
-	/**
-	 * @deprecated
-	 */
 	Unescape:function(a){ return String(a).unsafe() },
-
-	/**
-	 * 29/02/2016 removed computing position on click
-	 * @deprecated
-	 */
 	CreateDropDownMenu: function(a,b,c){ return new DropDownMenu(a,DDMconvert2new(b),c).getNode() },
-
-	/**
-	 * @deprecated: left for compatible
-	 */
 	DropDown:function(a,b,c){$.elements.toggleClass(a,"dd-open");var p=$.getPosition(a),b=$.getPosition(b);if(c){a.style.top="auto";a.style.bottom=0}},
-
-	/**
-	 * @deprecated
-	 */
 	CreateInlineForm: function(a) { return Site.getInlineForm(a); },
-
-	/**
-	 * @deprecated
-	 */
 	SetBackButton: function(a){},
-
-	/**
-	 * @deprecated
-	 */
 	enableLoggingAPIRequests: function () {},
-
-	/**
-	 * @deprecated
-	 */
 	logAPIReuqest: function () {},
 
 };
