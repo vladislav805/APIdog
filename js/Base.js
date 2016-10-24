@@ -86,7 +86,6 @@ console.log("ModuleManager<>: adding to queue ", item);
 
 
 			item.files.forEach(function(item) {
-				console.log(item);
 				if (~files.indexOf(item)) {
 					return;
 				};
@@ -111,7 +110,6 @@ console.log("ModuleManager<>: queue files ", files);
 				return ModuleManager._parse(file);
 			})
 			.filter(function(item, index, array) {
-				console.log(item ,index, array);
 				return !(item instanceof ModuleManager.Unknown);
 			})
 			.forEach(function(item) {
@@ -236,8 +234,8 @@ var Modules = {
 	"uploader": { files: ["js/VKUpload.js"] },
 
 	/* Pages */
-	"profiles": { files: ["js/Profile.js"], dependency: ["wall"] },
-	"groups": { files: ["js/Groups.js"], dependency: ["wall"] },
+	"profiles": { files: ["js/Profile.js", "css/profiles.css"], dependency: ["wall"] },
+	"groups": { files: ["js/Groups.js", "css/groups.css"], dependency: ["wall"] }, // styles in friends ????
 	"apps": { files: ["js/Apps.js", "css/apps.css"] },
 
 	/* Media */
@@ -249,12 +247,12 @@ var Modules = {
 	"snapster": { files: ["js/Snapster.js"], dependency: "photos" },
 
 	/* Wall/feed */
-	"wall": { files: ["js/Wall.js", "css/fallback.wall.css", "css/wall.css"], dependency: ["likes", "media", "comments", "attacher"] },
+	"wall": { files: ["js/Wall.js", "css/fallback.wall.css", "css/wall.css", "css/fallback.comments.css"], dependency: ["likes", "media", "comments", "attacher"] },
 	"feed": { files: ["js/Feed.js", "css/fallback.feed.css"], dependency: ["wall"] },
 	"likes": { files: [] },
 	"notifications": { files: ["js/Notifications.js", "css/fallback.notifications.css"] },
 	"media": { files: ["css/fallback.attachments.css"], dependency: ["photos", "video", "audio", "documents", "attachments", "notes", "polls", "templates"] },
-	"comments": { files: ["css/fallback.comments.css"], dependency: ["attacher"] },
+	"comments": { files: ["js/Comments.js", "css/comments.css"], dependency: ["attacher"] },
 	"attacher": { files: ["css/attacher.css"] },
 
 	"fave": { files: ["js/Fave.js"], dependency: ["templates"] },
@@ -271,7 +269,7 @@ var Modules = {
 	"vkutils": { files: ["js/Dev.js"] },
 	"extension": { files: ["js/Extension.js"] },
 	"gifts": { files: ["js/Gifts.js"] },
-	"notes": { files: ["js/Notes.js", "css/notes.css"], dependency: ["wiki"] },
+	"notes": { files: ["js/Notes.js", "css/board.css", "css/notes.css"], dependency: ["wiki"] },
 	"pages": { files: ["js/Pages.js", "css/pages.css"], dependency: ["wiki"] },
 	"places": { files: ["js/Places.js", "css/places.css"] },
 	"polls": { files: ["js/Polls.js", "css/polls.css"] },
@@ -289,6 +287,7 @@ var Modules = {
 (function(w, d) {
 	w.addEventListener("load", function() {
 		ModuleManager.load(["sdk", "lang", "hammer"], function() {
+			Sugar.extend();
 			console.info("APIdog: loaded minimal");
 			init();
 			ModuleManager.load(["analytics", "lazy-css"]);
