@@ -249,20 +249,20 @@ var Profile = {
 				isLink = typeof k.link === "string";
 
 				nodeMedia.appendChild(e(isLink ? "a" : "div", {
-					"class": "profile-counters a",
+					"class": "grid-links-item a",
 					href: isLink ? "#" + k.link : null,
 					onclick: !isLink ? k.link : null,
 					append: [
 						k.count > 0
 							? e("strong", {
-								"class": "profile-counters-count",
+								"class": "grid-links-count",
 								html: parseInt(k.count).toK()
 							  })
 							: k.icon
 								? e("div", {"class": "i i18 " + k.icon})
 								: null,
 						e("div", {
-							"class": "profile-counters-label cliptextfix",
+							"class": "grid-links-label cliptextfix",
 							html: k.count >= 0 ? lg("profiles." + k.label, k.count) : lg("profiles." + k.label)
 						})
 					]

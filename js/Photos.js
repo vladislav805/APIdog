@@ -781,7 +781,7 @@ var Photos = {
 
 
 	getAllComments: function(owner_id) {
-		Site.Loader();
+		/*Site.Loader();
 		Site.API("execute", {
 			code: 'var c=API.photos.getAllComments({owner_id:%h%,album_id:%a%,count:30,offset:%o%,need_likes:1,v:5}),p=[],i=0;while(i<c.items.length){p.push("%h%_"+c.items[i].pid);i=i+1;}return[c,API.users.get({user_ids:c.items@.from_id+c.items@.reply_to_user,fields:"photo_rec,screen_name,online,first_name_dat,last_name_dat",v:5.0}),API.photos.getById({photos:p,extended:1,v:5.0})];'
 					.replace(/%h%/ig, owner_id)
@@ -808,148 +808,12 @@ var Photos = {
 			parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
 			Site.Append(parent);
 			Site.SetHeader(Lang.get("photos", "photos_all"), {link: "photos" + owner_id});
-		})
-	},
-	comments: {},
-	itemComment: function(comment, owner_id, photo_id, opts){
-		var Item = $.e("div"),
-			from_id = comment.from_id,
-			comment_id = comment.id || comment.cid,
-			replyId = comment.reply_to_user,
-			reply = Local.Users[replyId];
-		Photos.comments[owner_id + "_" + photo_id + "_" + comment_id] = comment;
-		Photos.comments[owner_id + "_" + comment_id] = comment;
-		Item.id = "photo-comment" + owner_id + "_" + photo_id + "_" + comment_id;
-		Item.className = "comments";
-		var user = Local.Users[from_id] || {}, actions = [];
-		actions.push($.e("span", {"class": "a", html: Lang.get("comment.reply"), onclick: function(event) {
-			Photos.reply(owner_id, photo_id, comment_id, from_id);
-		}}));
-		actions.push($.e("span", {"class": "tip", html: " | "}));
-		if (comment.can_edit) {
-			actions.push($.e("span", {"class": "a", html: Lang.get("comment.edit"), onclick: function() {
-				Photos.editComment(owner_id, comment_id);
-			}}));
-			actions.push($.e("span", {"class": "tip", html: " | "}));
-		}
-		if (
-			owner_id > 0 && owner_id == API.userId ||
-			owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin ||
-			from_id == API.userId
-		) {
-			actions.push($.e("span", {"class": "a", html: Lang.get("comment.delete"), onclick: (function(owner_id,comment_id,node) {
-				return function(event) {
-					VKConfirm(Lang.get("comment.delete_confirm"), function() {
-						Site.API("photos.deleteComment", {
-							owner_id: owner_id,
-							comment_id: comment_id
-						}, function(data) {
-							data = Site.isResponse(data);
-							if (!data)
-								return;
-							node.parentNode.insertBefore($.e("div", {
-								id: "photo_comment_deleted_" + owner_id + "_" + comment_id,
-								"class": "comments comments-deleted",
-								append: [
-									document.createTextNode(Lang.get("comment.deleted") + " "),
-									$.e("span", {"class": "a", html: Lang.get("comment.restore"), onclick: (function(owner_id, comment_id, node) {
-										return function(event) {
-											Site.API("photos.restoreComment", {
-												owner_id: owner_id,
-												comment_id: comment_id
-											}, function(data) {
-												data = Site.isResponse(data);
-												if (data) {
-													$.elements.remove($.element("photo_comment_deleted_" + owner_id + "_" + comment_id));
-													$.elements.removeClass(node, "hidden");
-												}
-											})
-										};
-									})(owner_id, comment_id, node)})
-								]
-							}), node);
-							$.elements.addClass(node, "hidden");
-						});
-					});
-				};
-			})(owner_id, comment_id, Item)}));
-		};
-		if (from_id != API.userId) {
-			if (actions.length)
-				actions.push($.e("span", {"class": "tip", html: " | "}));
-			actions.push($.e("span", {"class": "a", html: Lang.get("comment.report"), onclick: function(event) {
-				new ReportWindow("photos.reportComment", owner_id, "commentId", comment_id, access_key, false).show();
-			}}));
-		}
-
-		user.screen_name = user.screen_name || (user.uid ? "id" + user.uid : "club" + (-user.gid));
-		Item.appendChild(
-			$.e("div", {
-				"class": "wall-in",
-				append: [
-					(opts && opts.photo ? $.e("div", {"class": "photos-comments-attachedphoto", append: [Photos.itemPhoto(opts.photo, {likes: true, comments: true})]}) : $.e("div")),
-					$.e("a", {href: "#" + user.screen_name, "class": "comments-left", append: [$.e("img", {src: getURL(user.photo || user.photo_rec || user.photo_50)})]}),
-					$.e("div", {
-						"class": "comments-right",
-						append: [
-							$.e("a", {href: "#" + user.screen_name, html: '<strong>' + (user.name || (user.first_name + " " + user.last_name + " " + Site.isOnline(user))) + '<\/strong>'}),
-							replyId
-								? $.e("span", {html: " ответил" + (user.sex === 1 ? "а" : "") + " "})
-								: null,
-							replyId
-								? $.e("a", {
-									href: "#" + reply.screen_name,
-									html: reply.name || reply.first_name_dat + " " + reply.last_name_dat})
-								: null,
-							$.e("div", {"class": "comments-content", html: Mail.Emoji(Site.Format(comment.text) || ""), id: "photo_comment_" + owner_id + "_" + comment_id}), // TODO format
-							$.e("div", {"class": "comments-attachments", append: Site.Attachment(comment.attachments, "photo_comment" + owner_id + "_" + comment_id)}),
-							$.e("div",{
-								"class":"comments-footer",
-								append:[
-									$.e("div", {"class":"comments-actions", append: actions}),
-									$.e("div", {"class":"comments-footer-left", html: $.getDate(comment.date)}),
-									$.e("div", {"class":"wall-likes likes", id: "like_photo_comment_" + owner_id + "_" + comment_id, append: Wall.LikeButton("photo_comment", owner_id, comment_id, comment.likes)})
-								]
-							})
-						]
-					})
-				]
-			})
-		);
-		return Item;
-	},
-	editComment: function(owner_id, comment_id) {
-		var textNode = $.element("photo_comment_" + owner_id + "_" + comment_id);
-		textNode.innerHTML = '';
-		textNode.appendChild(Site.CreateWriteForm({
-			nohead: true,
-			noleft: true,
-			name: "text",
-			value: Photos.comments[owner_id + "_" + comment_id].text,
-			onsubmit: function(event) {
-				var text = this.text && $.trim(this.text.value);
-				if (!text) {
-					Site.Alert({text: "Введите текст!"});
-					return false;
-				}
-				Site.API("photos.editComment", {
-					owner_id: owner_id,
-					comment_id: comment_id,
-					message: text,
-					attachments: Wall.AttachmentToString(Photos.comments[owner_id + "_" + comment_id].attachments)
-				}, function(data) {
-					data = Site.isResponse(data);
-					if (!data)
-						return;
-					Photos.comments[owner_id + "_" + comment_id].text = text;
-					$.element("photo_comment_" + owner_id + "_" + comment_id).innerHTML = Mail.Emoji(Site.Format(text)); // TODO format
-				})
-				return false;
-			}
-		}, owner_id, comment_id))
+		})*/
+		alert("not implemented yet");
 	},
 
 	getCommentNode: function(node, photoData, data, opts) {
+
 		var owner_id = photoData.owner_id,
 			photo_id = photoData.photo_id,
 			access_key = photoData.access_key,
@@ -958,78 +822,52 @@ var Photos = {
 			count = data.count,
 			parent = $.e("div"),
 			list = $.e("div");
-		list.id = "photo_comments_list";
-/**/    parent.appendChild(Site.getPageHeader("Комментарии <i class=count>" + (count) + "</i>"))
-		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
-		for (var i = 0, l = comments.length; i < l; ++i) {
-			list.appendChild(Photos.itemComment(comments[i], owner_id, photo_id));
-		}
-		parent.appendChild(list);
-		parent.appendChild(Site.PagebarV2(getOffset(), count, 30));
-		if (opts && opts.can_comment)
-			parent.appendChild(Site.CreateWriteForm({
-				asAdmin: (owner_id < 0 && Local.Users[owner_id] && Local.Users[owner_id].is_admin),
-				name: "text",
-				id: "photo-comment-writearea",
-				reply: true,
-				allowAttachments: 30,
-				owner_id: owner_id,
-				onsubmit: function(event) {
-					event.preventDefault();
-					var text = this.text && this.text.value,
-						attachments = this.attachments && this.attachments.value || "",
-						fromGroup = this.as_admin && this.as_admin.checked && 1 || "",
-						replyComment = this.reply_cid && this.reply_cid.value || "";
 
-					if (!$.trim(text) && !$.trim(attachments)) {
-						Site.Alert({text: "Введите текст!"});
-						return false;
-					};
+		node.appendChild(new Comments({
+			type: "photo",
+			ownerId: owner_id,
+			postId: photo_id,
+		}, data, {
+			get: {
+				method: "photos.getComments",
+				itemField: "photo_id"
+			},
+			add: {
+				method: "photos.createComment",
+				text: "text",
+				attachments: "attachments",
+				itemField: "post_id",
+				callback: function() {
 
-					Site.API("photos.createComment", {
-						owner_id: owner_id,
-						photo_id: photo_id,
-						access_key: access_key,
-						message: text,
-						attachments: attachments,
-						from_group: fromGroup,
-						reply_to_comment: replyComment
-					}, function(data) {
-						data = Site.isResponse(data);
-						if (data) {
-							var newOffset = Math.floor(count / 30) * 30;
-							window.location.hash = "#photo" + owner_id + "_" + photo_id + "?reply=" + data + "&offset=" + newOffset + (access_key ? "&access_key=" + access_key : "");
-						}
-					});
-					return false;
 				}
-			}, owner_id, photo_id));
-		node.appendChild(parent);
-	},
-	reply: function(ownerId, photoId, commentId, toId){
-		var area = $.element("photo-comment-writearea"),
-			to = Local.Users[toId],
-			reply = $.element("wall-comments-reply" + ownerId + "_" + photoId),
-			replyUI = $.element("wall-comments-replyUI" + ownerId + "_" + photoId),
-			e = $.e;
+			},
+			edit: {
+				method: "photos.editComment",
+				text: "text",
+				attachments: "attachments",
+				callback: function() {
 
-		if (reply.value == commentId)
-			return;
+				}
+			},
+			remove: {
+				method: "photos.deleteComment",
+				callback: function() {
 
-		if (!$.trim(area.value))
-			reply.value = commentId;
-		area.value += " [" + (to.screen_name || (toId > 0 ? "id" + toId : "club" + (-toId))) + "|" + (to.name || to.first_name) + "], ";
-		var l = area.value.length - 1;
-		area.setSelectionRange(l, l);
-		$.elements.clearChild(replyUI);
-		replyUI.appendChild(e("div", {append: [
-			e("a", {href: "#" + to.screen_name, html: (to.name || to.first_name_dat + " " + to.last_name_dat)}),
-			e("div", {"class": "feed-close a", onclick: function(event) {
-				area.value = area.value.replace(new RegExp("^\[" + to.screen_name + "|" + (to.name || to.first_name) + "\], " ,"img"), "");
-				reply.value = "";
-				$.elements.clearChild(replyUI);
-			}})
-		]}))
+				}
+			},
+			restore: {
+				method: "photos.restoreComment",
+				callback: function() {
+
+				}
+			},
+			report: {
+				method: "photos.reportComment",
+				callback: function() {
+
+				}
+			}
+		}).getNode());
 	},
 
 
@@ -1108,8 +946,8 @@ var Photos = {
 			makeLike   = Photos.getLikeEffect(owner_id, photo_id),
 			footer     = $.e("div"),
 			comments   = $.e("div"),
-			like       = Wall.LikeButton("photo", owner_id, photo_id, photo.likes || {}, {}, access_key),
-			links      = (function(a,b,c,d,e,f,g,h,i,j,k,l){for(;e<f;++e){l={};if(a[c+d[e]]==g)continue;l[j]=(((((l[i]=((((100*d[e])/a[i])*a[i])/100))*100)/a[i])*a[j])/100);l[k]=a[c+d[e]];b[h](l);};return b;})(photo,[],"photo_",[75,130,604,807,1280,2560],0,6,undefined,"push","width","height","url",{}),
+			like       = getLikeButton("photo", owner_id, photo_id, photo.likes || {}, {}, access_key),
+			links      = (function(a,b,c,d,e,f,g,h,i,j,k,l){for(;e<f;++e){l={};if(a[c+d[e]]==g)continue;l[j]=(((((l[i]=((((100*d[e])/a[i])*a[i])/100))*100)/a[i])*a[j])/100);l[k]=a[c+d[e]];b[h](l);};return b;})(photo,[],"photo_",[2560,1280,807,604,130,75],0,6,undefined,"push","width","height","url",{}),
 			actions    = {},
 			headerText = Lang.get("photos", "photo_noun") + " " + (position.current + 1 || 1) + Lang.get("photos", "photo_count_of") + (position.current != -1 ? list.length : 1);
 		header.id    = "photo_actions_head";
@@ -1524,24 +1362,6 @@ var Photos = {
 			}
 		}));
 	},
-	getReportSelect: function(type) {
-		var parent = $.e("div"),
-			tip    = $.e("div"),
-			//select = $.e("select"),
-			reasons = "это спам|детская порнография|экстремизм|насилие|пропаганда наркотиков|материал для взрослых|оскорбление"
-				.split("|");
-		tip.className = "tip";
-		tip.innerHTML = "Выберите, пожалуйста, причину, почему Вы хотите пожаловаться на " + (type == 2 ? "комментарий" : "фотографию") + ":";
-		parent.appendChild(tip);
-		//select.name = "reason";
-		for (var i = 0, l = reasons.length; i < l; ++i)
-			parent.appendChild($.e("label", {append: [
-				$.e("input", {type: "radio", name: "reason", value: i}),
-				document.createTextNode(" " + reasons[i])
-			]}));
-		//parent.appendChild(select);
-		return parent;
-	},
 
 	reportPhoto: function(ownerId, photoId, accessKey) {
 		new ReportWindow("photos.report", ownerId, "photoId", photoId, accessKey, false).show();
@@ -1601,41 +1421,42 @@ var Photos = {
 	},
 	downloadPhoto: function(owner_id, photo_id, access_key, links) {
 		var parent = $.e("div"),
-			item = function(url, width, height) {
-				return $.e("a", {href: url, target: "_blank", html: parseInt(width) + "&times;" + parseInt(height)});
+			item = function(url, width, height, type) {
+				return $.e("a", {"class": "grid-links-item", href: url, target: "_blank", append:[
+					$.e("strong", {"class": "grid-links-count", html: type || "?"}),
+					$.e("div", {"class": "grid-links-label", html: parseInt(width) + "&times;" + parseInt(height)})
+				]});
 			};
-		parent.id = "photo_downloadlinks" + owner_id + "_" + photo_id;
-		parent.className = "profile-lists";
+
 		for (var i = 0, l = links.length; i < l; ++i) {
 			var link = links[i];
 			parent.appendChild(item(link.url, link.width, link.height));
 		};
-		parent.appendChild($.e("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}))
+
+		parent.appendChild($.e("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}));
+
 		new Modal({
 			title: "Прямые ссылки на фото",
 			content: parent,
 			noPadding: true,
-			footer: [ { name: "close", title: "Закрыть", onclick: function() { this.close() } } ]
+			footer: [ { name: "close", title: Lang.get("general.close"), onclick: function() { this.close() } } ]
 		}).show();
-		Site.API("execute", {
-			code: 'return API.photos.getById({photos:"%id%",photo_sizes:1})[0].sizes;'
-					.replace(/%id%/ig, owner_id + "_" + photo_id + (access_key ? "_" + access_key : ""))
-		}, function(data) {
-			data = Site.isResponse(data);
-			if (!data)
-				return;
+
+		new APIRequest("execute", {
+			code: "return API.photos.getById({photos:Args.p,photo_sizes:1})[0].sizes;",
+			p: owner_id + "_" + photo_id + (access_key ? "_" + access_key : "")
+		}).setOnCompleteListener(function(data) {
 			$.elements.clearChild(parent);
 
-			data.sort(function(a, b)
-			{
+			data.sort(function(a, b) {
 				return a.width > b.width ? -1 : a.width < b.width ? 1 : 0;
 			});
 
 			for (var i = 0, l = data.length; i < l; ++i) {
 				var link = data[i];
-				parent.appendChild(item(link.src, link.width, link.height));
+				parent.appendChild(item(link.src, link.width, link.height, link.type.toUpperCase()));
 			}
-		})
+		}).execute();
 	},
 	setProfilePhoto: function(ownerId, photoId) {
 		Site.API("execute", {
