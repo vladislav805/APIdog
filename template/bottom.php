@@ -6,9 +6,9 @@
 			</div>
 		</div>
 		<script src="lib/lib1.3.0.js"></script>
-		<!--script src="js/SDK.js"></script-->
+		<script src="js/Constants.js"></script>
 		<script src="js/SDK.js"></script>
-		<script src="js/VKUpload.js"></script>
+		<!--script src="js/VKUpload.js"></script-->
 		<script src="lib/nondefault.js?1"></script>
 		<script type="text/javascript"><?
 	if (defined("_installed")) {
