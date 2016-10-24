@@ -219,6 +219,53 @@
 	transform: translateY(100%);
 }
 
+/* --- grid links --- */
+
+.grid-links-item {
+    width: 25%;
+    display: inline-block;
+    text-align: center;
+    line-height: 0;
+    padding: 10px 0;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	vertical-align: bottom;
+}
+
+.grid-links-item:hover {
+	background: rgb(242, 244, 247);
+}
+
+.grid-links-count {
+    font-size: 20px;
+    line-height: 20px;
+}
+
+.grid-links-label {
+    line-height: 24px;
+}
+
+.grid-links .i {
+	margin: 0 auto;
+	height: 20px !important;
+	background-position: bottom;
+	background-size: 18px;
+}
+
+@media screen and (max-width: 360px) {
+	.grid-links-item {
+		width: 33.3333%;
+	}
+
+	.grid-links-count {
+		font-size: 19px;
+	}
+
+	.grid-links-label {
+		font-size: 11.5px;
+	}
+}
+
 /* --- fullwidth input --- */
 
 .s,
@@ -360,6 +407,34 @@
 	line-height: 30px;
 	padding: 0 10px;
 }
+
+/* -- search form --- */
+
+.searchform {
+
+}
+
+.searchform-wrap {
+	overflow: hidden;
+	position: relative;
+	margin: 11px 14px;
+}
+
+.searchform-icon {
+	position: absolute;
+	right: 0;
+	height: 36px;
+	width: 34px;
+	background: url("data:image/svg+xml,%3Csvg fill='%2366768F' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E")  no-repeat center transparent !important;
+}
+
+.searchform-field {
+	width: 100%;
+	line-height: 34px;
+	border: 1px solid #C1C1C1;
+	padding: 0 9px;
+}
+
 
 /* --- simple form --- */
 

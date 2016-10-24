@@ -1,0 +1,46 @@
+/* --- profiles --- */
+
+.profile-info {
+	padding:8px;
+	overflow:hidden;
+}
+
+.profile-left {
+	float: left;
+	width: 50px;
+}
+
+.profile-left img {
+	border-radius: 4px;
+}
+
+.profile-left img {
+	max-width: 100%;
+}
+
+.profile-right {
+	margin-left: 58px;
+	line-height: 18px;
+	margin-top: -2px;
+}
+
+.profile-media {
+	margin: 10px;
+}
+
+.profile-status {
+	cursor: pointer;
+}
+
+.profile-all td {
+	padding: 5px 10px;
+}
+
+.profile-gotofullinfo {
+	background: #E9EDF1;
+	margin: 9px 12px;
+	text-align: center;
+	display: block;
+	padding: 10px;
+	border-radius: 2px;
+}
