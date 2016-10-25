@@ -452,11 +452,7 @@ progress {
 .im-important{
 	background:linear-gradient(#ffffcc,#ffff99);
 }
-.emoji {
-	width: 16px;
-	height: 16px;
-	vertical-align: middle;
-}
+
 
 .im-fwds *{
 	text-align:left !important;
@@ -920,26 +916,6 @@ progress {
 
 
 /* e */
-.minilist a{
-	overflow: hidden;
-	display: block;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0) !important;
-	outline: none !important;
-	margin: 0 15px;
-	border-bottom: 1px solid #E9ECEE;
-	padding: 10px 0;
-}
-.minilist a:hover{
-	background: rgb(242, 244, 247);
-	margin: 0 0px;
-	border-top: 1px solid #E9EBEC;
-	padding: 10px 15px;
-	margin-top: -1px;
-}
-.minilist a:last-child {
-	border-bottom: none;
-}
 .stickers-dragged {
 	position: absolute;
 	width: 100%;
@@ -1318,103 +1294,4 @@ progress {
 }
 .2x .uploadblock {
 	background-image: url(//static.apidog.ru/port.v7/uploadIcon-2x.png)
-}
-
-/* Modal */
-
-
-
-
-
-
-
-/* Simple List */
-
-.simplelist-item {
-	display: block;
-	padding: 0 16px;
-	line-height: 48px;
-	border-bottom: 1px solid #F2F2F2;
-	transition: height .2s ease-in-out;
-	overflow: hidden;
-}
-
-.simplelist-item:hover {
-
-}
-
-.simplelist-actions {
-	float: right;
-}
-
-.simplelist-actions > * {
-	width: 0;
-	float: left;
-	opacity: 0;
-	transition: all .3s ease-in-out;
-}
-
-.simplelist-item:hover .simplelist-actions > * {
-	width: 42px;
-	opacity: .7;
-}
-
-.simplelist-actions > *:hover {
-	opacity: 1;
-}
-
-/* User List */
-
-.userlist-item {
-	display: block;
-	overflow: hidden;
-	display: block;
-	padding: 10px 14px;
-	position: relative;
-	color: #66768F;
-}
-
-.userlist-item::after {
-	content: "";
-	position: absolute;
-	bottom: 0;
-	left: 76px;
-	right: 0;
-	display: block;
-	border-bottom: 1px solid #F2F2F2;
-}
-
-.userlist-item:hover {
-
-}
-
-.userlist-photo {
-	width: 50px;
-	height: 50px;
-	float: left;
-	border-radius: 25px;
-}
-
-.userlist-content {
-	margin-left: 64px;
-}
-
-
-
-
-
-
-
-
-
-._logWrap {
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	background: white;
-	font-family: monospace;
-}
-._log-item {
-	padding: 12px;
-	line-height: 30px;
 }

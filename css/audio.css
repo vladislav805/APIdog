@@ -35,3 +35,11 @@
 	height: 42px;
 	float: left;
 }
+
+
+.audio-radio-frequency {
+	font-style: normal;
+	color: rgb(136, 136, 136);
+	font-size: 9px;
+	vertical-align: top;
+}

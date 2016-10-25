@@ -98,7 +98,90 @@
 	display: block;
 }
 
+/* Simple List */
+
+.simplelist-item {
+	display: block;
+	padding: 0 16px;
+	line-height: 48px;
+	border-bottom: 1px solid #F2F2F2;
+	transition: height .2s ease-in-out;
+	overflow: hidden;
+}
+
+.simplelist-item:hover {
+
+}
+
+.simplelist-actions {
+	float: right;
+}
+
+.simplelist-actions > * {
+	width: 0;
+	float: left;
+	opacity: 0;
+	transition: all .3s ease-in-out;
+}
+
+.simplelist-item:hover .simplelist-actions > * {
+	width: 42px;
+	opacity: .7;
+}
+
+.simplelist-actions > *:hover {
+	opacity: 1;
+}
+
+/* User List */
+
+.userlist-item {
+	display: block;
+	overflow: hidden;
+	display: block;
+	padding: 10px 14px;
+	position: relative;
+	color: #66768F;
+}
+
+.userlist-item::after {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	left: 76px;
+	right: 0;
+	display: block;
+	border-bottom: 1px solid #F2F2F2;
+}
+
+.userlist-item:hover {
+
+}
+
+.userlist-photo {
+	width: 50px;
+	height: 50px;
+	float: left;
+	border-radius: 25px;
+}
+
+.userlist-content {
+	margin-left: 64px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 /* --- list --- */
+/* Using in likes list */
 
 .listItem {
 	display: block;
@@ -220,6 +303,7 @@
 }
 
 /* --- grid links --- */
+/* Using in profiles/groups and window "download original" in photos */
 
 .grid-links-item {
     width: 25%;
@@ -383,6 +467,7 @@
 }
 
 /* --- mini items of list profiles/groups --- */
+/* Using in create chat, editing list of friends */
 
 .miniprofiles-item {
 	border-bottom: 1px solid #d9d9d9;
@@ -408,7 +493,7 @@
 	padding: 0 10px;
 }
 
-/* -- search form --- */
+/* --- search form --- */
 
 .searchform {
 
@@ -789,4 +874,10 @@ input[type=search].sf
 .captcha input[type="button"] {
 	display: block;
 	width: 100%;
+}
+
+.emoji {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
 }
