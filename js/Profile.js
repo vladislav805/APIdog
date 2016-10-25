@@ -70,7 +70,7 @@ var Profile = {
 		};
 
 
-		var photo = e("img", {src: getURL(user.photo_rec), alt: ""}),
+		var photo = lz(getURL(user.photo_rec), 50, 50),
 			isPhoto = user.photo_id,
 			location = [],
 			status = Profile.getStatusNode(user);

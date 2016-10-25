@@ -111,10 +111,7 @@ VKMessage.prototype = {
 				e("div", {
 					"class": "dialogs-item-left",
 					append: [
-						e("img", {
-							"class": "dialogs-left",
-							src: from.photo ? getURL(from.photo) : Mail.defaultChatImage
-						}),
+						new LazyImage(from.photo ? getURL(from.photo) : Mail.defaultChatImage).setClass("dialogs-left").getNode(),
 						e("span", {
 							"class": "dialogs-unread",
 							id: "ml" + fromId, html: unread || ""

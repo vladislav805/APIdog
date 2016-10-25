@@ -36,6 +36,7 @@ function formatNumber(n) { return parseInt(n).format().replace(/,/ig, "\u2009") 
 function random(a, b) {return Number.random(a, b) };
 function shuffle(array) { return array.shuffle() };
 function httpBuildQuery(array, noEncode) { return Object.toQueryString(array) };
+function is2x() { return window.devicePixelRatio > 1 };
 
 function getLoader() {
 	return $.e("div", {style: "padding: 90px 0", append: $.e("div", {"class": "loader-svg"})});
@@ -207,14 +208,6 @@ window.addEventListener("mousemove", function _mouseMoveDetector() {
  */
 
 /**
- * Return number with beginning zero if number less than 10
- * @return {String} result number
- */
-Number.prototype.fix00 = function() {
-	return this < 10 ? "0" + this : this;
-};
-
-/**
  * Geerate string with name of value of file
  * @return {String} string, contains value and unit of measure
  */
@@ -229,14 +222,6 @@ Number.prototype.getInformationValue = function() {
 			return n + " " + (("b Kb Mb Gb Tb".split(" "))[i]);
 	};
 	return null;
-};
-
-/**
- * Convert number to humanize format: 1234 => 1.2K, 1000000 => 1KK
- * @return {String} Result
- */
-Number.prototype.toK = function() {
-	return this.metric(1, "|KM");
 };
 
 /**
@@ -266,7 +251,6 @@ String.prototype.setLang = function(data, value) {
 	return s;
 };
 
-
 String.prototype.schema = function(data) {
 	var s = this, k;
 	for (k in data) {
@@ -274,18 +258,6 @@ String.prototype.schema = function(data) {
 	};
 	return s;
 };
-
-/**
- * Replace html-tags for safe inserting in page
- * @return {String} safe string
- */
-String.prototype.safe = function() { return this.escapeHTML() };
-
-/**
- * Replace safe html symbols to plain text
- * @return {String} Unsafe string
- */
-String.prototype.unsafe = function() { return this.unescapeHTML() };
 
 /**
  * Return HTML-code from pseudo-BB-code
@@ -303,14 +275,22 @@ var emojiNeedReplace = !~navigator.userAgent.toLowerCase().indexOf("iphone"),
 	emojiRegExp = /((?:[\u2122\u231B\u2328\u25C0\u2601\u260E\u261d\u2626\u262A\u2638\u2639\u263a\u267B\u267F\u2702\u2708]|[\u2600\u26C4\u26BE\u2705\u2764]|[\u25FB-\u25FE]|[\u2602-\u2618]|[\u2648-\u2653]|[\u2660-\u2668]|[\u26A0-\u26FA]|[\u270A-\u2764]|[\uE000-\uF8FF]|[\u2692-\u269C]|[\u262E-\u262F]|[\u2622-\u2623]|[\u23ED-\u23EF]|[\u23F8-\u23FA]|[\u23F1-\u23F4]|[\uD83D\uD83C\uD83E]|[\uDC00-\uDFFF]|[0-9]\u20e3|[\u200C\u200D])+)/g,
 	emojiCharSequence = /[0-9\uD83D\uD83C\uD83E]/,
 	emojiFlagRegExp = /\uD83C\uDDE8\uD83C\uDDF3|\uD83C\uDDE9\uD83C\uDDEA|\uD83C\uDDEA\uD83C\uDDF8|\uD83C\uDDEB\uD83C\uDDF7|\uD83C\uDDEC\uD83C\uDDE7|\uD83C\uDDEE\uD83C\uDDF9|\uD83C\uDDEF\uD83C\uDDF5|\uD83C\uDDF0\uD83C\uDDF7|\uD83C\uDDF7\uD83C\uDDFA|\uD83C\uDDFA\uD83C\uDDF8/,
-	emojiImageTemplate = "<img src=\"\/\/vk.com\/images\/emoji\/%c_2x.png\" alt=\"%s\" class=\"emoji\" \/>",
-	emojiImageTemplateProxy = "<img src=\"\/\/static.apidog.ru\/proxed\/smiles\/%c.png\" alt=\"%s\" class=\"emoji\" \/>",
+	emojiImageTemplate = "<img src=\"\/\/vk.com\/images\/emoji\/{code}{size}.png\" alt=\"{symbol}\" class=\"emoji\" \/>",
+	emojiImageTemplateProxy = "<img src=\"\/\/static.apidog.ru\/proxed\/smiles\/{code}.png\" alt=\"{symbol}\" class=\"emoji\" \/>",
 	emojiHandler = function(s){var i=0,b="",a="",n,y=[],c=[],d,l,o="",j=!1,f=!1;while(n=s.charCodeAt(i++)){d=n.toString(16).toUpperCase();l=s.charAt(i-1);if(i==2&&n==8419){c.push("003"+s.charAt(0)+"20E3");y.push(s.charAt(0));b='';a='';continue};b+=d;a+=l;if(!l.match(emojiCharSequence)){c.push(b);y.push(a);b='';a=''}};if(b){c.push(b);y.push(a)};b="";a="";for(var i in c){d=c[i];l=y[i];if(l.match(/\uD83C[\uDFFB-\uDFFF]/)){b+=d;a+=l;continue};if(j){b+=d;a+=l;j=!1;continue};if(d=="200C"||d=="200D"){if(b){j=!0;continue}else o+=l};if(l.match(/\uD83C[\uDDE6-\uDDFF]/)){if(f){b+=d;a+=l;f=!1;continue};f=!0;}else if(f)f=!1;if(b)o+=emojiRender(b,a,!0);b=d;a=l};if(b)o+=emojiRender(b,a,!0);return o},
-	emojiRender = function(a,b){return(isEnabled(4)?emojiImageTemplateProxy:emojiImageTemplate).schema({c:a,s:b})};
+	emojiRender = function(a,b){return(isEnabled(4)?emojiImageTemplateProxy:emojiImageTemplate).format({code:a,size:is2x()?"_2x":"",symbol:b})};
 
 String.prototype.emoji = function() {
 	return emojiNeedReplace ? this.replace(emojiRegExp, emojiHandler).replace(/\uFE0F/g, '') : this;
 };
+
+/* Replaced by SugarJS */
+
+Number.prototype.fix00 = function() { return this < 10 ? "0" + this : this };
+Number.prototype.toK = function() { return this.metric(1, "|KM") };
+String.prototype.safe = function() { return this.escapeHTML() };
+String.prototype.unsafe = function() { return this.unescapeHTML() };
+
 
 
 
@@ -323,7 +303,7 @@ function APIdogRequest(method, params, callback, fallback, progress) {
 	params = params || {};
 	params.authKey = API.userAuthKey;
 	var xhr = new XMLHttpRequest(),
-		postFields = httpBuildQuery(params),
+		postFields = Object.toQueryString(params),
 		key;
 	xhr.open("POST", location.protocol + "\/\/" + window.APIdogAPIDomain + window.APIdogAPIPath + method, true);
 	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -491,12 +471,12 @@ function startFirstRequestAPI() {
 		code: 'return{u:API.users.get({fields:"photo_50,photo_100,screen_name,bdate",v:5.52})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({filters:"active",type:"stickers",v:5.52,extended:1}),l:API.messages.getRecentStickers().sticker_ids,f:API.friends.get({fields:"online,photo_50,photo_100,sex,bdate,screen_name,can_write_private_message,city,country",v:5.52,order:"hints"}),d:API.utils.getServerTime()};'
 	}).setOnErrorListener(function() {
 		new Modal({
-			title: "Хм..",
-			content: "Произошло что-то странное. На первый запрос от ВК сайт не смог получить ответа.<br />Проблема находится либо у ВК, либо в Вашем соединении. Если проблема в Вашем доступе к ВК (домену vk.com), то Вы можете включить режим прокси и попробовать еще раз &mdash; в большинстве случаев это помогает, но учтите, что при этом режиме отключается расширение APIdog LongPoll (если оно было установлено) и все запросы будут идти через наш сервер.<br />Если Вы найдете причину ошибки и устраните её, то, пожалуйста, отключите режим прокси.",
+			title: Lang.get("site.errorWhileInitTitle"),
+			content: Lang.get("site.errorWhileInit"),
 			footer: [
 				{
 					name: "enableProxy",
-					title: "Включить прокси",
+					title: Lang.get("site.errorWhileInitButtonProxy"),
 					onclick: function() {
 						if (!(API.settings.bitmask & 4)) {
 							API.settings.bitmask += 4;
@@ -508,7 +488,7 @@ function startFirstRequestAPI() {
 				},
 				{
 					name: "tryAgain",
-					title: "Повторить",
+					title: Lang.get("site.errorWhileInitButtonTryAgain"),
 					onclick: function() {
 						startFirstRequestAPI();
 						this.close();
@@ -887,7 +867,14 @@ var Local = {
 	 * 07/08/2016: добавлена поддержка хранения chat (v6.5)
 	 * @param {Array} users Массив с пользователями
 	 */
-	add: function(users) {
+	add: function() {
+		if (arguments.length > 1) {
+			Array.prototype.forEach.call(arguments, function(a) { Local.add(a) });
+			return Local.Users;
+		};
+
+		var users = arguments[0];
+
 		if (users == null) {
 			return;
 		};
@@ -979,7 +966,7 @@ function getSelectNumbersInRange (options, min, max, value, step) {
 	return select;
 };
 
-function createInputDate (options, date) {
+function createInputDate(options, date) {
 	options = options || {};
 	var e = $.e,
 		wrap,
@@ -1020,7 +1007,7 @@ function createInputDate (options, date) {
 		y = getSelectNumbersInRange({
 			name: options.name + "Year",
 			onchange: recount
-		}, 2016, 2017, u.getFullYear()),
+		}, 2016, 2018, u.getFullYear()),
 
 		h = getSelectNumbersInRange({
 			name: options.name + "Hours"
@@ -1049,7 +1036,97 @@ function createInputDate (options, date) {
 	};
 };
 
-function getUnixtimeFromCustomInputBundle (d, m, y, h, i) {
+function LazyImage(url, width, height) {
+
+	this._node = $.e("img", {"src-url": url, src: "data:image/svg+xml,%3Csvg height=%220%22 width=%220%22 viewport=%220 0 0 0%22 version=%221.1%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E", onload: this._loaded.bind(this), style: "background: url(\"" + lzHolder + "\") no-repeat center center" });
+
+	if (width && height) {
+		this._node.width = width;
+		this._node.height = height;
+	};
+
+	lzQueue.push(this);
+
+	this._node.addEventListener("progress", function(event) { console.log("IMAGE PROGRESS") });
+
+	this.x = -1;
+	this.y = -1;
+
+};
+
+LazyImage.prototype = {
+
+	getNode: function() {
+		return this._node;
+	},
+
+	load: function() {
+		this._node.setAttribute("src", this._node.getAttribute("src-url"));
+	},
+
+	find: function() {
+		var pos = $.getPosition(this._node);
+		this.x = pos.left;
+		this.y = pos.top;
+	},
+
+	setClass: function(cls) {
+		this._node.className = Array.prototype.join.call(arguments, " ");
+		return this;
+	},
+
+	_loaded: function() {
+
+	}
+
+};
+
+var lzQueue = [],
+	lzCache = {},
+	lzLast = 0,
+	lzHolder = "data:image/svg+xml,%3Csvg height=%2226%22 width=%2226%22 viewport=%220 0 100 100%22 version=%221.1%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cdefs%3E%3ClinearGradient id=%22int%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%220%25%22%3E%3Cstop offset=%220%25%22 stop-opacity=%221%22 stop-color=%22%23567CA4%22%3E%3C/stop%3E%3Cstop offset=%2260%25%22 stop-opacity=%221%22 stop-color=%22%23567CA4%22%3E%3C/stop%3E%3Cstop offset=%22100%25%22 stop-opacity=%220%22 stop-color=%22%23567CA4%22%3E%3C/stop%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle style=%22stroke: url%28'%23int'%29 none;%22 r=%2211.5%22 cy=%2213%22 cx=%2213%22 stroke=%22%23567CA4%22 stroke-width=%223%22 stroke-dasharray=%2231.7929, 40.4637%22 stroke-dashoffset=%220%22 transform-origin=%22center center%22 fill=%22transparent%22%3E %3CanimateTransform attributeType='xml' attributeName='transform' type='rotate' from='0 13 13' to='360 13 13' dur='0.8s' repeatCount='indefinite'/%3E %3C/circle%3E%3C/svg%3E";
+
+function lz(src, width, height) {
+	var image;
+	if (lzCache[src]) {
+		image = lzCache[src].getNode();
+	} else {
+		image = new LazyImage(src, width, height);
+		lzCache[src] = image;
+	};
+	return image.getNode();
+};
+
+ModuleManager.eventManager.addEventListener("SDK", function() {
+	window.addEventListener("scroll", function(event) {
+		var d;
+		if ((d = Date.now()) - lzLast < 200) {
+			return;
+		};
+
+		var top = getScroll(),
+			limit = top + document.documentElement.clientHeight;
+
+		lzLast = d;
+
+		lzQueue = lzQueue.filter(function(image) {
+			if (image.y < 0) {
+				image.find();
+			};
+
+			if (image.y <= top || image.y >= limit) {
+				return true;
+			};
+
+			image.load();
+
+			return false;
+		});
+	});
+
+});
+
+function getUnixtimeFromCustomInputBundle(d, m, y, h, i) {
 	var d = new Date(
 			y.options[y.selectedIndex].value.trim(),
 			m.options[m.selectedIndex].value.trim() - 1,
@@ -1062,7 +1139,7 @@ function getUnixtimeFromCustomInputBundle (d, m, y, h, i) {
 	return d.toString() === "Invalid Date" ? 0 : parseInt(d.getTime() / 1000);
 };
 
-function setSelectedItem (select, value) {
+function setSelectedItem(select, value) {
 	Array.prototype.forEach.call(select.options, function(item, index) {
 		if (item.value == value) {
 			select.selectedIndex = index;
@@ -1070,7 +1147,7 @@ function setSelectedItem (select, value) {
 	});
 };
 
-function extendClass (child, parent) {
+function extendClass(child, parent) {
 	var F = function() { };
 	F.prototype = parent.prototype;
 	child.prototype = new F();
@@ -1078,7 +1155,7 @@ function extendClass (child, parent) {
 	child.superclass = parent.prototype;
 };
 
-function extendObject (target, data) {
+function extendObject(target, data) {
 	target = target || {};
 	data = data || {};
 	Object.keys(data).forEach(function(key) {
@@ -1135,9 +1212,7 @@ function truncate (text, options) {
 	]}) : nodeSmall;
 };
 
-function is2x() {
-	return window.devicePixelRatio > 1;
-};
+
 
 function parse (data, fx) {
 	return data.map(function(i) {

@@ -350,21 +350,21 @@ var Feed = {
 			parent = document.createElement("div"),
 			list = document.createElement("div"),
 			e = $.e,
-			getItem = function(i) {
-				return e("a", {href: "#feed?lists=" + (i.id ? "list" + i.id : i.name), html: i.title.safe()});
+			insertItem = function(i) {
+				list.appendChild(e("a", {"class": "simplelist-item", href: "#feed?lists=" + (i.id ? "list" + i.id : i.name), append: e("div", {"class": "simplelist-content", html: i.title.safe()})}));
 			};
-		list.className = "minilist";
-		for (var i = 0, l = lists.length; i < l; ++i)
-			list.appendChild(getItem(lists[i]));
+
 		if (!lists.length)
-			list.appendChild(Site.EmptyField("Нет списоков новостей"));
+			list.appendChild(getEmptyField("Нет списоков новостей"));
+		else
+			lists.forEach(insertItem);
 		parent.appendChild(Feed.GetTabs());
-		parent.appendChild(Site.CreateHeader("Списки новостей"));
+		parent.appendChild(Site.getPageHeader("Списки новостей"));
 		parent.appendChild(Feed.getSelectionsTabs());
 		parent.appendChild(list);
-		parent.appendChild(Site.CreateNextButton({text: lg("feed.listsRecommend"), link: "#groups?act=recommends"}));
-		Site.Append(parent);
-		Site.SetHeader("Списки новостей");
+		//parent.appendChild(Site.CreateNextButton({text: lg("feed.listsRecommend"), link: "#groups?act=recommends"}));
+		Site.append(parent);
+		Site.setHeader("Списки новостей");
 	},
 	getFriends: function(data) {
 		data = Site.isResponse(data);

@@ -303,7 +303,7 @@ VKAudio.prototype = {
 	},
 
 	getBitrate: function(callback) {
-		APIdogRequest("apidog.getBitrate", { a: API.userAccessToken, i: this.ownerId + "_" + this.audioId }, function(data) {
+		APIdogRequest("apidog.getBitrate", { a: API.userAccessToken, i: this.getId() }, function(data) {
 			callback({ isSuccess: data.isSuccess, rate: data.bitrate, size: data.size || 0 });
 		});
 	}
@@ -605,7 +605,7 @@ VKAudioAlbum.prototype = {
 			"class": "audio-i audio-i-edit",
 			title: lg("audio.albumTipEdit"),
 			onclick: function(event) {
-				s.editAlbum();
+				s.editAlbum(this);
 				event.preventDefault();
 				return false;
 			}
@@ -627,10 +627,11 @@ VKAudioAlbum.prototype = {
 	/**
 	 * Open dialog editing album
 	 */
-	editAlbum: function() {
+	editAlbum: function(fromNode) {
 		var album = this;
 		new EditWindow({
 			lang: true,
+			fromNode: fromNode,
 			title: "audio.editAlbumWindowTitle",
 			isEdit: true,
 			items: [
@@ -735,6 +736,78 @@ VKAudioBroadcast.prototype = {
 
 function RadioItem(r) {
 	this.stationId = r.stationId;
+	this.title = r.title;
+	this.cityId = r.cityId;
+	this.city = null;
+	this.streams = parse(r.streams, RadioStream);
+	this.site = r.site;
+	this.frequency = r.frequency;
+};
+
+RadioItem.prototype.getId = function() {
+	return this.stationId;
+};
+
+RadioItem.prototype.getCityName = function() {
+	return this.city && this.city.title || "";
+};
+
+RadioItem.prototype.getFrequency = function() {
+	return this.frequency > 0 ? this.frequency.toFixed(1) + " MHz" : "";
+};
+
+RadioItem.prototype.getNode = function() {
+	var e = $.e;
+
+	return e("div", {
+		id: "audio-station" + this.getId(),
+		"class": "audio-item",
+
+		append: [
+			e("div", {"class": "audio-right", append: [
+				e("div", {"class": "audio-times", html: this.getCityName()}),
+//				e("div", {"class": "audio-actions", append: this.getActions()})
+			]}),
+			this.mNodeControl = e("div", {"class": "audio-control audio-i audio-i-play"}),
+			e("div", {"class": "audio-content", append: [
+				e("div", {"class": "audio-title", append: [
+					this.mNodeArtist = e("strong", {html: this.title.safe()}),
+					document.createTextNode(" "),
+					this.mNodeTitle = e("i", { "class": "audio-radio-frequency", html: this.getFrequency()})
+				]})
+			]})
+		],
+
+		onclick: function(event) {
+			if (event.ctrlKey) {
+				return self.getCurrentTrack(function(result) {
+					/*new Snackbar({
+						text: result.isSuccess
+							? lg("audio.infoBitrate").schema({
+								t: self.artist + " - " + self.title,
+								b: result.rate,
+								s: result.size.getInformationValue()
+							})
+							: lg("audio.errorBitrate")
+					}).show();*/
+				});
+			};
+
+			Audios.setPlaylist(self.getPlaylist());
+
+			return $.event.cancel(event);
+		}
+	});
+};
+
+RadioItem.prototype.getPlaylist = function() {
+	return new VKPlaylist({ count: 1, items: [this] }, APIDOG_AUDIO_PLAYLIST_RADIO, 0);
+};
+
+function RadioStream(s) {
+	this.url = s.url;
+	this.bitrate = s.bitrate;
+	this.format = s.format.toUpperCase();
 };
 
 function RadioCity(c) {
@@ -798,7 +871,7 @@ var Audios = {
 
 		code: {
 
-			getAudios: "var o=parseInt(Args.o),h=parseInt(Args.h),l=parseInt(Args.a),c=parseInt(Args.c),a=API.audio.get({owner_id:h,album_id:l,count:c,offset:o,v:5.39}),p=h>0?API.users.get({user_ids:h,fields:\"online,photo_100\"}):API.groups.getById({group_ids:-h});return{audios:a,host:p};",
+			getAudios: "var o=parseInt(Args.o),h=parseInt(Args.h),l=parseInt(Args.a),c=parseInt(Args.c);return API.audio.get({owner_id:h,album_id:l,count:c,offset:o,v:5.61,extended:1,fields:\"online,photo_100\"});",
 
 			getAlbums: "var o=Args.o,l=API.audio.getAlbums({owner_id:o,v:5.38,v:5.38}).count,d=[];while(d.length<l){d=d+API.audio.getAlbums({owner_id:o,count:100,offset:d.length}).items;};return{count:l,items:d};",
 
@@ -885,7 +958,7 @@ var Audios = {
 
 			getRadio: function(callback) {
 				APIdogRequest("vlad805.getRadio", { v: 2.1 }, function(result) {
-
+					callback(result);
 				});
 			},
 
@@ -1003,7 +1076,7 @@ var Audios = {
 
 		Audios.API.invoke.get(ownerId, audioId, 1000, function(result) {
 			Audios.addAlbum(result.album);
-			callback(new VKPlaylist(albums.audios, APIDOG_AUDIO_PLAYLIST_OWNER_ALBUM, ownerId + "_" + albumId));
+			callback(new VKPlaylist(albums, APIDOG_AUDIO_PLAYLIST_OWNER_ALBUM, ownerId + "_" + albumId));
 		});
 	},
 
@@ -1068,7 +1141,11 @@ var Audios = {
 				break;
 
 			case APIDOG_AUDIO_TAB_RADIO:
-
+				Audios.API.invoke.getRadio(function(result) {
+					console.log(result);
+					Audios.saveRadio(result);
+					Audios.showRadio();
+				});
 				break;
 
 			case APIDOG_AUDIO_TAB_ALL:
@@ -1079,8 +1156,8 @@ var Audios = {
 				};
 
 				Audios.API.invoke.get(ownerId, 0, 150, function(result) {
-					Local.add(result.host);
-					var playlist = new VKPlaylist(result.audios, APIDOG_AUDIO_PLAYLIST_OWNER, ownerId);
+					Local.add(result.profiles, result.groups);
+					var playlist = new VKPlaylist(result, APIDOG_AUDIO_PLAYLIST_OWNER, ownerId);
 					Audios.addPlaylist(APIDOG_AUDIO_PLAYLIST_OWNER, ownerId, playlist);
 					Audios.showList(playlist);
 				});
@@ -1163,7 +1240,7 @@ var Audios = {
 	// 01/03/2016 created
 	showList: function(playlist) {
 
-		Audios.mNodeHeadCount.innerHTML = playlist.getRealCount() + " " + lg("audio", "audios", playlist.getCount());
+		Audios.mNodeHeadCount.innerHTML = playlist.getRealCount() + " " + lg("audio.audios", playlist.getCount());
 
 		var time = 0, step = Audios.API.ITEMS_PER_PAGE, nList = this.mNodeList;
 
@@ -2163,7 +2240,64 @@ console.log(byUser);
 		});
 		node.click();
 	},
-	radio: {},
+
+
+
+
+	_radio: null,
+
+	saveRadio: function(data) {
+		Audios._radio = {
+			count: data.count,
+			cities: parse(data.cities, RadioCity),
+			stations: parse(data.items, RadioItem)
+		};
+
+		Audios.radio.init();
+	},
+
+	radio: {
+
+		init: function() {
+			Audios.radio.getStations().forEach(function(station) {
+				if (!station.cityId) {
+					return;
+				};
+
+				station.city = Audios.radio.getCityById(station.cityId);
+			});
+		},
+
+		getStationById: function(stationId) {
+			return Audios._radio.stations.find(function(station) { return station.stationId === stationId });
+		},
+
+		getCityById: function(cityId) {
+			return Audios._radio.cities.find(function(city) { return city.cityId === cityId });
+		},
+
+		getStations: function() {
+			return Audios._radio.stations;
+		}
+
+	},
+
+	showRadio: function() {
+		Audios.showCustomList(APIDOG_AUDIO_TAB_RADIO, {
+
+			title: lg("audio.radioTitle"),
+
+			getItems: function() {
+				return Audios.radio.getStations();
+			}
+
+		});
+	},
+
+
+
+
+
 	getRadio: function() {
 		var e = $.e,
 			parent = e("div", {"class": "audio-wrap"}),
@@ -2273,9 +2407,5 @@ data = data.response;
 
 
 		//new Vlad805API("radio.getCurrentBroadcastingSong", {stationId: station.stationId, v: 2.0}).onResult();
-	},
-	getBitrate: function(audioId)
-	{
-
 	}
 };

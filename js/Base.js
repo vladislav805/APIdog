@@ -86,15 +86,15 @@ console.log("ModuleManager<>: adding to queue ", item);
 
 
 			item.files.forEach(function(item) {
-				if (~files.indexOf(item)) {
+				if (~files.indexOf(item) || ModuleManager.data[item]) {
 					return;
 				};
 
 				files.push(item);
 			});
-item.files.length && mlog("added to queue loader modules: " + item.files.join(", "));
 			item.dependency && (!Array.isArray(item.dependency) ? [item.dependency] : item.dependency).forEach(add);
 		}, loadend = function(name, isCached) {
+			console.log(name, isCached);
 console.log("ModuleManager<>: ", (isCached ? "get from cache" : "loaded"), " ", name, " (", stat.loaded+1, " of ", files.length, ")");
 !isCached && mlog("loaded module " + name + "; " + (stat.loaded+1) + "/" + files.length);
 			if (++stat.loaded == files.length) {
@@ -104,6 +104,7 @@ console.log("ModuleManager<>: ", (isCached ? "get from cache" : "loaded"), " ", 
 		};
 
 		input.forEach(add);
+files.length && mlog("added to queue loader modules: " + files.join(", "));
 console.log("ModuleManager<>: queue files ", files);
 		files
 			.map(function(file) {
@@ -114,7 +115,7 @@ console.log("ModuleManager<>: queue files ", files);
 			})
 			.forEach(function(item) {
 				item._loaded
-					? loadend(item._name)
+					? loadend(item._name, true)
 					: item.load(loadend);
 			});
 	},
@@ -213,12 +214,11 @@ ModuleManager.Image.prototype.load = function(callback) {
 };
 
 
-var mlogt;
-function mlog(t){
-	document.getElementById("module-log").innerHTML = (document.getElementById("module-log").innerHTML + "\n" + t).replace(/^\n/, "");
-	mlogt && clearTimeout(mlogt);
-	mlogt = setTimeout(function() { document.getElementById("module-log").innerHTML = ""; }, 3000);
-}
+var mlogd = [],
+	mlog = function(t){ mloga(t); mlogu(); setTimeout(mlogr, 4000) },
+	mloga = function(t) { mlogd.push(t) },
+	mlogu = function() { document.getElementById("module-log").innerHTML = mlogd.slice(mlogd.length < 15 ? 0 : mlogd.length - 15).join("\n") },
+	mlogr = function() { mlogd.shift(); mlogu() };
 
 
 
