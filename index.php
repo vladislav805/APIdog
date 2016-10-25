@@ -174,7 +174,7 @@
 				</section>
 			</div>
 		</div>
-		<pre style="position: fixed; bottom: 0; right: 0; background: rgba(255, 255, 255, .5); pointer-events: none; padding: 1px 5px; line-height: 20px; font-size: 9px; z-index: 10000000" id="module-log"></pre>
+		<pre style="position: fixed; bottom: 0; left: 0; background: rgba(255, 255, 255, .5); pointer-events: none; padding: 1px 5px; line-height: 18px; font-size: 9px; z-index: 10000000" id="module-log"></pre>
 		<script src="js/Base.js"></script>
 		<noscript>
 			<img src="//mc.yandex.ru/watch/19029880" style="position:absolute; left:-9999px;" alt="" />
