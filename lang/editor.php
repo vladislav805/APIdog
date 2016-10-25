@@ -102,7 +102,7 @@
 	}
 
 <?
-	for ($i = 1; $i < 15; ++$i) {
+	for ($i = 1; $i < 20; ++$i) {
 		print ".pagination-wrap[data-links=\"" . $i . "\"] a { width: " . (100 / $i) . "%; }\n";
 	}
 ?>

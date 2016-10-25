@@ -20,9 +20,13 @@
 		"menuBlog":"Блог",
 		"menuAbout":"О проекте",
 		"pageGoToUp":"Наверх",
-		"footer":"APIdog v6.5 &copy; 2016<br>ver.20160910 night build",
+		"footer":"APIdog v6.5 &copy; 2016<br>ver.20161025 day build",
 		"loadingSite":"Загрузка...",
-		"loadingAuthors":"Владислав Велюга, Антон Карпович, Александр Ткачук, Тарас Дацюк, Оксана Эриксон, Илья Ворчук, Надя Иванова"
+		"loadingAuthors":"Владислав Велюга, Антон Карпович, Александр Ткачук, Тарас Дацюк, Оксана Эриксон, Илья Ворчук, Надя Иванова",
+		"errorWhileInitTitle": "Хм..",
+		"errorWhileInit": "Произошло что-то странное. На первый запрос от ВК сайт не смог получить ответа.<br />Проблема находится либо у ВК, либо в Вашем соединении. Если проблема в Вашем доступе к ВК (домену vk.com), то Вы можете включить режим прокси и попробовать еще раз &mdash; в большинстве случаев это помогает, но учтите, что при этом режиме отключается расширение APIdog LongPoll (если оно было установлено) и все запросы будут идти через наш сервер.<br />Если Вы найдете причину ошибки и устраните её, то, пожалуйста, отключите режим прокси.",
+		"errorWhileInitButtonProxy": "Включить прокси",
+		"errorWhileInitButtonTryAgain": "Повторить"
 	},
 	"nonstdsite":{
 		"menuBlog":"Блог",
@@ -414,20 +418,7 @@
 			"Внучка",
 			"Внук"
 		],
-		"info_relatives_head":"Родственники",
-		"report_head":"Жалоба",
-		"report_tip":"Пожалуйста, сообщите причину, по которой данная страница должна быть заблокирована",
-		"report_types":[
-			"Array",
-			"Array",
-			"Array",
-			"Array",
-			"Array"
-		],
-		"report_comment":"Комментарий (необязательно)",
-		"report_submit":"Отправить",
-		"report_error_reason":"Причина должна быть указана!",
-		"report_success":"Жалоба успешно отправлена!"
+		"info_relatives_head":"Родственники"
 	},
 	"friends":{
 		"friends":"Друзья",
@@ -980,7 +971,6 @@
 		"photo_actions_addTag":"Добавить отметку",
 		"photo_actions_save":"Сохранить",
 		"photo_actions_cover":"Сделать обложкой",
-		"photo_actions_report":"Пожаловаться",
 		"photo_actions_download":"Скачать",
 		"photo_actions_download_original":"Открыть оригинал",
 		"photo_count_of":" из ",
@@ -1071,18 +1061,6 @@
 		"albums_new":"Новый",
 		"albums_edit_header":"Редактирование альбома",
 		"albums_edit_title":"Введите название альбома",
-		"report_types":{
-			"adult":"материал 18+",
-			"child_porn":"детская порнография",
-			"extremism":"экстремизм",
-			"violence":"насилие",
-			"drugs_promotion":"пропаганда наркотиков"
-		},
-		"report_header_short":"Жалоба",
-		"report_header":"Новая жалоба на видеозапись",
-		"report_type":"Тип жалобы",
-		"report_comment":"Комментарий (не обязательно)",
-		"report_send":"Отправить",
 		"action_edit_album":"Редактировать альбом",
 		"action_delete_album":"Удалить альбом",
 		"action_video_restore":"Восстановить",
@@ -1090,7 +1068,6 @@
 		"action_video_tag_me":"Отметить себя",
 		"action_video_untag_me":"Удалить мою отметку",
 		"action_video_add":"Добавить к себе",
-		"action_video_report":"Пожаловаться",
 		"action_video_share":"Поделиться",
 		"action_video_liked":"Оценили",
 		"action_video_share_friend":"Отправить другу",
@@ -1135,7 +1112,6 @@
 		"info_tag_deleted":"Отметка успешно удалена",
 		"info_tag_created":"Отметка успешно создана",
 		"info_published":"Вы успешно опубликовали видеозапись на стене!",
-		"info_report_sent":"Жалоба отправлена",
 		"confirm_album_delete":"Вы действительно хотите удалить этот альбом?",
 		"confirm_video_delete":"Вы уверены, что хотите удалить это видео?",
 		"confirm_video_share":"Внимание! Репост видео сделает аккаунт онлайн.Вы уверены, что хотите поделиться видео?",
@@ -1221,7 +1197,6 @@
 		"ignore":"Скрыть из новостей",
 		"edit":"Редактировать",
 		"delete":"Удалить",
-		"report":"Пожаловаться",
 		"comments":[
 			"комментарий",
 			"комментария",
@@ -1277,6 +1252,7 @@
 		"actionEdit":"Редактировать",
 		"actionDelete":"Удалить",
 		"actionRestore":"Восстановить",
+		"actionReport": "Пожаловаться",
 		"confirmDelete":"Вы уверены, что хотите удалить этот комментарий?",
 		"cancel":"Отмена",
 		"infoReported":"Жалоба на комментарий отправлена",
@@ -1314,7 +1290,9 @@
 		"tabAlbums":"альбомы",
 		"tabRadio":"радио",
 		"infoBitrate":"Аудиозапись &laquo;%t&raquo; имеет битрейт %bkbps (%s)",
-		"errorBitrate":"Не удалось получить битрейт"
+		"errorBitrate":"Не удалось получить битрейт",
+		"translationsTitle": "Трансляции",
+		"albumsListTitle": "Альбомы"
 	},
 	"docs":{
 		"doc":"Документ",
