@@ -178,6 +178,8 @@ function waitForLongPoll(response, data) {
 		});
 	}).on("error", function(e) {
 		return outputJSON(response, [APIDOG_LONGPOLL_RESULT_CODE_API_REQUEST_UNKNOWN, null, {}]);
+	}).setTimeout(25000, function() {
+		return outputJSON(response, [APIDOG_LONGPOLL_RESULT_CODE_FAILED, null, {  }]);
 	});
 };
 
@@ -187,6 +189,7 @@ function waitForLongPoll(response, data) {
  * @param  {Object} data     Данные для вывода
  */
 function outputJSON(response, data) {
+	data.push({v: 2});
 	response.write(JSON.stringify(data));
 	response.end();
 };
@@ -225,5 +228,7 @@ function API(method, params, callback, response) {
 		});
 	}).on("error", function(e) {
 		return outputJSON(response, [APIDOG_LONGPOLL_RESULT_CODE_SERVER_ISSUE, null, {}]);
+	}).setTimeout(7500, function() {
+		outputJSON(response, [APIDOG_LONGPOLL_RESULT_CODE_SERVER_ISSUE, null, {}]);
 	});
 };
