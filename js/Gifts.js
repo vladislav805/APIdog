@@ -4,6 +4,157 @@
  * upd: -1
  */
 
+function VKGift (g) {
+	var s = this;
+
+	s.id = g.id;
+	s.fromId = g.from_id;
+	s.date = g.date;
+	s.hash = g.gift_hash;
+	s.message = g.message;
+	s.privacy = g.privacy;
+	s.giftId = g.gift.id;
+	s.giftPhoto = {
+		small: g.gift.thumb_48,
+		medium: g.gift.thumb_96,
+		big: g.gift.thumb_256
+	};
+	s.left = g.gifts_left;
+	s.sender = Local.Users[s.fromId] || {
+		first_name: "Неизвестный",
+		last_name: "пользователь",
+		photo_50: "//vk.com/images/dquestion_c.gif",
+		online: false
+	};
+	s.stickersId = -g.gift.stickers_product_id;
+
+	s.payment = {
+		type: g.payment_type,
+		price: g.price,
+		priceString: g.price_str,
+		priceReal: g.real_price,
+		priceRealString: g.real_price_str
+	};
+	s.description = g.description;
+	s.disabled = g.disabled;
+};
+
+VKGift.prototype = {
+
+	getNode: function(toId) {
+		var e = $.e, ctx = this;
+
+		return e("div", {"class": "gift-item", id: "gift" + this.id, append: [
+			e("div", {id: "gift" + this.id + "-content", append: [
+				e(this.fromId ? "a" : "div", {"class": "a gift-photo", append: e("img", {src: getURL(this.sender.photo_50)})}),
+				e("div", {"class": "gift-right", append: [
+					e("div", {"class": "gift-sender", append: [
+						e(this.fromId ? "a" : "div", {"class": "a gift-sender", href: "#" + this.sender.screen_name, html: getName(this.sender)}),
+						this.getType()
+					]}),
+					e("div", {"class": "tip", html: $.getDate(this.date)}),
+					this.getPreview(),
+					this.hash && toId == API.userId ? e("div", {"class": "gift-footer", append: [
+						e("a", {href: "#gifts?act=send&toId=" + this.fromId, html: Lang.get("gifts.gift_action_reply")}),
+						e("div", {"class": "a", html: Lang.get("gifts.gift_action_delete"), onclick: function(event) {
+							ctx["delete"]();
+						}})
+					]}) : null
+				]})
+			]}),
+			e("div", {id: "gift" + this.id + "-deleted", "class": "hidden", append: e("div", {"class": "gift-deleted", append: [
+				e("span", {html: Lang.get("gifts.deleted")}),
+				e("span", {"class": "a", html: Lang.get("gifts.restore"), onclick: function(event) {
+					ctx.restore();
+				}})
+			]})})
+		]});
+	},
+
+	"delete": function() {
+		var giftId = this.id;
+		Site.API("gifts.delete", {
+			id: giftId,
+			gift_hash: this.hash
+		}, function(data) {
+			$.elements.addClass($.element("gift" + giftId + "-content"), "hidden");
+			$.elements.removeClass($.element("gift" + giftId + "-deleted"), "hidden");
+		});
+	},
+
+	restore: function() {
+		var giftId = this.id;
+		Site.API("gifts.restore", {
+			id: this.id,
+			gift_hash: this.hash
+		}, function(data) {
+			$.elements.removeClass($.element("gift" + giftId + "-content"), "hidden");
+			$.elements.addClass($.element("gift" + giftId + "-deleted"), "hidden");
+		});
+	},
+
+	getType: function() {
+		return $.e("span", {"class": "tip", html: Lang.get("gifts.gift_type_" + ["normal", "only_getter", "only_sender"][this.privacy || 0])});
+	},
+
+	getPreviewImage: function(isEvent) {
+		return $.e(!isEvent || this.disabled ? "div" : "a", {
+			"class": "gifts-item" + (this.disabled ? " gifts-disabled" : ""),
+			href: "#gifts?act=send&toId=" + Site.get("toId") + "&giftId=" + this.giftId,
+			append: [
+				$.e("img", {
+					"class": "gift-image",
+					src: getURL(this.giftPhoto.medium)
+				}),
+				$.e("div", {
+					"class": "gifts-price-wrap",
+					append: $.e("div", {"class": "gifts-price", html: this.payment.priceString + (this.left ? " (" + this.left + ")" : "") || this.disabled && "Куплено"})
+				})
+			]
+		});
+	},
+
+	getPreview: function() {
+		return $.e("div", {"class": "gift-preview", append: [
+			$.e("img", {"class": "gift-image", src: getURL(this.giftPhoto.big)}),
+			this.message ? $.e("div", {"class": "gift-message", html: this.message.safe()}) : null // TODO FORMAT()
+		]});
+	}
+};
+
+function VKGiftCategory (c) {
+	var s = this;
+	s.title = c.title;
+	s.name = c.name;
+	s.items = c.items && c.items[0] && c.items[0].giftId != undefined ? items : Gifts.parse(c.items);
+};
+
+VKGiftCategory.prototype.getExtendedBlock = function(parent) {
+	var e = $.e, wrap, header, preview, items, item, l = this.items, triggerFunction = function(event) {
+		$.elements.toggleClass(wrap, "gifts-category-opened");
+	};
+
+	wrap = e("div", {"class": "gifts-category-item", id: "gifts-category-" + this.name});
+	header = e("div", {"class": "gifts-category-title", html: this.title.safe(), onclick: triggerFunction});
+	preview = e("div", {"class": "gifts-category-preview", append: (function(a, b, c, d, e) {
+		while (b < c && (e = a[b++])) {
+			d.push(e.getPreviewImage(false));
+		}
+		return d;
+	})(l, 0, 6, [], null), onclick: triggerFunction});
+	items = e("div",  {"class": "gifts-category-items", append: (function(a, b, c, d) {
+		while (c = a[b++])
+			d.push(c.getPreviewImage(true));
+		return d;
+	})(l, 0, null, [])});
+
+	wrap.appendChild(header);
+	wrap.appendChild(preview);
+	wrap.appendChild(items);
+
+	return wrap;
+};
+
 var Gifts = {
 	RequestPage: function() {
 		var act = getAct(),
@@ -31,10 +182,10 @@ var Gifts = {
 					for (i in data) {
 						items = data[i].items;
 						for (j in items) {
-							item = new Gift(items[j]);
+							item = new VKGift(items[j]);
 							Gifts.items[item.giftId] = item;
 						}
-						Gifts.catalog.push(new GiftCategory(data[i]));
+						Gifts.catalog.push(new VKGiftCategory(data[i]));
 					}
 					if (giftId) {
 						return Gifts.showSendForm(toId, giftId);
@@ -56,10 +207,7 @@ var Gifts = {
 	catalog: null,
 	items: null,
 	parse: function(items) {
-		for (var i in items) {
-			items[i] = new Gift(items[i]);
-		}
-		return items;
+		return parse(items, VKGift);
 	},
 	showList: function(data) {
 		data = Site.isResponse(data);
@@ -226,7 +374,7 @@ var Gifts = {
 	},
 	getAttachment: function(gift) {
 		var e = $.e;
-		gift = new Gift({gift: gift});
+		gift = new VKGift({gift: gift});
 		return e("a", {"class": "attachments-gift", href: "#gifts", append: [
 			gift.getPreview(),
 			e("div", {html: Lang.get("gifts.gift")})
@@ -234,142 +382,3 @@ var Gifts = {
 	}
 };
 
-function Gift (g) {
-	var s = this;
-
-	s.id = g.id;
-	s.fromId = g.from_id;
-	s.date = g.date;
-	s.hash = g.gift_hash;
-	s.message = g.message;
-	s.privacy = g.privacy;
-	s.giftId = g.gift.id;
-	s.giftPhoto = {
-		small: g.gift.thumb_48,
-		medium: g.gift.thumb_96,
-		big: g.gift.thumb_256
-	};
-	s.left = g.gifts_left;
-	s.sender = Local.Users[s.fromId] || {
-		first_name: "Неизвестный",
-		last_name: "пользователь",
-		photo_50: "//vk.com/images/dquestion_c.gif",
-		online: false
-	};
-	s.stickersId = -g.gift.stickers_product_id;
-
-	s.payment = {
-		type: g.payment_type,
-		price: g.price,
-		priceString: g.price_str,
-		priceReal: g.real_price,
-		priceRealString: g.real_price_str
-	};
-	s.description = g.description;
-	s.disabled = g.disabled;
-};
-function GiftCategory (c) {
-	var s = this;
-	s.title = c.title;
-	s.name = c.name;
-	s.items = c.items && c.items[0] && c.items[0].giftId != undefined ? items : Gifts.parse(c.items);
-};
-Gift.prototype.getNode = function(toId) {
-	var e = $.e, ctx = this;
-
-	return e("div", {"class": "gift-item", id: "gift" + this.id, append: [
-		e("div", {id: "gift" + this.id + "-content", append: [
-			e(this.fromId ? "a" : "div", {"class": "a gift-photo", append: e("img", {src: getURL(this.sender.photo_50)})}),
-			e("div", {"class": "gift-right", append: [
-				e("div", {"class": "gift-sender", append: [
-					e(this.fromId ? "a" : "div", {"class": "a gift-sender", href: "#" + this.sender.screen_name, html: getName(this.sender)}),
-					this.getType()
-				]}),
-				e("div", {"class": "tip", html: $.getDate(this.date)}),
-				this.getPreview(),
-				this.hash && toId == API.userId ? e("div", {"class": "gift-footer", append: [
-					e("a", {href: "#gifts?act=send&toId=" + this.fromId, html: Lang.get("gifts.gift_action_reply")}),
-					e("div", {"class": "a", html: Lang.get("gifts.gift_action_delete"), onclick: function(event) {
-						ctx["delete"]();
-					}})
-				]}) : null
-			]})
-		]}),
-		e("div", {id: "gift" + this.id + "-deleted", "class": "hidden", append: e("div", {"class": "gift-deleted", append: [
-			e("span", {html: Lang.get("gifts.deleted")}),
-			e("span", {"class": "a", html: Lang.get("gifts.restore"), onclick: function(event) {
-				ctx.restore();
-			}})
-		]})})
-	]});
-};
-Gift.prototype["delete"] = function() {
-	var giftId = this.id;
-	Site.API("gifts.delete", {
-		id: giftId,
-		gift_hash: this.hash
-	}, function(data) {
-		$.elements.addClass($.element("gift" + giftId + "-content"), "hidden");
-		$.elements.removeClass($.element("gift" + giftId + "-deleted"), "hidden");
-	});
-};
-Gift.prototype.restore = function() {
-	var giftId = this.id;
-	Site.API("gifts.restore", {
-		id: this.id,
-		gift_hash: this.hash
-	}, function(data) {
-		$.elements.removeClass($.element("gift" + giftId + "-content"), "hidden");
-		$.elements.addClass($.element("gift" + giftId + "-deleted"), "hidden");
-	});
-};
-Gift.prototype.getType = function() {
-	return $.e("span", {"class": "tip", html: Lang.get("gifts.gift_type_" + ["normal", "only_getter", "only_sender"][this.privacy || 0])});
-};
-Gift.prototype.getPreviewImage = function(isEvent) {
-	return $.e(!isEvent || this.disabled ? "div" : "a", {
-		"class": "gifts-item" + (this.disabled ? " gifts-disabled" : ""),
-		href: "#gifts?act=send&toId=" + Site.get("toId") + "&giftId=" + this.giftId,
-		append: [
-			$.e("img", {
-				"class": "gift-image",
-				src: getURL(this.giftPhoto.medium)
-			}),
-			$.e("div", {
-				"class": "gifts-price-wrap",
-				append: $.e("div", {"class": "gifts-price", html: this.payment.priceString + (this.left ? " (" + this.left + ")" : "") || this.disabled && "Куплено"})
-			})
-		]
-	});
-};
-Gift.prototype.getPreview = function() {
-	return $.e("div", {"class": "gift-preview", append: [
-		$.e("img", {"class": "gift-image", src: getURL(this.giftPhoto.big)}),
-		this.message ? $.e("div", {"class": "gift-message", html: this.message.safe()}) : null // TODO FORMAT()
-	]});
-};
-GiftCategory.prototype.getExtendedBlock = function(parent) {
-	var e = $.e, wrap, header, preview, items, item, l = this.items, triggerFunction = function(event) {
-		$.elements.toggleClass(wrap, "gifts-category-opened");
-	};
-
-	wrap = e("div", {"class": "gifts-category-item", id: "gifts-category-" + this.name});
-	header = e("div", {"class": "gifts-category-title", html: this.title.safe(), onclick: triggerFunction});
-	preview = e("div", {"class": "gifts-category-preview", append: (function(a, b, c, d, e) {
-		while (b < c && (e = a[b++])) {
-			d.push(e.getPreviewImage(false));
-		}
-		return d;
-	})(l, 0, 6, [], null), onclick: triggerFunction});
-	items = e("div",  {"class": "gifts-category-items", append: (function(a, b, c, d) {
-		while (c = a[b++])
-			d.push(c.getPreviewImage(true));
-		return d;
-	})(l, 0, null, [])});
-
-	wrap.appendChild(header);
-	wrap.appendChild(preview);
-	wrap.appendChild(items);
-
-	return wrap;
-};

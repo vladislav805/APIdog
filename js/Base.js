@@ -235,7 +235,7 @@ var Modules = {
 
 	/* Pages */
 	"profiles": { files: ["js/Profile.js", "css/profiles.css"], dependency: ["wall"] },
-	"groups": { files: ["js/Groups.js", "css/groups.css"], dependency: ["wall"] }, // styles in friends ????
+	"groups": { files: ["js/Groups.js", "css/groups.css"], dependency: ["wall", "templates"] }, // styles in friends ????
 	"apps": { files: ["js/Apps.js", "css/apps.css"] },
 
 	/* Media */
@@ -247,11 +247,12 @@ var Modules = {
 	"snapster": { files: ["js/Snapster.js"], dependency: "photos" },
 
 	/* Wall/feed */
-	"wall": { files: ["js/Wall.js", "css/fallback.wall.css", "css/wall.css", "css/fallback.comments.css"], dependency: ["likes", "media", "comments", "attacher"] },
+	"wall": { files: ["js/Wall.js", "css/fallback.wall.css", "css/wall.css", "css/fallback.comments.css"], dependency: ["likes", "comments", "attacher", "mediaattachments"] },
 	"feed": { files: ["js/Feed.js", "css/fallback.feed.css"], dependency: ["wall"] },
 	"likes": { files: [] },
-	"notifications": { files: ["js/Notifications.js", "css/fallback.notifications.css"] },
-	"media": { files: ["css/fallback.attachments.css"], dependency: ["photos", "video", "audio", "documents", "attachments", "notes", "polls", "templates"] },
+	"mediaattachments": { files: ["js/MediaAttachments.js", "css/fallback.attachments.css", "css/attacher.css"], dependency: ["documents"] },
+	"notifications": { files: ["js/Notifications.js", "css/fallback.notifications.css"], dependency: ["mediaattachments"] },
+	"media": { files: ["css/fallback.attachments.css"], dependency: ["photos", "video", "audio", "documents", "attachments", "notes", "polls", "templates", "pages"] },
 	"comments": { files: ["js/Comments.js", "css/comments.css"], dependency: ["attacher"] },
 	"attacher": { files: ["css/attacher.css"] },
 

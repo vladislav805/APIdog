@@ -93,7 +93,7 @@ VKMessage.prototype = {
 
 		text = this.text.replace(/\n/g, " ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + "…" : text;
-		text = Mail.Emoji(text);
+		text = text.emoji();
 
 		if (o.highlight) {
 			text = text.replace(new RegExp("(" + o.highlight + ")", "igm"), "<span class='search-highlight'>$1<\/span>");
@@ -114,7 +114,7 @@ VKMessage.prototype = {
 						new LazyImage(from.photo ? getURL(from.photo) : Mail.defaultChatImage).setClass("dialogs-left").getNode(),
 						e("span", {
 							"class": "dialogs-unread",
-							id: "ml" + fromId, html: unread || ""
+							id: "ml" + fromId, html: unread ? parseInt(unread).toK() : ""
 						})
 					]
 				}),
@@ -972,6 +972,13 @@ var Mail = {
 			}
 		};
 
+		p["utils"] = {
+			label: lg("mail.actionUtilites"),
+			isDisabled: true,
+			onclick: function() {
+				alert("not implemented yet!");
+			}
+		};
 
 
 

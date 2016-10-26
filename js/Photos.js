@@ -8,24 +8,38 @@
 // need refactor and rewrite base
 function VKPhoto (p) {
 	var photo = this;
-	photo.photoId = p.id;
-	photo.albumId = p.album_id;
-	photo.ownerId = p.owner_id;
-	photo.photo75 = p.photo_75;
-	photo.photo130 = p.photo_130;
-	photo.photo604 = p.photo_604;
-	photo.photo807 = p.photo_807;
-	photo.photo1280 = p.photo_1280;
-	photo.photo2560 = p.photo_2560;
-	photo.width = p.width;
-	photo.height = p.height;
-	photo.description = p.text;
-	photo.date = p.date;
-	photo.latitude = p.lat;
-	photo.longitude = p.long;
-	photo.postId = p.post_id;
-	photo.likes = p.likes && p.likes.count;
+	this.ownerId = p.owner_id;
+	this.photoId = p.id;
+	this.albumId = p.album_id;
+
+	this.photo75 = p.photo_75;
+	this.photo130 = p.photo_130;
+	this.photo604 = p.photo_604;
+	this.photo807 = p.photo_807;
+	this.photo1280 = p.photo_1280;
+	this.photo2560 = p.photo_2560;
+
+	this.width = p.width;
+	this.height = p.height;
+
+	this.description = p.text;
+	this.date = p.date;
+
+	this.latitude = p.lat;
+	this.longitude = p.long;
+
+	this.postId = p.post_id;
+	this.tags = p.tags;
+
+	this.isLiked = !!(p.likes && p.likes.user_likes);
+	this.likesCount = p.likes && p.likes.count;
+
+	this.canComment = !!p.can_comment;
+	this.commentsCount = p.comments && p.comments.count || 0;
+
+	this.canRepost = !!p.can_repost;
 };
+
 VKPhoto.prototype = {
 	getAttachId: function() {
 		return this.getType() + this.getId();
@@ -277,6 +291,7 @@ var Photos = {
 
 	getAttachment: function(photo, options) {
 		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: Site.getAddress(true)});
+//		return MediaAttachment.photo(photo, options);
 	},
 	getAttachmentAlbum: function(album) {
 		return $.e("a", {href: "#photos" + album.owner_id + "_" + album.id, "class": "attachments-album", append: [

@@ -188,8 +188,8 @@ var Feed = {
 				$.e("a", {href: "#" + user.screen_name, html: (user.name || user.first_name + " " + user.last_name + Site.isOnline(user)), "class": "bold"}),
 				$.e("span", {"class": "tip", html: " " + lg("feed.eventsAddedPhotosVerb")[user.sex || 0] + " " + photos.count + " " + Lang.get("feed", "eventsAddedPhotosPhotos", photos.count)})
 			]}));
-			for (var i = 0; i < photos.items.length; ++i)
-				list.appendChild(Photos.itemPhoto(Photos.v5normalize(photos.items[i])));
+			/*for (var i = 0; i < photos.items.length; ++i)
+				list.appendChild(Photos.itemPhoto(Photos.v5normalize(photos.items[i])));*/
 			right.appendChild(list);
 			right.appendChild($.e("div", {"class": "tip", html: Site.getDate(item.date)}));
 			right.className = "wall-right";

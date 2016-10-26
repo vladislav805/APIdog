@@ -237,9 +237,9 @@ var Board = {
 			})(c.id, item)}));
 		item.appendChild($.e("div", {"class": "comments-left", append:$.e("img", {src: getURL(photo)})}));
 		item.appendChild($.e("div", {"class": "comments-right", append: [
-			$.elements.create("a", {href: "#" + screen_name, html: "<strong>%n%</strong>".replace("%n%", Site.Escape(name))}),
-			$.elements.create("div", {"class": "comments-content", id: "topic" + group_id + "_" + topic_id + "_" + c.id + "_text", append: [textNode]}),
-			$.elements.create("div", {"class": "comments-attachments", append:[Site.Attachment(c.attachments)]}),
+			$.elements.create("a", {href: "#" + screen_name, html: "<strong>%n%</strong>".replace("%n%", name.safe())}),
+			$.elements.create("div", {"class": "comments-content", id: "topic" + group_id + "_" + topic_id + "_" + c.id + "_text", append: textNode}),
+			$.elements.create("div", {"class": "comments-attachments", append:Site.Attachment(c.attachments)}),
 			$.elements.create("div",{
 				"class": "comments-footer",
 				append: [
@@ -248,7 +248,7 @@ var Board = {
 					$.elements.create("div",{
 						"class": "wall-likes likes",
 						id: "like_topic_comment_-" + group_id + "_" + c.id,
-						append: [Wall.LikeButton("topic_comment", -group_id, c.id, c.likes)]
+						append: getLikeButton("topic_comment", -group_id, c.id, c.likes)
 					})
 				]
 			})

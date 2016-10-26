@@ -99,7 +99,7 @@ var Fave = {
 		};
 
 		controller.onMetaData = function(count, all) {
-			header.innerHTML = lg(controller.lang.header).schema({ n: count, f: lg(controller.lang.items) });
+			header.innerHTML = lg(controller.lang.header).schema({ n: count, f: lg(controller.lang.items, count) });
 			isAll = all;
 			if (!count) {
 				$.elements.clearChild(list).appendChild(getEmptyField("fave.nothing"));

@@ -5,7 +5,45 @@
  */
 
 function VKVideo(v) {
+	this.ownerId = v.owner_id;
+	this.videoId = v.id;
+	this.albumIds = v.album_ids;
+	this.title = v.title;
+	this.description = v.description;
+	this.date = v.date;
+	this.duration = v.duration;
+	this.player = v.player;
 
+	this.canAdd = !!v.can_add;
+	this.canEdit = !!v.can_edit;
+
+	this.canRepost = !!v.can_repost;
+	this.repostCount = v.reposts && v.reposts.count || 0;
+	this.isReposted = !!(v.reposts && v.reposts.user_reposted);
+
+	this.canLike = true;
+	this.likesCount = v.likes && v.likes.count || 0;
+	this.isLiked = !!(v.likes && v.likes.user_likes);
+
+	this.canComment = !!v.can_comment;
+	this.commentsCount = v.comments;
+
+	this.isConverted = !!v.converted || !v.converting;
+	this.isRepeated = !!v.repeat;
+
+	this.preview130 = v.photo_130;
+	this.preview320 = v.photo_320;
+	this.preview640 = v.photo_640;
+	this.preview800 = v.proto_800;
+
+	this.privacyView = v.privacy_view;
+	this.privacyComment = v.privacy_comment;
+
+	this.platform = v.platform; // string
+
+	this.files = Object.map(v.files, function(url, label) {
+		return new VKVideoFile(label, url);
+	});
 };
 
 VKVideo.prototype = {
@@ -20,6 +58,10 @@ VKVideo.prototype = {
 	getId: function() {
 		return this.videoId;
 	}
+
+};
+
+function VKVideoFile(label, url) {
 
 };
 
@@ -71,6 +113,7 @@ var Video = {
 				]
 			})
 		});
+		// MediaAttachment.video(video, options);
 	},
 
 	explain: function (url) {
@@ -194,13 +237,7 @@ var Video = {
 	},
 
 	getDurationString: function (duration) {
-		var seconds = Math.floor(duration % 60),
-			minutes = Math.floor(duration / 60 % 60),
-			hours = Math.floor(duration / 3600 % 60),
-			n2 = function (n) {return n < 10 ? "0" + n : n;},
-			str = [n2(minutes), n2(seconds)];
-		if (hours) str.unshift(hours);
-		return str.join(":");
+		return parseInt(duration).getDuration();
 	},
 
 	item: function (v) {
@@ -779,19 +816,18 @@ var Video = {
 			});
 		};
 		Site.API("execute", {
-			code: ('var v=API.video.get({videos:"%o%_%v%%a%",extended:1,v:5.18}),p=v.profiles,g=v.groups;v=v.items[0];v.inAlbums=API.video.getAlbumsByVideo({owner_id:%o%,video_id:%v%});return{video:v,u:p+g,increment:API.video.incViewCounter({owner_id:%o%,video_id:%v%}),tags:API.video.getTags({owner_id:%o%,video_id:%v%,v:5.21})};')
-				.replace(/%o%/ig, owner_id)
-				.replace(/%g%/ig, -owner_id)
-				.replace(/%v%/ig, video_id)
-				.replace(/%a%/ig, access_key ? "_" + access_key : "")
+			code: 'var o=Args.o,i=Args.v,a=Args.a,v=API.video.get({videos:o+"_"+i+a,extended:1,v:5.62}),p=v.profiles,g=v.groups,z={owner_id:o,video_id:i};v=v.items[0];if(v==null){return{v:null,u:[]};};v.album_ids=API.video.getAlbumsByVideo(z);v.tags=API.video.getTags(z);return{v:v,u:p+g,i:API.video.incViewCounter(z)};',
+			o: owner_id,
+			v: video_id,
+			a: access_key ? "_" + access_key : ""
 		}, function (data) {
 			data = Site.isResponse(data);
-			Local.AddUsers(data.u);
+			Local.add(data.u);
 
-			var video       = data.video;
+			var video       = data.v;
 
 			if (!video) {
-				Site.Append(Site.EmptyField("Видеозапись не найдена. Возможно, она была удалена или у Вас нет доступа."));
+				Site.append(getEmptyField("Видеозапись не найдена. Возможно, она была удалена или у Вас нет доступа."));
 				return;
 			};
 
@@ -806,7 +842,7 @@ var Video = {
 				preview     = getURL(video.photo_640 || video.photo_320),
 				likes       = video.likes,
 				isRepeat    = video.repeat,
-				tags        = data.tags,
+				tags        = data.t,
 				parent      = document.createElement("div"),
 				header      = Video.getHeader(video, {access_key: access_key, tags: tags}),
 				player      = Video.getAPIdogPlayer(video),
@@ -880,7 +916,7 @@ var Video = {
 			tagId       = Video.hasMineInVideo(options.tags || []),
 			accessKey   = options.access_key,
 			l           = lg,
-			hasMine		= ~video.inAlbums.indexOf(-2) || API.userId == video.owner_id;
+			hasMine		= ~video.album_ids.indexOf(-2) || API.userId == video.owner_id;
 		if (!accessKey && API.userId == video.owner_id)
 			if (!tagId)
 				actions[l("videos.action_video_tag_me")]    = function (event) {Video.addMyTag(ownerId, videoId, this)};
@@ -1364,7 +1400,7 @@ var Video = {
 					owner_id: owner_id,
 					comment_id: comment_id,
 					message: text,
-					attachments: Wall.AttachmentToString(Video.comments[owner_id + "_" + comment_id].attachments)
+					attachments: getAttachmentIdsByObjects(Video.comments[owner_id + "_" + comment_id].attachments)
 				}, function (data) {
 					data = Site.isResponse(data);
 					if (!data)

@@ -160,6 +160,7 @@ var Site = {
 			src: (isEnabled(4) ? "\/\/static.apidog.ru\/proxed\/stickers\/%sb.png" : STICKERS_SCHEMA_IMAGE).schema({s: sticker.id}),
 			alt: "Стикер"
 		});
+		// return MediaAttachment.sticker(sticker);
 	},
 
 
@@ -621,95 +622,7 @@ var Site = {
 	},
 
 	Attachment:function(attachments,id){
-		var Parent=document.createElement("div");
-		if(!attachments)
-			return Parent;
-		var photos = [],
-			videos = [],
-			audios = [],
-			docs = [],
-			link = $.e("div"),
-			page = $.e("div"),
-			graffiti = [],
-			albums = [],
-			sticker = $.elements.create("div"),
-			poll = $.elements.create("div"),
-			note = $.elements.create("div"),
-			wall = [],
-			reply = $.elements.create("div"),
-			audioIdList = (+new Date());
-			Audios.Lists[audioIdList] = [],
-			photo_list_id = Photos.createList(id, []), ass = {};
-		for (var i = 0, l = attachments.length; i < l; ++i)
-			if (ass[attachments[i].type])
-				ass[attachments[i].type]++;
-			else
-				ass[attachments[i].type] = 1;
-		for (var i = 0, l = attachments.length; i < l; ++i){
-			var a=attachments[i];
-			switch(a.type){
-				case "photo":
-					photos.push(Photos.getAttachment(a.photo, {list: id, full: (ass.photo == 1), from: Site.getAddress(true)}));
-					break;
-				case "video":
-					videos.push(Video.getAttachment(a.video, {from: true}));
-					break;
-				case "audio":
-					audio = a.audio;
-					audio.aid = audio.aid || audio.id;
-					audios.push(Audios.Item(audio, {lid: audioIdList, from: 8}));
-					Audios.Lists[audioIdList].push(audio.owner_id + "_" + (audio.aid || audio.id));
-					Audios.Data[audio.owner_id + "_" + (audio.aid || audio.id)] = audio;
-					break;
-				case "doc":
-					docs.push(Docs.getAttachment(Docs.tov5(a.doc)));
-					break;
-				case "link":
-					link = Site.getLinkAttachment(a.link);
-					break;
-				case "poll":
-					if (a.poll && !a.poll.answers)
-						continue;
-					poll = Polls.getFullAttachment(a.poll, id);
-					break;
-				case "sticker":
-					sticker = Site.getStickerAttachment(a.sticker);
-					break;
-				case "wall":
-					wall.push(Wall.getAttachment(a.wall));
-					break;
-				case "page":
-					page = Pages.getAttachment(a.page);
-					break;
-				case "note":
-					note = Notes.getAttachment(a.note);
-					break;
-				case "wall_reply":
-					a = a.wall_reply;
-					reply = Wall.getAttachmentReply(a.owner_id, a.post_id, r.id);
-					break;
-				case "album":
-					var album=a.album;
-					album.id = album.id || album.album_id;
-					albums.push(Photos.getAttachmentAlbum(album));
-					break;
-			}
-		}
-		var nodes=[
-			$.e("div",{append: photos}),
-			$.e("div",{append: albums}),
-			$.e("div",{append: videos}),
-			$.e("div",{append: audios}),
-			$.e("div",{append: docs}),
-			page,
-			note,
-			poll,
-			$.e("div",{append: wall}),
-			reply,
-			link,
-			sticker
-		];
-		return $.elements.create("div",{append:nodes});
+		return new MediaAttachments(attachments).id(id).get();
 	},
 	PagebarV2:function(offset,count,step){
 		offset = parseInt(offset);

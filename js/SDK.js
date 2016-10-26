@@ -65,7 +65,7 @@ function getTabPanel(tabs, options) {
 			param = Site.get(item.current.name);
 			val = item.current.value;
 
-			if (typeof val === "string" ? val == param : isArray(val) && !~val.indexOf(param)) {
+			if (typeof val === "string" ? val == param : isArray(val) && ~val.indexOf(param)) {
 				$.elements.addClass(tab, "vktab-tab-active");
 			};
 		};
@@ -222,6 +222,15 @@ Number.prototype.getInformationValue = function() {
 			return n + " " + (("b Kb Mb Gb Tb".split(" "))[i]);
 	};
 	return null;
+};
+
+Number.prototype.getDuration = function() {
+	var seconds = Math.floor(this % 60),
+		minutes = Math.floor(this / 60 % 60),
+		hours = Math.floor(this / 3600 % 60),
+		str = [minutes.fix00(), seconds.fix00()];
+	if (hours) str.unshift(hours);
+	return str.join(":");
 };
 
 /**
@@ -468,7 +477,8 @@ function init(event) {
 function startFirstRequestAPI() {
 	Loader.main.setTitle("Requesting user info...");
 	new APIRequest("execute", {
-		code: 'return{u:API.users.get({fields:"photo_50,photo_100,screen_name,bdate",v:5.52})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({filters:"active",type:"stickers",v:5.52,extended:1}),l:API.messages.getRecentStickers().sticker_ids,f:API.friends.get({fields:"online,photo_50,photo_100,sex,bdate,screen_name,can_write_private_message,city,country",v:5.52,order:"hints"}),d:API.utils.getServerTime()};'
+		code: 'return{u:API.users.get({fields:"photo_50,photo_100,screen_name,bdate",v:5.52})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({filters:"active",type:"stickers",v:5.52,extended:1}),l:API.messages.getRecentStickers().sticker_ids,d:API.utils.getServerTime()};',
+		// f:API.friends.get({fields:"online,photo_50,photo_100,sex,bdate,screen_name,can_write_private_message,city,country",v:5.52,order:"hints"})
 	}).setOnErrorListener(function() {
 		new Modal({
 			title: Lang.get("site.errorWhileInitTitle"),
@@ -499,7 +509,7 @@ function startFirstRequestAPI() {
 	}).setOnCompleteListener(function(data) {
 		var user = data.u, friends, isAlreadyStarted = false;
 
-		API.userId      = user.id;
+		API.userId = user.id;
 		API.bdate = user.bdate;
 
 		Local.add([user]);
@@ -522,13 +532,13 @@ function startFirstRequestAPI() {
 		data.c && Site.setCounters(data.c);
 
 		// сохранить баланс голосов, если доступны
-		data.b && (API.userBalance = data.b);
+		data.b && (API.balance = data.b);
 
 		// показать дни рождения под меню
 //		(friends = data.f) && (Local.add(friends.items) && Friends.showBirthdays(friends.items));
 
 		if (!APIdogNoInitPage) {
-			setInterval(UpdateCounters, 60000);
+			setInterval(updateCounters, 60000);
 		};
 
 /*		if (!API.APIdogAuthUserId) {
@@ -925,9 +935,12 @@ var Local = {
 	}
 };
 
-function UpdateCounters () {
+function updateCounters () {
 	new APIRequest("execute", {
-		code: ("return{c:API.account.getCounters(),f:API.friends.getOnline({v:5.8,online_mobile:1}),n:API.notifications.get({start_time:%s,count:5})" + (isEnabled(1) ? ",online:API.account.setOnline({voip:0})" : "") + "};").schema({s: vkLastCheckNotifications})
+		// f:API.friends.getOnline({v:5.8,online_mobile:1})
+		code: "if(parseInt(Args.o)){API.account.setOnline({voip:0});};return{c:API.account.getCounters(),n:API.notifications.get({start_time:Args.s,count:5})};",
+		o: (+isEnabled(1)).toString(),
+		s: vkLastCheckNotifications
 	}).setOnCompleteListener(function(data) {
 		vkLastCheckNotifications = getUnixTime();
 		if (!data || APIdogNoInitPage)
@@ -935,7 +948,7 @@ function UpdateCounters () {
 
 		Site.setCounters(data.c);
 		Site.showNewNotifications(data.n);
-
+/*
 		var friends = Friends.friends[API.userId] && Friends.friends[API.userId].items || [],
 			f = data.f,
 			fo = f.online,
@@ -947,7 +960,7 @@ function UpdateCounters () {
 			friends[i].online = ~fom.indexOf(id) || ~fo.indexOf(id);
 			friends[i].online_mobile = ~fom.indexOf(id);
 			friends[i].online_app = !~fo.indexOf(id);
-		};
+		};*/
 		//Friends.friends[API.userId].items = friends;
 
 	}).execute();
