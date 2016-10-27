@@ -314,7 +314,7 @@ a:focus {
 	background: rgba(252, 252, 252, .95);
 	vertical-align: top;
 	border-radius: 0 0 2px 2px;
-	min-height: 400px;
+	min-height: 200px;
 	margin-left: 160px;
 	overflow: hidden;
 }

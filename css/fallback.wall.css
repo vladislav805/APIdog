@@ -129,14 +129,14 @@ img.wall-left {
 	border-bottom: none !important;
 }
 .wall-attachments .photos-item {
-	max-width: 100%;
+/*	max-width: 100%;
 	width: auto !important;
-	height: auto !important;
+	height: auto !important;*/
 }
 .wall-attachments .photos-item img {
 	position: relative;
-	max-width: 100%;
-	max-height: 400px;
+/*	max-width: 100%;
+	max-height: 400px;*/
 }
 .wall-date {
 	color: #888888 !important;
