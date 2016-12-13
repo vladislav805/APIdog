@@ -215,7 +215,7 @@ ModuleManager.Image.prototype.load = function(callback) {
 
 
 var mlogd = [],
-	mlog = function(t){ mloga(t); mlogu(); setTimeout(mlogr, 4000) },
+	mlog = function(t){ /* mloga(t); mlogu(); setTimeout(mlogr, 4000) */ },
 	mloga = function(t) { mlogd.push(t) },
 	mlogu = function() { document.getElementById("module-log").innerHTML = mlogd.slice(mlogd.length < 15 ? 0 : mlogd.length - 15).join("\n") },
 	mlogr = function() { mlogd.shift(); mlogu() };
