@@ -41,6 +41,16 @@ function VKVideo(v) {
 
 	this.platform = v.platform; // string
 
+	this.isPrivate = !!v.is_private;
+	this.isAutoplay = !v.no_autoplay;
+
+	this.firstFrame130 = v.first_frame_130;
+	this.firstFrame320 = v.first_frame_320;
+	this.firstFrame800 = v.first_frame_800;
+
+	this.isLive = !!v.live;
+	this.liveStatus = v.live_status; // started,failed,finished,waiting,upcoming
+
 	this.files = Object.map(v.files, function(url, label) {
 		return new VKVideoFile(label, url);
 	});

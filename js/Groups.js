@@ -4,6 +4,14 @@
  * upd: -1
  */
 
+/*
+
+	VKGroup
+
+	is_messages_blocked
+
+ */
+
 var Groups = {
 	// need refactor
 	// need rewrite
