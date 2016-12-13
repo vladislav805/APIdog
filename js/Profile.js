@@ -105,7 +105,7 @@ var Profile = {
 		]}));
 
 		wrap.appendChild(Site.getPageHeader(
-			e("strong", {html: user.first_name.safe() + " " + user.last_name.safe() + (user.maiden_name ? " (" + user.maiden_name + ")" : "")}),
+			e("strong", {html: user.first_name.safe() + (user.nickname ? " " + user.nickname.safe() : "") + " " + user.last_name.safe() + (user.maiden_name ? " (" + user.maiden_name.safe() + ")" : "")}),
 			new DropDownMenu(lg("general.actions"), Profile.getDisplayActions(user)).getNode()
 		));
 
