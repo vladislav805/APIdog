@@ -85,6 +85,7 @@
 
 			$ch = curl_init($url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 			$result = curl_exec($ch);
 			$data = json_decode($result);
 			curl_close($ch);
@@ -144,7 +145,7 @@
 			], true);
 
 			if ($test->error) {
-				throwError(41);
+				throwError(41, ["source" => $test]);
 			};
 
 			$test = $test->response;
