@@ -19,48 +19,13 @@ APIdog v6.5
 
 Команда проекта:
 ========
-* [Владислав Велюга](https://github.com/vladislav805) (разработчик)
-* [Антон Карпович](https://github.com/longpoll) (финансовый директор)
+* Велюга Владислав (разработчик)
+* Антон Карпович (финансовый директор)
 * Александр Ткачук (системный администратор)
-* [Тарас Дацюк](https://github.com/who0ps) (техподдержка, тестировщик)
-* [Илья Ворчук](https://github.com/wityaz) (дизайнер)
+* Тарас Дацюк (техподдержка)
+* Илья Ворчук (дизайнер)
 * Оксана Эриксон (агент поддержки)
 * Надя Иванова (агент поддержки)
 
 
-Подробная информация о проекте [здесь](http://apidog.ru/6.5/about.php).
-
-- - -
-
-APIdog v6.5
-===========
-
-Alternative web client for social network VK, which work exclusively in VK API.
-
-Frontend
-----------------
-Client dynamic code is located in js/ and css/ directories. Assembly minify version is produced in the collector /api/v2/apidog.minify.
-
-Backend
----------------
-### PHP
-Work with database and user, model-object is lcoated in zero.framework.php. Logic and all work with database: in api-v2.php.
-
-### NodeJS
-Work with LongPoll: file longpoll.js
-
-
-
-Team project:
-========
-* [Vladislav Veluga](https://github.com/vladislav805) (developer)
-* [Anton Karpovich](https://github.com/longpoll) (financial director)
-* Alexander Tkachuk (system administrator)
-* [Taras Datsyuk](https://github.com/who0ps) (support, QA)
-* [Ilya Vorchuk](https://github.com/wityaz) (designer)
-* Oksana Erickson (support)
-* Nadia Ivanova (support)
-
-
-Detailed information about the project [here](http://apidog.ru/6.5/about.php).
-
+Подробная информация по проекте [здесь] (http://apidog.ru/v6.5/about.php).

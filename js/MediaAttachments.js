@@ -77,28 +77,28 @@ var MediaAttachment = {
 
 	link: function(link) {
 		var shortlink;
-
 		try {
 			shortlink = link.url.match(/\/\/([^\/]+)(\/|$)/igm)[0].replace(/\//g, "");
 		} catch (e) {
 			shortlink = "перейти";
 		};
-
-		link.url = link.url.replace(/https?:\/\/(m\.)?vk\.com\//ig, "\/\/apidog.ru\/6.5\/#");
-
-		return { node: $.e("div", {
-			"class": "attachments-link",
+		link.url = link.url.replace(/https?:\/\/(m\.)?vk\.com\//ig, "\/\/apidog.ru\/#");
+		return { node: $.e("a", {
+			href: link.preview_page ? "#page" + link.preview_page + "?site=1" : link.url,
+			"data-url": link.url,
+			onclick: function(event) {
+				if (event.ctrlKey) {
+					this.href = this.dataset.url;
+				};
+				event.preventDefault();
+				return false;
+			},
+			"class": "attach-row-wrap",
+			target: "_blank",
 			append: [
-				$.e("div", {"class": "wall-icons wall-icon-link"}),
-				$.e("span", {"class": "tip", html: " Ссылка "}),
-				$.e("a", {href: link.url, target: "_blank", html: shortlink + " "}),
-				link.preview_page
-					? $.e("a", {
-						href: "#page" + link.preview_page + "?site=1",
-						"class": "btn",
-						html: "Предпросмотр"
-					  })
-					: null
+				$.e("div", {"class": "attach-row-icon-wrap", append: $.e("div", { "class": "attach-row-icon attach-icon-link" })}),
+				$.e("div", {"class": "attach-row-title", html: link.title.safe()}),
+				$.e("div", {"class": "attach-row-description", html: shortlink.safe()})
 
 			]
 		}) };

@@ -138,21 +138,41 @@ var Site = {
 			shortlink = "перейти";
 		};
 		link.url = link.url.replace(/https?:\/\/(m\.)?vk\.com\//ig, "\/\/apidog.ru\/#");
-		return $.e("div", {
-			"class": "attachments-link",
+		return $.e("a", {
+			href: link.preview_page ? "#page" + link.preview_page + "?site=1" : link.url,
+			"data-url": link.url,
+			onclick: function(event) {
+				if (event.ctrlKey) {
+					this.href = this.dataset.url;
+				};
+				event.preventDefault();
+				return false;
+			},
+			"class": "attach-row-wrap",
+			target: "_blank",
 			append: [
-				$.e("div", {"class": "wall-icons wall-icon-link"}),
-				$.e("span", {"class": "tip", html: " Ссылка "}),
-				$.e("a", {href: link.url, target: "_blank", html: shortlink + " "}),
-				link.preview_page ? $.e("a", {
-					href: "#page" + link.preview_page + "?site=1",
-					"class": "btn",
-					html: "Предпросмотр"
-				}) : null
+				$.e("div", {"class": "attach-row-icon-wrap", append: $.e("div", { "class": "attach-row-icon attach-icon-link" })}),
+				$.e("div", {"class": "attach-row-title", html: link.title.safe()}),
+				$.e("div", {"class": "attach-row-description", html: shortlink.safe()})
 
 			]
 		});
 	},
+
+
+/*
+
+<a class="attach-row-wrap" href="%s" onclick="stopEvent(event);" target="_blank">
+	<div class="attach-row-icon-wrap">
+		<div class="attach-row-icon attach-icon-%s"></div>
+	</div>
+	<div class="attach-row-title">%s</div>
+	<div class="attach-row-description">%s</div>
+</a>
+
+
+ */
+
 
 	getStickerAttachment: function (sticker) {
 		return $.e("img", {
