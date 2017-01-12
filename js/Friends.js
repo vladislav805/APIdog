@@ -162,6 +162,14 @@ var Friends = {
 	item: function(i, options) {
 		options = options || {};
 		var e = $.elements.create, to = Photos.getToParam(0),
+		bd = i.bdate.split("."), by = +bd[2], bm = +bm[1], bd = +bd[0], y = by ? (function(y, m, d, a, n) {
+			n = new Date();
+			a = n.getFullYear() - y;
+			if (n.getMonth() + 1 < m || n.getMonth() + 1 === m && n.getDate() < d) {
+				a--;
+			};
+			return a;
+		})(by, bm, bd) : "",
 		item = e("a", {"class": "friends-item", href: "#" + (i.screen_name || "id" + i.id), id: "friend" + i.id, append: [
 			e("img", {"class": "friends-left", src: getURL(i.photo_50)}),
 			e("div", {"class": "friends-right", append: [
@@ -186,7 +194,24 @@ var Friends = {
 				})(i.id)}) : null,
 				!to && options.requests ? e("span", {
 					"class": "tip",
-					html: (function(a){for(var b=0,c=a.length,d=[];b<c;++b)if(a[b]!=null)d.push(a[b]);return d.join(", ");})([i.city ? i.city.title : null, i.bdate && i.bdate.split(".").length == 3 ? (new Date().getFullYear() - (+i.bdate.split(".")[2])) + " " + $.TextCase(new Date().getFullYear() - (+i.bdate.split(".")[2]), Lang.get("friends.years")) : null])}) : null
+					html: (function(a) {
+						for (var b = 0, c = a.length, d= []; b < c; ++b) {
+							if (a[b] != null) {
+								d.push(a[b]);
+							};
+						};
+						return d.join(", ");
+					})(
+						[
+							i.city
+								? i.city.title
+								: null,
+
+							by
+								? y + " " + $.textCase(y, Lang.get("friends.years"))
+								: null
+						]
+					)}) : null
 			]})
 		]});
 		if (to)
