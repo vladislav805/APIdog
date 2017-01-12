@@ -148,7 +148,6 @@
 					<br />
 					<aside>
 						<a href="#settings"><?=$speech["menuSettings"];?></a>
-						<!--a href="#support">FAQ</a-->
 						<a href="donate.php"><?=$speech["menuDonate"];?></a>
 						<a href="blog.php"><?=$speech["menuBlog"];?></a>
 						<!--a href="extensions.php" id="_link_ext">APIdog Plus</a-->
