@@ -11,7 +11,7 @@
 		<!--script src="js/VKUpload.js"></script-->
 		<script src="lib/nondefault.js?1"></script>
 		<script type="text/javascript"><?
-	if (defined("_installed")) {
+	if (defined("_install")) {
 		$user = getUserDataForNonStdPages();
 		print "var API = " . json_encode($user["usr"] ? $user["usr"] : [
 			"userAccessToken" => "",
