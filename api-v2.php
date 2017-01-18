@@ -164,7 +164,7 @@
 			};
 
 			$authId = (int) $_REQUEST["authId"];
-			$session = Settings::getSessionById($authId);
+			$session = APIdogSession::getByAuthKey($authKey);
 			if ($session == -1)
 				throwError(10);
 			if (is_object($session) && $session->getUserId() != userId)

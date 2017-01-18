@@ -222,7 +222,7 @@
 			$list = SQLquery("SELECT * FROM `auth` WHERE `user_id` = '" . userId . "' ORDER BY `date` DESC", SQL_RESULT_ITEMS);
 
 			foreach ($list as $i => $session) {
-				$list[$i] = new AuthSession($session);
+				$list[$i] = new APIdogSession($session);
 			};
 
 			return [
@@ -232,19 +232,13 @@
 		}
 
 		/**
-		 * Изменение темы
-		 * @param int $themeId Идентификатор темы
-		 */
-		static function setTheme($themeId) {
-			$result = SQLquery("UPDATE `settings` SET `themeId` = '" . ((int) $themeId) . "' WHERE `userId` = '" . userId . "' LIMIT 1", SQL_RESULT_AFFECTED);
-			return [ "result" => (boolean) $result ];
-		}
-
-		/**
+		 *
+		 *	NOT WORK
+		 *
 		 * Получить сессию по идентификатору авторизации
 		 * @deprecated
 		 * @param  int $authId Идентификатор авторизации
-		 * @return AuthSession Сессия
+		 * @return APIdogSession Сессия
 		 */
 		static function getSessionById($authId) {
 			return APIdogSession::getByAuthKey();
@@ -276,12 +270,12 @@
 	 * Подключает модуль
 	 * @deprecated
 	 */
-	function requireModule ($name) { include_once "./" . $name . "-engine.php"; };
+	function requireModule($name) { include_once "./" . $name . "-engine.php"; };
 
 	/**
 	 * Проверяет, находится ли число $n в пределах [$min, $max]
 	 */
-	function toRange ($min, $n, $max) { return min($max, max($n, $min)); };
+	function toRange($min, $n, $max) { return min($max, max($n, $min)); };
 
 
 
