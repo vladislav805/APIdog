@@ -37,6 +37,11 @@
 ### NodeJS
 Работа с LongPoll: один файл `longpoll.js`
 
+Расширение APIdog Plus
+----------------------
+Также доступно на GitHub по адресу: https://github.com/vladislav805/APIdogPlusExtension
+С янврая 2017 года только одно единое. До этого было разделение на расширение для Firefox/Chrome+Opera
+
 
 
 Команда проекта:
