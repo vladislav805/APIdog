@@ -45,47 +45,11 @@
 	 */
 	class APIdogSession {
 
-		public $authId;
-		public $userId;
-		public $date;
-
-		public function __construct ($result) {
-			$this->authId = (int) $result["authId"];
-			$this->userId = (int) $result["userId"];
-			$this->date = (int) $result["date"];
-		}
-
-		public function getSettings () {
-			return APIdogSettings::getById($this->userId);
-		}
-
-		/**
-		 * Получение пользователя по authKey
-		 * @param  string $authKey authKey
-		 * @return [type]       [description]
-		 */
-		static function getByAuthKey($authKey = "") {
-			if (!$authKey) {
-				return false;
-			};
-
-			$user = SQLquery("SELECT * FROM `auth` WHERE `hash`='" . escape($authKey) . "' LIMIT 1", SQL_RESULT_ITEM);
-			return !$user ? false : new APIdogSession($user);
-		}
-
-	};
-
-	/**
-	 * Авторизационная сессия
-	 */
-	class AuthSession {
-		public $authId;
-		public $authKey;
+		private $authId;
 		private $userId;
-		public $date;
-		public $appId;
+		private $date;
 
-		public function __construct($q) {
+		public function __construct($result) {
 			$this->authId = (int) $q["auth_id"];
 			$this->authKey = $q["hash"];
 			$this->userId = $q["user_id"];
@@ -93,8 +57,44 @@
 			$this->appId = (int) $q["appId"];
 		}
 
-		public function getUserId() {
-			return $this->userId;
+		public function getSettings() {
+			return APIdogSettings::getById($this->userId);
+		}
+
+		/**
+		 * Создание сессии и генерация authKey
+		 * @param  AuthorizeAccessToken $authorize Результат от авторизации
+		 * @return APIdogSession                   Сессия
+		 */
+		static function create(AuthorizeAccessToken $authorize) {
+			$date = time();
+			$authKey = md5(time() . $authorize->getUserId());
+
+			$query = sprintf("INSERT INTO `auth` (`user_id`, `date`, `hash`, `appId`) VALUES (%d,%d,'%s','%s')", $userId, $date, $hash, $authorize->getApplication()->getApplicationId());
+
+			$authId = SQLquery($query, SQL_RESULT_INSERTED);
+
+			return new APIdogSession([
+				"user_id" => $authorize->getUserId(),
+				"auth_id" => $authId,
+				"hash" => $authKey,
+				"date" => $date,
+				"appId" => $authorize->getApplication()->getApplicationId()
+			]);
+		}
+
+		/**
+		 * Получение пользователя по authKey
+		 * @param  string $authKey authKey
+		 * @return [type]       [description]
+		 */
+		static function getByAuthKey($authKey = false) {
+			if (!$authKey) {
+				return false;
+			};
+
+			$user = SQLquery("SELECT * FROM `auth` WHERE `hash`='" . escape($authKey) . "' LIMIT 1", SQL_RESULT_ITEM);
+			return !$user ? false : new APIdogSession($user);
 		}
 
 		/**
@@ -104,8 +104,8 @@
 		public function kill() {
 			return (boolean) SQLquery("DELETE FROM `auth` WHERE `auth_id` = '" . $this->authId . "' LIMIT 1", SQL_RESULT_AFFECTED);
 		}
-	};
 
+	};
 
 	/**
 	 * Настройки
@@ -178,63 +178,4 @@
 		 * @return array           Данные
 		 */
 		static function associateAuthKey($authKey, $authId, $userId) { }
-	};
-
-
-	/**
-	 * Тема для сайта
-	 */
-	class APIdogTheme {
-
-		public $themeId;
-		public $authorId;
-		public $file;
-		public $title;
-		public $updated;
-		public $fileJS;
-
-		/**
-		 * Возвращает тему по её id
-		 * @param  int $themeId Идентификатор темы
-		 * @return APIdogTheme  Объект темы
-		 */
-		static function getById ($themeId) {
-			return new APIdogTheme(SQLquery("SELECT * FROM `themes` WHERE `themeId` = '" . $themeId . "' LIMIT 1", SQL_RESULT_ITEM));
-		}
-
-		public function __construct ($theme) {
-			$this->themeId = (int) $theme["themeId"];
-			$this->authorId = (int) $theme["authorId"];
-			$this->file = $theme["file"];
-			$this->title = $theme["title"];
-			$this->updated = (int) $theme["updated"];
-			$this->fileJS = $theme["filejs"];
-		}
-
-		/**
-		 * Получает, записывает и возвращает код темы
-		 * @return String Код темы
-		 */
-		public function open () {
-			$content = file_get_contents("../styles/" . $this->file);
-			$this->content = $content;
-			return $this;
-		}
-
-		/**
-		 * Получает и возвращает код js темы
-		 * @return String Код
-		 */
-		public function openJS () {
-			$content = file_get_contents("../scripts/" . $this->fileJS);
-			return $content;
-		}
-
-		/**
-		 * Возвращает код темы
-		 * @return String Код
-		 */
-		public function getContent () {
-			return $this->content ? $this->content : $this->open()->content;
-		}
 	};
