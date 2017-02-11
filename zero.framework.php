@@ -107,21 +107,3 @@
 	session_write_close();
 
 	initDefines();
-
-
-
-	class ADEmptyException extends Throwable {
-
-		public function __construct() {
-			parent::__construct();
-		}
-
-	}
-
-	class ADInvalidAuthorizeException extends Throwable {
-
-		public function __construct() {
-			parent::__construct();
-		}
-
-	}

@@ -164,7 +164,7 @@
 			};
 
 			$authId = (int) $_REQUEST["authId"];
-			$session = APIdogSession::getByAuthKey($authKey);
+			$session = Settings::getSessionById($authId);
 			if ($session == -1)
 				throwError(10);
 			if (is_object($session) && $session->getUserId() != userId)
@@ -350,6 +350,409 @@
 			output($ads->delete($adId));
 
 			break;
+
+
+		// Support
+		// Returns tickets
+		case "support.get":
+			$filter = (int) $_REQUEST["filter"];
+			$categoryId = (int) $_REQUEST["categoryId"];
+			$userId = (int) $_REQUEST["userId"];
+			$offset = (int) $_REQUEST["offset"];
+			$actionId = (int) $_REQUEST["actionId"];
+			$count = (int) $_REQUEST["count"];
+			$count = toRange(1, $count, 100);
+
+			$filter = getQueryStringWithFilter($filter, $categoryId, ["userId" => (int) $userId, "actionId" => $actionId]);
+			$tickets = Ticket::parse(APIdog::mysql("SELECT * FROM `supportTickets` $filter ORDER BY `ticketId` DESC LIMIT $offset,$count", 2), true);
+			$count = APIdog::mysql("SELECT COUNT(*) FROM `supportTickets` " . $filter, 3);
+			output([
+				"count" => $count,
+				"items" => $tickets
+			]);
+			break;
+
+		// Search in support
+		case "support.search":
+//sendDeprecated();
+			$q = mb_strtoupper(escape($_REQUEST["q"]));
+			$type = (int) $_REQUEST["type"];
+			$offset = (int) $_REQUEST["offset"];
+			$count = (int) $_REQUEST["count"];
+
+			if (!$count)
+			{
+				$count = 20;
+			};
+
+			if (!$q)
+			{
+				throwError(50);
+			};
+
+			switch ($type)
+			{
+				case 0: // Comments
+					$result = APIdog::mysql("SELECT * FROM `supportComments` WHERE `text` LIKE '%" . $q . "%' ORDER BY `commentId` DESC LIMIT $offset,$count", 2);
+					$count = APIdog::mysql("SELECT COUNT(*) FROM `supportComments` WHERE `text` LIKE '%" . $q . "%'", 3);
+					$data = Comment::parse($result, true);
+					break;
+				case 1: // Ticket
+					$result = APIdog::mysql("SELECT * FROM `supportTickets` WHERE `title` LIKE '%" . $q . "%' ORDER BY `ticketId` DESC LIMIT $offset,$count", 2);
+					$count = APIdog::mysql("SELECT COUNT(*) FROM `supportTickets` WHERE `title` LIKE '%" . $q . "%'", 3);
+					$data = Ticket::parse($result, true);
+					break;
+			};
+
+			$agents = Ticket::getAgents($data);
+
+			output([
+				"count" => $count,
+				"items" => $data,
+				"agents" => $agents
+			]);
+			break;
+
+		// Returns categories and faq. Launching for create ticket.
+		case "support.getDataForCreate":
+sendDeprecated();
+			$categories = [
+				["categoryId" => 1, "title" => "Общие вопросы"],
+				["categoryId" => 2, "title" => "Ошибка на сайте"],
+				["categoryId" => 3, "title" => "Вопросы"],
+				["categoryId" => 4, "title" => "Предложения"],
+				["categoryId" => 5, "title" => "Вход"],
+				["categoryId" => 6, "title" => "Отзывы и благодарности"],
+				["categoryId" => 7, "title" => "Ошибка в переводе"],
+				["categoryId" => 8, "title" => "Ошибки на определенных устройствах/браузере"],
+				["categoryId" => 9, "title" => "Прочее"],
+				["categoryId" => 10, "title" => "Флудилка"]
+			];
+			$r = (int) date("H");
+
+			if  ($r > 15)
+			{
+				$remain = 1;
+			}
+			elseif ($r > 8 && $r <= 15)
+			{
+				$remain = 2;
+			}
+			elseif ($r <= 7)
+			{
+				$remain = 8 - $remain + 1;
+			};
+
+			output([
+				"categories" => $categories,
+				"remain" => $remain,
+				"agents" => [
+					"count" => sizeof($Agents)
+				],
+				"faq" => file_get_contents("faqbbcode.txt")
+			]);
+			break;
+
+
+		// Create new ticket
+		case "support.createTicket":
+//sendDeprecated();
+			if (!userId) {
+				throwError(9);
+			};
+
+			if (Ticket::isBlocked())
+			{
+				throwError(51);
+			};
+
+			$title = escape($_REQUEST["title"]);
+			$text  = escape($_REQUEST["text"]);
+			$userAgent = escape($_SERVER["HTTP_USER_AGENT"]);
+			$categoryId = (int) $_REQUEST["categoryId"];
+			$isExtension = (int)  $_REQUEST["isExtension"];
+			$isPrivate = (int)  $_REQUEST["isPrivate"];
+			$attachments = join(",", array_map("intval", explode(",", $_REQUEST["attachments"])));
+			$time  = time();
+
+			if (!$title || !$text)
+			{
+				throwError(21);
+			};
+
+			$extime = time() - 5 * 60;
+			$last = APIdog::mysql("SELECT COUNT(*) FROM `support_list` WHERE `date` > $extime", 3);
+
+			if ($last && !getAdmin())
+			{
+				throwError(22);
+			};
+
+			$ticketId = APIdog::mysql("INSERT INTO `supportTickets` (`title`,`userId`,`date`,`categoryId`,`isRead`,`isPrivate`) VALUES ('$title','" . userId . "','$time','$categoryId',1,'" . ((int) $isPrivate) . "')", 4);
+			$commentId = APIdog::mysql("INSERT INTO `supportComments` (`ticketId`,`text`,`userId`,`date`,`actionId`,`attachments`,`userAgent`,`isExtension`) VALUES ('$ticketId','$text','" . userId . "','$time','0','$attachments','$userAgent','$isExtension')", 4);
+
+
+			output([
+				"ticketId" => $ticketId,
+				"commentId" => $commentId
+			]);
+			break;
+
+		// Edit ticket
+		case "support.editTicket":
+//sendDeprecated();
+			if (!userId) {
+				throwError(9);
+			};
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$title = escape($_REQUEST["title"]);
+			$categoryId = (int) $_REQUEST["categoryId"];
+
+			if (!$ticketId || !$title)
+			{
+				throwError(21);
+			};
+
+			$data = Ticket::getById($ticketId);
+			$data->edit($title, $categoryId);
+			output(["result" => (boolean) $data]);
+			break;
+
+		// Delete ticket
+		case "support.deleteTicket":
+//sendDeprecated();
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+
+			$data = Ticket::getById($ticketId);
+			output(["result" => $data->delete()]);
+			break;
+
+		// Returns discussions
+		case "support.getTicket":
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$offset = (int) $_REQUEST["offset"];
+			$count = (int) $_REQUEST["count"];
+
+			if (!$ticketId)
+				throwError(21);
+
+			$ticket = Ticket::getById($ticketId);
+
+			if (!$ticket)
+			{
+				throwError(24);
+			};
+
+			$ticket->checkPrivateAccess();
+
+			$comments = $ticket->getComments($count, $offset);
+
+			if ($ticket->userId == userId)
+			{
+				$ticket->setRead(true);
+			};
+
+			$comments["ticket"] = $ticket;
+			$comments["agents"] = $ticket->getAgents($comments["items"]);
+			output($comments);
+			break;
+
+		// Add new comment
+		case "support.addComment":
+//sendDeprecated();
+			if (!userId)
+			{
+				throwError(9);
+			};
+
+			if (Ticket::isBlocked())
+			{
+				throwError(51);
+			};
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$text = escape($_REQUEST["text"]);
+			$attachmentId = join(",", array_map("intval", explode(",", $_REQUEST["attachments"])));
+			$action = (int) $_REQUEST["action"];
+
+			$ticket = Ticket::getById($ticketId);
+			if (!$ticket)
+			{
+				throwError(24);
+			};
+
+			$ticket->checkPrivateAccess();
+
+			$extime = time() - 1 * 60;
+			$last = APIdog::mysql("SELECT COUNT(*) FROM `supportComments` WHERE `date` > $extime AND `userId` = '" . userId . "' LIMIT 1", 3);
+
+			if ($last && !getAdmin())
+			{
+				throwError(22);
+			};
+
+			if (getAdmin())
+			{
+				$ticket->setRead(false);
+			};
+
+			if (mb_strlen($text) < 10 && !$action)
+			{
+				throwError(48);
+			};
+
+			if (!getAdmin() && !$text && !$attachmentId || getAdmin() && !$text && !$action)
+			{
+				throwError(21);
+			};
+
+			$comment = $ticket->addComment($text, $action, $attachmentId);
+
+			if (!$comment)
+			{
+				throwError(47);
+			};
+
+			$ticket->updateActionId();
+
+			output([
+				"comment" => $comment,
+				"agents" => $ticket->getAgents([$comment])
+			]);
+			break;
+
+		// Edit comment
+		case "support.editComment":
+//sendDeprecated();
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$commentId = (int) $_REQUEST["commentId"];
+			$text = escape($_REQUEST["text"]);
+			$action = (int) $_REQUEST["action"];
+
+			if (mb_strlen($text) < 10 && !$action)
+			{
+				throwError(48);
+			};
+
+			$ticket = Ticket::getById($ticketId);
+			$q = $ticket->getComment($commentId)->edit($text);
+
+			output(["result" => $q]);
+			break;
+
+		// Delete comment
+		case "support.deleteComment":
+//sendDeprecated();
+
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$commentId = (int) $_REQUEST["commentId"];
+
+			if (!$ticketId || !$commentId)
+			{
+				throwError(24);
+			};
+
+			$ticket = Ticket::getById($ticketId);
+
+			$q = $ticket->getComment($commentId)->delete();
+
+			$ticket->updateActionId();
+
+			output(["result" => $q]);
+			break;
+
+		case "support.restoreComment":
+//sendDeprecated();
+			$ticketId = (int) $_REQUEST["ticketId"];
+			$commentId = (int) $_REQUEST["commentId"];
+
+			if (!$ticketId || !$commentId)
+			{
+				throwError(24);
+			};
+
+			$ticket = Ticket::getById($ticketId);
+
+			$q = $ticket->getComment($commentId)->restore();
+
+			$ticket->updateActionId();
+
+			output(["result" => $q]);
+			break;
+
+		// Returns URI for uploading attachment for comment in support
+		case "support.getUploadURL":
+			output(Attachment::getUploadURL(userId));
+			break;
+
+		// Upload image
+		case "support.uploadAttachment":
+//sendDeprecated();
+			list($userId, $time, $key) = explode(base64_encode($_REQUEST["data"]));
+			$now = time();
+			$file = $_FILES["file"];
+			if ($key != md5($authKey) || $userId != userId || $time > $now || $now - $time > 600)
+			{
+				throwError(49);
+			};
+
+			$attach = Attachment::uploadImage($file);
+
+			return [
+				"saved" => true,
+				"attachment" => $attach
+			];
+			break;
+
+		// Returns attachment
+		case "support.getAttachment":
+
+			$attachmentId = (int) $_REQUEST["attachmentId"];
+			$key = escape($_REQUEST["key"]);
+
+			if (!$attachmentId || !$key)
+				throwError(21);
+			$attach = Attachment::getById($attachmentId);
+
+			$link = $attach->getRealImage();
+
+			if (strpos($link, "http") === false)
+			{
+				$link = "http:" . $link;
+			};
+
+			$ch = curl_init($link);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			$image = curl_exec($ch);
+			$header = curl_getinfo($ch);
+			curl_close($ch);
+			header("Content-Type: " . $header["content_type"]);
+			header("Content-Length: " . $header["download_content_length"]);
+			exit($image);
+			break;
+
+		case "support.markTicketAsReplied":
+//sendDeprecated();
+			$ticketId = (int) $_REQUEST["ticketId"];
+
+			if (!getAdmin())
+			{
+				throwError(25);
+			};
+
+			$ticket = Ticket::getById($ticketId);
+			$ticket->setRead(false);
+			$ticket->setAction(1);
+
+			output(["result" => true]);
+			break;
+
+
+
 
 
 		case "apidog.uploadAttachmentByURL":

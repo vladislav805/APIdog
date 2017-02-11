@@ -61,7 +61,7 @@
 			exit("db data not set");
 		};
 
-		$db = new mysqli(dbHost, dbUser, dbPassword, dbDatabase);
+		$db = new mysqli(dbHost, dbUser, dbPassword, dbDatabase, defined("dbPort") ? dbPort : null);
 		return $db;
 	};
 
