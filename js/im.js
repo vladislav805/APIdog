@@ -1260,7 +1260,6 @@ console.log(data.offset);
 		parent.className = "imdialog-item-attachments";
 
 		var audioIdList = (+new Date());
-		Audios.Lists[audioIdList] = [];
 
 		for (item in objects) {
 			item = objects[item];
@@ -1675,7 +1674,7 @@ console.log(data.offset);
 							break;
 						case "audio":
 							Audios.Data[a.owner_id + "_" + a.id] = a;
-							Audios.Lists[audioLid].push(a);
+
 							//node = Audios.Item(a, {lid: audioLid});
 							break;
 						case "doc":

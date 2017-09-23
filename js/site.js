@@ -788,8 +788,6 @@ var Site = {
 			audioIdList = Date.now(),
 			ass = {}, i, a;
 
-		Audios.Lists[audioIdList] = [];
-
 
 		attachments.forEach(function(item) {
 			ass[item.type] ? ass[item.type]++ : (ass[item.type] = 1);

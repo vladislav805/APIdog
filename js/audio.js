@@ -893,8 +893,7 @@ console.log(position);
 				item = data[i];
 				id = item.owner_id + "_" + (item.aid || item.id);
 				//wrap.appendChild(Audios.Item(item, {lid: lid, from: 64, add: true}));
-				Audios.Lists[lid].push(id);
-				Audios.Data[id] = item;
+				
 			}
 			wrap.appendChild(Site.getSmartPagebar(getOffset(), count > 1000 ? 1000 : count, 40));
 			list = list || $.element("audio-search-list");
