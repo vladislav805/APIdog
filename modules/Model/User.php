@@ -1,0 +1,6 @@
+<?
+	namespace Model;
+
+	class User {
+
+	}

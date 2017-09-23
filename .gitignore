@@ -1,0 +1,9 @@
+/.idea
+/conf.php
+/application.json
+/tmp
+/user
+/invites.json
+/invite.php
+/modules/Method/VK/FixAudio.php
+/modules/Method/VK/RefreshToken.php
