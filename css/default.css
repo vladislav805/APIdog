@@ -346,8 +346,7 @@ progress {
 
 .head-player-button-prev,
 .head-player-button-next,
-.head-player-button-play,
-.head-player-button-pause {
+.head-player-button-state {
 	height: 24px;
 	width: 24px;
 	background-size: 24px;
@@ -356,8 +355,8 @@ progress {
 
 .head-player-button-prev {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z'/%3E%3C/svg%3E");}
 .head-player-button-next {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z'/%3E%3C/svg%3E");}
-.head-player-button-play {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");}
-.head-player-button-pause {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 19h4V5H6v14zm8-14v14h4V5h-4z'/%3E%3C/svg%3E");}
+.head-player-button-play .head-player-button-state {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 19h4V5H6v14zm8-14v14h4V5h-4z'/%3E%3C/svg%3E");}
+.head-player-button-pause .head-player-button-state {background-image: url("data:image/svg+xml,%3Csvg fill='%23FFFFFF' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");}
 
 /** END LEFT */
 

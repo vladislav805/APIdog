@@ -122,7 +122,7 @@
 
 
 
-	<body id="main" class="animation isTouch<?=($settings->getBitmask() & Setting::FIXED_POSITION_HEADER ? " header--fixed": "");?>">
+	<body id="main" class="head-player-button-play isTouch<?=($settings->getBitmask() & Setting::FIXED_POSITION_HEADER ? " header--fixed": "");?>">
 
 		<!-- Load screen -->
 		<div class="hidden loadScreen-wrap">
@@ -173,8 +173,7 @@
 
 							<div class="head-player-buttons">
 								<div class="head-player-button-prev" onclick="Audios.previous();"></div>
-								<div class="head-player-button-play" id="headplayer-play" onclick="Audios.player.play();"></div>
-								<div class="head-player-button-pause hidden" id="headplayer-pause" onclick="Audios.player.pause();"></div>
+								<div class="head-player-button-state" id="headplayer-play" onclick="Audios.player.toggle();"></div>
 								<div class="head-player-button-next" onclick="Audios.next();"></div>
 							</div>
 
@@ -197,7 +196,7 @@
 
 							<div class="head-player-actions">
 								<div class="head-player-actions-icons">
-									<div class="head-player-add hidden cp" id="add-audio" onclick="Audios.player.Add(this);"></div>
+									<div class="head-player-add hidden cp" id="add-audio" onclick="Audios.player.add(this);"></div>
 									<div class="head-player-live cp" id="live-audio" onclick="Audios.player.toggleBroadcast(this);"></div>
 									<div class="head-player-find hidden cp" id="find-audio" onclick="Audios.getRadioCurrentBroadcastingSong(Audios.getRadioCurrent());"></div>
 									<!--div class="head-player-text-audio" onclick="Audios.Player.TriggerPlayList(this);"></div-->

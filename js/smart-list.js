@@ -162,6 +162,15 @@ SmartList.prototype = {
 		return this;
 	},
 
+	setOptionsItemListCreator: function(obj, value) {
+		if (value === undefined) {
+			this.mOptionsItemListCreator = obj;
+		} else {
+			this.mOptionsItemListCreator[obj] = value;
+		}
+		return this;
+	},
+
 	/**
 	 * Set state for UI
 	 * @param {SmartList.state|int} state

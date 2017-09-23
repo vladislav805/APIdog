@@ -443,7 +443,7 @@ var Groups = {
 				} : null);})(group.is_admin, groupId),
 				html: ((group.status.safe().emoji() || "") || (group.is_admin ? Lang.get("profiles.status_change") : ""))
 			}) : (function (a) {
-				return Audios.Item(a, {from: 2, set: 32, lid: Audios.createList(a).lid, gid: groupId, uid: -groupId});
+				//return Audios.Item(a, {from: 2, set: 32, lid: Audios.createList(a).lid, gid: groupId, uid: -groupId});
 			})(group.status_audio)),
 
 			$.e("div", {"class": "group-act", id: "group" + groupId + "_actions", append: buttons})

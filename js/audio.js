@@ -97,18 +97,66 @@ var Audios = {
 		Audios.RequestPage();
 	},
 
-	Storage: {},
-	Data: {},
-	Lists: {0: []},
-	CurrentList: 0,
-	Current: "0_0",
-	Settings: 0,
-	Albums: {},
-	l2l: {},
-	l2c: {},
-	Texts: {},
 
-	RequestPage: function () {
+	/**
+	 * Full ID of current audio. Audios.items[<ID>]
+	 * @var {string}
+	 */
+	currentAudioFullID: "0_0",
+
+	/**
+	 * ID of current playlist in Audios.storage[<ID>]
+	 * @var {string|null}
+	 */
+	currentPlaylistID: null,
+
+	/**
+	 * Storage for playlists
+	 */
+	storage: {},
+
+	/**
+	 * Storage for audio by ID
+	 */
+	items: {},
+
+	/**
+	 * Bitmask for audio play settings
+	 */
+	playSettings: 0,
+
+	/**
+	 * Available bits settings
+	 */
+	BIT_BROADCAST: 16,
+	BIT_REPEAT: 32,
+	BIT_INVERSE_TIME: 1024,
+
+	/**
+	 * Checks if setting is enabled
+	 * @param {int} bit
+	 * @returns {boolean}
+	 */
+	isEnabled: function(bit) {
+		return !!(Audios.playSettings & bit);
+	},
+
+	/**
+	 * Classes for nodes
+	 */
+	CLASS_FLAT_MODE: "audios-flat",
+	CLASS_PLAYING: "audios-playing",
+	CLASS_RESTRICTED: "audios-restricted",
+	CLASS_NOW_BROADCAST: "audios-noBroadcast",
+	CLASS_PAUSED: "audios-paused",
+
+	CLASS_HEAD_PLAY: "head-player-button-play",
+	CLASS_HEAD_PAUSE: "head-player-button-pause",
+
+	/**
+	 * Route
+	 */
+	RequestPage: function() {
 		var ownerId = parseInt(Site.get("ownerId")) || API.userId;
 
 		switch (Site.get("act")) {
@@ -136,35 +184,38 @@ var Audios = {
 				return Audios.getAlbums(ownerId);
 
 			default:
-				return Audios.page(ownerId).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
+				return Audios.page({ownerId: ownerId, search: true, playlist: ownerId}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
 		}
 	},
 
 
 	/**
 	 * Create template of audio list
-	 * @param {int} ownerId
+	 * @param {{ownerId: int, search: boolean=, playlist: string=}} options
 	 * @returns {Promise}
 	 */
-	page: function(ownerId) {
+	page: function(options) {
 		return new Promise(function(resolve) {
 			var sl = new SmartList({
 					data: {count: -1, items: []},
 					countPerPage: 100,
 					needSearchPanel: true,
 					getItemListNode: Audios.getListItem,
+					optionsItemListCreator: {
+						playlist: options.playlist
+					},
 					filter: function(q, audio) {
 						return ~audio.artist.toLowerCase().indexOf(q) || ~audio.title.toLowerCase().indexOf(q);
 					}
 				}),
 				loader = Site.Loader(true),
 				list = $.e("div", {"class": "audios-list", append: [sl.getNode(), loader]}),
-				tabs = Audios.getTabs(ownerId),
+				tabs = Audios.getTabs(options.ownerId),
 				wrap = $.e("div", {"class": "audios-wrap", append: [tabs, list]});
 
 			Site.append(wrap);
 
-			resolve({list: list, sl: sl, loader: loader, ownerId: ownerId});
+			resolve({list: list, sl: sl, loader: loader, ownerId: options.ownerId});
 		});
 	},
 
@@ -173,11 +224,28 @@ var Audios = {
 	 * @param {int} ownerId
 	 */
 	getTabs: function(ownerId) {
+		var tabs = [],
+			param = API.userId === ownerId ? "ownerId=" + ownerId : "";
 
+		tabs.push(["audio" + (param ? "?" + param : ""), Lang.get("audios.tabs_audios")]);
+		tabs.push(["audio?act=recommendations" + (param ? "&" + param : ""), Lang.get("audios.tabs_recommends")]);
+		tabs.push(["audio?act=albums" + (param ? "&" + param : ""), Lang.get("audios.tabs_recommends")]);
+
+		if (API.userId === ownerId) {
+			tabs.push(["audio?act=friends", Lang.get("audios.tabs_friends")]);
+			tabs.push(["audio?act=popular", Lang.get("audios.tabs_popular")]);
+			tabs.push(["audio?act=radio", Lang.get("audios.tabs_radio")]);
+		}
+
+		return Site.getTabPanel(tabs);
 	},
 
-	storage: {},
 
+	/**
+	 * Request audio data by owner
+	 * @param {{ownerId: int}} meta
+	 * @returns {*}
+	 */
 	requestAudios: function(meta) {
 		var ownerId = meta.ownerId;
 		if (Audios.storage[ownerId]) {
@@ -195,42 +263,37 @@ var Audios = {
 				throw new TypeError("Audios is not fixed");
 			}
 			meta.data = data.a;
+			Audios.storage[meta.ownerId] = data.a.items;
 			return meta;
 		});
 	},
 
+	/**
+	 * Trying fix audio
+	 * @param {TypeError|null} e
+	 */
 	fixAudio: function(e) {
 		console.error(e);
 		console.info("Fixing..");
 		APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function(res) {
-			console.log("May be fixed. Try reload");
+			console.log("May be fixed. Try reload", res);
 		});
 	},
 
 	/**
-	 *
-	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int, loader: HTMLEl;ement}} obj
+	 * Show audio list
+	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int, loader: HTMLElement}} obj
 	 */
 	show: function(obj) {
-		console.log(obj);
 		$.elements.remove(obj.loader);
-		var sl = obj.sl;
-
-		sl.setData(obj.data);
+		obj.sl.setData(obj.data);
 	},
 
-
-
-	CLASS_FLAT_MODE: "audios-flat",
-	CLASS_PLAYING: "audios-playing",
-	CLASS_RESTRICTED: "audios-restricted",
-	CLASS_NOW_BROADCAST: "audios-noBroadcast",
-	CLASS_PAUSED: "audios-paused",
 
 	/**
 	 * Return item node audio
 	 * @param {VKAudio} audio
-	 * @param {{flatMode: boolean=, removeBroadcast: boolean=, onMoreClick: function=}} options
+	 * @param {{flatMode: boolean=, removeBroadcast: boolean=, onMoreClick: function=, playlist: string=}} options
 	 */
 	getListItem: function(audio, options) {
 		var e = $.e,
@@ -238,13 +301,11 @@ var Audios = {
 			id = audio.owner_id + "_" + audio.id,
 			cls = ["audios-item"];
 
-
-
-
 		options = options || {};
 		options.flatMode && item.classList.add(Audios.CLASS_FLAT_MODE);
 
 		Audios.getCurrent() === id && emojiImageTemplate.classList.add(Audios.CLASS_PLAYING);
+		Audios.items[id] = audio;
 
 		item.id = "audio" + id;
 
@@ -253,7 +314,7 @@ var Audios = {
 				return Audios.getBitrate(audio);
 			}
 
-			Audios.setPlay(audio);
+			Audios.setPlay(audio, options.playlist);
 			return $.event.cancel(event);
 		});
 
@@ -322,9 +383,12 @@ var Audios = {
 	},
 
 
-
+	/**
+	 * Returns full ID of current audio
+	 * @returns {string}
+	 */
 	getCurrent: function() {
-		return Audios.Current; // TODO  сделать нормально
+		return Audios.currentAudioFullID;
 	},
 
 
@@ -366,362 +430,32 @@ var Audios = {
 		},
 
 		changeFormatTime: function (event) {
-			Audios.Settings = (Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? Audios.Settings - 1024 : Audios.Settings + 1024);
+			Audios.playSettings = (Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? Audios.playSettings - Audios.BIT_INVERSE_TIME : Audios.playSettings + Audios.BIT_INVERSE_TIME);
 			Audios.recountTime();
 			return $.event.cancel(event);
 		}
 	},
 
-	Save: function (data) {
-		for (var i = 0; i < data.length; ++i) {
-			var current = data[i];
-			/*
-				1 - audio
-				2 - albums
-			*/
-			switch (current.type) {
-				case 1:
-					for (var j = 0; j < current.data.length; ++j) {
-						var c = current.data[j];
-						console.log(c);
-						Audios.Data[c.owner_id + "_" + (c.aid || c.id)] = c;
-						if (!Audios.Albums["!" + c.owner_id])
-							Audios.Albums["!" + c.owner_id] = [];
-						Audios.Albums["!" + c.owner_id].push(c.owner_id + "_" + (c.aid || c.id));
-					}
-					break;
-				case 2:
-					for (var j = 0; j < current.data.length; ++j) {
-						var c = current.data[j];
-						Audios.Albums[c.owner_id + "_" + c.album_id] = c;
-						if (Audios.Albums[c.owner_id] && current.data.length - 1 === Audios.Albums[c.owner_id].length)
-							continue;
-						if (!Audios.Albums[c.owner_id])
-							Audios.Albums[c.owner_id] = [c.album_id];
-						else
-							Audios.Albums[c.owner_id].push(c.album_id);
-						Audios.Albums["_" + c.album_id] = c;
-					}
-					break;
-			}
-		}
-	},
 
-	Listing: function (data) {
-		data = Site.isResponse(data);
-		var _oid = data.o || Site.Get("oid") || API.userId;
-		if (data.c) {
-			Site.setCounters(data.c);
-			Audios.Save([{type: 2, data: data.l}]);
-			Local.add(data.u);
-		}
-
-		Audios.Save([{type: 1, data: data.a}]);
-		data = data.a;
-		var parent = document.createElement("div"),
-			list = document.createElement("div"),
-			count = data.count,
-
-			shuffleList = function (event) {
-				if (event.ctrlKey) {
-					Audios.downloadM3U8();
-					return;
-				}
-
-				if (!Audios.CurrentList)
-					return Site.Alert({text: "Сначала начните воспроизводить что-нибудь"});
-
-				var lid = +new Date(),
-					cl = Audios.Lists[Audios.CurrentList];
-				Audios.Lists[lid] = [];
-				for (var i = 0, l = cl.length; i < l; ++i)
-					if (Audios.Current !== cl[i])
-						Audios.Lists[lid].push(cl[i]);
-
-
-				Audios.Lists[lid] = Audios.Lists[lid].shuffle();
-				Audios.Lists[lid].unshift(Audios.Current);
-				Audios.CurrentList = lid;
-
-				Site.Alert({text: "Список перемешан"});
-			},
-
-			actions = (Site.Get("album") ? Site.CreateDropDownMenu("Действия", {
-				"Перемешать": shuffleList,
-				"Редактировать": function () {
-					window.location.hash = "#audio?act=albums&action=edit&oid=" + _oid + "&album=" + Site.Get("album");
-				},
-				"Удалить": function () {
-					VKConfirm("Вы действительно хотите удалить этот альбом?", function () {
-						var oid = _oid;
-						Site.API("audio.deleteAlbum", {
-							owner_id: _oid,
-							album_id: Site.Get("album")
-						}, function (data) {
-							data = Site.isResponse(data);
-							if (!data)
-								return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
-							Site.Alert({text: "Альбом успешно удален!"});
-							window.location.hash = "#audio" + (API.userId != oid ? "?oid=" + oid : "");
-						});
-					});
-				}
-			}) : $.e("span", {"class": "fr a", html: "Перемешать", onclick: shuffleList})),
-			audios = (function(a,b,c){for(;c<a.length;++c)b.push(a[c]);return b;})(data.items,[],0);
-		parent.appendChild(Site.getPageHeader(count + " " + $.textCase(count, "аудиозапись аудиозаписи аудиозаписей".split(" ")), actions));
-		list.id = "audiolist";
-		var lid = (+new Date() / 1000);
-		if (!Site.Get("album")) {
-			Audios.l2l[_oid] = lid;
-			Audios.l2c[_oid] = audios[0];
-		}
-		Audios.Lists[lid] = [];
-		for (var i = 0; i < audios.length; ++i) {
-			list.appendChild(Audios.Item(audios[i], {
-				lid: lid,
-				from: 1
-			}));
-			Audios.Lists[lid].push(audios[i].owner_id + "_" + (audios[i].id || audios[i].aid));
-			Audios.Data[audios[i].owner_id + "_" + audios[i].aid] = audios[i];
-		}
-		parent.className = "audio-wrap";
-		parent.appendChild(Audios.getRightPanel());
-		parent.appendChild(list);
-		if (Audios.Albums["!" + _oid] && Audios.Albums["!" + _oid].length < audios[0])
-			parent.appendChild(Audios.getNextButton(_oid, audios[0]));
-		Site.append(parent);
-		Site.setHeader("Аудиозаписи");
-		if (Audios.Current != "0_0")
-			Audios.miniPlayer.show();
-		if (Site.Get("album"))
-			Audios.Albums[Site.Get("oid") + "_" + Site.Get("album")].loaded = true;
-
-		window.audioLoadingState = false;
-		window.onScrollCallback = function (event) {
-			if (!event.needLoading || !Audios.getNextButtonNode() || window.audioLoadingState) return;
-
-			window.audioLoadingState = true;
-			Audios.getNextButtonNode().click();
-		};
-	},
-
-	getNextButtonNode: function () {
-		var e = $.element("audio-next-button");
-		return e && !e.disabled ? e : false;
-	},
-
-	getNextButton: function (_oid, count) {
-		return $.elements.create("div", {
-			"class": "button-block",
-			id: "audio-next-button",
-			html: "Подгрузить далее...",
-			onclick: (function (oid) {
-				return function (event) {
-					if (this.disabled)
-						return;
-					this.innerHTML = "Загрузка...";
-					this.disabled = true;
-					var elem = this;
-					Site.APIv5("audio.get", {
-						owner_id: oid,
-						album_id: Site.Get("album"),
-						count: 100,
-						offset: $.element("audiolist").children.length,
-						v: 5.63
-					}, function (data) {
-						$.elements.remove(elem);
-						data = Site.isResponse(data);
-						Audios.Save([{type: 1, data: data}]);
-						var d = [],
-							lid = Audios.l2l[oid];
-						for (var i = 0; i < data.length; ++i) {
-							d.push(Audios.Item(data[i], {
-								lid: lid,
-								from: 1
-							}));
-							Audios.Lists[lid].push(data[i].owner_id + "_" + (data[i].aid || data[i].id));
-
-//                          Audios.Albums["!" + _oid].push(data[i].owner_id + "_" + (data[i].aid || data[i].id));
-// ебаный баг, из-за которого не прогружалась половина списка аудиозаписей
-
-						}
-						if (Audios.Albums["!" + _oid] && Audios.Albums["!" + _oid].length + 1 < count)
-							d.push(Audios.getNextButton(_oid, count));
-						for (var i = 0; i < d.length; ++i)
-							$.element("audiolist").appendChild(d[i]);
-						window.audioLoadingState = false;
-					})
-				}
-			})(_oid)
+	/**
+	 * Request for add audio ito user's list
+	 * @param {VKAudio} audio
+	 * @returns {Promise}
+	 */
+	add: function(audio) {
+		return api("audio.add", {
+			owner_id: audio.ownerId,
+			audio_id: audio.id
+		}).then(function() {
+			audio.added = true;
+			Site.Alert({text: "Аудиозапись &laquo;" + audio.artist.safe() + " &mdash; " + audio.title.safe() + "&raquo; успешно добавлена в Ваши аудиозаписи"});
+			// TODO fire to storage current user
+			return true;
 		});
 	},
 
 
 
-	getRightPanel: function () {
-		var parent = document.createElement("div"),
-			cur = window.location.hash,
-			link = function (act, title, opts) {
-				opts = $.e("a", {
-					html: title,
-					"class": (cur === act || opts && opts.sel ? "audio-panel-sel" : "")
-				});
-				opts[typeof act === "string" ? "href" : "onclick"] = act;
-				return opts;
-			},
-			oid = Site.Get("oid");
-
-		oid = oid && API.userId !== oid ? "&oid=" + oid : "";
-
-		var to = Photos.getToParam(1);
-		parent.className = "audio-panel";
-		parent.appendChild(link("#audio?act=all" + oid + to, "Все аудиозаписи", {sel: (!Site.Get("oid") && !Site.Get("act") && !Site.Get("album"))}));
-		if (!oid) {
-			parent.appendChild(link("#audio?act=search" + to, "Поиск"));
-			parent.appendChild(link("#audio?act=friends" + to, "Трансляции"));
-			parent.appendChild(link("#audio?act=popular" + to, "Популярные"));
-		}
-		if (!oid || oid === API.userId)
-			parent.appendChild(link("#audio?act=radio", "Онлайн-радио"));
-		if (!oid || oid > 0)
-			parent.appendChild(link("#audio?act=recommendations" + oid + to, "Рекомендации"));
-		if (!oid || oid === API.userId && !to)
-			parent.appendChild(link(Audios.showUploadForm, "Загрузить"));
-		var album;
-		var _oid = Site.Get("oid") || API.userId;
-		parent.appendChild(link("#audio?act=albums" + oid + to, "Альбомы"));
-		if ((album = Site.Get("album")) && !to)
-			parent.appendChild(link("#audio?album=" + album + "&oid=" + _oid, Audios.Albums["_" + album].title, {sel: true}));
-		return parent;
-	},
-	createList: function (data) {
-		var lid = Math.floor(+new Date() / 10);
-		if (!Array.isArray(data))
-			data = [data];
-		for (var i = 0; i < data.length; ++i) {
-			Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
-		};
-		Audios.Lists[lid] = data;
-		return {lid: lid, list: data};
-	},
-
-
-	Item: function (c, opts) {
-		var item = document.createElement("div"),
-			_id = c.owner_id + "_" + (c.aid || c.id),
-			controls = [];
-		opts = opts || {};
-		item.className = "audio-item" + (Audios.Current == _id ? " audio-playing" : "") + (opts && (opts.set & 32) ? " audio-itemNoHover" : "") + (Audios._Uploaded && Audios._Uploaded == _id ? " doc-saved" : "");
-		item.id = "audio" + _id;
-		if (Audios._Uploaded && Audios._Uploaded == _id)
-			Audios._Uploaded = null;
-
-		!Audios.Data[_id] && (Audios.Data[_id] = c);
-
-		var to = Site.Get("to");
-
-		$.event.add(item, "click", (opts && !opts.addToAttachments ? (function (oid, aid, lid, noSelect) {
-			return function (event) {
-				if (to && window.location.hash.indexOf("im") < 0) {
-					return $.event.cancel(event);
-				}
-
-				if (event.ctrlKey) {
-					return Audios.getBitrate(_id);
-				}
-
-				Audios.CurrentList = lid;
-
-				Audios.play({
-					oid: oid,
-					aid: aid,
-					settings: 2
-				});
-				return $.event.cancel(event);
-			}
-		}) (c.owner_id, (c.aid || c.id), opts && opts.lid ? opts.lid : 0) : (function (oid, aid) {
-			return function (event) {
-				try{
-					SelectAttachments.AddAttachment({type: "audio", id: "audio" + oid + "_" + aid});
-					SelectAttachments.RemoveSelector();
-				}catch(e){} // временняк до v6.3
-			                // бля, ты шутишь что ли? xD уже v6.4, эта хуйня всё еще здесь
-			};
-		})(c.owner_id, (c.aid || c.id))));
-		if (opts && opts.removeBroadcast)
-			controls.push($.elements.create("div", {
-				"class": "audio-delete",
-				onclick: (function (id) {return function (event) {
-					Audios.setBroadcast("");
-					Audios.player.toggleBroadcast($.element("repeat-audio"), 1);
-					var parent = this.parentNode.parentNode.parentNode;
-					Site.API("status.get", {
-						user_id: id
-					}, function (data) {
-						var status = Site.isResponse(data).text;
-						parent.parentNode.appendChild($.elements.create("div", {"class": "profile-status" + (!status ? " tip" : ""),onclick: function (event) {Profile.EditStatus(this);},html: (status || "изменить статус")}));
-						$.elements.remove(parent);
-					});
-					$.event.cancel(event);
-				}})(opts.uid)
-			}))
-		controls.push($.elements.create("div", {
-			"class": "audio-sprite audio-goto",
-			onclick: (function (oid, aid) {
-				return function (event) {
-					//window.location.hash = "#audio?act=item&ownerId=" + c.owner_id + "&audioId=" + (c.aid || c.id);
-					$.event.cancel(event);
-
-					Audios.showModalInfoItem(c.owner_id, c.aid || c.id);
-
-				};
-			})(c.owner_id, (c.aid || c.id))
-		}));
-		if (API.userId != c.owner_id)
-			controls.push($.elements.create("div", {
-				"class": "audio-add audio-sprite fr",
-				onclick: (function (oid, aid) {
-					return function (event) {
-						$.event.cancel(event);
-						Audios.Add(oid, aid, 1);
-						return;
-					}
-				})(c.owner_id, (c.aid || c.id))
-			}));
-		item.appendChild($.e("div", {
-			"class": "fr",
-			append: [
-				$.e("div", {"class": "tip audio-item-played", html: "00:00"}),
-				$.e("div", {"class": "tip audio-item-real", html: $.toTime(c.duration)}),
-				$.e("div", {"class": "audio-control fr", append: controls})
-			]
-		}));
-		item.appendChild($.elements.create("div", {"class": "audio-item-control audio-sprite"}));
-		item.appendChild($.elements.create("div", {"class": "audio-item-title", title: c.artist + " — " + c.title, append: [
-			$.elements.create("strong", {html: Site.Escape(c.artist).replace(/&amp;/img, "&")}),
-			document.createTextNode(" — "),
-			$.elements.create("span", {html: Site.Escape(c.title).replace(/&amp;/img, "&")})
-		]}));
-
-		return item;
-	},
-
-
-	Add: function (oid, aid, from_search) {
-		if (!from_search)
-			return Audios.player.Add($.element("add-audio"));
-		Site.API("audio.add", {
-			owner_id: oid,
-			audio_id: aid
-		}, function (data) {
-			if (Site.isResponse(data)){
-				var audio = Audios.Data[oid + "_" + aid];
-				Audios.Data[oid + "_" + aid].added = true;
-				Site.Alert({text: "Аудиозапись &laquo;" + Site.Escape(audio.artist) + " &mdash; " + Site.Escape(audio.title) + "&raquo; успешно добавлена в Ваши аудиозаписи"});
-				Audios.l2l[API.userId] = null;
-			}
-		});
-	},
 	timeline: null,
 	volumeline: null,
 	setVolumeState: function(volume) {
@@ -730,9 +464,19 @@ var Audios = {
 		$.localStorage(Audios.KEY_AUDIO_VOLUME, volume);
 	},
 
-	getPlayer: function () {return $.element("player"); },
+	/**
+	 * Returns player
+	 * @returns {HTMLElement}
+	 */
+	getPlayer: function() {
+		return $.element("player");
+	},
 
-	isPlaying: function () {
+	/**
+	 * Returns state of playing
+	 * @returns {boolean}
+	 */
+	isPlaying: function() {
 		return !Audios.getPlayer().paused;
 	},
 
@@ -753,14 +497,20 @@ var Audios = {
 
 			Audios.volumeline.onchange = Audios.player.onVolumeChangeSlider.bind(Audios.volumeline);
 
+			//noinspection SpellCheckingInspection
 			$.event.add(player, "timeupdate", Audios.player.onTimeUpdatePlayer.bind(player));
 			$.event.add(player, "progress", Audios.player.onProgressPlayer.bind(player));
+			//noinspection SpellCheckingInspection
 			$.event.add(player, "loadedmetadata", Audios.player.onLoadedMetaDataPlayer.bind(player));
 			$.event.add(player, "ended", Audios.player.onEndedPlayer.bind(player));
+
+			$.event.add(player, "play", Audios.player.onPlay);
+			$.event.add(player, "pause", Audios.player.onPause);
 
 			$.event.add(window, "resize", Audios.volumeline.recalculate);
 			$.event.add($.element("head-player-line-wrap"), "click", Audios.player.onTimelineClick.bind(player));
 
+			//noinspection SpellCheckingInspection
 			$.elements.addClass(player, "sys-audio-inited");
 		},
 
@@ -773,7 +523,7 @@ var Audios = {
 		onTimeUpdatePlayer: function() {
 			var played = this.currentTime,
 				duration = this.duration,
-				persent = (100 * played) / duration,
+				percent = (100 * played) / duration,
 				isReverse = Audios.isEnabled(Audios.BIT_INVERSE_TIME) && duration !== Infinity,
 				playedString = $.toTime(!isReverse ? played : duration - played),
 				playing;
@@ -783,7 +533,7 @@ var Audios = {
 			}
 
 			$.element("player-playedtime").innerHTML = playedString;
-			$.element("head-player-line-played").style.width = persent + "%";
+			$.element("head-player-line-played").style.width = percent + "%";
 
 			if ((playing = q(".audio-playing")) && this.duration !== Infinity) {
 				try {
@@ -829,17 +579,25 @@ var Audios = {
 
 		onEndedPlayer: function() {
 			if (Audios.isEnabled(Audios.BIT_REPEAT)) {
-				var current = Audios.Current.split("_");
-				Audios.play({
-					oid: current[0],
-					aid: current[1]
-				});
+				var current = Audios.getCurrent();
+				Audios.setPlay(Audios.items[current], Audios.currentPlaylistID);
 				if (Audios.isEnabled(Audios.BIT_BROADCAST)) {
-					Audios.setBroadcast(Audios.Current);
+					Audios.setBroadcast(Audios.currentAudioFullID);
 				}
 			} else {
 				Audios.next();
 			}
+		},
+
+		onPlay: function() {
+			console.log('play');
+			getBody().classList.remove(Audios.CLASS_HEAD_PAUSE);
+			getBody().classList.add(Audios.CLASS_HEAD_PLAY);
+		},
+
+		onPause: function() {
+			getBody().classList.remove(Audios.CLASS_HEAD_PLAY);
+			getBody().classList.add(Audios.CLASS_HEAD_PAUSE);
 		},
 
 		onTimelineClick: function(event) {
@@ -850,22 +608,22 @@ var Audios = {
 			$.event.cancel(event);
 		},
 
-		play: function () {
-			$.element("player").play();
-			var btn = q(".audio-playing .audio-item-control");
+		play: function() {
+			Audios.getPlayer().play();
+			/*var btn = q(".audio-playing .audio-item-control");
 			$.elements.removeClass(btn, "player-play");
 			$.elements.addClass(btn, "player-pause");
 			$.elements.addClass($.element("headplayer-play"), "hidden");
-			$.elements.removeClass($.element("headplayer-pause"), "hidden");
+			$.elements.removeClass($.element("headplayer-pause"), "hidden");*/
 		},
 
-		pause: function () {
-			$.element("player").pause();
-			var btn = q(".audio-playing .audio-item-control")[0];
+		pause: function() {
+			Audios.getPlayer().pause();
+			/*var btn = q(".audio-playing .audio-item-control")[0];
 			$.elements.addClass(btn, "player-play");
 			$.elements.removeClass(btn, "player-pause");
 			$.elements.removeClass($.element("headplayer-play"), "hidden");
-			$.elements.addClass($.element("headplayer-pause"), "hidden");
+			$.elements.addClass($.element("headplayer-pause"), "hidden");*/
 		},
 
 		toggle: function () {
@@ -876,76 +634,59 @@ var Audios = {
 			var bit = Audios.isEnabled(Audios.BIT_BROADCAST);
 			if (bit || state) {
 				$.elements.removeClass(button, "head-player-live-on");
-				Audios.Settings -= 16;
+				Audios.playSettings -= 16;
 				Audios.setBroadcast("");
 			} else {
 				$.elements.addClass(button, "head-player-live-on");
-				Audios.Settings += 16;
-				Audios.setBroadcast(Audios.Current);
+				Audios.playSettings += 16;
+				Audios.setBroadcast(Audios.currentAudioFullID);
 			}
-			$.localStorage("audio-settings", Audios.Settings);
+			$.localStorage("audio-settings", Audios.playSettings);
 		},
 
 		toggleRepeat: function (button) {
 			var bit = Audios.isEnabled(Audios.BIT_REPEAT);
 			if (bit) {
 				$.elements.removeClass(button, "head-player-repeat-on");
-				Audios.Settings -= 32;
+				Audios.playSettings -= 32;
 			} else {
 				$.elements.addClass(button, "head-player-repeat-on");
-				Audios.Settings += 32;
+				Audios.playSettings += 32;
 			}
-			$.localStorage("audio-settings", Audios.Settings);
+			$.localStorage("audio-settings", Audios.playSettings);
 		},
 
-		Add: function() {
-			if (!Audios.Current || Audios.Data[Audios.Current].added)
+		add: function() {
+			if (!Audios.currentAudioFullID || Audios.items[Audios.currentAudioFullID].added) {
 				return;
-			var current = Audios.Current.split("_");
-			Site.API("audio.add", {
-				owner_id: current[0],
-				audio_id: current[1]
-			}, function (data) {
-				data = Site.isResponse(data);
-				if (data) {
-					Audios.Data[Audios.Current].added = true;
-					$.elements.addClass(q(".add-audio"), "head-player-add-on");
-					Site.Alert({
-						text:"Аудиозапись &laquo;" + Audios.Data[Audios.Current].artist + " &mdash; " + Audios.Data[Audios.Current].title + "&raquo; успешно добавлена в Ваши аудиозаписи"
-					});
-					try {
-						$.elements.addClass(q("#audio" + Audios.Current + " .audio-add"), "audio-added");
-					} catch (e) {}
-					Audios.l2l[API.userId] =null;
-				}
-			})
+			}
+
+			Audios.add(Audios.items[Audios.getCurrent()]).then(function() {
+				$.elements.addClass(q(".add-audio"), "head-player-add-on");
+				$.elements.addClass(q("#audio" + Audios.currentAudioFullID + " .audio-add"), "audio-added");
+			});
 		},
 
 		Share: function() {
-			window.location.hash = "#mail?attach=audio" + Audios.Current;
+			window.location.hash = "#mail?attach=audio" + Audios.currentAudioFullID;
 		}
 
 	},
 
-	BIT_BROADCAST: 16,
-	BIT_REPEAT: 32,
-	BIT_INVERSE_TIME: 1024,
 
-	isEnabled: function(bit) {
-		return !!(Audios.Settings & bit);
-	},
 
 
 	KEY_AUDIO_VOLUME: "audio-vol",
 
 	/**
 	 * Start track playing
-	 * @param object
+	 * @param {VKAudio} track
+	 * @param {string} playlistId
 	 * @returns {*}
 	 */
-	play: function(object) {
+	setPlay: function(track, playlistId) {
 
-		if (!$.element("player").canPlayType("audio/mpeg")) {
+		if (!Audios.getPlayer().canPlayType("audio/mpeg")) {
 			alert("Ваш браузер не поддерживает воспроизведение MP3 файлов!");
 			return;
 		}
@@ -958,58 +699,48 @@ var Audios = {
 
 		Audios.miniPlayer.show();
 
-		var audioId = object.oid + "_" + object.aid,
-			player = $.element("player"),
-			track = Audios.Data[audioId];
-
+		var audioId = track.owner_id + "_" + track.id,
+			player = $.element("player");
 
 		if (!track.url) {
-			return Site.Alert({
+			Site.Alert({
 				text: (
 					API.isExtension
 						? "Аудиозапись изъята из публичного доступа."
-						: !isMobile
-						? "Не могу получить доступ к аудио. Решение и описание этой проблемы есть в оповещении в меню.\n" +
-						"<strong>УБЕДИТЕЛЬНАЯ ПРОСЬБА: НЕ СОЗДАВАТЬ<\/strong> тикеты в поддержке по этому вопросу. Они будут удаляться без ответа."
-						: "На мобильном, к сожалению, прослушивание аудиозаписей недоступно.\n" +
-						"Подробнее о проблеме можно прочитать по ссылке в оповещении, которое находится в меню."
+						: (!isMobile
+							? "Не могу получить доступ к аудио. Решение и описание этой проблемы есть в оповещении в меню.\n<strong>УБЕДИТЕЛЬНАЯ ПРОСЬБА: НЕ СОЗДАВАТЬ<\/strong> тикеты в поддержке по этому вопросу. Они будут удаляться без ответа."
+							: "На мобильном, к сожалению, прослушивание аудиозаписей недоступно.\nПодробнее о проблеме можно прочитать по ссылке в оповещении, которое находится в меню."
+						)
 				),
 				time: 20000
 			});
+			return;
 		}
 
 		Audios.setVolumeState(vol);
 
-		if (audioId === Audios.Current) {
+		if (audioId === Audios.getCurrent()) {
 			Audios.player.toggle();
 			return;
 		}
 
-		Audios.Current = audioId;
+		Audios.currentAudioFullID = audioId;
+		Audios.currentPlaylistID = playlistId;
+
 		player.src = getURL(track.url, "mp3");
 		player.load();
-		Audios.player.play();
+		player.play();
 
 		Audios.setTitle(track);
 		Audios.setButtonsState(track);
 
-		if (Audios.isEnabled(Audios.BIT_BROADCAST)) {
-			Audios.setBroadcast(track.oid + "_" + track.aid);
-		}
-
-		var previous = document.querySelectorAll(".audio-playing");
-		for (var i = 0; i < previous.length; ++i) {
-			$.elements.removeClass(previous[i], "audio-playing");
-		}
-
-		previous = document.querySelectorAll(".player-pause");
-		for (var i = 0; i < previous.length; ++i)
-			$.elements.removeClass(previous[i], "player-pause");
-		$.elements.addClass($.element("audio" + audioId), "audio-playing");
-
-
+		Audios.isEnabled(Audios.BIT_BROADCAST) && Audios.setBroadcast(audioId);
 	},
 
+	/**
+	 * Set title of current track in header of site
+	 * @param {VKAudio|RadioStation} track
+	 */
 	setTitle: function(track) {
 		var isRadio = !!track.stationId;
 		$.element("head-player-artist").textContent = !isRadio ? track.artist : track.title;
@@ -1017,6 +748,10 @@ var Audios = {
 		$.element("head-player-mini-title").textContent = !isRadio ? track.artist + " - " + track.title : track.title
 	},
 
+	/**
+	 * Set visibility buttons in header by track
+	 * @param {VKAudio} track
+	 */
 	setButtonsState: function(track) {
 		var isRadio = Audios.getRadioCurrent(),
 			isOwn = !isRadio && track.owner_id !== API.userId;
@@ -1026,49 +761,66 @@ var Audios = {
 		Audios.volumeline.recalculate();
 	},
 
+	/**
+	 * Send request to broadcast track
+	 * @param {string} audioId
+	 * @returns {Promise}
+	 */
 	setBroadcast: function(audioId) {
-		Site.API("audio.setBroadcast", {audio: audioId}, blank);
+		return api("audio.setBroadcast", {audio: audioId});
 	},
 
-	getCurrentPositionInList: function () {
-		var list = Audios.Lists[Audios.CurrentList];
-
-		for (var i = 0; i < list.length; ++i) {
-			if (list[i] === Audios.Current) {
-				return {
-					position: i,
-					previous: !!list[i - 1],
-					next: !!list[i + 1]
-				};
+	/**
+	 * Find position and ability to navigate in current playlist by current audio
+	 * @returns {{position: int, previous: boolean, next: boolean}}
+	 */
+	getCurrentPositionInList: function() {
+		var list = Audios.storage[Audios.currentPlaylistID];
+console.log(list);
+		for (var i = 0, l; l = list[i]; ++i) {
+			if (l.owner_id + "_" + l.id === Audios.currentAudioFullID) {
+				return { position: i, previous: !!list[i - 1], next: !!list[i + 1] };
 			}
 		}
 
-		return {position: -1, previous: false, next: false};
-	},
-	toObject: function (str) {
-		str = str.split("_");
-		return {oid: str[0], aid: str[1]};
+		return { position: -1, previous: false, next: false };
 	},
 
+	previous: function() {
+		var position = Audios.getCurrentPositionInList(), list;
+console.log(position);
+		if (!~position.position) {
+			console.warn("Unknown position, unhandled: ", position);
+			return;
+		}
 
-	previous: function () {
-		var i = Audios.getCurrentPositionInList(), l = Audios.Lists[Audios.CurrentList], u;
-		u = i.previous ? l[i.position - 1] : l[l.length - 1];
-		Audios.play(Audios.toObject(u));
-	},
+		if (!position.previous) {
+			return;
+		}
 
-
-	next: function () {
-		try {
-			var i = Audios.getCurrentPositionInList(), l = Audios.Lists[Audios.CurrentList], u;
-			u = i.next ? l[i.position + 1] : l.length > 1 ? l[0] : false;
-			if (u !== false)
-				Audios.play(Audios.toObject(u));
-		} catch (e) {} // заглушка до v6.4
+		list = Audios.storage[Audios.currentPlaylistID];
+		Audios.setPlay(list[position.position - 1], Audios.currentPlaylistID);
 	},
 
 
-	recountTime: function () {
+	next: function() {
+		var position = Audios.getCurrentPositionInList(), list;
+
+		if (!~position.position) {
+			console.warn("Unknown position, unhandled: ", position);
+			return;
+		}
+
+		if (!position.next) {
+			return;
+		}
+
+		list = Audios.storage[Audios.currentPlaylistID];
+		Audios.setPlay(list[position.position + 1], Audios.currentPlaylistID);
+	},
+
+
+	recountTime: function() {
 		var elem = $.element("player");
 		$.element("player-playedtime").innerHTML = Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? $.toTime(elem.currentTime) : "-" + $.toTime(elem.duration - elem.currentTime);
 	},
@@ -1140,7 +892,7 @@ var Audios = {
 			for (var i = 1; i < data.length; ++i) {
 				item = data[i];
 				id = item.owner_id + "_" + (item.aid || item.id);
-				wrap.appendChild(Audios.Item(item, {lid: lid, from: 64, add: true}));
+				//wrap.appendChild(Audios.Item(item, {lid: lid, from: 64, add: true}));
 				Audios.Lists[lid].push(id);
 				Audios.Data[id] = item;
 			}
@@ -1169,7 +921,7 @@ var Audios = {
 						$.elements.create("div", {"class": "friends-right", append: [
 							$.elements.create("a", {href: "#" + c.screen_name, append: [
 								$.elements.create("strong", {html: (c.type === "profile" ? c.first_name + " " + c.last_name + Site.isOnline(c) : c.name)}),
-								Audios.Item(c.status_audio, {lid: lid, set: 32})
+							//	Audios.Item(c.status_audio, {lid: lid, set: 32})
 							]})
 						]})
 					]})
@@ -1201,11 +953,11 @@ var Audios = {
 			Audios.Lists[lid] = Audios.getStringListFromArrayList(data);
 			list.id = "audiolist";
 			for (var i = 0; i < data.length; ++i) {
-				list.appendChild(Audios.Item(data[i], {
+				/*list.appendChild(Audios.Item(data[i], {
 					lid: lid,
 					from: 64,
 					add: true
-				}));
+				}));*/
 				Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
 			}
 			//list.appendChild(Site.getPagination({offset: offset, count: 1000, step: 50, callback: function (event) {
@@ -1245,11 +997,11 @@ var Audios = {
 			Audios.Lists[lid] = Audios.getStringListFromArrayList(data);
 			list.id = "audiolist";
 			for (var i = 0; i < data.length; ++i) {
-				list.appendChild(Audios.Item(data[i], {
+				/*list.appendChild(Audios.Item(data[i], {
 					lid: lid,
 					from: 64,
 					add: true
-				}));
+				}));*/
 				Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
 				//Audios.Lists[lid].push(data[i]);
 			}
@@ -1273,7 +1025,7 @@ var Audios = {
 				owner_id: owner_id
 			}, function (data) {
 				data = Site.isResponse(data);
-				Audios.Save([{type: 2, data: data}]);
+
 				Audios.getAlbums(owner_id);
 				Audios.l2a[owner_id] = true;
 			});
@@ -1698,7 +1450,6 @@ var Audios = {
 
 		list.appendChild(Site.Loader(true));
 		parent.appendChild(Site.getPageHeader("Онлайн-радио", e("a", {href: "http:\/\/radio.vlad805.ru\/", target: "_blank", "class": "fr", html: "radio.vlad805.ru"})));
-		parent.appendChild(Audios.getRightPanel());
 		parent.appendChild(list);
 		Site.append(parent);
 
@@ -1725,14 +1476,14 @@ var Audios = {
 	},
 
 	getRadioCurrent: function() {
-		return !isNaN(parseInt(Audios.Current)) && Audios.Current < 0 ? -Audios.Current : false;
+		return !isNaN(parseInt(Audios.currentAudioFullID)) && Audios.currentAudioFullID < 0 ? -Audios.currentAudioFullID : false;
 	},
 
 	getRadioItem: function(i, l) {
 		var n = document.createElement("div"),
 			c = [];
 
-		n.className = "audio-item" + (Audios.Current === -i.stationId ? " audio-playing" : "");
+		n.className = "audio-item" + (Audios.currentAudioFullID === -i.stationId ? " audio-playing" : "");
 		n.id = "audio" + i.stationId;
 
 		var CITY = (i.cityId && l[i.cityId] ? Site.Escape(l[i.cityId].city) : "");
@@ -1745,7 +1496,7 @@ var Audios = {
 			AudioPlayer.load();
 			Audios.miniPlayer.show();
 			Audios.player.play()
-			Audios.Current = -i.stationId;
+			Audios.currentAudioFullID = -i.stationId;
 			Audios.setButtonsState(i);
 
 			var other = document.querySelectorAll(".audio-playing"), j = 0, it;

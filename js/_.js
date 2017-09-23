@@ -274,6 +274,11 @@ var VkError = {};
  */
 var APIdogTheme = {};
 
+/**
+ * @type {{owner_id: int, id: int, artist: string, title: string, duration: int, no_search: boolean, lyrics_id: int=, album_id: int=, date: int}}
+ */
+var VKAudio = {};
+
 var ymaps = {
 	Map: function() {},
 	geoObjects: [],

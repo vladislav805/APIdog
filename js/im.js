@@ -1274,7 +1274,7 @@ console.log(data.offset);
 					datas.v.push(Video.getAttachment(o, {from: true}));
 					break;
 				case "audio":
-					datas.a.push(Audios.Item(o, {lid: Audios.createList([o])}));
+					datas.a.push(Audios.getListItem(o, {}));
 					break;
 				case "doc":
 					datas.d.push(Docs.getAttachment(o));
@@ -1676,7 +1676,7 @@ console.log(data.offset);
 						case "audio":
 							Audios.Data[a.owner_id + "_" + a.id] = a;
 							Audios.Lists[audioLid].push(a);
-							node = Audios.Item(a, {lid: audioLid});
+							//node = Audios.Item(a, {lid: audioLid});
 							break;
 						case "doc":
 							node = Docs.item(a, {type: 1});
