@@ -59,6 +59,8 @@
 		"vk.getUserDateRegistration" => "\Method\VK\GetUserDateRegistration",
 		"vk.fetchDocumentation" => "\Method\VK\FetchDocumentation",
 
+		"internal.updateLangPack" => "\Method\Internal\UpdateLangPack",
+
 		"app.fixAudio" => "\Method\VK\FixAudio",
 
 		"app.test" => "\Method\Internal\Test"

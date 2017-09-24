@@ -90,8 +90,8 @@ var onLoad = function() {
 		 *   }
 		 * }} data
 		 */
-		function(data) {
-		var user = data.u, friends;
+	function(data) {
+		var user = data.u, friends, isAlreadyStarted = false;
 
 		Local.add(user);
 
@@ -139,7 +139,14 @@ var onLoad = function() {
 
 		// TODO: ThemeManager.onInstall();
 
-		Site.route(getAddress());
+			Lang.load(function() {
+				if (!getAddress()) {
+					window.location.hash = "#" + user.screen_name;
+					isAlreadyStarted = true;
+				}
+
+				!isAlreadyStarted && Site.route(getAddress());
+			});
 
 		$.elements.removeClass(document.documentElement, "_notloaded");
 
