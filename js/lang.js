@@ -23,7 +23,9 @@ var Lang = {
 		}
 
 		fetch("./lang/" + API.language + ".json").then(function(result) {
-			Lang.data = result.json();
+			return result.json();
+		}).then(function(result) {
+			Lang.data = result;
 			var date = parseInt(Date.now() / 1000);
 			$.localStorage(Lang.KEY_LOCAL_STORAGE, JSON.stringify(Lang.data));
 			$.localStorage(Lang.KEY_LOCAL_VERSION, date);
