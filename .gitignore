@@ -7,3 +7,6 @@
 /invite.php
 /modules/Method/VK/FixAudio.php
 /modules/Method/VK/RefreshToken.php
+/lang/*.json
+!/lang/keys.json
+!/lang/lang.json
