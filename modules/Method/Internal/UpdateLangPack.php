@@ -28,7 +28,9 @@
 			$langCount = 3;
 
 			for ($i = 0; $i < $langCount; ++$i) {
-				file_put_contents(sprintf("./lang/%d.json", $i), json_encode(array_column($all, $i), JSON_UNESCAPED_UNICODE));
+				file_put_contents(sprintf("./lang/%d.json", $i), json_encode(array_map(function($element) use($i) {
+					return $element[$i];
+				}, $all), JSON_UNESCAPED_UNICODE));
 			}
 
 			return true;
