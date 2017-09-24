@@ -24,13 +24,15 @@
 		 */
 		public function run(Controller $controller, Connection $db) {
 			$all = json_decode(file_get_contents("./lang/lang.json"), true);
+			$data = [];
+			foreach ($all as $key => $item) {
+				foreach ($item as $lang => $val) {
+					$data[$lang][$key] = $val;
+				}
+			}
 
-			$langCount = 3;
-
-			for ($i = 0; $i < $langCount; ++$i) {
-				file_put_contents(sprintf("./lang/%d.json", $i), json_encode(array_map(function($element) use($i) {
-					return $element[$i];
-				}, $all), JSON_UNESCAPED_UNICODE));
+			foreach ($data as $lang => $item) {
+				file_put_contents(sprintf("./lang/%d.json", $lang), json_encode($item, JSON_UNESCAPED_UNICODE));
 			}
 
 			return true;
