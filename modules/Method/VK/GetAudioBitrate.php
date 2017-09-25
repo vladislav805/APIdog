@@ -71,7 +71,7 @@
 
 				preg_match_all("/Location: ([^$]+)/", $x, $location, PREG_SET_ORDER);
 
-				$location = $location[0][1];
+				$location = isset($location[0]) ? $location[0][1] : $location;
 
 				if ($location) {
 					$host = $url["host"];
