@@ -93,7 +93,7 @@ SmartList.prototype = {
 
 		chunk.forEach(function(item) {
 			var node = this.mCache[item.id] || (this.mCache[item.id] = this.mGetItemListNode(item, this.mOptionsItemListCreator));
-
+			console.log(item, node);
 			this.mNodeList.appendChild(node);
 		}, this);
 

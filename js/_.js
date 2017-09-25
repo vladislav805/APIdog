@@ -279,6 +279,26 @@ var APIdogTheme = {};
  */
 var VKAudio = {};
 
+/**
+ * @type {{lyrics_id: int, text: string}}
+ */
+var VKAudioLyrics = {};
+
+/**
+ * @type {{stationId: int, title: string, frequency: float, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string}}
+ */
+var RadioStation = {};
+
+/**
+ * @type {{cityId: int, title: string, country: string}}
+ */
+var RadioCity = {};
+
+/**
+ * @type {{url: string, bitrate: int, streamId: int, format: int}}
+ */
+var RadioStream = {};
+
 var ymaps = {
 	Map: function() {},
 	geoObjects: [],
@@ -292,6 +312,8 @@ var Hammer = {
 	DIRECTION_LEFT: 1,
 	DIRECTION_RIGHT: 1
 };
+
+var vlad805 = {api: { radio: { get: function(){}, getCurrentBroadcastingTrack: function(){} } }};
 
 /**
  * @type {{
