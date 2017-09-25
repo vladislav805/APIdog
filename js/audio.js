@@ -100,9 +100,9 @@ var Audios = {
 
 	/**
 	 * Full ID of current audio. Audios.items[<ID>]
-	 * @var {string}
+	 * @var {string|null}
 	 */
-	currentAudioFullID: "0_0",
+	currentAudioFullID: null,
 
 	/**
 	 * ID of current playlist in Audios.storage[<ID>]
@@ -153,6 +153,8 @@ var Audios = {
 	CLASS_HEAD_PLAY: "head-player-button-play",
 	CLASS_HEAD_PAUSE: "head-player-button-pause",
 
+	TIME_STR_NON_STARTED: "00:00",
+
 	/**
 	 * Route
 	 */
@@ -169,15 +171,14 @@ var Audios = {
 				break;
 
 			case "popular":
-				return Audios.getPopular();
-				break;
+				var genreId = +Site.get("genreId") || 0;
+				return Audios.page({ownerId: API.userId, albumId: genreId, playlist: "popular" + genreId}).then(Audios.requestPopular).then(Audios.show);
 
 			case "recommendations":
-				return Audios.getRecommendations();
-				break;
+				return Audios.page({ownerId: ownerId, playlist: "recommendations" + ownerId}).then(Audios.requestRecommendations).then(Audios.show);
 
 			case "radio":
-				return Audios.getRadio();
+				return Audios.page({ownerId: API.userId}).then(Audios.requestRadio).then(Audios.showRadio);
 
 
 			case "albums":
@@ -191,7 +192,7 @@ var Audios = {
 
 	/**
 	 * Create template of audio list
-	 * @param {{ownerId: int, search: boolean=, playlist: string=}} options
+	 * @param {{ownerId: int, search: boolean=, playlist: string=, albumId: int=}} options
 	 * @returns {Promise}
 	 */
 	page: function(options) {
@@ -199,7 +200,7 @@ var Audios = {
 			var sl = new SmartList({
 					data: {count: -1, items: []},
 					countPerPage: 100,
-					needSearchPanel: true,
+					needSearchPanel: options.search,
 					getItemListNode: Audios.getListItem,
 					optionsItemListCreator: {
 						playlist: options.playlist
@@ -225,17 +226,19 @@ var Audios = {
 	 */
 	getTabs: function(ownerId) {
 		var tabs = [],
-			param = API.userId === ownerId ? "ownerId=" + ownerId : "";
+			param = API.userId !== ownerId ? "ownerId=" + ownerId : "",
+			mine = API.userId === ownerId;
 
-		tabs.push(["audio" + (param ? "?" + param : ""), Lang.get("audios.tabs_audios")]);
-		tabs.push(["audio?act=recommendations" + (param ? "&" + param : ""), Lang.get("audios.tabs_recommends")]);
-		tabs.push(["audio?act=albums" + (param ? "&" + param : ""), Lang.get("audios.tabs_recommends")]);
+		tabs.push(["audio" + (param ? "?" + param : ""), Lang.get("audio.tabAll")]);
+		tabs.push(["audio?act=recommendations" + (param ? "&" + param : ""), Lang.get("audio.tabRecommendations")]);
 
-		if (API.userId === ownerId) {
-			tabs.push(["audio?act=friends", Lang.get("audios.tabs_friends")]);
-			tabs.push(["audio?act=popular", Lang.get("audios.tabs_popular")]);
-			tabs.push(["audio?act=radio", Lang.get("audios.tabs_radio")]);
-		}
+		mine && tabs.push(["audio?act=search", Lang.get("audio.tabSearch")]);
+		mine && tabs.push(["audio?act=popular", Lang.get("audio.tabPopular")]);
+		mine && tabs.push(["audio?act=friends", Lang.get("audio.tabFriends")]);
+
+		tabs.push(["audio?act=albums" + (param ? "&" + param : ""), Lang.get("audio.tabAlbums")]);
+
+		mine && tabs.push(["audio?act=radio", Lang.get("audio.tabRadio")]);
 
 		return Site.getTabPanel(tabs);
 	},
@@ -243,13 +246,13 @@ var Audios = {
 
 	/**
 	 * Request audio data by owner
-	 * @param {{ownerId: int}} meta
-	 * @returns {*}
+	 * @param {{ownerId: int, data}} meta
+	 * @returns {Promise|{ownerId: int, data: {count: int, items: VKAudio[]}}}
 	 */
 	requestAudios: function(meta) {
 		var ownerId = meta.ownerId;
 		if (Audios.storage[ownerId]) {
-			meta.data = Audios.storage[ownerId];
+			meta.data = {count: Audios.storage[ownerId].length, items: Audios.storage[ownerId]};
 			return meta;
 		}
 
@@ -292,22 +295,30 @@ var Audios = {
 
 	/**
 	 * Return item node audio
-	 * @param {VKAudio} audio
-	 * @param {{flatMode: boolean=, removeBroadcast: boolean=, onMoreClick: function=, playlist: string=}} options
+	 * @param {VKAudio|RadioStation} audio
+	 * @param {{flatMode: boolean=, playlist: string=, isRadio: boolean=}} options
 	 */
 	getListItem: function(audio, options) {
+
+		if (audio.stationId) {
+			return Audios.getRadioItem(audio);
+		}
+
 		var e = $.e,
 			item = e("div"),
 			id = audio.owner_id + "_" + audio.id,
-			cls = ["audios-item"];
+			cls = ["audios-item"],
+			more,
+			actions = !options.isRadio ? Audios.getActionsByAudio(audio) : Audios.getActionsByStation(audio);
 
 		options = options || {};
 		options.flatMode && item.classList.add(Audios.CLASS_FLAT_MODE);
 
-		Audios.getCurrent() === id && emojiImageTemplate.classList.add(Audios.CLASS_PLAYING);
+		Audios.getCurrent() === id && item.classList.add(Audios.CLASS_PLAYING);
 		Audios.items[id] = audio;
 
 		item.id = "audio" + id;
+		item.dataset.audioId = id;
 
 		item.addEventListener("click", function(event) {
 			if (event.ctrlKey) {
@@ -318,68 +329,121 @@ var Audios = {
 			return $.event.cancel(event);
 		});
 
-		options.removeBroadcast && item.classList.add(Audios.CLASS_NOW_BROADCAST);
-
-		/*if (opts && opts.removeBroadcast)
-			controls.push($.elements.create("div", {
-				"class": "audio-delete",
-				onclick: (function (id) {return function (event) {
-					Audios.setBroadcast("");
-					Audios.player.toggleBroadcast($.element("repeat-audio"), 1);
-					var parent = this.parentNode.parentNode.parentNode;
-					Site.API("status.get", {
-						user_id: id
-					}, function (data) {
-						var status = Site.isResponse(data).text;
-						parent.parentNode.appendChild($.elements.create("div", {"class": "profile-status" + (!status ? " tip" : ""),onclick: function (event) {Profile.EditStatus(this);},html: (status || "изменить статус")}));
-						$.elements.remove(parent);
-					});
-					$.event.cancel(event);
-				}})(opts.uid)
-			}))*/
-
-		/*
-		controls.push($.elements.create("div", {
-			"class": "audio-sprite audio-goto",
-			onclick: (function (oid, aid) {
-				return function (event) {
-					//window.location.hash = "#audio?act=item&ownerId=" + c.owner_id + "&audioId=" + (c.aid || c.id);
-					$.event.cancel(event);
-
-					Audios.showModalInfoItem(c.owner_id, c.aid || c.id);
-
-				};
-			})(c.owner_id, (c.aid || c.id))
-		}));*/
-
-		/*if (API.userId !== c.owner_id) {
-			controls.push($.elements.create("div", {
-				"class": "audio-add audio-sprite fr",
-				onclick: (function (oid, aid) {
-					return function (event) {
-						$.event.cancel(event);
-						Audios.Add(oid, aid, 1);
-						return;
-					}
-				})(c.owner_id, (c.aid || c.id))
-			}));
-		}*/
-
 		item.appendChild(e("div", {"class": "audios-state"}));
 
 		item.appendChild(e("div", {"class": "audios-name", title: audio.artist + " — " + audio.title, append: [
-			e("span", {"class": "audios-artist", html: audio.artist.safe() }),
-			e("span", {"class": "audios-title", html: audio.title.safe() })
+			e("span", {"class": "audios-title", html: audio.title.safe() }),
+			e("span", {"class": "audios-artist", html: audio.artist.safe() })
 		]}));
 
 		item.appendChild(e("div", {"class": "audios-meta", append: [
-			e("div", {"class": "audios-time", html: "00:00"}),
-			e("div", {"class": "audios-more", onclick: options.onMoreClick})
+			e("div", {"class": "audios-time", html: Audios.TIME_STR_NON_STARTED}),
+			more = e("div", {"class": "audios-more", onclick: function(event) {
+				event.preventDefault();
+				event.stopPropagation();
+				event.cancelBubble = true;
+			}})
 		]}));
+
+		more.appendChild(new DropDownMenu("", actions).getNode());
 
 		item.classList.add.apply(item.classList, cls);
 
 		return item;
+	},
+
+	/**
+	 * Returns dropdown menu for audio list item
+	 * @param {VKAudio} audio
+	 * @returns {object[]}
+	 */
+	getActionsByAudio: function(audio) {
+		var items = [], isAvailable = !!audio.url;
+
+		if (audio.owner_id !== API.userId && isAvailable) {
+			items.push({
+				label: Lang.get("audio.itemActionAdd"),
+				onclick: function() {
+					Audios.add(audio);
+				}
+			});
+		}
+
+		if (isAvailable) {
+			items.push({
+				label: Lang.get("audio.itemActionDownload"),
+				onclick: function() {
+					Audios.download(audio);
+				}
+			});
+		}
+
+		if (audio.lyrics_id) {
+			items.push({
+				label: Lang.get("audio.itemActionShowLyrics"),
+				onclick: function() {
+					Audios.openLyricsModal(audio).then(Audios.getLyrics).then(Audios.showLyrics);
+				}
+			});
+
+		}
+		if (isAvailable) {
+			items.push({
+				label: Lang.get("audio.itemActionShare"),
+				onclick: function() {
+					//noinspection JSCheckFunctionSignatures
+					share("audio", audio.owner_id, audio.id, null, null, {wall: true, user: true, group: true});
+				}
+			});
+
+			items.push({
+				label: Lang.get("audio.itemActionBitrate"),
+				onclick: function() {
+					Audios.getBitrate(audio);
+				}
+			})
+		}
+
+		if (audio.owner_id === API.userId) {
+			items.push({
+				label: Lang.get("audio.itemActionRemove"),
+				onclick: function() {
+					Audios.remove(audio);
+				}
+			});
+
+		}
+		return items;
+	},
+
+	/**
+	 * Returns items of menu for radio station
+	 * @param {RadioStation|VKAudio} audio
+	 */
+	getActionsByStation: function(audio) {
+		var items = [];
+
+		if (audio.canResolveTrack) {
+			items.push({
+				label: Lang.get("audio.itemActionRadioResolveTrack"),
+				onclick: function() {
+					Audios.resolveRadioTrack(-audio.id);
+				}
+			});
+		}
+
+		audio.streams.forEach(function(item) {
+			items.push({
+				label: ["MP3", "AAC", null, "M3U8"][item.format - 1] + " " + item.bitrate + "kbps",
+				onclick: function() {
+					console.log();
+					audio.url = item.url;
+					Audios.setPlay(audio, "radio");
+				}
+			});
+		});
+
+		return items;
 	},
 
 
@@ -391,51 +455,21 @@ var Audios = {
 		return Audios.currentAudioFullID;
 	},
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	miniPlayer: {
-		mHead: null,
-
-		getHead: function() {
-			return this.mHead || (this.mHead = q(".head-content"));
-		},
-
-		hide: function (event) {
-			this.getHead().dataset.open = "title";
-			return $.event.cancel(event);
-		},
-
-		show: function (event) {
-			this.getHead().dataset.open = "player";
-			return $.event.cancel(event);
-		},
-
-		changeFormatTime: function (event) {
-			Audios.playSettings = (Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? Audios.playSettings - Audios.BIT_INVERSE_TIME : Audios.playSettings + Audios.BIT_INVERSE_TIME);
-			Audios.recountTime();
-			return $.event.cancel(event);
-		}
+	/**
+	 * Returns player
+	 * @returns {HTMLElement}
+	 */
+	getPlayer: function() {
+		return $.element("player");
 	},
 
+	/**
+	 * Returns state of playing
+	 * @returns {boolean}
+	 */
+	isPlaying: function() {
+		return !Audios.getPlayer().paused;
+	},
 
 	/**
 	 * Request for add audio ito user's list
@@ -454,7 +488,72 @@ var Audios = {
 		});
 	},
 
+	/**
+	 * Confirm and request for remove audio
+	 * @param {VKAudio} audio
+	 */
+	remove: function(audio) {
+		VKConfirm(Lang.get("audio.confirmAudioRemove"), function () {
+			api("audio.delete", {
+				owner_id: audio.owner_id,
+				audio_id: audio.id
+			}).then(function(data) {
+				// todo
+			});
+		});
+	},
 
+	/**
+	 * Make download audio
+	 * @param {VKAudio} audio
+	 */
+	download: function(audio) {
+
+	},
+
+	/**
+	 * Open modal window for lyrics
+	 * @param {VKAudio} audio
+	 * @returns {Promise.<{audio: VKAudio, modal: Modal}>}
+	 */
+	openLyricsModal: function(audio) {
+		return new Promise(function(resolve) {
+			var modal = new Modal({
+				title: Lang.get("audio.lyricsTitle"),
+				content: Site.Loader(true),
+				footer: [
+					{
+						name: "ok",
+						title: Lang.get("general.close"),
+						onclick: function() {
+							this.close();
+						}
+					}
+				]
+			});
+			resolve({audio: audio, modal: modal.show()});
+		});
+	},
+
+	/**
+	 * Request lyrics by audio object
+	 * @param {{audio: VKAudio, modal: Modal}} meta
+	 * @returns {Promise.<{audio: VKAudio, modal: Modal, lyrics: VKAudioLyrics}>}
+	 */
+	getLyrics: function(meta) {
+		return api("audio.getLyrics", { lyrics_id: meta.audio.lyrics_id, v: 5.56 }).then(function(data) {
+			meta.lyrics = data;
+			return meta;
+		});
+	},
+
+	/**
+	 * Show lyrics in modal
+	 * @param {{audio: VKAudio, modal: Modal, lyrics: VKAudioLyrics}} meta
+	 */
+	showLyrics: function(meta) {
+		meta.modal.setContent(Site.toHTML(meta.lyrics.text));
+	},
 
 	timeline: null,
 	volumeline: null,
@@ -464,21 +563,7 @@ var Audios = {
 		$.localStorage(Audios.KEY_AUDIO_VOLUME, volume);
 	},
 
-	/**
-	 * Returns player
-	 * @returns {HTMLElement}
-	 */
-	getPlayer: function() {
-		return $.element("player");
-	},
 
-	/**
-	 * Returns state of playing
-	 * @returns {boolean}
-	 */
-	isPlaying: function() {
-		return !Audios.getPlayer().paused;
-	},
 
 	player: {
 
@@ -535,10 +620,9 @@ var Audios = {
 			$.element("player-playedtime").innerHTML = playedString;
 			$.element("head-player-line-played").style.width = percent + "%";
 
-			if ((playing = q(".audio-playing")) && this.duration !== Infinity) {
+			if ((playing = q(".audios-playing .audios-time")) && this.duration !== Infinity) {
 				try {
-					playing.querySelector(".audio-item-played").innerHTML = playedString;
-					playing.querySelector(".audio-item-real").innerHTML = $.toTime(duration);
+					playing.textContent = playedString;
 				}catch(e){console.error(e)}
 			}
 		},
@@ -610,20 +694,10 @@ var Audios = {
 
 		play: function() {
 			Audios.getPlayer().play();
-			/*var btn = q(".audio-playing .audio-item-control");
-			$.elements.removeClass(btn, "player-play");
-			$.elements.addClass(btn, "player-pause");
-			$.elements.addClass($.element("headplayer-play"), "hidden");
-			$.elements.removeClass($.element("headplayer-pause"), "hidden");*/
 		},
 
 		pause: function() {
 			Audios.getPlayer().pause();
-			/*var btn = q(".audio-playing .audio-item-control")[0];
-			$.elements.addClass(btn, "player-play");
-			$.elements.removeClass(btn, "player-pause");
-			$.elements.removeClass($.element("headplayer-play"), "hidden");
-			$.elements.addClass($.element("headplayer-pause"), "hidden");*/
 		},
 
 		toggle: function () {
@@ -668,7 +742,7 @@ var Audios = {
 		},
 
 		Share: function() {
-			window.location.hash = "#mail?attach=audio" + Audios.currentAudioFullID;
+			window.location.hash = "#mail?attach=audio" + Audios.currentAudioFullID; // TODO rewrite to share
 		}
 
 	},
@@ -719,7 +793,7 @@ var Audios = {
 
 		Audios.setVolumeState(vol);
 
-		if (audioId === Audios.getCurrent()) {
+		if (audioId === Audios.getCurrent() && player.src === track.url) {
 			Audios.player.toggle();
 			return;
 		}
@@ -733,6 +807,7 @@ var Audios = {
 
 		Audios.setTitle(track);
 		Audios.setButtonsState(track);
+		Audios.notifyListItem(track);
 
 		Audios.isEnabled(Audios.BIT_BROADCAST) && Audios.setBroadcast(audioId);
 	},
@@ -762,6 +837,22 @@ var Audios = {
 	},
 
 	/**
+	 * Set class on list item for active
+	 * @param audio
+	 */
+	notifyListItem: function(audio) {
+		Array.prototype.forEach.call(document.querySelectorAll(".audios-playing .audios-time"), function(item) {
+			item.textContent = Audios.TIME_STR_NON_STARTED;
+		});
+		Array.prototype.forEach.call(document.querySelectorAll("." + Audios.CLASS_PLAYING), function(item) {
+			$.elements.removeClass(item, Audios.CLASS_PLAYING);
+		});
+		Array.prototype.forEach.call(document.querySelectorAll("[data-audio-id='" + audio.owner_id + "_" + audio.id + "']"), function(item) {
+			$.elements.addClass(item, Audios.CLASS_PLAYING);
+		});
+	},
+
+	/**
 	 * Send request to broadcast track
 	 * @param {string} audioId
 	 * @returns {Promise}
@@ -786,9 +877,12 @@ console.log(list);
 		return { position: -1, previous: false, next: false };
 	},
 
+	/**
+	 * Navigate through current list to back
+	 */
 	previous: function() {
 		var position = Audios.getCurrentPositionInList(), list;
-console.log(position);
+
 		if (!~position.position) {
 			console.warn("Unknown position, unhandled: ", position);
 			return;
@@ -802,7 +896,9 @@ console.log(position);
 		Audios.setPlay(list[position.position - 1], Audios.currentPlaylistID);
 	},
 
-
+	/**
+	 * Navigate through current list to forward
+	 */
 	next: function() {
 		var position = Audios.getCurrentPositionInList(), list;
 
@@ -819,11 +915,80 @@ console.log(position);
 		Audios.setPlay(list[position.position + 1], Audios.currentPlaylistID);
 	},
 
+	miniPlayer: {
+		mHead: null,
 
-	recountTime: function() {
-		var elem = $.element("player");
-		$.element("player-playedtime").innerHTML = Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? $.toTime(elem.currentTime) : "-" + $.toTime(elem.duration - elem.currentTime);
+		getHead: function() {
+			return this.mHead || (this.mHead = q(".head-content"));
+		},
+
+		hide: function(event) {
+			this.getHead().dataset.open = "title";
+			return $.event.cancel(event);
+		},
+
+		show: function(event) {
+			this.getHead().dataset.open = "player";
+			return $.event.cancel(event);
+		},
+
+		changeFormatTime: function(event) {
+			Audios.playSettings = (Audios.isEnabled(Audios.BIT_INVERSE_TIME) ? Audios.playSettings - Audios.BIT_INVERSE_TIME : Audios.playSettings + Audios.BIT_INVERSE_TIME);
+			Audios.player.onTimeUpdatePlayer();
+			return $.event.cancel(event);
+		}
 	},
+
+	/**
+	 * Request for list of recommendations
+	 * @param meta
+	 * @returns {Promise.<{count: int, items: VKAudio[]}>}
+	 */
+	requestRecommendations: function(meta) {
+		return api("audio.getRecommendations", {
+			count: 500,
+			user_id: meta.ownerId,
+			v: 5.56
+		}).then(function(data) {
+			meta.data = data;
+			Audios.storage["recommendations" + meta.ownerId] = data.items;
+			return meta;
+		});
+	},
+
+	/**
+	 * Request for list of popular
+	 * @param meta
+	 * @returns {Promise.<{count: int, items: VKAudio[]}>}
+	 */
+	requestPopular: function(meta) {
+		return api("audio.getPopular", {
+			count: 500,
+			genre_id: meta.albumId,
+			v: 5.56
+		}).then(function(data) {
+			var count = data.length;
+			meta.data = {count: count, items: data};
+			Audios.storage["popular" + meta.albumId] = data;
+			return meta;
+		});
+		/**
+		 * gnr = $.e("select", {"class": "fr", append: Audios.getGenreNodeArray(), onchange: function (event) {
+				window.location.hash = "#audio?act=popular&genreId=" + this.options[this.selectedIndex].value;
+			}})));
+		 gnr.selectedIndex = (function (a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]===b)return c})(Audios.genres, Site.Get("genreId"), -1);
+		 */
+	},
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -938,83 +1103,13 @@ console.log(position);
 			Site.setHeader("Трансляции друзей");
 		})
 	},
-	getPopular: function (offset) {
-		offset = +offset || 0;
-		Site.API("audio.getPopular", {
-			count: 50,
-			offset: offset,
-			genre_id: Site.Get("genreId")
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				lid = (+new Date()), gnr;
-			Audios.Lists[lid] = Audios.getStringListFromArrayList(data);
-			list.id = "audiolist";
-			for (var i = 0; i < data.length; ++i) {
-				/*list.appendChild(Audios.Item(data[i], {
-					lid: lid,
-					from: 64,
-					add: true
-				}));*/
-				Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
-			}
-			//list.appendChild(Site.getPagination({offset: offset, count: 1000, step: 50, callback: function (event) {
-			//	window.scrollTo(0, 0); // top
-			//	Audios.getPopular(event.offset);
-			//}}));
-			parent.appendChild(Site.getPageHeader("Популярные аудиозаписи", gnr = $.e("select", {"class": "fr", append: Audios.getGenreNodeArray(), onchange: function (event) {
-				window.location.hash = "#audio?act=popular&genreId=" + this.options[this.selectedIndex].value;
-			}})));
-			gnr.selectedIndex = (function (a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]===b)return c})(Audios.genres, Site.Get("genreId"), -1);
-			parent.appendChild(Audios.getRightPanel());
-			//parent.appendChild($.e("div", {"class": "sf-wrap", append: }));
-			parent.appendChild(list);
-			Site.append(parent);
-			Site.setHeader("Популярное");
-		})
-	},
-	getStringListFromArrayList: function (data) {
-		var d = [];
-		for (var i = 0, l = data.length; i < l; ++i)
-			d.push(data[i].owner_id + "_" + (data[i].id || data[i].aid));
-		return d;
-	},
-	getRecommendations: function (offset) {
-		offset = +offset || 0;
-		Site.API("execute", {
-			code: 'return API.audio.getRecommendations({count:50,offset:%o,user_id:%u,v:5.9});'
-				.replace(/%o/i, offset)
-				.replace(/%u/i, Site.Get("oid"))
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				count = data.count,
-				lid = (+new Date());
-			data = data.items;
-			Audios.Lists[lid] = Audios.getStringListFromArrayList(data);
-			list.id = "audiolist";
-			for (var i = 0; i < data.length; ++i) {
-				/*list.appendChild(Audios.Item(data[i], {
-					lid: lid,
-					from: 64,
-					add: true
-				}));*/
-				Audios.Data[data[i].owner_id + "_" + (data[i].aid || data[i].id)] = data[i];
-				//Audios.Lists[lid].push(data[i]);
-			}
-			parent.appendChild(Site.getPageHeader("Рекомендованные аудиозаписи"));
-			parent.appendChild(Audios.getRightPanel());
-			parent.appendChild(list);
-			//list.appendChild(Site.getPagination({offset: offset, count: count, step: 50, callback: function (event) {
-		//		window.scrollTo(0, 0); // top
-		//		Audios.getRecommendations(event.offset);
-		//	}}));
-			Site.append(parent);
-			Site.setHeader("Рекомендации");
-		})
-	},
+
+
+
+
+
+
+
 	l2a: {},
 	getAlbums: function (owner_id) {
 		owner_id = owner_id || API.userId;
@@ -1056,75 +1151,7 @@ console.log(position);
 		Site.append(parent);
 		Site.setHeader("Альбомы");
 	},
-	createAlbum: function (oid) {
-		oid = oid || API.userId;
-		var Form = document.createElement("form"),
-			page = document.createElement("div");
-		Form.onsubmit = function (event) {
-			var e = this,
-				title = e.title.value,
-				oid = e.owner_id.value;
-			if (!$.trim(title)) {
-				Site.Alert({text: "Поле \"название\" не может быть пустым!"});
-				return false;
-			}
-			if (!(oid == API.userId || oid < 0)) {
-				Site.Alert({text: "Вы не можете здесь создавать альбом!"});
-				return false;
-			}
-			Site.API("audio.addAlbum", {
-				group_id: (oid < 0 ? -oid : ""),
-				title: title
-			}, function (data) {
-				data = Site.isResponse(data);
-				if (data && data.album_id) {
-					Site.Alert({text: "Альбом успешно создан!"});
-					window.location.hash = "#audio?oid=" + oid + "&album=" + data.album_id;
-				} else
-					Site.Alert({text: "Ошибка!<br>" + data.error.error_msg})
-			});
-			return false;
-		};
-		Form.appendChild(Site.getPageHeader("Создание аудиоальбома", '<a href="#audio' + (oid != API.userId && oid < 0 ? '?oid=' + oid : '') + '">Назад<\/a>'));
-		page.className = "sf-wrap";
-		page.appendChild($.elements.create("div", {"class": "tip tip-form", html: "Название альбома"}));
-		page.appendChild($.elements.create("input", {type:"text", name: "title", required: true}));
-		page.appendChild($.elements.create("input", {type:"hidden", name: "owner_id", value: oid}));
-		page.appendChild($.elements.create("input", {type:"submit", value: "Создать"}));
-		Form.appendChild(page);
-		Site.append(Form);
-	},
-	editAlbum: function (oid, aid) {
-		var title = Audios.Albums[oid + "_" + aid] && Audios.Albums[oid + "_" + aid].title;
-		var parent = document.createElement("div"),
-			Form = Site.createInlineForm({type: "text", name: "title", value: title, title: "Сохранить"});
-		Form.onsubmit = function (event) {
-			if (!$.trim(this.title.value)) {
-				Site.Alert({text: "Пустое поле!"});
-				return false;
-			}
-			var o = [oid, aid],
-				title = $.trim(this.title.value);
-			Site.API("audio.editAlbum", {
-				owner_id: oid,
-				album_id: aid,
-				title: title
-			}, function (data) {
-				if (data.response && data.response === 1) {
-					Site.Alert({text: "Альбом успешно отредактирован!"});
-					Audios.Albums[o[0] + "_" + o[1]].title = title;
-					window.location.hash = "#audio?oid=" + o[0] + "&album=" + o[1];
-				}
-			});
-			return false;
-		};
-		Form.appendChild($.elements.create("input", {type: "hidden", name: "owner_id", value: (oid < 0 ? -oid : "")}));
-		Form.appendChild($.elements.create("input", {type: "hidden", name: "album_id", value: aid}));
-		parent.appendChild(Site.getPageHeader("Редактирование альбома"));
-		parent.appendChild(Form);
-		Site.append(parent);
-		Site.setHeader("Альбом", {link: "audio?oid=" + oid + "&album=" + aid});
-	},
+
 
 	showModalInfoItem: function (ownerId, audioId) {
 		var w,
@@ -1149,62 +1176,12 @@ console.log(position);
 					parent = e("div"),
 					actions = [
 						{
-							label: "Скачать MP3",
-							url: audio.url,
-							attribute: ["download", audio.artist + " - " + audio.title + ".mp3"]
-						},
-						{
-							label: "Скачать MP3 (alternative)",
-							url: "//apidog.ru/api/v2/apidog.downloadAudio?key=" + API.accessToken + "&audio=" + ownerId + "_" + audioId,
-							attribute: ["target", "_blank"]
-						},
-						{
-							label: "Отправить другу",
-							url: "#mail?attach=audio" + ownerId + "_" + audioId
-						},
-						{
 							label: "Редактировать",
 							url: "#audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId + "&action=edit",
 							hide: !(API.userId == ownerId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin),
 							callback: function (event) {
 								modal.close();
 							}
-						},
-						{
-							label: "Удалить",
-							callback: function (event) {
-								var elem = this;
-								VKConfirm("Вы действительно хотите удалить эту аудиозапись?", function () {
-									Site.API("audio.delete", {
-										owner_id: ownerId,
-										audio_id: audioId
-									}, function (data) {
-										data = Site.isResponse(data);
-										if (!data)
-											return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
-										$.elements.removeClass(elem.nextSibling, "hidden");
-										$.elements.addClass(elem, "hidden");
-									})
-								});
-							},
-							hide: !(API.userId == ownerId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin)
-						},
-						{
-							label: "Восстановить",
-							callback: function (event) {
-								var elem = this;
-								Site.API("audio.restore", {
-									owner_id: ownerId,
-									audio_id: audioId
-								}, function (data) {
-									data = Site.isResponse(data);
-									if (!data)
-										return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
-									$.elements.removeClass(elem.previousSibling, "hidden");
-									$.elements.addClass(elem, "hidden");
-								})
-							},
-							hide: true
 						}
 					];
 				actions.forEach(function (link) {
@@ -1238,104 +1215,6 @@ console.log(position);
 		}
 	},
 
-	getItem: function (ownerId, audioId, albumId) {
-		var id = ownerId + "_" + audioId,
-			audio = Audios.Storage[id];
-		if (!audio || audio.lyrics_id && !audio.text) {
-			Site.API("execute", {
-				code: "var a=API.audio.getById({audios:\"%i\"})[0],o=a.owner_id;return{a:a,h:(o>0?API.users.getById({user_ids:o,fields:\"online\"}):API.groups.getById({group_ids:-o}))[0],l:API.audio.getLyrics({lyrics_id:a.lyrics_id}).text};"
-					.replace(/%i/img, id)
-			}, function (data) {
-				data = Site.isResponse(data);
-				data.a.text = data.l;
-				Audios.Storage[data.a.owner_id + "_" + (data.a.aid || data.a.id)] = data.a;
-				Audios.getItem(ownerId, audioId, albumId);
-			});
-			return;
-		}
-
-		var e = $.e,
-			parent = e("div");
-
-		if (!audio)
-			return;
-
-		//parent.appendChild(Audios.Item(audio, {lid: null, add: (audio.owner_id != API.userId)}));
-		parent.appendChild(Site.getPageHeader("Действия"));
-		var actions = [
-			{
-				label: "Скачать MP3",
-				url: audio.url,
-				attribute: ["download", audio.artist + " - " + audio.title + ".mp3"]
-			},
-			{
-				label: "Скачать MP3 (alternative)",
-				url: "//apidog.ru/api/v2/apidog.downloadAudio?key=" + API.accessToken + "&audio=" + ownerId + "_" + audioId,
-				attribute: ["target", "_blank"]
-			},
-			{
-				label: "Отправить другу",
-				url: "#mail?attach=audio" + ownerId + "_" + audioId
-			},
-			{
-				label: "Редактировать",
-				url: "#audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId + "&action=edit",
-				hide: !(API.userId === ownerId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin)
-			},
-			{
-				label: "Удалить",
-				callback: function (event) {
-					VKConfirm("Вы действительно хотите удалить эту аудиозапись?", function () {
-						console.log("CALLBACK CALLED");
-						var elem = this;
-						Site.API("audio.delete", {
-							owner_id: ownerId,
-							audio_id: audioId
-						}, function (data) {
-							data = Site.isResponse(data);
-							if (!data)
-								return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
-							$.elements.removeClass(elem.nextSibling, "hidden");
-							$.elements.addClass(elem, "hidden");
-						})
-					});
-				},
-				hide: !(API.userId == ownerId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin)
-			},
-			{
-				label: "Восстановить",
-				callback: function (event) {
-					var elem = this;
-					Site.API("audio.restore", {
-						owner_id: ownerId,
-						audio_id: audioId
-					}, function (data) {
-						data = Site.isResponse(data);
-						if (!data)
-							return Site.Alert({text: "Ошибка!<br>" + data.error.error_msg});
-						$.elements.removeClass(elem.previousSibling, "hidden");
-						$.elements.addClass(elem, "hidden");
-					})
-				},
-				hide: true
-			}
-		];
-		actions.forEach(function (link) {
-			var attributes = {"class": "list-item"};
-			if (link.hide) attributes["class"] += " hidden";
-			if (link.url) attributes.href = link.url;
-			if (link.callback) attributes.onclick = link.callback;
-			attributes.html = link.label;
-			if (link.attribute) attributes[link.attribute[0]] = link.attribute[1];
-			parent.appendChild(e("a", attributes));
-		});
-		if (audio.text) {
-			parent.appendChild(Site.getPageHeader("Текст аудиозаписи"));
-			parent.appendChild(e("div", {"class": "sf-wrap", html: Site.toHTML(audio.text)}));
-		}
-		Site.append(parent);
-		Site.setHeader("Аудиозапись", {link: "audio?oid=" + ownerId + (albumId ? "&album=" + albumId : "")})
-	},
 	editAudio: function (ownerId, audioId)
 	{
 		var id = ownerId + "_" + audioId,
@@ -1442,114 +1321,116 @@ console.log(position);
 
 	radio: {},
 
-	getRadio: function () {
-		var e = $.e,
-			parent = e("div", {"class": "audio-wrap"}),
-			list = e("div", {"id": "audiolist"});
+	/**
+	 * Request radio stations
+	 * @param meta
+	 * @returns {Promise.<RadioStation[]>}
+	 */
+	requestRadio: function(meta) {
+		return new Promise(function(resolve) {
+			meta.list.parentNode.insertBefore(
+				Site.getPageHeader("Онлайн-радио", $.e("a", {
+					"class": "fr",
+					href: "http:\/\/radio.vlad805.ru\/",
+					target: "_blank",
+					html: "radio.vlad805.ru"
+				})),
+				meta.list
+			);
+			Site.setHeader("Online radio", {});
+			return vlad805.api.radio.get(60).then(function(result) {
+				meta.data = result;
+				resolve(meta);
+			}).catch(console.error.bind(console));
+		});
+	},
 
-		list.appendChild(Site.Loader(true));
-		parent.appendChild(Site.getPageHeader("Онлайн-радио", e("a", {href: "http:\/\/radio.vlad805.ru\/", target: "_blank", "class": "fr", html: "radio.vlad805.ru"})));
-		parent.appendChild(list);
-		Site.append(parent);
+	/**
+	 * Show list of radio stations
+	 * @param {{list: HTMLElement, loader: HTMLElement, sl: SmartList, data: {count: int, items: RadioStation[], cities: RadioCity[]}}} meta
+	 */
+	showRadio: function(meta) {
+		$.elements.remove(meta.loader);
 
-		vlad805.api.radio.get(60).then(function(data) {
-			/** @var {{count: int, items: object[], cities: object[]}} data */
-			$.elements.clearChild(list);
-
-			var cities = (function(a, b) {
-				a.forEach(function(c) {
-					/** @var {{cityId: int}} c */
-					b[c.cityId] = c;
-				});
-				return b;
-			})(data.cities, {}, null);
-
-			data.items.forEach(function(item) {
-				/** @var {{stationId: int}} item */
-				list.appendChild(Audios.getRadioItem(item, cities));
-				Audios.radio[item.stationId] = item;
+		var cities = (function(a, b) {
+			a.forEach(function(c) {
+				b[c.cityId] = c;
 			});
-		});
+			return b;
+		})(meta.data.cities, {}, null);
 
-		Site.setHeader("Online radio", {});
-	},
-
-	getRadioCurrent: function() {
-		return !isNaN(parseInt(Audios.currentAudioFullID)) && Audios.currentAudioFullID < 0 ? -Audios.currentAudioFullID : false;
-	},
-
-	getRadioItem: function(i, l) {
-		var n = document.createElement("div"),
-			c = [];
-
-		n.className = "audio-item" + (Audios.currentAudioFullID === -i.stationId ? " audio-playing" : "");
-		n.id = "audio" + i.stationId;
-
-		var CITY = (i.cityId && l[i.cityId] ? Site.Escape(l[i.cityId].city) : "");
-		i._city = CITY;
-		$.event.add(n, "click", function() {
-			var AudioPlayer;
-			AudioPlayer = $.element("player");
-			AudioPlayer.pause();
-			AudioPlayer.src = i.streams[0].url;
-			AudioPlayer.load();
-			Audios.miniPlayer.show();
-			Audios.player.play()
-			Audios.currentAudioFullID = -i.stationId;
-			Audios.setButtonsState(i);
-
-			var other = document.querySelectorAll(".audio-playing"), j = 0, it;
-			while (it = other[j++])
-				$.elements.removeClass(it, "audio-playing");
-
-			$.elements.addClass(n, "audio-playing");
-
-			Audios.setTitle(i);
-		});
-
-		c.push($.e("div", {
-			"class": "audio-sprite audio-goto",
-			onclick: function (event) {
-				$.event.cancel(event);
-				Audios.getRadioCurrentBroadcastingSong(i);
+		meta.data.items.forEach(function(item) {
+			if (item.cityId && cities[item.cityId]) {
+				item["cityName"] = cities[item.cityId].city;
 			}
-		}));
-		n.appendChild($.e("div", {
-			"class": "fr",
-			append: $.e("div", {"class": "audio-control fr", append: c})
-		}));
-		n.appendChild($.e("div", {"class": "audio-item-control audio-sprite"}));
-		n.appendChild($.e("div", {"class": "audio-item-title", title: i.title.safe() + (CITY ? " (" + CITY + ")" : ""), append: [
-			$.e("strong", {html: i.title.safe()}),
-			CITY ? $.e("span", {html: " (" + CITY + ")"}) : null
-		]}));
-		return n;
+			//meta.list.appendChild(Audios.getRadioItem(item, cities));
+			Audios.radio[item.stationId] = item;
+		});
+
+		meta.data.items = meta.data.items.map(function(st) {
+			return {
+				owner_id: 0,
+				id: -st.stationId,
+				title: st.title,
+				artist: st.cityName ? st.cityName + (st.frequency ? ", " + st.frequency + "MHz" : "") : "-",
+				duration: Infinity,
+				url: st.streams[0].url,
+				streams: st.streams,
+				canResolveTrack: st.canResolveTrack
+			};
+		});
+
+		meta.sl.setOptionsItemListCreator("isRadio", true).setData(meta.data);
 	},
 
-	getRadioCurrentBroadcastingSong: function (station) {
-		if (!station)
-			return;
+	/**
+	 * Returns station id if playing radio
+	 * @returns {int|boolean}
+	 */
+	getRadioCurrent: function() {
+		return Audios.currentAudioFullID && Audios.currentAudioFullID.indexOf("0_") === 0 && -Audios.currentAudioFullID.substring(2);
+	},
 
-		if (!isNaN(station)) {
-			station = Audios.radio[station];
+	/**
+	 * Return item for radio station list
+	 * @param st
+	 * @returns {Element}
+	 */
+	getRadioItem: function(st) {
+		return Audios.getListItem(st, {
+			isRadio: true
+		});
+	},
+
+	/**
+	 * Request for resolve track
+	 * @param {int} stationId
+	 */
+	resolveRadioTrack: function(stationId) {
+		if (!stationId) {
+			return;
 		}
 
+		var station;
+		if (!isNaN(stationId)) {
+			station = Audios.radio[stationId];
+		}
 
 		vlad805.api.radio.getCurrentBroadcastingTrack(station.stationId).then(function(data) {
 			if (data.title) {
-				alert("На <" + station.title + "> сейчас играет трек <" + data.artist + " -- " + data.title + ">");
+				alert(Lang.get("audio.radioResolveTrackSuccess").schema({n: station.title, t: data.artist + " -- " + data.title}));
 			} else {
-				alert("Неизвестная ошибка");
+				alert(Lang.get("audio.radioResolveTrackFail"));
 			}
 		});
 	},
 
 	/**
 	 * Request and show bitrate of audio
-	 * @param audioId
+	 * @param {VKAudio} audio
 	 */
-	getBitrate: function(audioId) {
-		APIdogRequest("vk.getAudioBitrate", { audio: audioId, accessToken: API.accessToken }).then(function(data) {
+	getBitrate: function(audio) {
+		APIdogRequest("vk.getAudioBitrate", { audio: audio.owner_id + "_" + audio.id, accessToken: API.accessToken }).then(function(data) {
 			alert("Примерный битрейт: " + data.bitrate + "kbps");
 		}).catch(function() {
 			alert("К сожалению, не получилось получить битрейт");

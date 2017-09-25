@@ -4889,8 +4889,12 @@ img.wall-left {
 	display: flex;
 	flex-flow: row nowrap;
 	justify-content: center;
-	align-items: center;
+	align-items: stretch;
 	cursor: pointer;
+}
+
+.audios-item:hover {
+	background: rgba(85, 115, 152, .05);
 }
 
 .audios-name {
@@ -4899,6 +4903,15 @@ img.wall-left {
 	flex-flow: column nowrap;
 	line-height: 20px;
 	padding: 5px 10px;
+}
+
+.audios-title {
+	color: #557398;
+}
+
+.audios-artist {
+	color: #2a3035;
+	font-size: smaller;
 }
 
 .audios-state {
@@ -4911,6 +4924,11 @@ img.wall-left {
 	flex-flow: row nowrap;
 }
 
+.audios-time {
+	align-self: center;
+	color: #828282;
+}
+
 .audios-more,
 .audios-state {
 	background: no-repeat center;
@@ -4919,15 +4937,19 @@ img.wall-left {
 
 .audios-more {
 	width: 50px;
+	height: 50px;
 	background-image: url("data:image/svg+xml,%3Csvg fill='%23CBCBCB' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
+}
 
+.audios-more .xdd-wrap, .audios-more .xdd-title {
+	height: 100%;
 }
 
 .audios-state {
 	background-image: url("data:image/svg+xml,%3Csvg fill='%23557398' height='36' viewBox='0 0 24 24' width='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
 }
 
-.audios-state.audios-paused {
+.head-player-button-play .audios-playing .audios-state {
 	background-image: url("data:image/svg+xml,%3Csvg fill='%23557398' height='36' viewBox='0 0 24 24' width='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 19h4V5H6v14zm8-14v14h4V5h-4z'/%3E%3C/svg%3E");
 }
 
