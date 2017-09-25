@@ -4337,11 +4337,23 @@
 
 
 	"audio.tabAll": ["Все", "All", null],
+	"audio.tabSearch": ["Поиск", "Search", null],
 	"audio.tabRecommendations": ["Рекомендации", "Recommendations", null],
 	"audio.tabAlbums": ["Альбомы", "Albums", null],
 	"audio.tabFriends": ["Трансляции", "Translations", null],
 	"audio.tabPopular": ["Популярное", "Popular", null],
 	"audio.tabRadio": ["Радио", "Radio", null],
+	"audio.itemActionAdd": ["Добавить к себе", "Add to my audio"],
+	"audio.itemActionShowLyrics": ["Показать текст", "Show lyrics", null],
+	"audio.itemActionShare": ["Поделиться", "Share", null],
+	"audio.itemActionRemove": ["Удалить", "Remove", null],
+	"audio.itemActionDownload": ["Скачать", "Download", null],
+	"audio.itemActionBitrate": ["Узнать битрейт", "Resolve bitrate", null],
+	"audio.itemActionRadioResolveTrack": ["Найти трек", "Find track", null],
+	"audio.radioResolveTrackSuccess": ["Сейчас на '%n' играет трек '%t'", "Now playing on '%n' track '%t'", null],
+	"audio.radioResolveTrackFail": ["Не удалось получить название текущего трека", "Unfortunately, cannot get title of playing track", null],
+	"audio.confirmAudioRemove": ["Вы действительно хотите удалить эту аудиозапись?", "Are you sure that you want remove this audio?", null],
+	"audio.lyricsTitle": ["Текст песни", "Lyrics", null],
 
 
 
