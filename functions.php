@@ -18,7 +18,7 @@
 	define("MONTH", 30 * DAY);
 
 	define("APIDOG_VERSION", "6.4.6");
-	define("APIDOG_BUILD", "20170923");
+	define("APIDOG_BUILD", "20170925");
 
 	/**
 	 * Return param from query string/post body by key
@@ -39,7 +39,7 @@
 		$j = json_encode([$wrap => $data], JSON_UNESCAPED_UNICODE);
 		header("Content-type: " . ($c ? "text/javascript" : "application/json") . "; charset=utf-8");
 		exit(($c ? $c . "(" : "") . $j . ($c ? ");" : ""));
-	};
+	}
 
 	/**
 	 * Return number $n in range $min to $max
