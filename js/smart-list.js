@@ -93,7 +93,6 @@ SmartList.prototype = {
 
 		chunk.forEach(function(item) {
 			var node = this.mCache[item.id] || (this.mCache[item.id] = this.mGetItemListNode(item, this.mOptionsItemListCreator));
-			console.log(item, node);
 			this.mNodeList.appendChild(node);
 		}, this);
 
@@ -153,13 +152,22 @@ SmartList.prototype = {
 	},
 
 	setData: function(data) {
+		this.clear();
 		//noinspection JSUnusedGlobalSymbols
 		this.mCount = data.count;
 		this.mItems = data.items;
-		this.mLastIndex = 0;
 		this.setState(SmartList.state.NORMAL); // TODO: needed?
 		this.output();
 		return this;
+	},
+
+	clear: function() {
+		$.elements.clearChild(this.mNodeList);
+		//noinspection JSUnusedGlobalSymbols
+		this.mCount = 0;
+		this.mItems = [];
+		this.mLastIndex = 0;
+		this.setState(SmartList.state.NORMAL);
 	},
 
 	setGetItemListNode: function(fx) {
