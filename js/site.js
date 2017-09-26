@@ -516,7 +516,7 @@ var Site = {
 			? ""
 			: (
 				s && s.platform
-					? " <span class='tip'>" + (Lang.get("profiles.profile_was_in")[data.sex]) + " " + $.getDate(s.time) + icon + "<\/span>"
+					? " <span class='tip'>" + (Lang.get("profiles.profile_was_in")[data.sex]) + " " + getDate(s.time) + icon + "<\/span>"
 					: ""
 			);
 	},
