@@ -285,7 +285,7 @@ var VKAudio = {};
 var VKAudioLyrics = {};
 
 /**
- * @type {{stationId: int, title: string, frequency: float, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string}}
+ * @type {{stationId: int, title: string, frequency: float, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string, _city}}
  */
 var RadioStation = {};
 

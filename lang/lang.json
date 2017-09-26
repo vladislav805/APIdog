@@ -4354,6 +4354,8 @@
 	"audio.radioResolveTrackFail": ["Не удалось получить название текущего трека", "Unfortunately, cannot get title of playing track", null],
 	"audio.confirmAudioRemove": ["Вы действительно хотите удалить эту аудиозапись?", "Are you sure that you want remove this audio?", null],
 	"audio.lyricsTitle": ["Текст песни", "Lyrics", null],
+	"audio.broadcastTitle": ["Трансляции", "Broadcasts", null],
+	"audio.popularTitle": ["Популярное", "Popular", null],
 
 
 

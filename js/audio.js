@@ -166,9 +166,8 @@ var Audios = {
 				Audios.showSerachPage();
 				break;
 
-			case "friends":
-				return Audios.getFriendsBroadcast();
-				break;
+			case "broadcasts":
+				return Audios.page({ownerId: API.userId, playlist: "broadcast"}).then(Audios.requestBroadcasts).then(Audios.showBroadcasts);
 
 			case "popular":
 				var genreId = +Site.get("genreId") || 0;
@@ -216,7 +215,7 @@ var Audios = {
 
 			Site.append(wrap);
 
-			resolve({list: list, sl: sl, loader: loader, ownerId: options.ownerId});
+			resolve({list: list, sl: sl, loader: loader, ownerId: options.ownerId, albumId: options.albumId});
 		});
 	},
 
@@ -234,7 +233,7 @@ var Audios = {
 
 		mine && tabs.push(["audio?act=search", Lang.get("audio.tabSearch")]);
 		mine && tabs.push(["audio?act=popular", Lang.get("audio.tabPopular")]);
-		mine && tabs.push(["audio?act=friends", Lang.get("audio.tabFriends")]);
+		mine && tabs.push(["audio?act=broadcasts", Lang.get("audio.tabFriends")]);
 
 		tabs.push(["audio?act=albums" + (param ? "&" + param : ""), Lang.get("audio.tabAlbums")]);
 
@@ -296,7 +295,7 @@ var Audios = {
 	/**
 	 * Return item node audio
 	 * @param {VKAudio|RadioStation} audio
-	 * @param {{flatMode: boolean=, playlist: string=, isRadio: boolean=}} options
+	 * @param {{flatMode: boolean=, playlist: string=, isRadio: boolean=}=} options
 	 */
 	getListItem: function(audio, options) {
 
@@ -537,7 +536,7 @@ var Audios = {
 
 	/**
 	 * Request lyrics by audio object
-	 * @param {{audio: VKAudio, modal: Modal}} meta
+	 * @param {{audio: VKAudio, modal: Modal, lyrics}} meta
 	 * @returns {Promise.<{audio: VKAudio, modal: Modal, lyrics: VKAudioLyrics}>}
 	 */
 	getLyrics: function(meta) {
@@ -556,9 +555,10 @@ var Audios = {
 	},
 
 	timeline: null,
-	volumeline: null,
+	volumeLine: null,
+
 	setVolumeState: function(volume) {
-		Audios.volumeline.setValue(volume);
+		Audios.volumeLine.setValue(volume);
 		Audios.getPlayer().volume = volume / 100;
 		$.localStorage(Audios.KEY_AUDIO_VOLUME, volume);
 	},
@@ -575,12 +575,13 @@ var Audios = {
 
 			Audios.player.mVolumeGhost = $.element("head-player-volume-ghost");
 
-			Audios.volumeline = new Slider(volumeLineNode, volumeLineInput);
+			//noinspection JSUnresolvedFunction
+			Audios.volumeLine = new Slider(volumeLineNode, volumeLineInput);
 
-			Audios.volumeline.setMinimum(0);
-			Audios.volumeline.setMaximum(100);
+			Audios.volumeLine.setMinimum(0);
+			Audios.volumeLine.setMaximum(100);
 
-			Audios.volumeline.onchange = Audios.player.onVolumeChangeSlider.bind(Audios.volumeline);
+			Audios.volumeLine.onchange = Audios.player.onVolumeChangeSlider.bind(Audios.volumeLine);
 
 			//noinspection SpellCheckingInspection
 			$.event.add(player, "timeupdate", Audios.player.onTimeUpdatePlayer.bind(player));
@@ -592,7 +593,7 @@ var Audios = {
 			$.event.add(player, "play", Audios.player.onPlay);
 			$.event.add(player, "pause", Audios.player.onPause);
 
-			$.event.add(window, "resize", Audios.volumeline.recalculate);
+			$.event.add(window, "resize", Audios.volumeLine.recalculate);
 			$.event.add($.element("head-player-line-wrap"), "click", Audios.player.onTimelineClick.bind(player));
 
 			//noinspection SpellCheckingInspection
@@ -602,7 +603,7 @@ var Audios = {
 		onVolumeChangeSlider: function() {
 			var n = this.getValue();
 			Audios.setVolumeState(n);
-			Audios.player.mVolumeGhost.style.width = Audios.volumeline.handle.style.left;
+			Audios.player.mVolumeGhost.style.width = Audios.volumeLine.handle.style.left;
 		},
 
 		onTimeUpdatePlayer: function() {
@@ -833,7 +834,7 @@ var Audios = {
 
 		$.elements[isOwn || isRadio ? "removeClass" : "addClass"]($.element("add-audio"), "hidden");
 		$.elements[isRadio ? "removeClass" : "addClass"]($.element("find-audio"), "hidden");
-		Audios.volumeline.recalculate();
+		Audios.volumeLine.recalculate();
 	},
 
 	/**
@@ -958,10 +959,21 @@ console.log(list);
 
 	/**
 	 * Request for list of popular
-	 * @param meta
+	 * @param {{ownerId: int, list: HTMLElement, data: {count: int, items: VKAudio[]}, albumId: int}} meta
 	 * @returns {Promise.<{count: int, items: VKAudio[]}>}
 	 */
 	requestPopular: function(meta) {
+		var genreSelector = $.e("select", {
+			"class": "fr",
+			append: Audios.getGenreNodeArray(),
+			onchange: function() {
+				window.location.hash = "#audio?act=popular&genreId=" + getValue(this);
+			}
+		});
+
+		genreSelector.selectedIndex = (function(a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]===b)return c})(Audios.genres,meta.albumId,-1);
+
+		meta.list.parentNode.insertBefore(Site.getPageHeader(Lang.get("audio.popularTitle"), genreSelector), meta.list);
 		return api("audio.getPopular", {
 			count: 500,
 			genre_id: meta.albumId,
@@ -972,17 +984,47 @@ console.log(list);
 			Audios.storage["popular" + meta.albumId] = data;
 			return meta;
 		});
-		/**
-		 * gnr = $.e("select", {"class": "fr", append: Audios.getGenreNodeArray(), onchange: function (event) {
-				window.location.hash = "#audio?act=popular&genreId=" + this.options[this.selectedIndex].value;
-			}})));
-		 gnr.selectedIndex = (function (a,b,c,d){for(d=a.length;++c<d;)if(a[c][0]===b)return c})(Audios.genres, Site.Get("genreId"), -1);
-		 */
 	},
 
+	/**
+	 * Request for current broadcasts friends and groups
+	 * @param {{ownerId: int, data: object?, list: HTMLElement}} meta
+	 * @returns {Promise.<{ownerId: int, data: {count: int, items: VKAudio[]}}>}
+	 */
+	requestBroadcasts: function(meta) {
+		Site.setHeader(Lang.get("audio.broadcastTitle"));
+		meta.list.parentNode.insertBefore(Site.getPageHeader(Lang.get("audio.broadcastTitle")), meta.list);
+		return api("audio.getBroadcastList", {
+			filter: "all",
+			active: 1,
+			fields: "online,photo_50,screen_name"
+		}).then(function(data) {
+			meta.data = {count: data.length, items: data};
+			Audios.storage["broadcast"] = data;
+			return meta;
+		});
+	},
 
-
-
+	/**
+	 * Show broadcasts
+	 * @param {{ownerId: int, sl: SmartList, data: {count: int, items: VKAudio[]}}} meta
+	 */
+	showBroadcasts: function(meta) {
+		Local.add(meta.data);
+		var e = $.e,
+			item = function(c) {
+			return e("div", {"class": "audios-broadcast", append: [
+					e("div", {"class": "audios-broadcast-left", append: e("img", {src: getURL(c.photo_50)}) }),
+					e("div", {"class": "audios-broadcast-right", append:
+						e("a", {href: "#" + c.screen_name, append: [
+							e("strong", {html: getName(c)}),
+							Audios.getListItem(c.status_audio)
+						]})
+					})
+				]})
+			};
+		meta.sl.setGetItemListNode(item).setData(meta.data);
+	},
 
 
 
@@ -1066,43 +1108,6 @@ console.log(list);
 			list.appendChild(wrap);
 		});
 	},
-	getFriendsBroadcast: function () {
-		Site.API("audio.getBroadcastList", {
-			filter: "all",
-			active: 1,
-			fields: "online,photo_rec,screen_name"
-		}, function (data) {
-			data = Site.isResponse(data);
-			Local.add(data);
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				item = function (c) {
-					var lid = (+new Date());
-					Audios.Lists[lid] = [c.status_audio];
-					Audios.Data[c.status_audio.owner_id + "_" + c.status_audio.aid] = c.status_audio;
-					return $.elements.create("div", {"class": "friends-item", append: [
-						$.elements.create("img", {src: getURL(c.photo_rec || c.photo || c.photo_50), "class": "friends-left"}),
-						$.elements.create("div", {"class": "friends-right", append: [
-							$.elements.create("a", {href: "#" + c.screen_name, append: [
-								$.elements.create("strong", {html: (c.type === "profile" ? c.first_name + " " + c.last_name + Site.isOnline(c) : c.name)}),
-							//	Audios.Item(c.status_audio, {lid: lid, set: 32})
-							]})
-						]})
-					]})
-				};
-			list.id = "audiolist";
-			if (data.length)
-				for (var i = 0; i < data.length; ++i)
-					list.appendChild(item(data[i]));
-			else
-				list.appendChild(Site.getEmptyField("В данный момент никто не транслирует аудиозаписи"));
-			parent.appendChild(Site.getPageHeader("Трансляции"));
-			parent.appendChild(Audios.getRightPanel());
-			parent.appendChild(list);
-			Site.append(parent);
-			Site.setHeader("Трансляции друзей");
-		})
-	},
 
 
 
@@ -1110,7 +1115,7 @@ console.log(list);
 
 
 
-	l2a: {},
+
 	getAlbums: function (owner_id) {
 		owner_id = owner_id || API.userId;
 		if (!Audios.Albums[owner_id] && !Audios.l2a[owner_id])
@@ -1328,15 +1333,12 @@ console.log(list);
 	 */
 	requestRadio: function(meta) {
 		return new Promise(function(resolve) {
-			meta.list.parentNode.insertBefore(
-				Site.getPageHeader("Онлайн-радио", $.e("a", {
-					"class": "fr",
-					href: "http:\/\/radio.vlad805.ru\/",
-					target: "_blank",
-					html: "radio.vlad805.ru"
-				})),
-				meta.list
-			);
+			meta.list.parentNode.insertBefore(Site.getPageHeader("Онлайн-радио", $.e("a", {
+				"class": "fr",
+				href: "http:\/\/radio.vlad805.ru\/",
+				target: "_blank",
+				html: "radio.vlad805.ru"
+			})), meta.list);
 			Site.setHeader("Online radio", {});
 			return vlad805.api.radio.get(60).then(function(result) {
 				meta.data = result;
