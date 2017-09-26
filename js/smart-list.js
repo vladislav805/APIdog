@@ -16,9 +16,6 @@ function SmartList(options) {
 		throw new TypeError("no enough options");
 	}
 
-	//noinspection JSUnusedGlobalSymbols
-	this.mCount = options.data.count;
-	this.mItems = options.data.items;
 	this.mPerPage = options.countPerPage || 50;
 
 	this.mNeedSearchPanel = options.needSearchPanel;
@@ -36,9 +33,11 @@ function SmartList(options) {
 	this.mLastIndex = 0;
 	this.mQueryResult = [];
 
+
+
 	this.init();
 	this.initPlurals();
-	this.output();
+	this.setData(options.data);
 }
 
 //noinspection JSUnusedLocalSymbols
@@ -79,7 +78,7 @@ SmartList.prototype = {
 	},
 
 	/**
-	 *
+	 * Output items
 	 * @param {User[]=} data
 	 */
 	output: function(data) {
@@ -153,17 +152,18 @@ SmartList.prototype = {
 
 	setData: function(data) {
 		this.clear();
-		//noinspection JSUnusedGlobalSymbols
+
 		this.mCount = data.count;
 		this.mItems = data.items;
-		this.setState(SmartList.state.NORMAL); // TODO: needed?
+
+		this.setState(this.mCount !== -1 ? SmartList.state.NORMAL : SmartList.state.LOADING);
+
 		this.output();
 		return this;
 	},
 
 	clear: function() {
 		$.elements.clearChild(this.mNodeList);
-		//noinspection JSUnusedGlobalSymbols
 		this.mCount = 0;
 		this.mItems = [];
 		this.mLastIndex = 0;
@@ -228,7 +228,8 @@ SmartList.prototype = {
 
 SmartList.state = {
 	NORMAL: 0,
-	SEARCH: 1
+	SEARCH: 1,
+	LOADING: 2
 };
 
 /**
