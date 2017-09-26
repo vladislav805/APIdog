@@ -182,7 +182,7 @@ var Site = {
 
 		hash.forEach(function(item) {
 			offset = item.indexOf("=");
-			params[item.slice(0, offset)] = item.slice(++offset);
+			params[item.slice(0, offset)] = decodeURIComponent(item.slice(++offset));
 		});
 
 		return param ? params[param] : params;
