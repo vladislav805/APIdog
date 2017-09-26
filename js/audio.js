@@ -155,6 +155,8 @@ var Audios = {
 
 	TIME_STR_NON_STARTED: "00:00",
 
+	KEY_AUDIO_VOLUME: "audio-vol",
+
 	/**
 	 * Route
 	 */
@@ -206,15 +208,14 @@ var Audios = {
 					filter: function(q, audio) {
 						return ~audio.artist.toLowerCase().indexOf(q) || ~audio.title.toLowerCase().indexOf(q);
 					}
-				}),
-				loader = Site.Loader(true),
-				list = $.e("div", {"class": "audios-list", append: [sl.getNode(), loader]}),
+				}).setState(SmartList.state.LOADING),
+				list = $.e("div", {"class": "audios-list", append: sl.getNode()}),
 				tabs = Audios.getTabs(options.ownerId),
 				wrap = $.e("div", {"class": "audios-wrap", append: [tabs, list]});
 
 			Site.append(wrap);
 
-			resolve({list: list, sl: sl, loader: loader, ownerId: options.ownerId, albumId: options.albumId});
+			resolve({list: list, sl: sl, ownerId: options.ownerId, albumId: options.albumId});
 		});
 	},
 
@@ -283,10 +284,9 @@ var Audios = {
 
 	/**
 	 * Show audio list
-	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int, loader: HTMLElement}} obj
+	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int}} obj
 	 */
 	show: function(obj) {
-		$.elements.remove(obj.loader);
 		obj.sl.setData(obj.data);
 	},
 
@@ -506,6 +506,15 @@ var Audios = {
 	 * @param {VKAudio} audio
 	 */
 	download: function(audio) {
+		var url = audio.url,
+			title = audio.artist + " - " + audio.title + ".mp3";
+
+		if ("download" in $.e("a")) {
+			console.log('download')
+			$.e("a" , {href: url, target: "_blank", download: title}).click();
+		} else {
+			window.open("api-v3.php?method=vk.downloadAudio&audio=" + audio.owner_id + "_" + audio.id);
+		}
 
 	},
 
@@ -741,16 +750,16 @@ var Audios = {
 			});
 		},
 
-		Share: function() {
-			window.location.hash = "#mail?attach=audio" + Audios.currentAudioFullID; // TODO rewrite to share
+		share: function() {
+			var ids = Audios.getCurrent().split("_");
+			//noinspection JSCheckFunctionSignatures
+			share("audio", ids[0], ids[1], null, null, {wall: true, user: true, group: true});
 		}
 
 	},
 
 
 
-
-	KEY_AUDIO_VOLUME: "audio-vol",
 
 	/**
 	 * Start track playing
@@ -1093,9 +1102,7 @@ console.log(list);
 		meta.list.parentNode.insertBefore(Site.getPageHeader(strResults), meta.list);
 		meta.list.parentNode.insertBefore(form, meta.list);
 
-		if (q.query) {
-			Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
-		}
+		Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
 	},
 
 	/**
@@ -1104,6 +1111,7 @@ console.log(list);
 	 * @returns {Promise.<{sl: SmartList, query: Audios.getSearchQuery, header: HTMLElement}>}
 	 */
 	requestSearch: function(meta) {
+		meta.sl.setState(SmartList.state.LOADING);
 		return api("audio.search", {
 			q: meta.query.query,
 			performer_only: meta.query.performerOnly,
@@ -1312,11 +1320,9 @@ console.log(list);
 
 	/**
 	 * Show list of radio stations
-	 * @param {{list: HTMLElement, loader: HTMLElement, sl: SmartList, data: {count: int, items: RadioStation[], cities: RadioCity[]}}} meta
+	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: RadioStation[], cities: RadioCity[]}}} meta
 	 */
 	showRadio: function(meta) {
-		$.elements.remove(meta.loader);
-
 		var cities = (function(a, b) {
 			a.forEach(function(c) {
 				b[c.cityId] = c;
