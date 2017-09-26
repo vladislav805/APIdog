@@ -163,8 +163,7 @@ var Audios = {
 
 		switch (Site.get("act")) {
 			case "search":
-				Audios.showSerachPage();
-				break;
+				return Audios.page({ownerId: API.userId}).then(Audios.insertSearchForm);
 
 			case "broadcasts":
 				return Audios.page({ownerId: API.userId, playlist: "broadcast"}).then(Audios.requestBroadcasts).then(Audios.showBroadcasts);
@@ -1026,88 +1025,113 @@ console.log(list);
 		meta.sl.setGetItemListNode(item).setData(meta.data);
 	},
 
+	/**
+	 * Returns query params
+	 * @returns {{query: string, performerOnly: int, lyricsOnly: int, sort: int}}
+	 */
+	getSearchQuery: function() {
+		var q = Site.get();
+		return {
+			query: q.query || "",
+			performerOnly: q.performerOnly || 0,
+			lyricsOnly: q.lyricsOnly || 0,
+			sort: q.sort || 2
+		};
+	},
 
+	/**
+	 * Insert to prepared page search form
+	 * @param {{ownerId: int, list: HTMLElement, sl: SmartList}} meta
+	 * @returns {Promise.<{ownerId: int, list: HTMLElement, sl: SmartList}>}
+	 */
+	insertSearchForm: function(meta) {
+		var e = $.e,
+			q = Audios.getSearchQuery(),
+			fldPerformer,
+			fldLyrics,
+			strResults = $.e("div", {html: Lang.get("audio.searchTitle")}),
+			form = Site.createInlineForm({
+				type: "search",
+				name: "q",
+				value: q.query,
+				placeholder: Lang.get("audio.searchFieldPlaceholder"),
+				title: "Поиск",
+				onsubmit: function(event) {
+					event.preventDefault();
 
+					q.query = this.q.value.trim();
+					q.lyricsOnly = +fldLyrics.checked;
+					q.performerOnly = +fldPerformer.checked;
 
+					window.history.replaceState(null, document.title, "#audio?act=search&" + Object.toQueryString(q));
+					Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
+					return false;
+				}
+			});
 
-
-
-
-
-	lastSearched: ["",0,0],
-
-	showSerachPage: function () {
-		var e = $.e, list,
-			parent = e("div", {append: [
-				Site.getPageHeader("Поиск"),
-				Audios.getRightPanel(),
-				form = Site.createInlineForm({
-					type: "search",
-					name: "q",
-					value: Site.Get("q") || Audios.lastSearched[0] || "",
-					placeholder: "Поиск..",
-					title: "Поиск",
-					onsubmit: function (event) {
-						var query = $.trim(this.q.value),
-							performer = !!this.performer.checked,
-							lyrics = !!this.lyrics.checked;
-						Audios.lastSearched = [query, performer, lyrics];
-						Audios.doSearch(query, performer, lyrics, 0, list);
-						return false;
-					}
-				}),
-				list = e("div", {id: "audio-search-list"})
-			]});
 		form.appendChild(e("div", {"class": "sf-wrap", append: [
 			e("label", {
 				append: [
-					e("input", {type: "checkbox", name: "performer"}),
+					fldPerformer = e("input", {type: "checkbox", name: "performer"}),
 					e("span", {html: " только по исполнителям"})
 				]
 			}),
 			e("label", {
 				append: [
-					e("input", {type: "checkbox", name: "lyrics"}),
+					fldLyrics = e("input", {type: "checkbox", name: "lyrics"}),
 					e("span", {html: " только с текстом"})
 				]
-			})]
-		}));
-		form.id = "audio-search";
-		Site.append(parent);
-		Site.setHeader("Поиск аудиозаписей");
-		var q;
-		if (Audios.lastSearched[0] && (q = Audios.lastSearched)) {
-			Audios.doSearch(q[0], q[1], q[2], 0, list);
+			})
+
+			/**
+			 * А поиск пусть останется незадокументированной фичей ;)
+			 * Хотя додуматься о нем не составит труда: в адресе он всегда будет выводиться
+			 */
+
+		]}));
+
+		meta.list.parentNode.insertBefore(Site.getPageHeader(strResults), meta.list);
+		meta.list.parentNode.insertBefore(form, meta.list);
+
+		if (q.query) {
+			Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
 		}
 	},
-	doSearch: function (query, onlyPerformer, onlyWithLyrics, offset, list) {
-		Site.API("audio.search", {
-			q: query,
-			performer_only: +onlyPerformer,
-			lyrics: +onlyWithLyrics,
-			//auto_complete: 1,
-			count: 40,
-			offset: getOffset()
-		}, function (data) {
-			data = Site.isResponse(data);
-			var lid = +new Date(),
-				wrap = $.e("div"),
-				id,
-				item,
-				count = data[0];
-			Audios.Lists[lid] = [];
-			for (var i = 1; i < data.length; ++i) {
-				item = data[i];
-				id = item.owner_id + "_" + (item.aid || item.id);
-				//wrap.appendChild(Audios.Item(item, {lid: lid, from: 64, add: true}));
-				
-			}
-			wrap.appendChild(Site.getSmartPagebar(getOffset(), count > 1000 ? 1000 : count, 40));
-			list = list || $.element("audio-search-list");
-			$.elements.clearChild(list);
-			list.appendChild(wrap);
+
+	/**
+	 * Request for search audios
+	 * @param {{sl: SmartList, query: Audios.getSearchQuery, header: HTMLElement}} meta
+	 * @returns {Promise.<{sl: SmartList, query: Audios.getSearchQuery, header: HTMLElement}>}
+	 */
+	requestSearch: function(meta) {
+		return api("audio.search", {
+			q: meta.query.query,
+			performer_only: meta.query.performerOnly,
+			lyrics: meta.query.lyricsOnly,
+			sort: meta.query.sort,
+			count: 200,
+			v: 5.63
+		}).then(function(data) {
+			meta.data = data;
+			return meta;
 		});
 	},
+
+	/**
+	 * Show search results
+	 * @param {{sl: SmartList, query: Audios.getSearchQuery, header: HTMLElement, data: {count: int, items: VKAudio[]}}} meta
+	 */
+	showSearchResults: function(meta) {
+		meta.header.textContent = Lang.get("audio.searchHeadResult").schema({
+			n: meta.data.count,
+			w: Lang.get("audio.searchAudios", meta.data.count)
+		});
+
+		meta.sl.setData(meta.data);
+	},
+
+
+
 
 
 
@@ -1158,67 +1182,6 @@ console.log(list);
 	},
 
 
-	showModalInfoItem: function (ownerId, audioId) {
-		var w,
-			modal = new Modal({
-				title: "Аудиозапись",
-				content: w = $.e("div", {append: Site.Loader(true)}),
-				footer: [
-					{
-						name: "ok",
-						title: "Закрыть",
-						onclick: function (event) {
-							modal.close();
-						}
-					}
-				]
-			}).show(),
-			id = ownerId + "_" + audioId,
-			audio = Audios.Storage[id],
-
-			showInfo = function (audio) {
-				var e = $.e,
-					parent = e("div"),
-					actions = [
-						{
-							label: "Редактировать",
-							url: "#audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId + "&action=edit",
-							hide: !(API.userId == ownerId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin),
-							callback: function (event) {
-								modal.close();
-							}
-						}
-					];
-				actions.forEach(function (link) {
-					var attributes = {"class": "list-item"};
-					if (link.hide) attributes["class"] += " hidden";
-					if (link.url) attributes.href = link.url;
-					if (link.callback) attributes.onclick = link.callback;
-					attributes.html = link.label;
-					if (link.attribute) attributes[link.attribute[0]] = link.attribute[1];
-					parent.appendChild(e("a", attributes));
-				});
-				if (audio.text) {
-					parent.appendChild(Site.getPageHeader("Текст аудиозаписи"));
-					parent.appendChild(e("div", {"class": "audio-text", html: Site.toHTML(audio.text)}));
-				}
-				$.elements.clearChild(w).appendChild(parent);
-				w.parentNode.style.padding = "0";
-			};
-
-		if (!audio || audio.lyrics_id && !audio.text) {
-			Site.API("execute", {
-				code: "var a=API.audio.getById({audios:\"" + id + "\"})[0],o=a.owner_id;return{a:a,h:(o>0?API.users.getById({user_ids:o,fields:\"online\"}):API.groups.getById({group_ids:-o}))[0],l:API.audio.getLyrics({lyrics_id:a.lyrics_id}).text};"
-			}, function (data) {
-				data = Site.isResponse(data);
-				data.a.text = data.l;
-				Audios.Storage[data.a.owner_id + "_" + (data.a.aid || data.a.id)] = data.a;
-				showInfo(data.a);
-			});
-		} else {
-			showInfo(audio);
-		}
-	},
 
 	editAudio: function (ownerId, audioId)
 	{

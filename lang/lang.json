@@ -4356,6 +4356,15 @@
 	"audio.lyricsTitle": ["Текст песни", "Lyrics", null],
 	"audio.broadcastTitle": ["Трансляции", "Broadcasts", null],
 	"audio.popularTitle": ["Популярное", "Popular", null],
+	"audio.searchTitle": ["Поиск", "Search", null],
+	"audio.searchFieldPlaceholder": ["Название, исполнитель..", "Name of track, performer..", null],
+	"audio.searchHeadResult": ["Найдено %n %w", "Found %n %w", null],
+	"audio.searchAudios": [["трек", "трека", "треков"], ["track", "tracks", "tracks"], null],
+	"audio.searchParamPerformerOnly": ["только исполнитель", "by performer", null],
+	"audio.searchParamWithLyricsOnly": ["только с текстом", "only with lyrics", null],
+	"audio.searchParamSortPopular": ["по популярности", "by popular", null],
+	"audio.searchParamSortDuration": ["по длительности", "by duration", null],
+	"audio.searchParamSortUpload": ["по дате загрузки", "by date of upload", null],
 
 
 
