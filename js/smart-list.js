@@ -162,6 +162,11 @@ SmartList.prototype = {
 		return this;
 	},
 
+	setGetItemListNode: function(fx) {
+		this.mGetItemListNode = fx;
+		return this;
+	},
+
 	setOptionsItemListCreator: function(obj, value) {
 		if (value === undefined) {
 			this.mOptionsItemListCreator = obj;
