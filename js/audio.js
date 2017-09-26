@@ -180,7 +180,6 @@ var Audios = {
 			case "radio":
 				return Audios.page({ownerId: API.userId}).then(Audios.requestRadio).then(Audios.showRadio);
 
-
 			case "albums":
 				return Audios.getAlbums(ownerId);
 

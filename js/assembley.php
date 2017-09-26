@@ -11,8 +11,17 @@
 		}
 	}
 
-	readfile("../lib/hammer.js");
-	readfile("../lib/sugar.min.js");
+
+
+	$list = scanDir("../lib");
+
+	foreach ($list as $file) {
+		if (!in_array($file, $ignore)) {
+			readfile("../lib/" . $file);
+		}
+	}
+
+
 	readfile("http://api.vlad805.ru/v2/external.js");
 
 	exit;
