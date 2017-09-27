@@ -1,16 +1,36 @@
 /**
+ * @type {{
+ *     type: int,
+ *     name: string,
+ *     title: string,
+ *     value: string,
+ *     checked: boolean=,
+ *     items: object[]
+ *     items: object[]
+ * }}
+ */
+var EditItemField = {};
+
+/**
  * Universal edit-window
  * Created 10.01.2016
+ * @param {{
+ *     title: string,
+ *     isEdit: boolean,
+ *     items: *[],
+ *     validate: boolean=,
+ *     onSave: function,
+ *     onValidFail: function,
+ *     fromNode: HTMLElement=
+ * }} o
+ * @constructor
  */
-
 function EditWindow (o) {
 	o = o || {};
 
-	this.isLangPhrases = !!o.lang;
-
 	// userdata
 	this.items = o.items;
-	this.validate = !!o.validate;
+	this.validate = o.validate;
 
 	// events
 	this.onSave = o.onSave;
@@ -28,7 +48,7 @@ function EditWindow (o) {
 	// initialize
 	this.init(o);
 	this.populate();
-};
+}
 
 EditWindow.prototype = {
 
@@ -40,7 +60,7 @@ EditWindow.prototype = {
 			footer: [
 				{
 					name: "save",
-					title: o.isEdit ? this.label("general.save", true) : this.label(o.save),
+					title: o.isEdit ? this.label("general.save") : this.label(o.save),
 					onclick: function() {
 						self.onSubmit();
 						this.close();
@@ -48,7 +68,7 @@ EditWindow.prototype = {
 				},
 				{
 					name: "close",
-					title: this.label("general.cancel", true),
+					title: this.label("general.cancel"),
 					onclick: function() {
 						this.close();
 					}
@@ -57,8 +77,8 @@ EditWindow.prototype = {
 		}).show(this.fromNode || false);
 	},
 
-	label: function(key, forceLang) {
-		return this.isLangPhrases || forceLang ? Lang.get(key) : key;
+	label: function(key) {
+		return Lang.get(key);
 	},
 
 	populate: function() {
@@ -78,20 +98,21 @@ EditWindow.prototype = {
 
 				case APIDOG_UI_EW_TYPE_ITEM_SELECT:
 					node = e("select", {name: i.name, append: i.items.map(function(s) {
-						if (s.value == i.value) {
+						if (s.value === i.value) {
+							//noinspection JSUndefinedPropertyAssignment
 							s.selected = true;
-						};
+						}
 						return e("option", s);
 					})});
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_CHECKBOX:
 				case APIDOG_UI_EW_TYPE_ITEM_RADIO:
-					tmp = {type: i.type == APIDOG_UI_EW_TYPE_ITEM_CHECKBOX ? "checkbox" : "radio", name: i.name, value: i.value};
+					tmp = {type: i.type === APIDOG_UI_EW_TYPE_ITEM_CHECKBOX ? "checkbox" : "radio", name: i.name, value: i.value};
 
 					if (i.checked) {
 						tmp.checked = true;
-					};
+					}
 
 					node = e("label", {append: [
 						e("input", tmp),
@@ -103,12 +124,12 @@ EditWindow.prototype = {
 					node = i.node;
 					node._getValue = i.getValue;
 					break;
-			};
+			}
 
 			node.setAttribute("data-apt", i.type);
 
 			wrap = e("div", {append: [
-				i.type != APIDOG_UI_EW_TYPE_ITEM_CHECKBOX && i.type != APIDOG_UI_EW_TYPE_ITEM_RADIO
+				i.type !== APIDOG_UI_EW_TYPE_ITEM_CHECKBOX && i.type !== APIDOG_UI_EW_TYPE_ITEM_RADIO
 					? e("div", {"class": "tip tip-form", html: that.label(i.title)})
 					: null,
 				that.nodes[i.name] = node
@@ -121,11 +142,11 @@ EditWindow.prototype = {
 	onSubmit: function() {
 		if (this.state) {
 			return;
-		};
+		}
 
 		if (this.validate && !this.checkValidForm()) {
 			this.onValidFail && this.onValidFail();
-		};
+		}
 
 		this.lock();
 		this.onSave && this.onSave(this.getValues(), this.modal);
@@ -144,7 +165,7 @@ EditWindow.prototype = {
 	},
 
 	getValues: function() {
-		var nodes = this.nodes, data = {}, items = this.items, value, node;
+		var nodes = this.nodes, data = {}, value, node;
 		Object.keys(this.nodes).forEach(function(key) {
 			node = nodes[key];
 			switch (+node.getAttribute("data-apt")) {
@@ -168,7 +189,7 @@ EditWindow.prototype = {
 
 				default:
 					value = null;
-			};
+			}
 
 			data[key] = value;
 		});
