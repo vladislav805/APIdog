@@ -1767,6 +1767,10 @@ DropDownMenu.prototype = {
 		})
 	},
 
+	/**
+	 * Returns original root node
+	 * @returns {HTMLElement}
+	 */
 	getNode: function() {
 		return this.mNodeWrap;
 	}

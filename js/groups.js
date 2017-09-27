@@ -5,6 +5,7 @@ var Groups = {
 			case "invites":
 				return Groups.invites.page().then(Groups.invites.load).then(Groups.invites.show);
 
+// TODO
 			case "search":
 				if(!Site.Get("q"))
 					return [Site.Loader(), Groups.Search()];
@@ -16,50 +17,10 @@ var Groups = {
 					});
 
 			case "recommends":
-				Site.APIv5("newsfeed.getSuggestedSources", {
-					offset: getOffset(),
-					count: 40,
-					v: 5.29,
-					shuffle: 1,
-					fields: "members_count,photo_50,verified,online"
-				}, function (data) {
-					data = Site.isResponse(data);
-					var parent = document.createElement("div"),
-						list = document.createElement("div"),
-						tabs = [
-							["groups", "Все <i class='count'>" + formatNumber(Groups.groupsList[API.userId] && Groups.groupsList[API.userId].count || "") + "<\/i>"]
-						],
-						count = data.count,
-						data = data.items,
-						admins = 0;
-					Local.add(data);
-					if (Groups.groupsList[API.userId] && Groups.groupsList[API.userId].items)
-						for (var i = 0, l = Groups.groupsList[API.userId].items.length; i < l; ++i)
-							if (Groups.groupsList[API.userId].items[i].is_admin)
-								admins++;
-					if (admins > 0)
-						tabs.push(["groups?section=admin", "Управление <i class='count'>" + admins + "</i>"]);
-					if (Site.counters && Site.counters.groups > 0)
-						tabs.push(["groups?act=invites", "Приглашения <i class='count'>" + Site.counters.groups + "</i>"]);
-					tabs.push(["groups?act=recommends", "Рекомендованное"]);
-					tabs.push(["groups?act=search", "Поиск"]);
-					parent.appendChild(Site.getTabPanel(tabs));
-					parent.appendChild(Site.getPageHeader("Рекомендуемые сообщества"));
-					for (var i = 0; i < data.length; ++i)
-						if (data[i].type != "profile")
-							list.appendChild(Groups.Item(data[i], {noDeleteButton: userId != API.userId}));
-						else
-							list.appendChild((function (item, elem) {
-								elem.innerHTML = '<img src="'+getURL(item.photo_50)+'" alt="" class="friends-left" \/><div class="friends-right"><strong>'+item.first_name+' '+item.last_name + " " + Site.isVerify(data[i]) + " " + Site.isOnline(data[i]) + '<\/strong><\/div>';
-								return elem;
-							})(data[i], $.elements.create("a", {"class": "groups-item",href:"#"+(data[i].screen_name||"id"+data[i].id)})));
-					parent.appendChild(list);
-					parent.appendChild(Site.getSmartPagebar(getOffset(), count, 40));
-					Site.setHeader("Рекомендуемые сообщества");
-					Site.append(parent);
-				});
+				Groups.recommendations.page().then(Groups.recommendations.load).then(Groups.recommendations.show);
 				break;
 
+// TODO
 			case "create":
 				Groups.showCreateForm();
 				break;
@@ -83,6 +44,37 @@ var Groups = {
 		}
 	},
 
+	getTabs: function(ownerId) {
+		var list = Groups.groupsList[ownerId],
+			tabs = [
+				[API.userId === ownerId ? "groups" : "groups?userId=" + ownerId, Lang.get("groups.tabAll"), list ? list.count : 0]
+			],
+			adminCount = 0;
+
+		if (list) {
+			for (var i = 0, item; item = list.items[i]; ++i) {
+				if (ownerId === API.userId && item.is_admin) {
+					adminCount++;
+				}
+			}
+		}
+
+		if (ownerId === API.userId) {
+			if (adminCount > 0) {
+				tabs.push(["groups?section=admin", Lang.get("groups.tabManage"), adminCount]);
+			}
+
+			if (Site.counters && Site.counters.groups > 0) {
+				tabs.push(["groups?act=invites", Lang.get("groups.tabInvites"), Site.counters.groups]);
+			}
+
+			tabs.push(["groups?act=recommends", Lang.get("groups.tabSuggestions")]);
+			tabs.push(["groups?act=search", Lang.get("groups.tabSearch")]);
+		}
+
+		return Site.getTabPanel(tabs);
+	},
+
 	groupsList: {},
 
 	/**
@@ -95,16 +87,13 @@ var Groups = {
 
 		var wrap = $.e("div"),
 
-			tabs = [
-				[API.userId === ownerId ? "groups" : "groups?userId=" + ownerId, "Все", list.count]
-			],
 			adminCount = 0,
 			onlyAdmin = Site.get("section") === "admin",
 
 			realList = Object.assign({}, list),
 
-			LGusers = Lang.get("groups.members_followers"),
-			LGfollowers = Lang.get("groups.members_members");
+			LgUsers = Lang.get("groups.members_followers"),
+			LgFollowers = Lang.get("groups.members_members");
 
 		if (onlyAdmin) {
 			realList.items = list.items.filter(function(group) {
@@ -140,7 +129,7 @@ var Groups = {
 				},
 
 				getSubtitle: function(c) {
-					return (c.members_count ? formatNumber(c.members_count) + " " + $.textCase(c.members_count, c.type === "page" ? LGfollowers : LGusers) : "");
+					return (c.members_count ? formatNumber(c.members_count) + " " + $.textCase(c.members_count, c.type === "page" ? LgFollowers : LgUsers) : "");
 				},
 			},
 
@@ -158,22 +147,9 @@ var Groups = {
 			}
 		}
 
-		if (ownerId === API.userId) {
-			if (adminCount > 0) {
-				tabs.push(["groups?section=admin", "Управление", adminCount]);
-			}
-
-			if (Site.counters && Site.counters.groups > 0) {
-				tabs.push(["groups?act=invites", "Приглашения", Site.counters.groups]);
-			}
-
-			tabs.push(["groups?act=recommends", "Рекомендованное"]);
-			tabs.push(["groups?act=search", "Поиск"]);
-		}
-
 		var count = !onlyAdmin ? list.count : adminCount;
 
-		wrap.appendChild(Site.getTabPanel(tabs));
+		wrap.appendChild(Groups.getTabs(ownerId));
 		wrap.appendChild(Site.getPageHeader(
 			count + " " + $.textCase(count, ["группа", "группы", "групп"]),
 			ownerId === API.userId ? $.e("a", {"class": "fr", onclick: Groups.showCreateForm, html: "Создать группу"}) : null
@@ -500,9 +476,11 @@ var Groups = {
 				nodeInfo.appendChild(infoRow("Город", group.city.title));
 			} else if (group.place) {
 				group.place.title = group.place.title || "Место";
-				var map = Wall.getGeoAttachment({place: group.place, coordinates: group.place.latitude + " " + group.place.longitude}, false);
-				map.className = "group-info-item";
-				map.style.marginBottom = "5px";
+
+				/** @var {Geo} place */
+				var place = {place: group.place, coordinates: group.place.latitude + " " + group.place.longitude};
+
+				var map = Wall.getGeoAttachment(place, false);
 				nodeInfo.appendChild(map);
 			}
 
@@ -515,7 +493,7 @@ var Groups = {
 
 			var links = [
 				{
-					link: group.screen_name + "?act=members",
+					link: "#search?group_id=" + groupId,
 					label: "Участники",
 					count: group.members_count
 				},
@@ -586,10 +564,15 @@ var Groups = {
 			}
 		}
 
-		Site.setHeader({page: "Страница", group: "Группа", event: "Встреча"}[group.type] +" " + getName(group.name));
+		Site.setHeader(Lang.get("group.")[group.type] +" " + getName(group.name));
 		Site.append(wrap);
 	},
 
+	/**
+	 * Returns ability items actions
+	 * @param {User} group
+	 * @returns {HTMLElement}
+	 */
 	getActions: function(group) {
 		var p = {};
 
@@ -692,7 +675,7 @@ var Groups = {
 
 	/**
 	 * Open modal window and request data for links of group
-	 * @param {object[]} data
+	 * @param {GroupContact[]} data
 	 */
 	showLinks: function(data) {
 		var modal = new Modal({
@@ -731,7 +714,10 @@ var Groups = {
 		}).show();
 	},
 
-
+	/**
+	 * Show modal with information about contacts
+	 * @param {GroupContact[]} contacts
+	 */
 	showContacts: function(contacts) {
 		var modal = new Modal({
 			title: "Контакты",
@@ -768,7 +754,7 @@ var Groups = {
 	},
 
 
-	getRequests: function (screenName) {
+	getRequests: function(screenName) {
 		api("execute", {
 			code: "var g=API.utils.resolveScreenName({screen_name:Args.s,v:5.28}),i;if(g.type!=\"group\")return{};i=g.object_id;return{i:i,g:API.groups.getById({group_id:i,v:5.28}),r:API.groups.getRequests({group_id:i,count:50,offset:parseInt(Args.o),fields:Args.f,v:5.28})};",
 			s: screenName,
@@ -834,6 +820,12 @@ var Groups = {
 		Site.setHeader("Заявки на вступление", {link: group.screen_name});
 	},
 
+	/**
+	 * Request for approve user request for invite
+	 * @param {int} groupId
+	 * @param {int} userId
+	 * @returns {Promise}
+	 */
 	approveRequest: function(groupId, userId) {
 		return api("groups.approveRequest", {
 			group_id: groupId,
@@ -841,77 +833,28 @@ var Groups = {
 		});
 	},
 
+	/**
+	 * Request for remove user request for invite
+	 * @param opts
+	 * @returns {*}
+	 */
 	removeRequest: function(opts) {
-		return Groups.deleteUser(opts);
+		return Groups.removeMember(opts);
 	},
 
-	deleteUser: function(groupId, userId) {
+	/**
+	 * Request for remove user from group members or remove request for invite
+	 * @param {int} groupId
+	 * @param {int} userId
+	 * @returns {Promise}
+	 */
+	removeMember: function(groupId, userId) {
 		return api("groups.removeUser", {
 			group_id: groupId,
 			user_id: userId
 		});
 	},
 
-	/**
-	 * @deprecated
-	 */
-	Members: function (screen_name, offset) {
-		var sort = Site.Get("sort") || "id_asc";
-		Site.API("execute", {
-			code:'var i=API.utils.resolveScreenName({screen_name:"' + screen_name + '",v:5.24}).object_id;return {members:API.groups.getMembers({group_id:i,count:40,offset:' + offset + ',sort:"' + sort + '",fields:"photo_50,online,screen_name,first_name_gen,last_name_gen",v:5.24%f}),group:API.groups.getById({group_id:i,v:5.24})[0]};'.replace(/%f/img, Site.Get("onlyFriends") ? ",filter:\"friends\"" : "")
-		}, function (data) {
-			var parent = document.createElement("div"),
-				list = document.createElement("list");
-			if (data.error)
-				return Site.Alert({text: "Members is unavailable"});
-			data = Site.isResponse(data);
-			var count = data.members.count,
-				members = data.members.items,
-				group = data.group,
-				groupId = group.id,
-				changeSort = function (sort) {window.location.hash = "#" + screen_name + "?act=members&sort=" + sort;};
-			Local.add(members);
-			parent.appendChild(
-				Site.getPageHeader(
-					Lang.get("groups.members_in_group") + count + " " + Lang.get("groups", "members_members", count),
-					group.is_admin ? Site.CreateDropDownMenu("Сортировка", {
-						"Вошедшие по убыванию": function () {changeSort("time_desc");},
-						"Вошедшие по возврастанию": function () {changeSort("time_asc");},
-						"ID по убыванию": function () {changeSort("id_desc");},
-						"ID по возврастанию": function () {changeSort("id_asc");}
-					}) : null
-				)
-			);
-			parent.appendChild($.e("div", {append: [
-				$.e("div", {style: "width: 50%; display: inline-block", append: Site.createTopButton({tag: "a", link: "search?group_id=" + groupId, title: "Поиск по участникам"})}),
-				$.e("div", {style: "width: 50%; display: inline-block", append: Site.createTopButton({tag: "a", link: "search?birthday=1&group_id=" + groupId, title: "Юбиляры"})})
-			]}));
-			var id, name, wrap;
-			Array.prototype.forEach.call(members, function (m) {
-				id = m.id;
-				name = (m.first_name_gen + " " + m.last_name_gen).safe();
-				list.appendChild(wrap = Templates.getUser(m, {
-					fulllink: true,
-					close: group.is_admin ? (function (i, n, w) { return function (event) {
-						event.preventDefault();
-						if (!confirm("Вы уверены, что хотите удалить " + n + " из группы?"))
-							return;
-						Groups.deleteUser({
-							wrap: w,
-							button: this,
-							groupId: groupId,
-							userId: i
-						});
-						return false;
-					}})(id, name, wrap) : false
-				}));
-			});
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(offset, count, 40));
-			Site.setHeader("Участники", {link: screen_name});
-			Site.append(parent);
-		})
-	},
 
 	invites: {
 
@@ -922,10 +865,14 @@ var Groups = {
 		page: function() {
 			return new Promise(function(resolve) {
 				var sl = new SmartList({
-						data: {count: 0, items: []},
+						data: {count: -1, items: []},
 						countPerPage: 50
 					}),
-					wrap = $.e("div", {append: [Site.Loader(true), sl.getNode()]});
+					wrap = $.e("div", {append: [
+						Groups.getTabs(API.userId),
+						Site.getPageHeader(Lang.get("groups.request_header")),
+						sl.getNode()
+					]});
 
 				Site.setHeader(Lang.get("groups.request_header"), {link: "groups"});
 				Site.append(wrap);
@@ -970,11 +917,65 @@ var Groups = {
 	},
 
 
+	recommendations: {
+
+		/**
+		 * Draw page
+		 * @returns {Promise}
+		 */
+		page: function() {
+			return new Promise(function(resolve) {
+				var parent = $.e("div"),
+					sl = new SmartList({
+						data: {count: -1, items: []},
+						countPerPage: 40
+					});
+
+				parent.appendChild(Groups.getTabs(API.userId));
+				parent.appendChild(Site.getPageHeader(Lang.get("groups.suggestionsTitle")));
+				parent.appendChild(sl.getNode());
+
+				window.onScrollCallback = function(event) {
+					event.needLoading && sl.showNext();
+				};
+
+				Site.setHeader(Lang.get("groups.suggestionsTitle"));
+				Site.append(parent);
+				resolve({sl: sl});
+			});
+		},
+
+		/**
+		 * Request for suggestions
+		 * @returns {Promise}
+		 */
+		load: function(meta) {
+			return api("newsfeed.getSuggestedSources", {
+				count: 100,
+				shuffle: 1,
+				fields: "members_count,photo_50,verified,online",
+				v: 5.56
+			}).then(function(res) {
+				meta.data = res;
+				return meta;
+			});
+		},
+
+		/**
+		 * Show items on page
+		 */
+		show: function(meta) {
+			meta.sl.setData(meta.data);
+		}
+
+	},
+
+
 	/**
 	 * @deprecated
 	 */
 	Search: function () {
-		var parent = document.createElement("div"),
+		var parent = $.e("div"),
 			list = document.createElement("div");
 		list.id = "groups-search-list";
 		var tabs = [

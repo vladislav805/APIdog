@@ -2866,35 +2866,20 @@
 		"Documents",
 		null
 	],
-	"groups.search_founded":[
-		[
-			"Нашлась",
-			"Нашлось",
-			"Нашлось"
-		],
-		null,
-		[
-			"Знайшлась",
-			"Знайшлось",
-			"Знайшлось"
-		]
-	],
-	"groups.search_groups":[
-		[
-			"группа",
-			"группы",
-			"групп"
-		],
-		null,
-		[
-			"група",
-			"групи",
-			"груп"
-		]
-	],
+
+
+	"groups.tabAll": ["Все", "All", null],
+	"groups.tabManage": ["Управление", "Manage", null],
+	"groups.tabInvites": ["Приглашения", "Invites", null],
+	"groups.tabSuggestions": ["Рекомендации", "Suggestions", null],
+	"groups.tabSearch": ["Поиск", "Search", null],
+	"groups.type": [{"page": "Страница", "group": "Группа", "event": "Встреча"}, {"page": "Page", "group": "Group", "event": "Event"}, null],
+	"groups.suggestionsTitle": ["Рекомендуемые страницы", "Suggested pages", null],
+	"groups.search_founded":[["Нашлась", "Нашлось", "Нашлось" ], ["Found", "Found", "Found"], ["Знайшлась", "Знайшлось", "Знайшлось"]],
+	"groups.search_groups":[["группа", "группы", "групп"], ["group", "groups", "groups"], ["група", "групи", "груп"]],
 	"groups.requests_join_success":[
-		"Вы успешно в группу",
-		null,
+		"Вы успешно вступили в группу",
+		"You joined to this group",
 		"Ви успішно в групу"
 	],
 	"groups.requests_decline":[
@@ -3107,6 +3092,11 @@
 		null,
 		" з чорного списку"
 	],
+
+
+
+
+
 	"notifications.users":[
 		[
 			"человек",

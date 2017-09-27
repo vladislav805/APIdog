@@ -60,7 +60,7 @@ var ViewsData = {};
 var PostSource = {};
 
 /**
- * @type {{coordinates: string, showmap: boolean, place: Place, title: string=, onClick: function=}}
+ * @type {{coordinates: string, showmap: boolean=, place: Place, title: string=, onClick: function=}}
  */
 var Geo = {};
 
@@ -293,6 +293,11 @@ var RadioStation = {};
  * @type {{cityId: int, title: string, country: string}}
  */
 var RadioCity = {};
+
+/**
+ * @type {{user_id: int, name: string, phone: string, email: string, desc: string, photo_50: string, url: string}}
+ */
+var GroupContact = {};
 
 /**
  * @type {{url: string, bitrate: int, streamId: int, format: int}}
