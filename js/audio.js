@@ -294,6 +294,9 @@ var Audios = {
 	 */
 	show: function(obj) {
 		obj.sl.setData(obj.data);
+		window.onScrollCallback = function(event) {
+			event.needLoading && obj.sl.showNext();
+		};
 	},
 
 
@@ -882,7 +885,7 @@ var Audios = {
 	 */
 	getCurrentPositionInList: function() {
 		var list = Audios.storage[Audios.currentPlaylistID];
-console.log(list);
+
 		for (var i = 0, l; l = list[i]; ++i) {
 			if (l.owner_id + "_" + l.id === Audios.currentAudioFullID) {
 				return { position: i, previous: !!list[i - 1], next: !!list[i + 1] };
@@ -1107,6 +1110,10 @@ console.log(list);
 
 		meta.list.parentNode.insertBefore(Site.getPageHeader(strResults), meta.list);
 		meta.list.parentNode.insertBefore(form, meta.list);
+
+		window.onScrollCallback = function(event) {
+			event.needLoading && sl.showNext();
+		};
 
 		Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
 	},
