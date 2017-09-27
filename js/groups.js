@@ -494,7 +494,7 @@ var Groups = {
 
 			var links = [
 				{
-					link: "#search?group_id=" + groupId,
+					link: "search?group_id=" + groupId,
 					label: "Участники",
 					count: group.members_count
 				},
