@@ -414,6 +414,13 @@ var Audios = {
 
 		if (audio.owner_id === API.userId) {
 			items.push({
+				label: Lang.get("audio.itemActionEdit"),
+				onclick: function() {
+					Audios.editAudio(audio);
+				}
+			});
+
+			items.push({
 				label: Lang.get("audio.itemActionRemove"),
 				onclick: function() {
 					Audios.remove(audio);
@@ -554,7 +561,7 @@ var Audios = {
 	/**
 	 * Request lyrics by audio object
 	 * @param {{audio: VKAudio, modal: Modal, lyrics}} meta
-	 * @returns {Promise.<{audio: VKAudio, modal: Modal, lyrics: VKAudioLyrics}>}
+	 * @returns {Promise.<{audio: VKAudio, modal: Modal=, lyrics: VKAudioLyrics=}>}
 	 */
 	getLyrics: function(meta) {
 		return api("audio.getLyrics", { lyrics_id: meta.audio.lyrics_id, v: 5.56 }).then(function(data) {
@@ -1203,84 +1210,74 @@ var Audios = {
 	},
 
 
-
-	editAudio: function (ownerId, audioId)
-	{
-		var id = ownerId + "_" + audioId,
-			audio = Audios.Storage[id];
-		if (!audio || audio.lyrics_id && !audio.text) {
-			Site.API("execute", {
-				code: "var a=API.audio.getById({audios:\"%i\"})[0];return{a:a,l:API.audio.getLyrics({lyrics_id:a.lyrics_id}).text};"
-					.replace(/%i/img, id)
-			}, function (data) {
-				data = Site.isResponse(data);
-				data.a.text = data.l;
-				Audios.Storage[data.a.owner_id + "_" + (data.a.aid || data.a.id)] = data.a;
-				Audios.editAudio(ownerId, audioId);
-			});
-			return;
-		}
-		var e = $.e,
-			tip = function (l) { return e("div", {"class": "tip tip-form", html: l}); },
-			artist,
-			title,
-			text,
-			genre,
-			noSearch,
-			wrap = e("div", {append: [
-				Site.getPageHeader("Редактирование аудиозаписи"),
-				form = e("form", {"class": "sf-wrap", append: [
-					tip("Исполнитель:"),
-					artist = e("input", {type: "text", value: audio.artist}),
-					tip("Название:"),
-					title = e("input", {type: "text", value: audio.title}),
-					tip("Жанр:"),
-					genre = e("select", {append: Audios.getGenreOptions()}),
-					e("label", {append: [
-						noSearch = e("input", {type: "checkbox", name: "noSearch"}),
-						e("span", {html: " не выводить в поиске"})
-					]}),
-					tip("Текст:"),
-					text = e("textarea", {html: audio.text}),
-					e("input", {type: "submit", value: "Сохранить"})
-				]})
-			]});
-		if (audio.no_search)
-			noSearch.checked = true;
-		if (audio.genre)
-			genre.selectedIndex = (function (a,b,c,d){for(d=a.length;c++<d;)if(a[c]&&a[c][0]===b)return c})(Audios.genres, audio.genre, 0);
-		$.event.add(form, "submit", function (event)
-		{
-			event.preventDefault();
-
-			Site.API("audio.edit",
+	/**
+	 * Show edit window for audio
+	 * @param {VKAudio} audio
+	 */
+	editAudio: function(audio) {
+		var w = new EditWindow({
+			title: "audio.editWindowTitle",
+			isEdit: true,
+			items: [
 				{
-					owner_id: ownerId,
-					audio_id: audioId,
-					artist: artist.value.trim(),
-					title: title.value.trim(),
-					text: text.value.trim(),
-					genre_id: genre.options[genre.selectedIndex].value,
-					no_search: noSearch.checked ? 1 : 0
+					type: APIDOG_UI_EW_TYPE_ITEM_SIMPLE,
+					name: "artist",
+					title: "audio.editArtist",
+					value: audio.artist
 				},
-				function (data)
 				{
-					if (data.response !== null)
-					{
-						Site.Alert({text: "Сохранено успешно"});
-						audio.artist = artist.value.trim();
-						audio.title = title.value.trim();
-						audio.text = text.value.trim();
-						audio.genre_id = genre.options[genre.selectedIndex].value;
-						audio.no_search = noSearch.checked;
-					}
-					else
-						Site.isResponse(data);
-				});
-			return false;
+					type: APIDOG_UI_EW_TYPE_ITEM_SIMPLE,
+					name: "title",
+					title: "audio.editTitle",
+					value: audio.title
+				},
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_SELECT,
+					name: "genre_id",
+					title: "audio.editGenre",
+					items: Audios.genres.map(function(item) {
+						return {
+							value: item[0],
+							html: item[1]
+						};
+					}),
+					value: audio.genre_id
+				},
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_CHECKBOX,
+					name: "no_search",
+					title: "audio.editNoSearch",
+					checked: audio.no_search
+				},
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_TEXTAREA,
+					name: "text",
+					title: "audio.editText",
+					value: ""
+				}
+			],
+			onSave: function(values, modal) {
+				values.owner_id = audio.ownerId;
+				values.id = audio.id;
+				api("audio.edit", values)
+					.then(function(data) {
+						modal.setContent(Site.getEmptyField("audio.editSuccess")).setFooter("").closeAfter(1500);
+						audio.artist = values.artist;
+						audio.title = values.title;
+						audio.lyrics_id = data; // audio.edit returns id of lyrics after saving
+						audio.genre_id = values.genre_id;
+					});
+			}
 		});
-		Site.append(wrap);
-		Site.setHeader("Редактирование аудиозаписи", {link: "audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId});
+		var text = w.getItemFormNodeByName("text");
+		if (audio.lyrics_id) {
+			text.disabled = true;
+			text.value = "...";
+			Audios.getLyrics({audio: audio}).then(function (meta) {
+				text.value = meta.lyrics.text;
+				text.disabled = false;
+			});
+		}
 	},
 
 	genres: [[0,"---"],[1,"Rock"],[2,"Pop"],[3,"Rap & Hip-Hop"],[4,"Easy Listening"],[5,"Dance & House"],[6,"Instrumental"],[7,"Metal"],[21,"Alternative"],[8,"Dubstep"],[9,"Jazz & Blues"],[10,"Drum & Bass"],[11,"Trance"],[12,"Chanson"],[13,"Ethnic"],[14,"Acoustic & Vocal"],[15,"Reggae"],[16,"Classical"],[17,"Indie Pop"],[19,"Speech"],[22,"Electropop & Disco"],[18,"Other"]],

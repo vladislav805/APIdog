@@ -4220,6 +4220,8 @@
 	"audio.itemActionAdd": ["Добавить к себе", "Add to my audio"],
 	"audio.itemActionShowLyrics": ["Показать текст", "Show lyrics", null],
 	"audio.itemActionShare": ["Поделиться", "Share", null],
+	"audio.itemActionReorder": ["Переместить", "Reorder", null],
+	"audio.itemActionEdit": ["Редактировать", "Edit", null],
 	"audio.itemActionRemove": ["Удалить", "Remove", null],
 	"audio.itemActionDownload": ["Скачать", "Download", null],
 	"audio.itemActionBitrate": ["Узнать битрейт", "Resolve bitrate", null],
@@ -4242,6 +4244,13 @@
 	"audio.warningNonFixed": ["Аудио не пофикшены. Пытаемся исправить...", "Audios are not fixed. Trying fix it...", null],
 	"audio.warningFixDone": ["Выполнили то, что нужно было. Пытаемся получить аудио...", "Done. trying get audios...", null],
 	"audio.warningFixImpossible": ["Не получилось. Попробуйте выбрать другое приложение при авторизации.", "Not works. Check out select other application on authorization page.", null],
+	"audio.editWindowTitle": ["Редактирование аудио", "Edit audio", null],
+	"audio.editArtist": ["Исполнитель", "Artist", null],
+	"audio.editTitle": ["Название", "Title", null],
+	"audio.editGenre": ["Жанр", "Genre", null],
+	"audio.editNoSearch": ["не выводить в поиске", "no display in search", null],
+	"audio.editText": ["Текст", "Text", null],
+	"audio.editSuccess": ["Успешно сохранено", "Successfully saved", null],
 
 
 
