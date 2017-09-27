@@ -1266,104 +1266,35 @@
 		"Report successfully sent!",
 		"Скарга успішно відправлена!"
 	],
-	"friends.friends":[
-		"Друзья",
-		"Friends",
-		"Друзі"
-	],
-	"friends.tabs_all":[
-		"Все друзья",
-		"All friends",
-		"Всі друзі"
-	],
-	"friends.tabs_online":[
-		"Онлайн",
-		"Online",
-		"Онлайн"
-	],
-	"friends.tabs_requests":[
-		"Заявки",
-		"Requests",
-		"Заявки"
-	],
-	"friends.tabs_lists":[
-		"Списки",
-		"Lists",
-		"Списки"
-	],
-	"friends.tabs_suggestions":[
-		"Возможные",
-		"Suggestions",
-		"Можливі"
-	],
-	"friends.tabs_mutual":[
-		"Общие",
-		"Mutual",
-		"Спільні"
-	],
-	"friends.no_friends":[
-		"Ни одного друга",
-		"Not a single friend",
-		"Жодного друга"
-	],
-	"friends.confirm_delete_list":[
-		"Вы уверены, что хотите удалить этот список?",
-		"Are you sure you want to delete this list?",
-		"Ви впевнені, що хочите видалити цей список?"
-	],
+
+
+
+	"friends.friends":["Друзья", "Friends", "Друзі"],
+	"friends.tabs_all":["Все друзья", "All friends", "Всі друзі"],
+	"friends.tabs_online":["Онлайн", "Online", "Онлайн"],
+	"friends.tabs_requests":["Заявки", "Requests", "Заявки"],
+	"friends.tabs_lists":["Списки", "Lists", "Списки"],
+	"friends.tabs_suggestions":["Возможные", "Suggestions", "Можливі"],
+	"friends.tabs_mutual":["Общие", "Mutual", "Спільні"],
+	"friends.no_friends":["Ни одного друга", "Not a single friend", "Жодного друга"],
+	"friends.confirm_delete_list":["Вы уверены, что хотите удалить этот список?", "Are you sure you want to delete this list?", "Ви впевнені, що хочите видалити цей список?"],
 	"friends.success_delete_list":[
 		"Список успешно удален",
 		"The list of successfully removed",
 		"Список успішно видалений"
 	],
 	"friends.friend_s":[
-		[
-			"друг",
-			"друга",
-			"друзей"
-		],
-		[
-			"friend",
-			"friends",
-			"friends"
-		],
-		[
-			"друг",
-			"друга",
-			"друзів"
-		]
+		["друг","друга","друзей"],
+		["friend","friends","friends"],
+		["друг","друга","друзів"]
 	],
-	"friends.add_to_friends":[
-		"Добавить в друзья",
-		"Add to friends",
-		"Додати в друзі"
-	],
-	"friends.adding":[
-		"Добавление..",
-		"Adding..",
-		"Додавання.."
-	],
-	"friends.write":[
-		"Написать",
-		"Write message",
-		"Написати"
-	],
+	"friends.add_to_friends":["Добавить в друзья","Add to friends","Додати в друзі"],
+	"friends.adding":["Добавление..","Adding..","Додавання.."],
+	"friends.write":["Написать","Write message","Написати"],
 	"friends.years":[
-		[
-			"год",
-			"года",
-			"лет"
-		],
-		[
-			"year ago",
-			"years ago",
-			"years ago"
-		],
-		[
-			"рік",
-			"роки",
-			"років"
-		]
+		["год","года","лет"],
+		["year ago","years ago","years ago"],
+		["рік","роки","років"]
 	],
 	"friends.added_sex":[
 		[
@@ -1496,60 +1427,13 @@
 		"Save",
 		"Зберегти"
 	],
-	"friends.prompt_friend_will_be_added_to_chat":[
-		"%f %l будет %a в беседу. Продолжить?",
-		"%f %l will be %a in chat. Continue?",
-		null
-	],
-	"friends.prompt_friend_will_be_added_to_chat_action":[
-		[
-			"приглашено",
-			"приглашена",
-			"приглашен"
-		],
-		[
-			"invited",
-			"invited",
-			"invited"
-		],
-		null
-	],
-	"friends.info_friend_added_to_chat":[
-		"%f %n успешно %a в беседу",
-		"%f %n successfully %a in chat",
-		null
-	],
-	"friends.error_friend_error_adding_to_chat":[
-		"Ошибка. Возможно, %f уже %a в этой беседе и %w её. В таком случае %f может вернуться только самостоятельно. ",
-		"Error. Probably, %f already %a in this chat and %w it. In this case, %f can't be independently. ",
-		null
-	],
-	"friends.error_friend_error_adding_to_chat_action":[
-		[
-			"состояло",
-			"состояла",
-			"состоял"
-		],
-		[
-			"was",
-			"was",
-			"was"
-		],
-		null
-	],
-	"friends.error_friend_error_adding_to_chat_left":[
-		[
-			"само покинуло",
-			"сама покинула",
-			"сам покинул"
-		],
-		[
-			"itself left",
-			"herself left",
-			"himself left"
-		],
-		null
-	],
+	"friends.bdNotifyTitle": ["Напоминание!", "Notification!", null],
+	"friends.bdNotifyDay": [["сегодня", "завтра"], ["today", "tomorrow will"], null],
+	"friends.bdNotifyCelebrating": [["празднует", "празднуют"], ["celebrating", "celebrating"], null],
+	"friends.bdNotifyBirthday": ["день рождения", "birthday", null],
+
+
+
 	"mail.list_dialogs":[
 		[
 			"диалог",

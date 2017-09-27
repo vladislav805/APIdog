@@ -724,7 +724,7 @@ var Friends = {
 		if (!users.length) {
 			nowDate.setDate(nowDate.getDate() + 1);
 			users = getByDate(friends, {d: nowDate.getDate(), m: nowDate.getMonth() + 1});
-			isTomorrow = true;
+			isTomorrow = 1;
 		}
 
 		if (!users.length) {
@@ -742,18 +742,17 @@ var Friends = {
 			text.push(document.createTextNode(i + 2 < l ? ", " : i + 1 !== l ? " и " : ""));
 		}
 		text.push(document.createTextNode([
-			["сегодня", "завтра"][isTomorrow],
-			["празднует", "празднуют"][+(nodes.length > 1)],
-			"день рождения"
+			Lang.get("friends.bdNotifyDay")[isTomorrow],
+			Lang.get("friends.bdNotifyCelebrating")[+(nodes.length > 1)],
+			Lang.get("friends.bdNotifyBirthday")
 		].join(" ")));
 
 		g("birthdays").appendChild($.e("div", {"class": "menu-notify-wrap", append: [
-			$.e("strong", {"class": "menu-notify", html: "Напоминание!"}),
+			$.e("strong", {"class": "menu-notify", html: Lang.get("friends.bdNotifyTitle")}),
 			$.e("div", {style: "padding: 5px", append: text})
 		]}));
 	},
 
-	MONTH_NAMES: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
 	/*getCalendar: function () {
 		if (!Friends.friends[API.userId]) {
 			var callback = arguments.callee;
