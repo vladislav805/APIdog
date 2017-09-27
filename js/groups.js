@@ -453,19 +453,19 @@ var Groups = {
 
 			if (group.start_date) {
 				if (group.type === "event") {
-					nodeInfo.appendChild(infoRow("Начало", $.getDate(group.start_date)));
+					nodeInfo.appendChild(infoRow("Начало", getDate(group.start_date, APIDOG_DATE_FORMAT_FULL)));
 				} else {
 					try {
 						nodeInfo.appendChild(infoRow("Дата создания", (function(a) {
 							var b = /(\d{4})(\d{2})(\d{2})/img.exec(a);
-							return $.getDate(new Date(b[1], b[2] - 1, b[3]) / 1000);
+							return getDate(new Date(b[1], b[2] - 1, b[3]) / 1000, APIDOG_DATE_FORMAT_FULL);
 						})(group.start_date) ));
 					} catch (e) {}
 				}
 			}
 
 			if (group.finish_date) {
-				nodeInfo.appendChild(infoRow("Конец", $.getDate(group.finish_date)));
+				nodeInfo.appendChild(infoRow("Конец", getDate(group.finish_date, APIDOG_DATE_FORMAT_FULL)));
 			}
 
 			if (group.place && group.city && !group.place.title) {
@@ -477,6 +477,7 @@ var Groups = {
 			} else if (group.place) {
 				group.place.title = group.place.title || "Место";
 
+				//noinspection JSValidateTypes
 				/** @var {Geo} place */
 				var place = {place: group.place, coordinates: group.place.latitude + " " + group.place.longitude};
 
@@ -794,7 +795,7 @@ var Groups = {
 							}}),
 							e("input", {type: "button", value: "Отклонить", onclick: function() {
 								var button = this;
-								Groups.removeRequest(groupId, u.id).then(function() {
+								Groups.removeMember(groupId, u.id).then(function() {
 									q.style.opacity = .5;
 									$.elements.remove(button.parentNode);
 								});
@@ -831,15 +832,6 @@ var Groups = {
 			group_id: groupId,
 			user_id: userId
 		});
-	},
-
-	/**
-	 * Request for remove user request for invite
-	 * @param opts
-	 * @returns {*}
-	 */
-	removeRequest: function(opts) {
-		return Groups.removeMember(opts);
 	},
 
 	/**
