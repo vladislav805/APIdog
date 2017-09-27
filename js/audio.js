@@ -191,6 +191,7 @@ var Audios = {
 	 */
 	page: function(options) {
 		return new Promise(function(resolve) {
+			//noinspection JSCheckFunctionSignatures
 			var sl = new SmartList({
 					data: {count: -1, items: []},
 					countPerPage: 100,
@@ -271,7 +272,7 @@ var Audios = {
 	 * @param {TypeError|null} error
 	 */
 	fixAudio: function(meta, error) {
-		console.log(meta);
+		console.log(meta, error);
 		if (meta.warning) {
 			meta.warning.setText(Lang.get("audio.warningFixImpossible")).setDuration(2000);
 			return;
@@ -282,7 +283,7 @@ var Audios = {
 			duration: 6000
 		});
 		meta.warning.show();
-		return APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function(res) {
+		return APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function() {
 			meta.warning.setText(Lang.get("audio.warningFixDone")).setDuration(3000);
 			return Audios.requestAudios(meta);
 		});
@@ -519,7 +520,6 @@ var Audios = {
 			title = audio.artist + " - " + audio.title + ".mp3";
 
 		if ("download" in $.e("a")) {
-			console.log('download')
 			$.e("a" , {href: url, target: "_blank", download: title}).click();
 		} else {
 			window.open("api-v3.php?method=vk.downloadAudio&audio=" + audio.owner_id + "_" + audio.id);
@@ -982,7 +982,7 @@ var Audios = {
 	requestPopular: function(meta) {
 		var genreSelector = $.e("select", {
 			"class": "fr",
-			append: Audios.getGenreNodeArray(),
+			append: Audios.getGenreOptions(),
 			onchange: function() {
 				window.location.hash = "#audio?act=popular&genreId=" + getValue(this);
 			}
@@ -1235,7 +1235,7 @@ var Audios = {
 					tip("Название:"),
 					title = e("input", {type: "text", value: audio.title}),
 					tip("Жанр:"),
-					genre = e("select", {append: Audios.getGenreNodeArray()}),
+					genre = e("select", {append: Audios.getGenreOptions()}),
 					e("label", {append: [
 						noSearch = e("input", {type: "checkbox", name: "noSearch"}),
 						e("span", {html: " не выводить в поиске"})
@@ -1282,22 +1282,31 @@ var Audios = {
 		Site.append(wrap);
 		Site.setHeader("Редактирование аудиозаписи", {link: "audio?act=item&ownerId=" + ownerId + "&audioId=" + audioId});
 	},
+
 	genres: [[0,"---"],[1,"Rock"],[2,"Pop"],[3,"Rap & Hip-Hop"],[4,"Easy Listening"],[5,"Dance & House"],[6,"Instrumental"],[7,"Metal"],[21,"Alternative"],[8,"Dubstep"],[9,"Jazz & Blues"],[10,"Drum & Bass"],[11,"Trance"],[12,"Chanson"],[13,"Ethnic"],[14,"Acoustic & Vocal"],[15,"Reggae"],[16,"Classical"],[17,"Indie Pop"],[19,"Speech"],[22,"Electropop & Disco"],[18,"Other"]],
-	getGenreNodeArray:function(b){b=[];Audios.genres.forEach(function(d){b.push($.e("option",{value:d[0],html:d[1]}))});return b},
-	showUploadForm: function () {
+
+	/**
+	 * Returns array of node options for selector genres
+	 * @returns {HTMLElement[]}
+	 */
+	getGenreOptions: function() {
+		return Audios.genres.map(function(d){return $.e("option",{value:d[0],html:d[1]})});
+	},
+
+	// Будто кто-то будет заливать аудио...
+	showUploadForm: function() {
 		var node = $.e("input", {
 			type: "file",
 			accept: "audio/mp3",
 			multiple: true,
-			onchange: function () {
+			onchange: function() {
 				uploadFiles(node, {
 					maxFiles: 5,
 					method: "audio.getUploadServer"
 				}, {
 					onTaskFinished: function (result) {
 						result.forEach(function (a) {
-							Audios.l2l[API.userId] = null;
-							Audios._Uploaded = a.owner_id + "_" + (a.aid || a.id);
+							// TODO
 						});
 						Site.route("#audio");
 					}
@@ -1429,7 +1438,8 @@ var Audios = {
 			var lines = result.items.map(function(i) {
 				return "#EXTINF:" + i.duration + "," + i.artist + " - " + i.title + "\n" + i.url;
 			});
+			//noinspection ES6ModulesDependencies,JSUnresolvedFunction
 			saveAs(new Blob(["#EXTM3U\n#PLAYLIST:Playlist Name\n" + lines.join("\n")], {type: "audio/x-mpegurl", charset:"utf-8"}), "playlist.m3u8");
 		});
-	},
+	}
 };
