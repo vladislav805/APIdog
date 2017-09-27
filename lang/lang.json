@@ -4365,6 +4365,9 @@
 	"audio.searchParamSortPopular": ["по популярности", "by popular", null],
 	"audio.searchParamSortDuration": ["по длительности", "by duration", null],
 	"audio.searchParamSortUpload": ["по дате загрузки", "by date of upload", null],
+	"audio.warningNonFixed": ["Аудио не пофикшены. Пытаемся исправить...", "Audios are not fixed. Trying fix it...", null],
+	"audio.warningFixDone": ["Выполнили то, что нужно было. Пытаемся получить аудио...", "Done. trying get audios...", null],
+	"audio.warningFixImpossible": ["Не получилось. Попробуйте выбрать другое приложение при авторизации.", "Not works. Check out select other application on authorization page.", null],
 
 
 

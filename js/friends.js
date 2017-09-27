@@ -2,7 +2,7 @@ var Friends = {
 	List: null,
 	Lists: null,
 	explain: function(ownerId) {
-		ownerId = parseInt(ownerId || API.userId);
+		ownerId = parseInt(Site.get("id") || API.userId);
 
 		switch (Site.get("act")) {
 			case "requests":

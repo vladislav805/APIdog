@@ -1279,7 +1279,7 @@ console.log(data.offset);
 					datas.d.push(Docs.getAttachment(o));
 					break;
 				case "link":
-					datas.l = Site.getLinkAttachment(o);
+					datas.l = new VKLink(link).getNodeItem();
 					break;
 				case "gift":
 					datas.g = Gifts.getAttachment(o);

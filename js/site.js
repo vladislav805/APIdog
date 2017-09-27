@@ -157,10 +157,6 @@ var Site = {
 		}
 	},
 
-	getLinkAttachment: function(link) {
-		return new VKLink(link).getNodeItem();
-	},
-
 	getStickerAttachment: function(sticker) {
 		return $.e("img", {
 			style: "margin: 4px 0",
@@ -200,11 +196,14 @@ var Site = {
 	},
 
 
-	route: function (url) {
-		if (Site.get("w") || Site.get("z"))
-			return window.location.hash = "#" + (Site.Get("w") || Site.Get("z"));
+	route: function(url) {
+		if (Site.get("w") || Site.get("z")) {
+			return window.location.hash = "#" + (Site.get("w") || Site.get("z"));
+		}
+
 		document.documentElement.scrollTop = 0;
 		document.body.scrollTop = 0;
+
 		url = url.split("?")[0].replace("#", "");
 		var reg = {
 			Friends:    /^friends?$/ig,
@@ -231,21 +230,21 @@ var Site = {
 			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig
 		};
 
-		if (/^([^\/]+)\/([^\?]+)/img.test(url)) {
-			var r = /^([^\/]+)\/([^\?]+)/img.exec(url);
+		if (/^([^\/]+)\/([^?]+)/img.test(url)) {
+			var r = /^([^\/]+)\/([^?]+)/img.exec(url);
 			switch (r[1]) {
 				case "dev": return Dev.explain(r[2]);
 				case "stickers": return Settings.store.getItem(r[2]);
 				case "analyzes": return Analyzes.open.apply(window, r[2].split("/"));
 				case "images": return window.location.href = "//vk.com/" + url;
-				case "support": return Support.open(url);
 				default: return Feed.searchByOwner(r[1], r[2], getOffset());
 			}
 		}
+
+		//noinspection JSUnresolvedFunction,JSUnresolvedVariable
 		window.ga&&ga('send', 'pageview');
-		if (window.onLeavePage) {
-			window.onLeavePage();
-		}
+		window.onLeavePage && window.onLeavePage();
+
 		window.onResizeCallback = null;
 		window.onKeyDownCallback = null;
 		window.onScrollCallback = null;
@@ -263,24 +262,23 @@ var Site = {
 		Audios.miniPlayer.hide();
 		Menu.hide();
 
-		if (reg.Poll.test(url)) {
-			var poll = reg.Polls.exec(url), answerId = Site.Get("answerId");
-			return !answerId ? Polls.getPoll(poll[1], poll[2]) : Polls.getList(poll[1], poll[2], answerId);
-		}
 		if (reg.Photos.test(url))
 			return Photos.Resolve(url);
 		if (reg.Video.test(url))
 			return Video.Resolve(url);
+
 		if (reg.Audios.test(url))
-			return Audios.Resolve(url);
+			return Audios.route();
+
 		if (reg.Wall.test(url))
 			return Wall.Resolve(url);
-		if (reg.Places.test(url))
-			return Places.explain(url);
+
 		if (reg.Friends.test(url))
-			return Friends.explain(Site.Get("id"));
+			return Friends.explain();
+
 		if ((/^mail$/ig.test(url) || /^im$/ig.test(url)))
 			return IM.Resolve(url);
+
 		if (reg.Pages.test(url))
 			return Pages.explain(url);
 		if (reg.Docs.test(url))

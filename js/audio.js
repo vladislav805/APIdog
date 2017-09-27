@@ -93,11 +93,6 @@ VKAudio.prototype = {
 
 var Audios = {
 
-	Resolve: function() {
-		Audios.RequestPage();
-	},
-
-
 	/**
 	 * Full ID of current audio. Audios.items[<ID>]
 	 * @var {string|null}
@@ -160,7 +155,7 @@ var Audios = {
 	/**
 	 * Route
 	 */
-	RequestPage: function() {
+	route: function() {
 		var ownerId = parseInt(Site.get("ownerId")) || API.userId;
 
 		switch (Site.get("act")) {
@@ -260,24 +255,36 @@ var Audios = {
 			v: 5.56
 		}).then(function(data) {
 			Site.setCounters(data.s);
+
 			if (!data.a || data.a && data.a.items && data.a.items[0] && data.a.items[0].owner_id === 100) {
 				throw new TypeError("Audios is not fixed");
 			}
 			meta.data = data.a;
 			Audios.storage[meta.ownerId] = data.a.items;
 			return meta;
-		});
+		}).catch(Audios.fixAudio.bind(Audios, meta));
 	},
 
 	/**
 	 * Trying fix audio
-	 * @param {TypeError|null} e
+	 * @param meta
+	 * @param {TypeError|null} error
 	 */
-	fixAudio: function(e) {
-		console.error(e);
-		console.info("Fixing..");
-		APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function(res) {
-			console.log("May be fixed. Try reload", res);
+	fixAudio: function(meta, error) {
+		console.log(meta);
+		if (meta.warning) {
+			meta.warning.setText(Lang.get("audio.warningFixImpossible")).setDuration(2000);
+			return;
+		}
+
+		meta.warning = new Snackbar({
+			text: Lang.get("audio.warningNonFixed"),
+			duration: 6000
+		});
+		meta.warning.show();
+		return APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function(res) {
+			meta.warning.setText(Lang.get("audio.warningFixDone")).setDuration(3000);
+			return Audios.requestAudios(meta);
 		});
 	},
 
@@ -1130,7 +1137,7 @@ console.log(list);
 	 */
 	showSearchResults: function(meta) {
 		meta.header.textContent = Lang.get("audio.searchHeadResult").schema({
-			n: meta.data.count,
+			n: formatNumber(meta.data.count),
 			w: Lang.get("audio.searchAudios", meta.data.count)
 		});
 
