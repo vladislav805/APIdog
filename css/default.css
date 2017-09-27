@@ -538,7 +538,7 @@ div.content {
 
 
 #page {
-	overflow: hidden
+
 }
 
 .header--fixed #wrap-content {
@@ -960,70 +960,6 @@ table {
 	border-spacing: 0
 }
 
-.dd-wrap {
-	float: right;
-	position: relative
-}
-
-.dd-wrap * {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-o-user-select: none;
-	user-select: none
-}
-
-.dd {
-	position: absolute;
-	background: #ffffff;
-	box-shadow: 0 1px 1px 1px rgba(147, 159, 176, 0.35);
-	border-top: 1px solid rgba(147, 159, 176, 0.49);
-	display: none;
-	right: -12px;
-	top: -6px;
-	border-radius: 3px;
-	z-index: 9999;
-	overflow: hidden;
-	margin-top: -1px;
-	margin-right: -7px
-}
-
-.dd-title {
-	cursor: pointer;
-	color: #576881
-}
-
-.dd-titlefake,
-.dd-item {
-	padding: 6px 12px 6px 15px;
-
-	font-weight: normal;
-	cursor: pointer;
-	white-space: nowrap;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0)!important;
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0)!important;
-	outline: none!important;
-	display: block
-}
-
-.dd-titlefake {
-	background: #D8DEE4;
-	text-align: right;
-	font-weight: 900;
-	color: #576881!important
-}
-
-.dd-item:hover {
-	background: #f3f3f3
-}
-
-.dd-open {
-	display: block!important
-}
-
-.dd-extra {
-	display: none
-}
 
 
 /* <<<<<<<<<<< */
@@ -1035,7 +971,6 @@ table {
 	border-bottom: 1px solid #dfdfdf;
 	font-weight: 900;
 	z-index: 999;
-	clear: both;
 	text-decoration: none;
 	line-height: 30px;
 	color: #66768F;
@@ -1187,7 +1122,7 @@ body.firefox .s .s-submit input {
  */
 
 .tabs {
-	margin: 8px 12px;
+	padding: 8px 12px;
 }
 
 .tab {
@@ -1604,7 +1539,6 @@ input[type=search].sf {
 
 .group-info-item {
 	padding: 4px 12px;
-	clear: both;
 }
 
 .group-info-name {
