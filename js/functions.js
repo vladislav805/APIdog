@@ -623,9 +623,7 @@ function lz(src, width, height) {
 }
 
 function formatNumber(n) {
-	n = String(n);
-	n = new Array(4 - n.length % 3).join("U") + n;
-	return n.replace(/([0-9U]{3})/g, "$1 ").replace(/U/g, "").trim();
+	return parseInt(n).format(0).replace(/,/, " ");
 }
 
 /**
@@ -1873,12 +1871,26 @@ Snackbar.prototype = {
 		return this;
 	},
 
+	setDuration: function(duration) {
+		this._duration = duration;
+
+		if (this._id) {
+			clearTimeout(this._duration);
+			this._id = setTimeout(function() {
+				self.close();
+			}, this._duration);
+		}
+
+		return this;
+	},
+
 	show: function() {
 		var self = this;
 		this._id = setTimeout(function() {
 			self.close();
 		}, this._duration);
 		getBody().appendChild(this.nodeWrap);
+		return this;
 	},
 
 	close: function() {
@@ -1888,6 +1900,7 @@ Snackbar.prototype = {
 		setTimeout(function() {
 			$.elements.remove(self.nodeWrap);
 		}, 500);
+		return this;
 	},
 
 };
