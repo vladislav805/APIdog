@@ -2,14 +2,12 @@ function VKAudio(a) {
 	this.ownerId = a.owner_id;
 	this.audioId = a.id || a.aid;
 	this.albumId = a.album_id;
-	this.lyricsId = a.lyrics_id;
 	this.artist = a.artist;
 	this.title = a.title;
 	this.duration = a.duration;
-	this.genreId = a.genre_id || a.genre;
+	this.genreId = a.genre_id;
 	this.url = a.url;
 	this.date = a.date;
-	this.isNoSearch = !!a.no_search;
 }
 
 VKAudio.prototype = {
@@ -560,7 +558,7 @@ var Audios = {
 
 	/**
 	 * Request lyrics by audio object
-	 * @param {{audio: VKAudio, modal: Modal, lyrics}} meta
+	 * @param {{audio: VKAudio, lyrics: object=}} meta
 	 * @returns {Promise.<{audio: VKAudio, modal: Modal=, lyrics: VKAudioLyrics=}>}
 	 */
 	getLyrics: function(meta) {
@@ -1119,7 +1117,7 @@ var Audios = {
 		meta.list.parentNode.insertBefore(form, meta.list);
 
 		window.onScrollCallback = function(event) {
-			event.needLoading && sl.showNext();
+			event.needLoading && meta.sl.showNext();
 		};
 
 		Audios.requestSearch({query: q, sl: meta.sl, header: strResults}).then(Audios.showSearchResults);
@@ -1273,7 +1271,7 @@ var Audios = {
 		if (audio.lyrics_id) {
 			text.disabled = true;
 			text.value = "...";
-			Audios.getLyrics({audio: audio}).then(function (meta) {
+			Audios.getLyrics({audio: audio}).then(function(meta) {
 				text.value = meta.lyrics.text;
 				text.disabled = false;
 			});
@@ -1287,11 +1285,11 @@ var Audios = {
 	 * @returns {HTMLElement[]}
 	 */
 	getGenreOptions: function() {
-		return Audios.genres.map(function(d){return $.e("option",{value:d[0],html:d[1]})});
+		return Audios.genres.map(function(d){return $.e("option", {value: d[0], html:d[1]})});
 	},
 
 	// Будто кто-то будет заливать аудио...
-	showUploadForm: function() {
+/*	showUploadForm: function() {
 		var node = $.e("input", {
 			type: "file",
 			accept: "audio/mp3",
@@ -1303,7 +1301,7 @@ var Audios = {
 				}, {
 					onTaskFinished: function (result) {
 						result.forEach(function (a) {
-							// TODO
+
 						});
 						Site.route("#audio");
 					}
@@ -1311,7 +1309,7 @@ var Audios = {
 			}
 		});
 		node.click();
-	},
+	},*/
 
 
 	radio: {},
@@ -1323,7 +1321,7 @@ var Audios = {
 	 */
 	requestRadio: function(meta) {
 		return new Promise(function(resolve) {
-			meta.list.parentNode.insertBefore(Site.getPageHeader("Онлайн-радио", $.e("a", {
+			meta.list.parentNode.insertBefore(Site.getPageHeader(Lang.get("audios.radioTitle"), $.e("a", {
 				"class": "fr",
 				href: "http:\/\/radio.vlad805.ru\/",
 				target: "_blank",
@@ -1353,7 +1351,6 @@ var Audios = {
 			if (item.cityId && cities[item.cityId]) {
 				item["cityName"] = cities[item.cityId].city;
 			}
-			//meta.list.appendChild(Audios.getRadioItem(item, cities));
 			Audios.radio[item.stationId] = item;
 		});
 
