@@ -375,55 +375,36 @@ var Groups = {
 						onclick: Groups.join.bind(null, group, onMemberStateChange.bind(b, true))
 					});
 				return b;
-			};
+			},
+			location = [];
+
+
+		group.country && group.country.title && location.push(group.country.title);
+		group.city && group.city.title && location.push(group.city.title);
 
 		buttons.push(getJoinLeaveButton());
-
 
 		wrap.appendChild(Site.getPageHeader(getName(group), Groups.getActions(group)));
 
 
-		nodeInfo.appendChild($.e("a", {href: "#" + (group.is_admin ? group.screen_name + "?act=photo" : "photos-" + groupId + "_-6"), append: $.e("img", {src: getURL(group.photo_50), "class": "group-left"}) }));
+		wrap.appendChild(e("div", {
+			"class": "profile-info",
+			append: [
+				e("div", {"class": "profile-right", append: [
+					e("div", {"class": "profile-name",
+						html: group.name.safe() + Site.isVerify(group)
+					}),
 
+					Groups.getStatusNode(group),
 
-		nodeInfo.appendChild($.e("div", {"class": "group-right", append: [
-			$.e("strong", {html: getName(group.name) + Site.isVerify(group)}),
-
-			(!group.status_audio ? $.e("div", {
-				"class": (group.is_admin ? "profile-status" : "") + (!group.status ? " tip" : ""),
-				onclick: (function (a) {return (a ? function() {
-					var elem = this;
-					if (elem.opened)
-						return;
-					elem.opened = true;
-					var text = elem.innerHTML;
-					//if (wrap.innerHTML == "изменить статус" && /tip/ig.test(wrap.className))
-					elem.innerHTML = "";
-					elem.appendChild(Site.createInlineForm({
-						name: "text",
-						value: text,
-						onsubmit: function () {
-							var status = this.text.value.trim();
-							elem.opened = false;
-							if (!status){
-								elem.className = 'profile-status tip';
-								elem.innerHTML = Lang.get("profiles.status_change");
-							} else
-								elem.innerHTML = status.safe().emoji();
-
-							Site.API("status.set", {group_id: groupId, text: status}, "blank");
-						},
-						title: Lang.get("profiles.status_changer_complete")
-					}));
-					elem.firstChild.text.focus();
-				} : null);})(group.is_admin, groupId),
-				html: ((group.status.safe().emoji() || "") || (group.is_admin ? Lang.get("profiles.status_change") : ""))
-			}) : (function (a) {
-				//return Audios.Item(a, {from: 2, set: 32, lid: Audios.createList(a).lid, gid: groupId, uid: -groupId});
-			})(group.status_audio)),
-
-			$.e("div", {"class": "group-act", id: "group" + groupId + "_actions", append: buttons})
-		]}));
+					e("div", {"class": "tip", html: location.join(", ")}),
+				]}),
+				e("div", {
+					"class": "profile-left",
+					append: e("a", { href: "#photos-" + groupId + "_-6", append: lz(getURL(group.photo_100 || group.photo_50), 80, 80)})
+				})
+			]
+		}));
 
 // А этот кусок кода писала лично Надя Иванова :3
 		if (group.ban_info) {
@@ -565,7 +546,7 @@ var Groups = {
 			}
 		}
 
-		Site.setHeader(Lang.get("group.")[group.type] +" " + getName(group.name));
+		Site.setHeader(Lang.get("groups.type")[group.type]);
 		Site.append(wrap);
 	},
 
@@ -628,6 +609,82 @@ var Groups = {
 			console.log("toggle fav will ", group.is_favorite);
 			callback && callback();
 		});
+	},
+
+	/**
+	 * Возвращает DOMNode для статуса
+	 * @param  {User} group
+	 * @return {HTMLElement}
+	 */
+	getStatusNode: function(group) {
+		var e = $.e,
+			i = group.is_admin,
+			s = (group.status || ""),
+			a = group.status_audio;
+
+		if (!group.status_audio) {
+			var w = e("div", {
+				"class": (s ? "profile-status" : "") + (!s && i ? " tip" : ""),
+				"data-status": s,
+				html: s.safe().emoji() || (i ? Lang.get("profiles.statusChange") : "")
+			});
+
+			i && w.addEventListener("click", Groups.editStatus.bind(w, group.id));
+
+			return w;
+		} else {
+			return Audios.getListItem(a, {
+				removeBroadcast: i
+			});
+		}
+	},
+
+	/**
+	 * Заменяет поле со статусом на текстовое поле
+	 * Context: DOMNode
+	 */
+	editStatus: function(groupId) {
+		if (this.dataset.opened === "opened") {
+			return;
+		}
+
+		var text = this.dataset.status, node = this;
+		this.dataset.opened = "opened";
+
+		this.innerHTML = "";
+		node.appendChild(Site.createInlineForm({
+			name: "text",
+			value: text,
+			onsubmit: function(event) {
+				event.preventDefault();
+				var fText = this.text,
+					text = fText.value.trim();
+				Groups.setStatus(groupId, text).then(function() {
+					node.dataset.opened = "";
+					node.dataset.status = text;
+					node.innerHTML = text ? text.safe().emoji() : Lang.get("profiles.statusChange");
+
+					if (!text) {
+						node.className = 'profile-status tip';
+					}
+
+//					APINotify.fire(DogEvent.GROUP_STATUS_CHANGED, { text: text, groupId: groupId });
+				});
+				return false;
+			},
+			title: Lang.get("profiles.statusChangeSubmit")
+		}));
+		this.firstChild.text.focus();
+	},
+
+	/**
+	 * Запрос на изменение статуса
+	 * @param {int} groupId
+	 * @param {String} text
+	 * @returns {Promise}
+	 */
+	setStatus: function(groupId, text) {
+		return api("status.set", {group_id: groupId, text: text});
 	},
 
 
