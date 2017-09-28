@@ -328,7 +328,7 @@ var Wall = {
 					};
 				}
 
-				if (post.can_pin) {
+				if (post.can_pin && API.userId === ownerId) {
 					obj["pin"] = {
 						label: post.is_pinned ? "Открепить" : "Закрепить",
 						onclick: function() {
