@@ -5282,6 +5282,10 @@
 			"сторінок"
 		]
 	],
+	"pages.attachmentSunTitle": ["Wiki-страница", "Wiki-page", "Wiki-сторінка"],
+
+
+
 	"settings.save":[
 		"Сохранить",
 		"Save",

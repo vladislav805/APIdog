@@ -1,11 +1,12 @@
 var Pages = {
 
 	getAttachment: function(page) {
-		return $.e("div", {"class": "attachments-page", append: [
-			$.e("div", {"class": "wall-icons wall-icon-page"}),
-			$.e("span", {"class": "tip", html: " Страница "}),
-			$.e("a", {href: "#page-" + page.group_id + "_" + page.id, html: page.title.safe()})
-		]});
+		return getRowAttachment({
+			link: "#page-" + page.group_id + "_" + page.id,
+			title: page.title.safe(),
+			subtitle: Lang.get("pages.attachmentSunTitle"),
+			icon: "page"
+		});
 	},
 
 	explain: function (url) {
