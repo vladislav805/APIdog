@@ -374,7 +374,7 @@ console.log("will be loaded: ", from);
 					load = function() {
 						Mail.loadChunkOfSyncCache(queue[current].compact()).then(function(result) {
 							messages = messages.concat(result.items);
-							queue[++current] ? load() : resolve(messages);
+							queue[++current] ? setTimeout(load, 350) : resolve(messages);
 						}).catch(function (error) {
 							Site.Alert({text: "error while syncing, json: " + JSON.stringify(error)});
 						});
