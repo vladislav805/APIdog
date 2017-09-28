@@ -731,7 +731,7 @@ var Site = {
 						"_" + (type === "wall" ? parent.post.id : parent.id)
 					].join("");
 					iImage = creator.photo_50;
-					iText = "<strong>" + (creator.name || creator.first_name + " " + creator.last_name) + "<\/strong> replied to your comment<br>" + Mail.Emoji(Site.toHTML(feed.text));
+					iText = "<strong>" + getName(creator) + "<\/strong> replied to your comment<br>" + Site.toHTML(feed.text).emoji();
 					iLink = link;
 					break;
 

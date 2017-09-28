@@ -588,13 +588,6 @@ console.log("will be loaded: ", from);
 
 	defaultChatImage: "\/\/static.apidog.ru\/multichat-icon50.png",
 
-	/**
-	 * @deprecated
-	 */
-	Emoji: function (s) {
-		return (s || "").emoji();
-	},
-
 	getActions: function() {
 		var p = {};
 

@@ -1201,7 +1201,7 @@ console.log(data.offset);
 			al: Site.Escape(action.last_name_acc) + "</a>",
 			a: act[init.sex],
 			u: "",
-			t: "<strong>" + Mail.Emoji(Site.Escape(i.action_text)) + "</strong>"
+			t: "<strong>" + i.action_text.safe().emoji() + "</strong>"
 		});
 		t.innerHTML = html;
 		parent.appendChild(t);
@@ -1487,7 +1487,7 @@ console.log(data.offset);
 		item.appendChild($.e("div", {"class": "im-fwd-right", append: [
 			$.e("a", {"class": "bold _im_link_" + user_id, href: "#" + (user ? user.screen_name : "id" + user_id), html: (user ? user.first_name + " " + user.last_name + Site.isOnline(user) : "DELETED DELETED")}),
 			$.e("span", {"class": "im-date-fwd", html: $.getDate(message.date)}),
-			$.e("div", {"class": "im-text", html: !message.action ? Mail.Emoji(Site.toHTML(message.body)) : IM.getStringActionFromSystemVKMessage(message) }),
+			$.e("div", {"class": "im-text", html: !message.action ? Site.toHTML(message.body).emoji() : IM.getStringActionFromSystemVKMessage(message) }),
 			IM.getAttachments(message.attachments, parseInt(new Date() / 1000)),
 			IM.forwardedMessages(message.fwd_messages),
 			message.geo ? IM.getMap(message.geo, {map: true, mail: true}) : null
