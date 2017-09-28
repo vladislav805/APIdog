@@ -39,11 +39,6 @@ var Profile = {
 			bl = user.blacklisted,
 			thumb = user.crop_photo && user.crop_photo.photo && (user.crop_photo.photo.owner_id + "_" + user.crop_photo.photo.id) || user.photo_id;
 
-/*		if (user.deactivated) {
-			friendStatus = 3;
-		}
-*/
-
 		var photo = lz(getURL(user.photo_100 || user.photo_50), 80, 80),
 			isPhoto = user.photo_id,
 			location = [];
@@ -67,7 +62,7 @@ var Profile = {
 				}),
 				e("div", {"class": "profile-right", append: [
 					e("div", {"class": "profile-name",
-						html: user.first_name.safe() + " " + user.last_name.safe() + Site.isOnline(user, 1) + Site.isVerify(user)
+						html: user.first_name.safe() + " " + user.last_name.safe() + Site.isOnline(user) + Site.isVerify(user)
 					}),
 
 					Profile.getStatusNode(user),

@@ -92,7 +92,7 @@ var Place = {};
  *  online_mobile,
  *  online_app,
  *  last_seen,
- *  counters,
+ *  counters: {notes, followers, subscriptions, pages},
  *  activites,
  *  bdate,
  *  can_write_private_message,
