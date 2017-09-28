@@ -1708,18 +1708,16 @@ DropDownMenu.prototype = {
 
 			enable: function() {
 				s.set(label, { isDisabled: false });
+				$.elements.removeClass(s.mItemsNodes[label], DropDownMenu.CLASS_ITEM_DISABLED);
 				return f;
 			},
 
 			disable: function() {
 				s.set(label, { isDisabled: true });
+				$.elements.addClass(s.mItemsNodes[label], DropDownMenu.CLASS_ITEM_DISABLED);
 				return f;
 			},
 
-			/**
-			 * TODO: DO NOT WORK
-			 * @param {string} text
-			 */
 			label: function(text) {
 				s.set(label, { label: text });
 				s.mItemsNodes[label].innerHTML = text;
@@ -1748,7 +1746,7 @@ DropDownMenu.prototype = {
 		return $.e("div", {
 			"class": [
 				"xdd-item",
-				i.isDisabled ? "xdd-item-disabled" : "",
+				i.isDisabled ? DropDownMenu.CLASS_ITEM_DISABLED : "",
 				i.isHidden ? "hidden" : ""
 			].join(" "),
 			"data-label": key,
@@ -1777,6 +1775,7 @@ DropDownMenu.prototype = {
 };
 
 DropDownMenu.CLASS_OPENED = "xdd-opened";
+DropDownMenu.CLASS_ITEM_DISABLED = "xdd-item-disabled";
 
 DropDownMenu.closeAllDropdown = function(event) {
 	var opened = document.querySelectorAll("." + DropDownMenu.CLASS_OPENED),
