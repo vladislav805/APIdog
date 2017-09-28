@@ -345,20 +345,22 @@ AttachmentController.prototype = {
 			 */
 			case APIDOG_ATTACHMENT_DOCUMENT:
 				var documentListNode,
+					documentListGroupNode,
 					documents,
-					loadDocuments = function(callback) {
+					loadDocuments = function(callback, ownerId) {
 						if (documents) {
 							return callback(documents);
 						}
 
-						api("docs.get", {owner_id: self.ownerId, v: 5.52}).then(function(result) {
-							callback(documents = parse(result.items, VKDocument));
+						api("docs.get", {owner_id: ownerId, v: 5.52}).then(function(result) {
+							callback(parse(result.items, VKDocument));
 							self.saveIntoCache(AttachmentController.mediaCache.doc, result.items);
 						});
 					},
 
 					showDocuments = function(documents) {
 						$.elements.clearChild(documentListNode);
+						$.elements.clearChild(documentListGroupNode);
 						var list = $.e("div", {"class": "attacher-list-documents"});
 						documents.forEach(function(doc) {
 							list.appendChild(doc.getNodeItem({
@@ -376,7 +378,7 @@ AttachmentController.prototype = {
 						title: Lang.get("attacher.documentList"),
 						content: documentListNode = $.e("div", { append: getLoader() }),
 						onOpen: function() {
-							loadDocuments(showDocuments);
+							loadDocuments(showDocuments, API.userId);
 						}
 					},
 					{
@@ -390,6 +392,17 @@ AttachmentController.prototype = {
 						content: this.createURLForm(typeId)
 					}
 				];
+
+				if (self.ownerId < 0) {
+					tabs.splice(1, 0, {
+						name: "listOwn",
+						title: Lang.get("attacher.documentListGroup"),
+						content: documentListGroupNode = $.e("div", { append: getLoader() }),
+						onOpen: function() {
+							loadDocuments(showDocuments, self.ownerId);
+						}
+					});
+				}
 				host = new TabHost(tabs, {});
 
 				this.open(button);

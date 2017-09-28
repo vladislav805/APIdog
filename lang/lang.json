@@ -4616,275 +4616,51 @@
 		null,
 		null
 	],
-	"attacher.typeTitle":[
-		"Прикрепить",
-		null,
-		null
-	],
-	"attacher.modalTitle":[
-		"Прикрепить",
-		null,
-		null
-	],
-	"attacher.typePhoto":[
-		"Фотографию",
-		null,
-		null
-	],
-	"attacher.typeVideo":[
-		"Видеозапись",
-		null,
-		null
-	],
-	"attacher.typeAudio":[
-		"Аудиозапись",
-		null,
-		null
-	],
-	"attacher.typeDocument":[
-		"Документ",
-		null,
-		null
-	],
-	"attacher.typeMap":[
-		"Карту",
-		null,
-		null
-	],
-	"attacher.typePoll":[
-		"Опрос",
-		null,
-		null
-	],
-	"attacher.typeLink":[
-		"Ссылку",
-		null,
-		null
-	],
-	"attacher.typeNote":[
-		"Заметку",
-		null,
-		null
-	],
-	"attacher.typePage":[
-		"Wiki-страницу",
-		null,
-		null
-	],
-	"attacher.typeAlbum":[
-		"Альбом",
-		null,
-		null
-	],
-	"attacher.typeTimer":[
-		"Таймер",
-		null,
-		null
-	],
-	"attacher.typeSticker":[
-		"Стикер",
-		null,
-		null
-	],
-	"attacher.photoAlbum":[
-		"Из альбома",
-		null,
-		null
-	],
-	"attacher.photoFile":[
-		"Из файла",
-		null,
-		null
-	],
-	"attacher.photoURL":[
-		"По ссылке",
-		null,
-		null
-	],
-	"attacher.documentList":[
-		"Из документов",
-		null,
-		null
-	],
-	"attacher.documentFile":[
-		"Из файла",
-		null,
-		null
-	],
-	"attacher.documentURL":[
-		"По ссылке",
-		null,
-		null
-	],
-	"attacher.videoList":[
-		"Из списка",
-		null,
-		null
-	],
-	"attacher.audioList":[
-		"Из списка",
-		null,
-		null
-	],
-	"attacher.modalOk":[
-		"Готово",
-		null,
-		null
-	],
-	"attacher.modalCancel":[
-		"Отмена",
-		null,
-		null
-	],
-	"attacher.fileSelect":[
-		"Нажмите сюда для выбора или перетащите сюда файлы",
-		null,
-		null
-	],
-	"attacher.uploadModalTitle":[
-		"Загрузка (%c/%a)",
-		null,
-		null
-	],
-	"attacher.uploadModalConnecting":[
-		"Подключение...",
-		null,
-		null
-	],
-	"attacher.uploadModalSending":[
-		"Загрузка файла..",
-		null,
-		null
-	],
-	"attacher.uploadModalSent":[
-		"Отправка файла на сервер ВКонтакте...",
-		null,
-		null
-	],
-	"docs.doc":[
-		"Документ",
-		"Document",
-		"Документ"
-	],
-	"docs.docs":[
-		[
-			"документ",
-			"документа",
-			"документов"
-		],
-		[
-			"document",
-			"documents",
-			"documents"
-		],
-		[
-			"документ",
-			"документа",
-			"документів"
-		]
-	],
-	"docs.sizes":[
-		[
-			[
-				"байт",
-				"байта",
-				"байт"
-			],
-			"Кб",
-			"Мб",
-			"Гб",
-			"Тб"
-		],
-		[
-			[
-				"byte",
-				"bytes",
-				"bytes"
-			],
-			"Kb",
-			"Mb",
-			"Gb",
-			"Tb"
-		],
-		[
-			[
-				"байт",
-				"байти",
-				"байт"
-			],
-			"Кб",
-			"Мб",
-			"Гб",
-			"Тб"
-		]
-	],
-	"docs.search_by_query":[
-		"По запросу",
-		"By query",
-		"За запитом"
-	],
-	"docs.search_not_found":[
-		"ничего не найдено",
-		"nothing was found",
-		"нічего не знайдено"
-	],
-	"docs.search":[
-		"Поиск",
-		"Search",
-		"Пошук"
-	],
-	"docs.find":[
-		"Найти",
-		"Find",
-		"Знайти"
-	],
-	"docs.upload":[
-		"Загрузить",
-		"Upload",
-		"Завантажити"
-	],
-	"docs.uploading":[
-		"Загрузка...",
-		"Uploading...",
-		"Завантаження..."
-	],
-	"docs.founded":[
-		[
-			"Найден",
-			"Найдены",
-			"Найдено"
-		],
-		[
-			"Found",
-			"Found",
-			"Found"
-		],
-		[
-			"Знайдено",
-			"Знайдено",
-			"Знайдено"
-		]
-	],
-	"docs.saved":[
-		"Документ успешно сохранен!",
-		"Document successfully saved!",
-		"Документ успішно збережений!"
-	],
-	"docs.delete":[
-		"Удалить",
-		"Delete",
-		"Видалити"
-	],
-	"docs.change_view":[
-		"Сменить вид",
-		"Change design view",
-		"Змінити вид"
-	],
-	"docs.refresh":[
-		"Обновить",
-		"Refresh",
-		"Оновити"
-	],
+
+
+
+	"attacher.typeTitle":["Прикрепить",null,null],
+	"attacher.modalTitle":["Прикрепить",null,null],
+	"attacher.typePhoto":["Фотографию",null,null],
+	"attacher.typeVideo":["Видеозапись",null,null],
+	"attacher.typeAudio":["Аудиозапись",null,null],
+	"attacher.typeDocument":["Документ",null,null],
+	"attacher.typeMap":["Карту",null,null],
+	"attacher.typePoll":["Опрос",null,null],
+	"attacher.typeLink":["Ссылку",null,null],
+	"attacher.typeNote":["Заметку",null,null],
+	"attacher.typePage":["Wiki-страницу",null,null],
+	"attacher.typeAlbum":["Альбом",null,null],
+	"attacher.typeTimer":["Таймер",null,null],
+	"attacher.typeSticker":["Стикер",null,null],
+	"attacher.photoAlbum":["Из альбома",null,null],
+	"attacher.photoFile":["Из файла",null,null],
+	"attacher.photoURL":["По ссылке",null,null],
+	"attacher.documentList":["Из моих",null,null],
+	"attacher.documentListGroup":["Из группы", null, null],
+	"attacher.documentFile":["Из файла",null,null],
+	"attacher.documentURL":["По ссылке",null,null],
+	"attacher.videoList":["Из списка",null,null],
+	"attacher.audioList":["Из списка",null,null],
+	"attacher.modalOk":["Готово",null,null],
+	"attacher.modalCancel":["Отмена",null,null],
+	"attacher.fileSelect":["Нажмите сюда для выбора или перетащите сюда файлы",null,null],
+	"attacher.uploadModalTitle":["Загрузка (%c/%a)",null,null],
+	"attacher.uploadModalConnecting":["Подключение...",null,null],
+	"attacher.uploadModalSending":["Загрузка файла..",null,null],
+	"attacher.uploadModalSent":["Отправка файла на сервер ВКонтакте...",null,null],
+
+
+
+	"docs.doc":["Документ","Document","Документ"],
+	"docs.docs":[["документ","документа","документов"],["document","documents","documents"],["документ","документа","документів"]],
+	"docs.upload":["Загрузить","Upload","Завантажити"],
+	"docs.saved":["Документ успешно сохранен!","Document successfully saved!","Документ успішно збережений!"],
+	"docs.delete":["Удалить", "Delete", "Видалити"],
+	"docs.refresh":["Обновить", "Refresh", "Оновити"],
+
+
+
 	"polls.poll":[
 		"Опрос",
 		"Poll",
