@@ -18,7 +18,7 @@
 	define("MONTH", 30 * DAY);
 
 	define("APIDOG_VERSION", "6.4.6");
-	define("APIDOG_BUILD", "20170926");
+	define("APIDOG_BUILD", "20170928");
 
 	/**
 	 * Return param from query string/post body by key
