@@ -1045,12 +1045,6 @@ function requestCounters() {
 		}
 
 		Friends.friends[API.userId].items = friends;
-
-		// TODO
-		/*ThemeManager._cb.onintrvaleddatarecieved && ThemeManager._cb.onintrvaleddatarecieved(ThemeManager.getBundle(), {
-			counters: data.c,
-			friendsOnline: data.f
-		});*/
 	});
 }
 
