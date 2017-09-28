@@ -53,76 +53,22 @@
 			"грудня"
 		]
 	],
-	"general.like":[
-		"Мне нравится",
-		"Like",
-		"Мені подобається"
-	],
-	"general.dateAt":[
-		" в ",
-		" at ",
-		" о "
-	],
-	"general.actions":[
-		"Действия",
-		"Actions",
-		"Дії"
-	],
-	"general.and":[
-		" и ",
-		" and ",
-		" і "
-	],
-	"general._on":[
-		" на ",
-		" on ",
-		" на "
-	],
-	"general.save":[
-		"Сохранить",
-		"Save",
-		"Зберегти"
-	],
-	"general.saving":[
-		"Сохранение",
-		"Saving...",
-		"Збереження"
-	],
-	"general.saved":[
-		"Сохранено",
-		"Saved",
-		"Збережено"
-	],
-	"general.send":[
-		"Отправить",
-		"Send",
-		"Надіслати"
-	],
-	"general.yes":[
-		"Да",
-		"Yes",
-		"Так"
-	],
-	"general.retry":[
-		"Повторить",
-		"Retry",
-		"Повторити"
-	],
-	"general.cancel":[
-		"Отмена",
-		"Cancel",
-		"Скасувати"
-	],
-	"general.close":[
-		"Закрыть",
-		null,
-		null
-	],
-	"general.no":[
-		"Нет",
-		"No",
-		"Нi"
-	],
+	"general.showMore": ["Показать полностью", "Show more", "Показать полностью"],
+	"general.like":["Мне нравится", "Like", "Мені подобається"],
+	"general.dateAt":[" в ", " at ", " о "],
+	"general.actions":["Действия", "Actions", "Дії"],
+	"general.and":[" и ", " and ", " і "],
+	"general._on":[" на ", " on ", " на "],
+	"general.save":["Сохранить", "Save", "Зберегти"],
+	"general.saving":["Сохранение", "Saving...", "Збереження"],
+	"general.saved":["Сохранено", "Saved", "Збережено"],
+	"general.send":["Отправить", "Send", "Надіслати"],
+	"general.yes":["Да", "Yes", "Так"],
+	"general.no":["Нет", "No", "Нi"],
+	"general.retry":["Повторить", "Retry", "Повторити"],
+	"general.cancel":["Отмена", "Cancel", "Скасувати"],
+	"general.close":["Закрыть", "Close", "Закрыть"],
+
 	"general.was_sex":[
 		[
 			"было",
@@ -136,11 +82,7 @@
 		],
 		null
 	],
-	"general.back":[
-		"назад",
-		"back",
-		null
-	],
+	"general.back":["назад", "back", null],
 	"general.hours_":[
 		[
 			"час",

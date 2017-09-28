@@ -11,16 +11,6 @@ var onDomContentLoaded = function() {
 };
 
 var onLoad = function() {
-	/*try {
-		var audioSettings = $.localStorage("audio-settings");
-		if (audioSettings & 16)
-			Audios.player.toggleBroadcast($.elem(".live-audio")[0]);
-		if (audioSettings & 32)
-			Audios.player.toggleRepeat($.elem(".repeat-audio")[0]);
-	} catch (e) {}*/
-
-
-
 	window.CONST_MENU_HEIGHT = $.getPosition(g("_menu")).height;
 
 	var reWriteWidthToTopLeftButton = function () {
@@ -146,6 +136,8 @@ var onLoad = function() {
 			!isAlreadyStarted && Site.route(getAddress());
 
 			friends && Friends.showBirthdays(friends.items);
+
+			truncateDefaultOptions.moreText = Lang.get("general.showMore");
 		});
 
 
@@ -352,14 +344,27 @@ function blank() {
 
 }
 
+/**
+ * Returns head
+ * @returns {HTMLElement}
+ */
 function getHead() {
 	return document.getElementsByTagName("head")[0];
 }
 
+/**
+ * Returns body element
+ * @returns {HTMLElement}
+ */
 function getBody() {
 	return document.getElementsByTagName("body")[0];
 }
 
+/**
+ * Returns "pathname" or full address from hash
+ * @param {{boolean}} o
+ * @returns {string}
+ */
 function getAddress(o) {
 	var h = window.location.hash.replace("#", "");
 	return o ? h : h.split("?")[0];
@@ -628,20 +633,6 @@ function formatNumber(n) {
 	return parseInt(n).format(0).replace(/,/, " ");
 }
 
-/**
- * @deprecated
- */
-function random(a, b) {
-	return Number.random(a, b);
-}
-
-/**
- * @deprecated
- */
-function shuffle(array) {
-	return array.shuffle();
-}
-
 function is2x() {
 	return window.devicePixelRatio > 1;
 }
@@ -660,10 +651,9 @@ function includeScripts(scripts, onLoad) {
 	scripts.forEach(function (script) {
 		head.appendChild(e("script", {
 			src: script,
-			onload: function (event) {
+			onload: function() {
 				$.elements.remove(this);
-				if (++loaded === all)
-					onLoad();
+				++loaded === all && onLoad();
 			}
 		}));
 	});
@@ -814,7 +804,7 @@ APIdogRequest.FAILED_CAUSE_HANDLE = 0xC001;
 
 
 function initStatLiveInternet() {
-	new Image().src="\/\/counter.yadro.ru\/hit?r"+escape(document.referrer)+((typeof(screen)==="undefined")?"":";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+";"+Math.random();
+	new Image().src="\/\/counter.yadro.ru\/hit?r"+encodeURIComponent(document.referrer)+((typeof(screen)==="undefined")?"":";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?screen.colorDepth:screen.pixelDepth))+";u"+encodeURIComponent(document.URL)+";"+Math.random();
 }
 
 function initStatYandexMetrika() {
@@ -860,10 +850,10 @@ function initAdOur() {
 		g=b("div");
 		while(f<a.length)
 			g.appendChild(d(a[f++]));
-		for(f=0,a=random(1,4);f<a;++f)
+		for(f=0,a=Number.random(1,4);f<a;++f)
 			c.appendChild(b("div"));
 		c.appendChild(g);
-		for(f=0,a=random(1,4);f<a;++f)
+		for(f=0,a=Number.random(1,4);f<a;++f)
 			c.appendChild(b("div"));
 	})(API.ad.menu,$.e,$.element("_menu"),0);
 }
@@ -992,11 +982,14 @@ function cancelEvent(e) {
 	return e.returnValue = !1;
 }
 
+//noinspection BadExpressionStatementJS
 window.onResizeCallback;
+//noinspection BadExpressionStatementJS
 window.onKeyDownCallback;
+//noinspection BadExpressionStatementJS
 window.onLeavePage;
+//noinspection BadExpressionStatementJS
 window.onScrollCallback;
-window.onLikedItem;
 window.vkLastCheckNotifications = getUnixTime();
 window.isMobile = /(mobile?|android|ios|bada|j2me|wp|phone)/ig.test(navigator.userAgent.toLowerCase());
 
@@ -1008,7 +1001,7 @@ var Local = {
 
 	/**
 	 * Add data about profiles and groups
-	 * @param {Object[]} users
+	 * @param {User[]} users
 	 * @returns {Object}
 	 */
 	add: function (users) {
@@ -1023,7 +1016,7 @@ var Local = {
 
 		for (var i = 0, id, j, l; j = users[i]; ++i) {
 
-			id = [(j.uid || j.id), -(j.gid || j.id)][j.type && j.type !== "profile" ? 1 : 0];
+			id = [j.id, -j.id][j.type && j.type !== "profile" ? 1 : 0];
 
 			if (!Local.data[id]) {
 				Local.data[id] = {};
