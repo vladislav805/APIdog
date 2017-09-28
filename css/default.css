@@ -1567,6 +1567,11 @@ input[type=search].sf {
 	color: black;
 }
 
+.group-cover {
+	background: no-repeat center;
+	background-size: cover;
+}
+
 .friends-item {
 	overflow: hidden;
 	display: block;

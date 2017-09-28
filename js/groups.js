@@ -384,7 +384,9 @@ var Groups = {
 
 		buttons.push(getJoinLeaveButton());
 
-		wrap.appendChild(Site.getPageHeader(getName(group), Groups.getActions(group)));
+		wrap.appendChild(Groups.getCover(group));
+
+
 
 
 		wrap.appendChild(e("div", {
@@ -550,16 +552,80 @@ var Groups = {
 		Site.append(wrap);
 	},
 
+	getCover: function(group) {
+		var bg, cover = group.cover, actions = Groups.getActions(group);
+console.log(group);
+		if (cover && cover.enabled) {
+			var img, height;
+
+			for (var i = 0, item; item = cover.images[i]; ++i) {
+				if (item.width > 650) {
+					img = item.url;
+					height = item.height * (g("page").offsetWidth / item.width);
+					break
+				}
+			}
+
+
+			bg = $.e("div", {"class": "group-cover"});
+			bg.style.backgroundImage = "url(" + img + ")";
+			bg.style.height = height + "px";
+		} else {
+			return Site.getPageHeader(getName(group), actions);
+		}
+
+		return bg;
+	},
+
 	/**
 	 * Returns ability items actions
 	 * @param {User} group
 	 * @returns {HTMLElement}
 	 */
 	getActions: function(group) {
-		var p = {};
+		var p = {}, ms = group.member_status;
+
+		switch (ms) {
+			case MemberStatus.NOT_MEMBER:
+			case MemberStatus.INVITED_BY_SOMEBODY:
+				p["join"] = {
+					label: Lang.get(MemberStatus.NOT_MEMBER === ms ? "groups.actionJoin" : "groups.actionAcceptInvite"),
+					onclick: function(item) {
+						item.disable();
+						Groups.join(group, false, function() {
+							item.label(Lang.get(MemberStatus.NOT_MEMBER === ms ? "groups.actionDoneJoin" : "groups.actionDoneAcceptInvite"));
+						});
+					}
+				};
+				break;
+
+			case MemberStatus.MEMBER:
+			case MemberStatus.REJECTED_INVITE:
+				p["leave"] = {
+					label: Lang.get(MemberStatus.MEMBER === ms ? "groups.actionLeave" : "groups.actionCancelRequest"),
+					onclick: function(item) {
+						item.disable();
+						Groups.leave(group, function() {
+							item.label(Lang.get(MemberStatus.MEMBER === ms ? "groups.actionDoneLeave" : "groups.actionDoneCancelRequest"));
+						});
+					}
+				};
+				break;
+
+			case MemberStatus.NOT_SURE:
+				/*p["join"] = {
+					label: Lang.get("groups.actionJoin"),
+					onclick: function() {}
+				};
+				p["leave"] = {
+					label: Lang.get(MemberStatus.MEMBER === ms ? "groups.actionLeave" : "groups.actionAcceptCancelRequest"),
+					onclick: function() {}
+				};*/
+				break;
+		}
 
 		p["share"] = {
-			label: "Поделиться",
+			label: Lang.get("groups.actionShare"),
 			onclick: function() {
 				share("club", group.id, 0, null, actionAfterShare, {
 					wall: true,
@@ -576,7 +642,6 @@ var Groups = {
 					.disable()
 					.commit();
 
-// todo: not works label()
 				Groups.toggleFavorite(group, function() {
 					console.log("toggle fav callback", group.is_favorite);
 					item
@@ -1265,4 +1330,13 @@ var Groups = {
 		Site.setHeader(Lang.get("profiles.profile_photo_upload"), {link: Local.data[-groupId].screen_name});
 		form.parentNode.insertBefore(Site.getPageHeader(Lang.get("profiles.profile_photo_upload")), form);
 	}
+};
+
+var MemberStatus = {
+	NOT_MEMBER: 0,
+	MEMBER: 1,
+	NOT_SURE: 2,
+	REJECTED_INVITE: 3,
+	REQUESTED_JOIN: 4,
+	INVITED_BY_SOMEBODY: 5
 };

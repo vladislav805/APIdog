@@ -2761,148 +2761,36 @@
 	"groups.suggestionsTitle": ["Рекомендуемые страницы", "Suggested pages", null],
 	"groups.search_founded":[["Нашлась", "Нашлось", "Нашлось" ], ["Found", "Found", "Found"], ["Знайшлась", "Знайшлось", "Знайшлось"]],
 	"groups.search_groups":[["группа", "группы", "групп"], ["group", "groups", "groups"], ["група", "групи", "груп"]],
-	"groups.requests_join_success":[
-		"Вы успешно вступили в группу",
-		"You joined to this group",
-		"Ви успішно в групу"
-	],
-	"groups.requests_decline":[
-		"Вы отклонили приглашение",
-		null,
-		"Ви відхилили запрошення"
-	],
-	"groups.request_you_have":[
-		"Вас приглашают в ",
-		null,
-		"Вас запрошують в "
-	],
-	"groups.request_groups":[
-		[
-			"группу",
-			"группы",
-			"групп"
-		],
-		null,
-		[
-			"групу",
-			"групи",
-			"груп"
-		]
-	],
-	"groups.request_header":[
-		"Приглашения",
-		null,
-		"Запрошення"
-	],
-	"groups.leave_group":[
-		"Выйти из группы",
-		null,
-		null
-	],
-	"groups.members_in_group":[
-		"В группе ",
-		null,
-		"В групі "
-	],
-	"groups.members_members":[
-		[
-			"участник",
-			"участника",
-			"участников"
-		],
-		null,
-		[
-			"участник",
-			"участника",
-			"участників"
-		]
-	],
-	"groups.members_followers":[
-		[
-			"подписчик",
-			"подписчика",
-			"подписчиков"
-		],
-		null,
-		null
-	],
-	"groups.creating":[
-		"Создание группы",
-		"Creating group",
-		"Створення спільноти"
-	],
-	"groups.create_group":[
-		"Создать группу",
-		"Create group",
-		"Створити спільноту"
-	],
-	"groups.create":[
-		"Создать",
-		"Create",
-		"Створити"
-	],
-	"groups.create_title":[
-		"Название",
-		"Title",
-		"Назва"
-	],
-	"groups.create_description":[
-		"Описание",
-		"Description",
-		"Опис"
-	],
-	"groups.create_type":[
-		"Тип сообщества",
-		"Type of community",
-		"Тип спільноти"
-	],
-	"groups.create_type_values":[
-		{
-			"group":"группа",
-			"public":"публичная страница",
-			"event":"событие"
-		},
-		{
-			"group":"group",
-			"public":"public page",
-			"event":"event"
-		},
-		{
-			"group":"група",
-			"public":"публічна сторінка",
-			"event":"захід"
-		}
-	],
-	"groups.create_subtype":[
-		"Вид страницы",
-		"Subtype of public page",
-		"Вид сторінки"
-	],
-	"groups.create_subtype_values":[
-		[
-			"Место или небольшая компания",
-			"Компания, организация или веб-сайт",
-			"Известная личность или коллектив",
-			"Произведение или продукция"
-		],
-		[
-			"Place or small company",
-			"Company, organization or web-site",
-			"Famous people or collective",
-			"The product or products"
-		],
-		[
-			"Місце чи невелика компанія",
-			"Компанія, організація чи веб-сайт",
-			"Відома особистість або колектив",
-			"Виріб або продукція"
-		]
-	],
-	"groups.create_enter_title":[
-		"Введите название сообщества!",
-		"Enter title of community!",
-		"Введіть назву спільноти!"
-	],
+	"groups.requests_join_success":["Вы успешно вступили в группу","You joined to this group","Ви успішно в групу"],
+	"groups.requests_decline":["Вы отклонили приглашение",null,"Ви відхилили запрошення"],
+	"groups.request_you_have":["Вас приглашают в ","You invited in ","Вас запрошують в "],
+	"groups.request_groups":[["группу","группы","групп"],["group", "groups", "groups"],["групу","групи","груп"]],
+	"groups.request_header":["Приглашения","Invites","Запрошення"],
+	"groups.members_in_group":[	"В группе ","In group ","В групі "],
+	"groups.members_members":[["участник","участника","участников"],["member", "members", "members"],["участник","участника","участників"]],
+	"groups.members_followers":[["подписчик","подписчика","подписчиков"],["follower", "followers", "followers"],null],
+	"groups.creating":["Создание группы","Creating group","Створення спільноти"],
+	"groups.create_group":["Создать группу","Create group","Створити спільноту"],
+	"groups.create":["Создать","Create","Створити"],
+	"groups.create_title":["Название","Title","Назва"],
+	"groups.create_description":["Описание","Description","Опис"],
+	"groups.create_type":["Тип сообщества","Type of community","Тип спільноти"],
+	"groups.create_type_values":[{"group":"группа","public":"публичная страница","event":"событие"},{"group":"group","public":"public page","event":"event"},{"group":"група","public":"публічна сторінка","event":"захід"}],
+	"groups.create_subtype":["Вид страницы","Subtype of public page","Вид сторінки"],
+	"groups.create_subtype_values":[["Место или небольшая компания", "Компания, организация или веб-сайт", "Известная личность или коллектив", "Произведение или продукция"],["Place or small company", "Company, organization or web-site", "Famous people or collective", "The product or products"],["Місце чи невелика компанія", "Компанія, організація чи веб-сайт", "Відома особистість або колектив", "Виріб або продукція"]],
+	"groups.create_enter_title":["Введите название сообщества!", "Enter title of community!", "Введіть назву спільноти!"],
+	"groups.actionJoin": ["Вступить", "Join", null],
+	"groups.actionAcceptInvite": ["Принять приглашение", "Accept invite", null],
+	"groups.actionDoneJoin": ["Вы вступили в группу", "You joined", null],
+	"groups.actionDoneAcceptInvite": ["Приглашение принято", "Invite was accepted", null],
+	"groups.actionLeave": ["Покинуть группу", "Leave group", null],
+	"groups.actionCancelRequest": ["Отменить заявку", "Cancel request", null],
+	"groups.actionDoneLeave": ["Вы покинули группу", "You leaved from group", null],
+	"groups.actionDoneCancelRequest": ["Вы отменили заявку", "You canceled request", null],
+	"groups.actionShare": ["Поделиться", "Share", null],
+
+
+
 	"groups.bl_in":[
 		"В бан-листе сообщества ",
 		null,
