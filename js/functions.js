@@ -120,12 +120,9 @@ var onLoad = function() {
 			}), data.l);
 		}
 
-
-
 		if (friends = data.f) {
 			Local.add(friends.items);
 			Friends.friends[API.userId] = friends;
-			Friends.showBirthdays(friends.items);
 		}
 
 		requestCounters();
@@ -134,19 +131,24 @@ var onLoad = function() {
 		//if (!API.userId)
 		//	Site.associateAuthKey(API.authKey, API.authId, user.id);
 
-		if (!getAddress())
+		if (!getAddress()) {
 			window.location.hash = "#" + user.screen_name;
+		}
 
 		// TODO: ThemeManager.onInstall();
 
-			Lang.load(function() {
-				if (!getAddress()) {
-					window.location.hash = "#" + user.screen_name;
-					isAlreadyStarted = true;
-				}
+		Lang.load(function() {
+			if (!getAddress()) {
+				window.location.hash = "#" + user.screen_name;
+				isAlreadyStarted = true;
+			}
 
-				!isAlreadyStarted && Site.route(getAddress());
-			});
+			!isAlreadyStarted && Site.route(getAddress());
+
+			friends && Friends.showBirthdays(friends.items);
+		});
+
+
 
 		$.elements.removeClass(document.documentElement, "_notloaded");
 
