@@ -171,8 +171,10 @@ var onLoad = function() {
 			Pidor.redrawHeadPosition(top);
 		}
 */
-		if (!window.onScrollCallback)
+		if (!window.onScrollCallback) {
 			return;
+		}
+
 		window.onScrollCallback({
 			top: top,
 			originalEvent: event,
@@ -180,20 +182,17 @@ var onLoad = function() {
 		});
 	});
 	window.addEventListener("resize", reWriteWidthToTopLeftButton);
-	window.addEventListener("resize", function (event) {
+	window.addEventListener("resize", function(event) {
 		if (!window.onResizeCallback)
 			return;
 		var c  = $.element("content"),
-			cp = $.getPosition(c),
 			p  = $.element("page"),
-			pp = $.getPosition(p),
-			w  = document.getElementsByTagName("body"),
-			wp = $.getPosition(p);
+			w = getBody();
 		window.onResizeCallback({
 			originalEvent: event,
-			content:    {width: cp.width, height: cp.height},
-			page:       {width: pp.width, height: pp.height},
-			body:       {width: wp.width, height: wp.height}
+			content:    {width: c.offsetWidth, height: c.offsetHeight},
+			page:       {width: p.offsetWidth, height: p.offsetHeight},
+			body:       {width: w.offsetWidth, height: w.offsetHeight}
 		});
 	});
 	getBody().addEventListener("dragenter", function (event) {
@@ -250,14 +249,6 @@ var onLoad = function() {
 				stop();
 				break;
 
-			case KeyboardCodes.tab:
-				// TODO: EmotionController
-				/*var el = document.querySelector(".imdialog-icon-smile-button");
-				if (!el || event.ctrlKey || event.shiftKey) return;
-				el.click();
-				stop();*/
-				break;
-
 			case KeyboardCodes.F7:
 				if (event.ctrlKey) {
 					if (event.shiftKey) {
@@ -290,7 +281,7 @@ var onLoad = function() {
 	});
 
 	if ("onhashchange" in window) {
-		window.addEventListener("hashchange", function () {
+		window.addEventListener("hashchange", function() {
 			Site.route(window.location.hash);
 		});
 	} else {
@@ -914,15 +905,9 @@ var Menu = {
 	},
 	toTopPositionYStarted: 0,
 	toTopPositionOnePart: 0,
-	toTop: function (q, start) {
-		if (start) {
-			Menu.toTopPositionYStarted = Site.getScrolled();
-		}
 
-		var part = Menu.toTopPositionYStarted / 100,
-			scrolled = Site.getScrolled(),
-			started = Menu.toTopPositionYStarted,
-			animate = function (opts) {
+	toTop: function() {
+		var animate = function(opts) {
 				var start = new Date,
 					timer = setInterval(function () {
 						var progress = (new Date - start) / opts.duration;
@@ -939,24 +924,21 @@ var Menu = {
 					}, opts.delay || 10);
 			};
 
-		var to = started;
+		var to = getScroll();
 		animate({
 			delay: 10,
 			duration: 600,
-			delta: function (progress) {
+			delta: function(progress) {
 				return 1 - Math.sin(Math.acos(progress))
 			},
 			step: function(delta) {
-				window.scrollTo(0, started - (to * delta));
+				window.scrollTo(0, to - (to * delta));
 			}
 		});
 	},
-	toTopScrollEvent: function (event) {
-		if (Site.getScrolled() > window.CONST_MENU_HEIGHT) {
-			$.elements.removeClass(g("_menu_up"), "hidden");
-		} else {
-			$.elements.addClass(g("_menu_up"), "hidden");
-		}
+
+	toTopScrollEvent: function() {
+		$.elements[getScroll() > window.CONST_MENU_HEIGHT ? "removeClass" : "addClass"](g("_menu_up"), "hidden");
 	}
 };
 window.KeyboardCodes={left:37,right:39,up:38,down:40,"delete":8,tab:9,enter:13,esc:27,pageUp:33,pageDown:34,space:32,mediaPrevious:177,mediaNext:176,mediaStop:178,mediaChangeState:179,F1:112,F2:113,F3:114,F4:115,F5:116,F6:117,F7:118,F8:119,F9:120,F10:121,F11:122,F12:123};
