@@ -68,208 +68,43 @@
 	"general.retry":["Повторить", "Retry", "Повторити"],
 	"general.cancel":["Отмена", "Cancel", "Скасувати"],
 	"general.close":["Закрыть", "Close", "Закрыть"],
-
-	"general.was_sex":[
-		[
-			"было",
-			"была",
-			"был"
-		],
-		[
-			"was",
-			"was",
-			"was"
-		],
-		null
-	],
+	"general.was_sex":[["было", "была", "был"], ["was", "was", "was"], null],
 	"general.back":["назад", "back", null],
-	"general.hours_":[
-		[
-			"час",
-			"часа",
-			"часов"
-		],
-		[
-			"hour",
-			"hours",
-			"hours"
-		],
-		null
-	],
-	"general.minutes_":[
-		[
-			"минута",
-			"минуты",
-			"минут"
-		],
-		[
-			"minute",
-			"minutes",
-			"minutes"
-		],
-		null
-	],
-	"general.seconds_":[
-		[
-			"секунда",
-			"секунды",
-			"секунд"
-		],
-		[
-			"second",
-			"seconds",
-			"seconds"
-		],
-		null
-	],
-	"general.days_":[
-		[
-			"день",
-			"дня",
-			"дней"
-		],
-		[
-			"day",
-			"days",
-			"days"
-		],
-		null
-	],
+	"general.hours_":[["час", "часа", "часов"], ["hour", "hours", "hours"], null],
+	"general.minutes_":[["минута", "минуты", "минут"], ["minute", "minutes", "minutes"], null],
+	"general.seconds_":[["секунда", "секунды", "секунд"], ["second", "seconds", "seconds"], null],
+	"general.days_":[["день", "дня", "дней"], ["day", "days", "days"], null],
+
+
+
 	"profiles.profile_was_in":[
-		[
-			"было в сети",
-			"была в сети",
-			"был в сети"
-		],
-		[
-			"was online",
-			"was online",
-			"was online"
-		],
-		[
-			"null",
-			"була у мережі",
-			"був у мережі"
-		]
+		["было в сети", "была в сети", "был в сети"],
+		["was online", "was online", "was online"],
+		["null", "була у мережі", "був у мережі"]
 	],
-	"profiles.wasMinutesAgo":[
-		[
-			"минуту",
-			"минуты",
-			"минут"
-		],
-		null,
-		null
-	],
-	"profiles.wasSecondsAgo":[
-		[
-			"секунду",
-			"секунды",
-			"секунд"
-		],
-		null,
-		null
-	],
-	"profiles.wasAgo":[
-		" назад",
-		null,
-		null
-	],
-	"profiles.wasViaApp":[
-		" через приложение &laquo;%n&raquo;",
-		" via application &laquo;%n&raquo;",
-		null
-	],
-	"profiles.wasViaMobile":[
-		" через мобильный (m.vk.com)",
-		" via mobile (m.v.com)",
-		null
-	],
-	"profiles.wasViaPC":[
-		" через полную версию",
-		" via desktop",
-		null
-	],
-	"profiles.pageHead":[
-		"Профиль %n",
-		"Profile %n",
-		null
-	],
-	"profiles.statusChange":[
-		"изменить статус",
-		"change status",
-		null
-	],
-	"profiles.statusChangeSubmit":[
-		"Готово",
-		"Done",
-		null
-	],
-	"profiles.actionFriendAdd":[
-		"Добавить в друзья",
-		"Add friend",
-		null
-	],
-	"profiles.actionFriendAccept":[
-		"Подтвердить заявку",
-		"Accept request",
-		null
-	],
-	"profiles.actionFriendReject":[
-		"Отклонить заявку",
-		"Decline request",
-		null
-	],
-	"profiles.actionFriendCancel":[
-		"Отменить заявку",
-		"Cancel request",
-		null
-	],
-	"profiles.actionFriendDelete":[
-		"Удалить из друзей",
-		"Delete friend",
-		null
-	],
-	"profiles.actionFavoriteAdd":[
-		"Добавить в закладки",
-		"Add fave",
-		null
-	],
-	"profiles.actionFavoriteRemove":[
-		"Удалить из закладок",
-		"Remove fave",
-		null
-	],
-	"profiles.actionReport":[
-		"Пожаловаться",
-		"Report",
-		null
-	],
-	"profiles.actionBlock":[
-		"Добавить в чёрный список",
-		null,
-		null
-	],
-	"profiles.actionUnblock":[
-		"Убрать из чёрного списка",
-		null,
-		null
-	],
-	"profiles.actionDateRegistration":[
-		"Дата регистрации",
-		"Date of registration",
-		null
-	],
-	"profiles.actionLastActivity":[
-		"Последнее посещение",
-		"Last activity",
-		null
-	],
-	"profiles.actionWriteMessage":[
-		"Написать сообщение",
-		"Write message",
-		null
-	],
+	"profiles.wasMinutesAgo":[["минуту", "минуты", "минут"], null, null],
+	"profiles.wasSecondsAgo":[["секунду", "секунды", "секунд"], null, null],
+	"profiles.wasAgo":[" назад", null, null],
+	"profiles.wasViaApp":[" через приложение &laquo;%n&raquo;", " via application &laquo;%n&raquo;", null],
+	"profiles.wasViaMobile":[" через мобильный (m.vk.com)", " via mobile (m.v.com)", null],
+	"profiles.wasViaPC":[" через полную версию", " via desktop", null],
+	"profiles.pageHead":["Профиль %n", "Profile %n", null],
+	"profiles.statusChange":["изменить статус", "change status", null],
+	"profiles.statusChangeSubmit":["Готово","Done", null],
+	"profiles.actionFriendAdd":["Добавить в друзья", "Add friend", null],
+	"profiles.actionFriendAccept":["Подтвердить заявку", "Accept request", null],
+	"profiles.actionFriendReject":["Отклонить заявку", "Decline request", null],
+	"profiles.actionFriendCancel":["Отменить заявку", "Cancel request", null],
+	"profiles.actionFriendDelete":["Удалить из друзей", "Delete friend", null],
+	"profiles.actionFavoriteAdd":["Добавить в закладки","Add fave",null],
+	"profiles.actionFavoriteRemove":["Удалить из закладок","Remove fave",null],
+	"profiles.actionReport":["Пожаловаться","Report",null],
+	"profiles.actionRefresh": ["Обновить", "Refresh", null],
+	"profiles.actionBlock":["Добавить в чёрный список",null,null],
+	"profiles.actionUnblock":["Убрать из чёрного списка",null,null],
+	"profiles.actionDateRegistration":["Дата регистрации","Date of registration",null],
+	"profiles.actionLastActivity":["Последнее посещение","Last activity",null],
+	"profiles.actionWriteMessage":["Написать сообщение","Write message",null],
 	"profiles.blockInfoAdded":[
 		"%n %a в чёрный список",
 		"%n %a",
@@ -4235,207 +4070,51 @@
 		"Recommendations communities",
 		"Рекомендовані сторінки"
 	],
-	"wall.post_on_wall":[
-		"Запись на стене",
-		null,
-		"Запис на стіні"
-	],
-	"wall.comment_on_wall":[
-		"Комментарий на стене",
-		null,
-		null
-	],
-	"wall.wall":[
-		"Стена",
-		null,
-		null
-	],
-	"wall.posts":[
-		[
-			"запись",
-			"записи",
-			"записей"
-		],
-		null,
-		null
-	],
-	"wall.post":[
-		"Отправить",
-		null,
-		null
-	],
-	"wall.filter":[
-		"Фильтр",
-		null,
-		null
-	],
-	"wall.filter_all":[
-		"Все записи",
-		null,
-		null
-	],
-	"wall.filter_owner_user":[
-		"Записи пользователя",
-		null,
-		null
-	],
-	"wall.filter_owner_group":[
-		"Записи сообщества",
-		null,
-		null
-	],
-	"wall.filter_suggests":[
-		"Предложенные записи (%i)",
-		null,
-		null
-	],
-	"wall.filter_postponed":[
-		"Отложенные записи (%i)",
-		null,
-		null
-	],
-	"wall.wall_has_postponed":[
-		"%n %s %p",
-		null,
-		null
-	],
-	"wall.wall_has_suggested":[
-		"%n %s %p",
-		null,
-		null
-	],
-	"wall.wall_has_postponed_s":[
-		[
-			"отложенная",
-			"отложенные",
-			"отложенных"
-		],
-		null,
-		null
-	],
-	"wall.wall_has_suggested_s":[
-		[
-			"предлагаемая",
-			"предлагаемые",
-			"предлагаемых"
-		],
-		null,
-		null
-	],
-	"wall.posts_nothing":[
-		"Нет записей",
-		null,
-		null
-	],
-	"wall.pin":[
-		"Закрепить",
-		null,
-		null
-	],
-	"wall.unpin":[
-		"Открепить",
-		null,
-		null
-	],
-	"wall.ignore":[
-		"Скрыть из новостей",
-		null,
-		null
-	],
-	"wall.edit":[
-		"Редактировать",
-		null,
-		null
-	],
-	"wall.delete":[
-		"Удалить",
-		null,
-		null
-	],
-	"wall.report":[
-		"Пожаловаться",
-		null,
-		null
-	],
-	"wall.comments":[
-		[
-			"комментарий",
-			"комментария",
-			"комментариев"
-		],
-		null,
-		null
-	],
-	"wall.news_ignored_info":[
-		"Эта запись не будет показываться в ленте",
-		null,
-		null
-	],
-	"wall.news_ignored_hide_all":[
-		"Скрыть все новости от этого источника",
-		null,
-		null
-	],
-	"wall.news_ignored_unignore":[
-		"Вернуть в новостную ленту",
-		null,
-		null
-	],
-	"wall.news_ban_confirm":[
-		"Вы уверены, что хотите исключить этот источник из новостной ленты?",
-		null,
-		null
-	],
-	"wall.news_ban_banned":[
-		"Источник исключен из новостной ленты",
-		null,
-		null
-	],
-	"wall.attachment_link":[
-		" Ссылка ",
-		null,
-		null
-	],
-	"wall.header_post":[
-		"Запись на стене",
-		null,
-		null
-	],
-	"wall.confirm_delete_post":[
-		"Вы уверены, что хотите удалить эту запись?",
-		null,
-		null
-	],
-	"wall.error_delete_post":[
-		"Ошибка при удалении поста. ",
-		null,
-		null
-	],
-	"wall.error_restore_post":[
-		"Ошибка при попытке восстановить пост. ",
-		null,
-		null
-	],
-	"wall.error_post_empty":[
-		"Пустой пост отправить нельзя",
-		null,
-		null
-	],
-	"wall.message_deleted_post":[
-		"Пост удален. ",
-		null,
-		null
-	],
-	"wall.message_deleted_post_restore":[
-		"Восстановить",
-		null,
-		null
-	],
-	"wall.header_comments":[
-		"Комментарии",
-		null,
-		null
-	],
+
+
+
+	"wall.post_on_wall":["Запись на стене","Post on wall","Запис на стіні"],
+	"wall.comment_on_wall":["Комментарий на стене",null,null],
+	"wall.wall":["Стена","Wall",null],
+	"wall.posts":[["запись","записи","записей"],["post","posts","posts"],null],
+	"wall.post":["Отправить","Send",null],
+	"wall.postingWarningTimerTitle": ["Постинг на стену","Posting on wall",null],
+	"wall.postingWarningTimerContent": ["<strong>Внимание!</strong> Вы используете offline-режим на нашем сайте, но хотите написать пост себе на стену. При написании поста себе на стену Ваш аккаунт станет онлайн на 5 минут. Вы уверены, что хотите опубликовать запись и стать онлайн? Вы можете отправить пост с таймером на 5 минут (или выбрать дату самостоятельно, в прикреплениях): в таком случае дата последнего захода не изменится и онлайн на аккаунте не появится<br \/><strong>Отправить<\/strong> &mdash; отправить сразу, будет онлайн<br \/><strong>Отложка<\/strong> &mdash; отправить отложкой, пост будет доступен только через  минут<br \/><strong>Отмена<\/strong> &mdash; не отправлять вообще", "", null],
+	"wall.postingWarningTimerLater":["Отложка","Later",null],
+	"wall.filter":["Фильтр",null,null],
+	"wall.filter_all":["Все записи",null,null],
+	"wall.filter_owner_user":["Записи пользователя",null,null],
+	"wall.filter_owner_group":["Записи сообщества",null,null],
+	"wall.filter_suggests":["Предложенные записи (%i)",null,null],
+	"wall.filter_postponed":["Отложенные записи (%i)",null,null],
+	"wall.wall_has_postponed":["%n %s %p",null,null],
+	"wall.wall_has_suggested":["%n %s %p",null,null],
+	"wall.wall_has_postponed_s":[["отложенная","отложенные","отложенных"],null,null],
+	"wall.wall_has_suggested_s":[["предлагаемая","предлагаемые","предлагаемых"],null,null],
+	"wall.posts_nothing":["Нет записей",null,null],
+	"wall.pin":["Закрепить",null,null],
+	"wall.unpin":["Открепить",null,null],
+	"wall.ignore":["Скрыть из новостей",null,null],
+	"wall.edit":["Редактировать",null,null],
+	"wall.delete":["Удалить",null,null],
+	"wall.report":["Пожаловаться",null,null],
+	"wall.comments":[["комментарий","комментария","комментариев"],null,null],
+	"wall.news_ignored_info":["Эта запись не будет показываться в ленте",null,null],
+	"wall.news_ignored_hide_all":["Скрыть все новости от этого источника",null,null],
+	"wall.news_ignored_unignore":["Вернуть в новостную ленту",null,null],
+	"wall.news_ban_confirm":["Вы уверены, что хотите исключить этот источник из новостной ленты?",null,null],
+	"wall.news_ban_banned":["Источник исключен из новостной ленты",null,null],
+	"wall.header_post":["Запись на стене","Post on wall",null],
+	"wall.confirm_delete_post":["Вы уверены, что хотите удалить эту запись?",null,null],
+	"wall.error_delete_post":["Ошибка при удалении поста. ",null,null],
+	"wall.error_restore_post":["Ошибка при попытке восстановить пост. ",null,null],
+	"wall.error_post_empty":["Пустой пост отправить нельзя",null,null],
+	"wall.message_deleted_post":["Пост удален. ",null,null],
+	"wall.message_deleted_post_restore":["Восстановить","restore",null],
+	"wall.header_comments":["Комментарии","Comments",null],
+
+
+
 	"comment.edit":[
 		"Редактировать",
 		"Edit",
@@ -5722,21 +5401,12 @@
 		"Sent!",
 		"Надіслано!"
 	],
-	"report.action":[
-		"Пожаловаться",
-		null,
-		null
-	],
-	"report.modalTitle":[
-		"Жалоба",
-		null,
-		null
-	],
-	"report.modalDescription":[
-		"Пожалуйста, укажите причину по которой Вы хотите пожаловаться",
-		null,
-		null
-	],
+
+
+
+	"report.action":["Пожаловаться", "Report", null],
+	"report.modalTitle":["Жалоба", "Report", null],
+	"report.modalDescription":["Пожалуйста, укажите причину по которой Вы хотите пожаловаться", null, null],
 	"report.modalReasons":[
 		[
 			"спам",
@@ -5760,39 +5430,14 @@
 		null,
 		null
 	],
-	"report.modalComment":[
-		"Комментарий (необязательно)",
-		null,
-		null
-	],
-	"report.modalOkButton":[
-		"Пожаловаться",
-		null,
-		null
-	],
-	"report.modalSuccess":[
-		"Жалоба успешно была отправлена",
-		null,
-		null
-	],
-	"smartList.list_empty":[
-		"Ничего нет",
-		null,
-		null
-	],
-	"smartList.list_empty_search":[
-		"По данному запросу ничего не нашлось",
-		null,
-		null
-	],
-	"smartList.search_label":[
-		"Поиск",
-		null,
-		null
-	],
-	"smartList.search_holder":[
-		"Начните набирать...",
-		null,
-		null
-	]
+	"report.modalComment":["Комментарий (необязательно)", "Comment (not required)", null],
+	"report.modalOkButton":["Пожаловаться", "Send report", null],
+	"report.modalSuccess":["Жалоба успешно была отправлена", "Report was successfully sent", null],
+
+
+
+	"smartList.list_empty":["Ничего нет", "Nothing", null],
+	"smartList.list_empty_search":["По данному запросу ничего не нашлось", "Nothing found", null],
+	"smartList.search_label":["Поиск", "Search", null],
+	"smartList.search_holder":["Начните набирать...", "Start typing...", null]
 }

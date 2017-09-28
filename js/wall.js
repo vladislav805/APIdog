@@ -60,7 +60,7 @@ var Wall = {
 
 		data.profiles && Local.add(data.profiles.concat(data.groups));
 
-		parent.appendChild(Site.getPageHeader("Стена <i>" + count + " " + $.textCase(count, ["запись", "записи", "записей"]) + "<\/i>"));
+		parent.appendChild(Site.getPageHeader(Lang.get("wall.wall") + " <i>" + count + " " + Lang.get("wall.posts", count) + "<\/i>"));
 
 		if (opts.canPost || opts.canSuggest) {
 			var form = Site.getExtendedWriteForm({
@@ -83,12 +83,12 @@ var Wall = {
 
 					if (ownerId === API.userId && !isEnabled(Setting.ENABLED_ONLINE) && !event.publishDate) {
 						var cnf = new Modal({
-							title: "Постинг на стену",
-							content: "<strong>Внимание!</strong> Вы используете offline-режим на нашем сайте, но хотите написать пост себе на стену. При написании поста себе на стену Ваш аккаунт станет онлайн на 5 минут. Вы уверены, что хотите опубликовать запись и стать онлайн? Вы можете отправить пост с таймером на 5 минут (или выбрать дату самостоятельно, в прикреплениях): в таком случае дата последнего захода не изменится и онлайн на аккаунте не появится<br \/><strong>Отправить<\/strong> &mdash; отправить сразу, будет онлайн<br \/><strong>Отложка<\/strong> &mdash; отправить отложкой, пост будет доступен только через  минут<br \/><strong>Отмена<\/strong> &mdash; не отправлять вообще",
+							title: Lang.get("wall.postingWarningTimerTitle"),
+							content: Lang.get("wall.postingWarningTimerContent"),
 							footer: [
 								{
 									name: "post",
-									title: "Отправить",
+									title: Lang.get("general.send"),
 									onclick: function() {
 										send();
 										cnf.close();
@@ -96,7 +96,7 @@ var Wall = {
 								},
 								{
 									name: "timer",
-									title: "Отложка",
+									title: Lang.get("wall.postingWarningTimerLater"),
 									onclick: function() {
 //										q.push("publish_date:API.utils.getServerTime()+(60*5)");
 										event.publishDate = parseInt(Date.now() / 1000) + 60 * 5;
@@ -106,7 +106,7 @@ var Wall = {
 								},
 								{
 									name: "cancel",
-									title: "Отмена",
+									title: Lang.get("general.cancel"),
 									onclick: function() {
 										cnf.close();
 									}
