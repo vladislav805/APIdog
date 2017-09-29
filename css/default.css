@@ -3332,7 +3332,7 @@ img.wall-left {
 }
 
 .poll-option {
-	line-height: 30px;
+	line-height: 20px;
 	padding: 0 8px;
 	margin: 4px 8px;
 	position: relative;
@@ -3345,6 +3345,7 @@ img.wall-left {
 	position: relative;
 	z-index: 10;
 	color: black;
+	padding: 5px 0;
 }
 
 .poll-line-in {
