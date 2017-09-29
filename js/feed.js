@@ -369,7 +369,7 @@ var Feed = {
 		 * Load info about comments
 		 * @returns {Promise}
 		 */
-		load: function(from, list) {
+		load: function(from, meta) {
 			return api("newsfeed.getComments", {
 				start_from: from,
 				count: 10,
@@ -381,7 +381,9 @@ var Feed = {
 			}).then(function(data) {
 				Local.add(data.profiles);
 				Local.add(data.groups);
-				return {data: data, list: list, from: from};
+				meta.data = data;
+				meta.from = from;
+				return meta;
 			});
 		},
 
