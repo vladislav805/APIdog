@@ -32,7 +32,7 @@
 var Post = {};
 
 /**
- * @type {{count: int, can_comment: boolean}}
+ * @type {{count: int, can_comment: boolean, items: Comment=}}
  */
 var CommentsData = {};
 

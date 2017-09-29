@@ -481,13 +481,6 @@ var Wall = {
 		}));
 
 		/**
-		 * If feed, we can suggest delete post from news
-		 */
-		if (opts.hide) {
-			right.appendChild(Feed.getHideNode("wall", ownerId, postId));
-		}
-
-		/**
 		 * If post on wall and current user can delete post, show button for remove post
 		 */
 		if ((opts.deleteBtn || opts.extra) && (post.can_delete || post.can_edit)) {

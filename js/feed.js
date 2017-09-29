@@ -24,56 +24,38 @@ var Feed = {
 
 	RequestPage: function() {
 		switch (Site.get("act")) {
-			case "comments":
-				Feed.page({ needSections: false, title: "Комментарии" }).then(Feed.comments.load.bind(Feed.comments, "")).then(Feed.comments.show);
-				break;
-
 			case "notifications":
-				Notifications.init();
-				break;
+				return Notifications.init();
 
-
-
+			case "comments":
+				return Feed.page({ needSections: false, title: "Комментарии" }).then(Feed.comments.load.bind(Feed.comments, "")).then(Feed.comments.show);
 
 
 			case "search":
 				return Feed.search({q: Site.Get("q") || "", offset: getOffset()});
-				break;
+
 
 
 			case "friends":
-				Feed.page({ needSections: false, title: "Обновления друзей" }).then(Feed.friends.load).then(Feed.friends.show);
-				break;
+				return Feed.page({ needSections: false, title: "Обновления друзей" }).then(Feed.friends.load).then(Feed.friends.show);
 
 			case "mentions":
-				Feed.page({ needSections: false, title: "Упоминания" }).then(Feed.mentions.load).then(function(d) {
-					return Feed.show(d, Feed.mentions.load);
-				});
-				break;
+				return Feed.page({ needSections: false, title: "Упоминания" }).then(Feed.mentions.load).then(Feed.show);
 
 			case "recommends":
-				Feed.page({ needSections: false, title: "Рекомендации" }).then(Feed.recommendations.load).then(function(d) {
-					return Feed.show(d, Feed.recommendations.load);
-				});
-				Site.APIv5("newsfeed.getRecommended", {start_time: start, count: 50, allow_group_comments:1, v: 5.14, start_from: Site.Get("start_from")}, Feed.convert);
-				break;
+				return Feed.page({ needSections: true, title: "Рекомендации" }).then(Feed.recommendations.load).then(Feed.show);
 
 			case "select_list":
-				Feed.page({ needSections: false, title: "Списки новостей" }).then(Feed.lists.load).then(Feed.lists.show);
-				break;
+				return Feed.page({ needSections: false, title: "Списки новостей" }).then(Feed.lists.load).then(Feed.lists.show);
 
 			default:
-				Feed.page({ needSections: true, title: Lang.get("feed.newsfeed") }).then(Feed.request).then(function(d) {
-					return Feed.show(d, Feed.request);
-				});
+				return Feed.page({ needSections: true, title: Lang.get("feed.newsfeed") }).then(Feed.request).then(Feed.show);
 		}
 	},
-	convert: function(data) {
-		//return Feed.show(Feed.page(), data.items, data.count, data.next_from);
-	},
 
-
-	Filters: [],
+	/**
+	 * Counter-limiter for output advertisements
+	 */
 	adCounter: 0,
 
 	/**
@@ -84,16 +66,8 @@ var Feed = {
 	page: function(options) {
 		options = options || {};
 		return new Promise(function(resolve) {
-			var list;
-			if (list = $.element("mainFeed")) {
-				$.elements.clearChild(list).appendChild(Site.Loader(true));
-				list.previousSibling.querySelector(".hider-title-content").textContent = options.title;
-				resolve(list);
-				return;
-			}
-
-			var parent = $.e("div");
-			list = $.e("div", {id: "mainFeed", append: Site.Loader(true)});
+			var parent = $.e("div"),
+				list = $.e("div", {id: "mainFeed", append: Site.Loader(true)});
 
 			parent.appendChild(Feed.getTabs());
 			parent.appendChild(Site.getPageHeader(options.title));
@@ -102,16 +76,16 @@ var Feed = {
 
 			Site.append(parent);
 			Site.setHeader(Lang.get("feed.header_title"));
-			resolve(list);
+			resolve({list: list});
 		});
 	},
 
 	/**
 	 * Request feed data
-	 * @param {HTMLElement} list
-	 * @param {string} next
+	 * @param {{list: HTMLElement, data: *?, nextRequest: function?, wasNext: string?}} meta
+	 * @param {string=} next
 	 */
-	request: function(list, next) {
+	request: function(meta, next) {
 		var lists = Site.get("list") || "",
 			filter = Site.get("filter") === "photos" ? "photo,wall_photo,photo_tag" : "post";
 
@@ -149,20 +123,22 @@ var Feed = {
 
 			Local.add(result.u);
 
-			result = result.f;
+			var data = result.f;
 
-			Local.add(result.profiles.concat(result.groups));
+			Local.add(data.profiles.concat(data.groups));
 
-			result.items = result.items.map(function(post) {
+			data.items = data.items.map(function(post) {
 				if (post.comments) {
 					post.comments.items = comments[post.source_id + "_" + post.post_id];
 				}
 				return post;
 			});
 
-			// $.elements.clearChild(list); // TODO: fix it
+			meta.data = data;
+			meta.nextRequest = Feed.request;
+			meta.wasNext = next;
 
-			return {data: result, list: list};
+			return meta;
 		}).catch(function(error) {
 			console.error(error);
 		});
@@ -170,16 +146,18 @@ var Feed = {
 
 	/**
 	 * Show items
-	 * @param {{list: HTMLElement, data: {items: Post[], next_from: string, count: int}}} res
-	 * @param {function} nextRequest
+	 * @param {{list: HTMLElement, data: {items: Post[], next_from: string, count: int}, nextRequest: function?, wasNext: string}} meta
 	 */
-	show: function(res, nextRequest) {
+	show: function(meta) {
+		var res = meta.data,
+			list = meta.list,
 
-		nextRequest = nextRequest || Feed.request;
+			data = res.items,
+			next = res.next_from,
 
-		var list = res.list,
-			data = res.data.items,
-			next = res.data.next_from;
+			nextRequest = meta.nextRequest || Feed.request;
+
+		!meta.wasNext && $.elements.clearChild(list);
 
 		for (var i = 0, c; c = data[i]; ++i) {
 
@@ -220,19 +198,18 @@ var Feed = {
 			}
 		}
 
-		var load = false;
+		var load = false,
+			callback = function() {
+				if (load) {
+					return;
+				}
+				load = true;
+				nextRequest.call(Feed, {list: list}, next).then(Feed.show).then(function() {
+					//noinspection JSCheckFunctionSignatures
+					button && $.elements.remove(button);
+				});
 
-		var callback = function() {
-			if (load) {
-				return;
-			}
-			load = true;
-			nextRequest.call(Feed, list, next).then(Feed.show).then(function() {
-				//noinspection JSCheckFunctionSignatures
-				button && $.elements.remove(button);
-			});
-
-		},
+			},
 			button = $.e("div", {"class": "button-block", html: "Поздние записи..", onclick: callback});
 
 		list.appendChild(button);
@@ -240,6 +217,8 @@ var Feed = {
 		window.onScrollCallback = function (event) {
 			!load && event.needLoading && callback();
 		};
+
+		return meta;
 	},
 
 	/**
@@ -250,8 +229,8 @@ var Feed = {
 		var e = Site.getTabPanel([
 			["feed", Lang.get("feed.tabs_feed_selections")],
 			["feed?filter=photos", Lang.get("feed.tabs_photos")],
-			["feed?lists=friends", Lang.get("feed.tabs_friends")],
-			["feed?lists=groups,pages", Lang.get("feed.tabs_groups")],
+			["feed?list=friends", Lang.get("feed.tabs_friends")],
+			["feed?list=groups,pages", Lang.get("feed.tabs_groups")],
 			["feed?act=recommends", Lang.get("feed.tabs_recommends")],
 			["feed?act=select_list", Lang.get("feed.tabs_select")]
 		]);
@@ -267,7 +246,7 @@ var Feed = {
 				photos = item.photos,
 				user = Local.data[item.source_id];
 			parent.id = "wall-photo"+ item.source_id + "_" + item.post_id;
-			parent.appendChild(Feed.getHideNode("photo", item.source_id, item.post_id));
+
 			parent.appendChild($.elements.create("a", {
 				href: "#" + user.screen_name,
 				append: $.e("img", {src: getURL(user.photo || user.photo_rec || user.photo_50), "class": "wall-left"})
@@ -350,58 +329,7 @@ var Feed = {
 			return [t, p];
 		},
 	},
-	getHideNode: function (type, owner_id, item_id) {
-		return $.elements.create("div", {
-			"class": "feed-close a",
-			onclick: function (event) {
-				event.stopPropagation();
-				return Feed.hidePost(type, owner_id, item_id);
-			}
-		});
-	},
-	hidePost: function (type, owner_id, item_id) {
-		var node = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
 
-		Site.API("newsfeed.ignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function (response) {
-			if (!Site.isResponse(response))
-				return;
-
-			var hidden = $.e("div", {"class": "wall-hidden", append: [
-				$.e("div", {html: "Эта запись не будет показываться в ленте."}),
-				$.e("div", {append: [
-					$.elements.create("a", {
-						html: "Скрыть все новости этого " + (owner_id > 0 ? "пользователя" : "сообщества"),
-						onclick: function (event) {
-							event.stopPropagation();
-							return Feed.addBan(owner_id, type, item_id);
-						}
-					})
-				]}),
-				$.e("div", {append:
-					$.e("a", {
-						html: "Вернуть этот пост в ленту",
-						onclick: function (event) {
-							event.stopPropagation();
-							$.elements.removeClass(node, "hidden");
-							$.elements.remove(hidden);
-							return Feed.unhidePost(type, owner_id, item_id);
-						}
-					})
-				})
-			]});
-			$.elements.addClass(node, "hidden");
-			node.parentNode.insertBefore(hidden, node);
-		});
-		return false;
-	},
-	unhidePost: function (type, owner_id, item_id) {
-		var e = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
-		Site.API("newsfeed.unignoreItem", {type: type, owner_id: owner_id, item_id: item_id}, function (response) {
-			if (!Site.isResponse(response))
-				return;
-		});
-		return false;
-	},
 	addBan: function (owner_id, type, item_id) {
 		var params = {}, curPost = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
 		if (owner_id > 0) params.user_ids = owner_id; else params.group_ids = -owner_id;
@@ -585,7 +513,7 @@ var Feed = {
 	mentions: {
 		data: null,
 
-		load: function(list) {
+		load: function(meta) {
 			return api("newsfeed.getMentions", {
 				start_time: Feed.getStartFrom(),
 				count: Feed.DEFAULT_COUNT,
@@ -594,15 +522,17 @@ var Feed = {
 			}).then(function(result) {
 				Local.add(result.profiles);
 				Local.add(result.groups);
-				return {data: result, list: list};
+				meta.data = result;
+				meta.nextRequest = Feed.mentions.load;
+				return meta;
 			});
 		}
 	},
 
 	recommendations: {
 
-		load: function(list) {
-			return api("newsfeed.getMentions", {
+		load: function(meta) {
+			return api("newsfeed.getRecommended", {
 				start_time: Feed.getStartFrom(),
 				count: Feed.DEFAULT_COUNT,
 				allow_group_comments: 1,
@@ -611,7 +541,9 @@ var Feed = {
 			}).then(function(result) {
 				Local.add(result.profiles);
 				Local.add(result.groups);
-				return {data: result, list: list};
+				meta.data = result;
+				meta.nextRequest = Feed.recommendations.load;
+				return meta;
 			});
 		}
 
@@ -752,29 +684,6 @@ var Feed = {
 				i.style.opacity = ".5";
 			}
 		});
-	},
-	AddBan:function(id,list){
-		var opts={};
-		if(id>0)
-			opts.uids=id;
-		else
-			opts.gids=-id;
-		Site.API("newsfeed.addBan",opts,function(data){
-			if(data.response===1){
-				if(list==true){
-					$.element("feedbanned"+id).style.opacity=1;
-					$.element("feedact"+id).innerHTML='<a href="#feed" onclick="return Feed.DeleteBanned('+id+');">Вернуть в новости<\/a>';
-				}else{
-					var other=document.querySelectorAll(".feed_owner"+id);
-					var other_btns=document.querySelectorAll(".feed_owner"+id+" .feed-close");
-					for(var i=0;i<other.length;++i){
-						other[i].style.opacity=0.5;
-						other_btns[i].style.display="none";
-					}
-				}
-			}
-		});
-		return false;
 	},
 
 	getCommentForm: function (ownerId, postId, opts, type) {
