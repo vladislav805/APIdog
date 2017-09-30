@@ -189,7 +189,7 @@ var Profile = {
 						icon: user.can_see_gifts ? null : "profile-i-gift"
 					},
 					{
-						link: "feed?act=search&owner=" + user.id,
+						link: "feed?act=search&ownerId=" + user.id,
 						label: "countersWallSearch",
 						count: isActive && wall.count ? -1 : 0,
 						icon: "profile-i-searchWall"

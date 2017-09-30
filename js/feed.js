@@ -599,12 +599,15 @@ var Feed = {
 
 		getQuery: function() {
 			return {
-				q: Site.get("q") || ""
+				q: Site.get("q") || "",
+				owner: Site.get("ownerId") || 0,
+				// offset: Site.get("offset") || 0
 			};
 		},
 
 		insertForm: function(meta) {
-			var q = Feed.search.getQuery().q,
+			var p = Feed.search.getQuery(),
+				q = p.q,
 				form = Site.createInlineForm({
 					name: "q",
 					value: q,
@@ -612,7 +615,7 @@ var Feed = {
 					onsubmit: function(event) {
 						event.preventDefault();
 						$.elements.clearChild(meta.list);
-						window.history.replaceState(null, document.title, "#feed?act=search&q=" + encodeURIComponent(this.q.value.trim()));
+						window.history.replaceState(null, document.title, "#feed?act=search&q=" + encodeURIComponent(this.q.value.trim()) + (p.owner ? "&ownerId=" + p.owner : ""));
 						Feed.search.request("").then(Feed.search.show.bind(Feed.search, meta));
 						return false;
 					}
@@ -624,17 +627,29 @@ var Feed = {
 		},
 
 		request: function(nextFrom) {
-			var p = {
-				extended: 1,
-				count: Feed.DEFAULT_COUNT,
-				start_time: parseInt((Date.now() - 60 * DAY) / 1000),
-				start_from: nextFrom,
-				end_time: getUnixTime(),
-				v: 5.56
-			};
+			var q = Feed.search.getQuery(), method, p;
+			if (!q.owner) {
+				method = "newsfeed.search";
+				p = {
+					extended: 1,
+					count: Feed.DEFAULT_COUNT,
+					start_time: parseInt((Date.now() - 60 * DAY) / 1000),
+					start_from: nextFrom,
+					end_time: getUnixTime(),
+					v: 5.56
+				};
+			} else {
+				method = "execute";
+				p = {
+					code: "var o=parseInt(Args.owner),d=API.wall.search({query:Args.q,owner_id:o,count:parseInt(Args.c),owners_only:1,extended:1});if(o>0){d.profiles.push(API.users.get({user_ids:o,fields:Args.f})[0]);}else{d.groups.push(API.groups.getById({group_id:-o})[0]);};return d;",
+					c: Feed.DEFAULT_COUNT,
+					f: "first_name_gen,online,screen_name",
+					v: 5.56
+				};
+			}
 
-			Object.merge(p, Feed.search.getQuery());
-			return api("newsfeed.search", p).then(function(res) {
+			Object.merge(p, q);
+			return api(method, p).then(function(res) {
 				Local.add(res.profiles);
 				Local.add(res.groups);
 				res["wasNext"] = nextFrom;
@@ -644,13 +659,14 @@ var Feed = {
 
 		/**
 		 * Show results of search
-		 * @param {{wasNext: string=, rightHead: HTMLElement, list: HTMLElement}} meta
-		 * @param {{total_count: int, count: int, next_from: string, items: Post[]}} result
+		 * @param {{rightHead: HTMLElement, list: HTMLElement}} meta
+		 * @param {{wasNext: string=, total_count: int, count: int, next_from: string, items: Post[]}} result
 		 */
 		show: function(meta, result) {
-			meta.rightHead.textContent = result.total_count + " " + $.textCase(result.total_count, ["запись", "записи", "записей"]);
+			var realCount = result.total_count || result.count;
+			meta.rightHead.textContent = realCount + " " + $.textCase(realCount, ["запись", "записи", "записей"]);
 
-			meta.wasNext && $.elements.clearChild(meta.list);
+			!result.wasNext && $.elements.clearChild(meta.list);
 
 			result.items.forEach(function(post) {
 				meta.list.appendChild(Wall.getItemPost(post, post.source_id, post.id));
@@ -658,7 +674,7 @@ var Feed = {
 
 			var button;
 
-			meta.list.appendChild(button = Site.getNextButton({
+			result.next_from && meta.list.appendChild(button = Site.getNextButton({
 				text: "next",
 				click: function(event) {
 					event.preventDefault();
@@ -856,69 +872,6 @@ var Feed = {
 			}
 		};
 		return Site.getExtendedWriteForm(obj, ownerId, postId);
-	},
-
-
-
-
-	searchByOwner: function (screenName, query, offset) {
-		Site.Loader();
-		query = decodeURIComponent(query || "") || "";
-		var q = Site.Escape(query);
-		Site.API("execute", {
-			code: "return{o:API.users.get({user_ids:\"%d\",fields:\"first_name_gen,online,screen_name\",v:5.29})[0],g:API.groups.getById({group_id:\"%d\"})[0],r:API.wall.search({query:\"%s\",domain:\"%d\",count:50,offset:%o,owners_only:%f,extended:1,v:5.29})};"
-				.replace(/%s/img, query) // there was addSlashes
-				.replace(/%d/img, screenName)
-				.replace(/%o/img, offset)
-				.replace(/%f/img, Site.Get("comments") ? 0 : 1)
-		}, function (data) {
-			data = Site.isResponse(data);
-			if (!data.o && !data.g) {
-				Site.append(Site.getEmptyField("Ошибка<br\/><br\/>data.o && data.g is null"));
-				return;
-			};
-			Local.add([data.o, data.g]);
-			Local.add(data.r.profiles);
-			Local.add(data.r.groups);
-			var e = $.e,
-				owner = data.o || data.g,
-				isUser = data.o,
-				u = Local.data,
-				w = data.r.items,
-				hash = String(q).split("@")[0],
-				count = data.r.count,
-				form = Site.createInlineForm({
-					title: "Найти",
-					value: hash,
-					placeholder: "Поиск..",
-					name: "q",
-					onsubmit: function (event) {
-						window.location.hash = "#" + screenName + "?act=search&q=" + encodeURIComponent($.trim(this.q.value));
-						event.preventDefault();
-						return false;
-					}
-				}),
-				list = e("div"),
-				page = e("div", {append: [
-					Site.getPageHeader(
-						("На странице %s найдено %d " + $.textCase(count, ["запись", "записи", "записей"]) + " по хэштегу %h")
-							.replace(/%s/img, Site.Escape(isUser ? owner.first_name_gen : owner.name))
-							.replace(/%d/img, count)
-							.replace(/%h/img, hash)
-					),
-					form,
-					list
-				]});
-			if (w.length)
-				Array.prototype.forEach.call(w, function (post) {
-					list.appendChild(Wall.getItemPost(post, post.owner_id, post.id, {deleteBtn: true, from: Site.getAddress(true)}));
-				});
-			else
-				list.appendChild(Site.getEmptyField(query ? "Ничего не найдено" : "Введите запрос"));
-			list.appendChild(Site.getSmartPagebar(offset, count, 50));
-			Site.append(page);
-			Site.setHeader("Поиск по стене", {link: screenName});
-		});
 	},
 
 	curAd: [],

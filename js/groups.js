@@ -520,7 +520,7 @@ var Groups = {
 				}
 			}
 
-			links.push({link: "feed?act=search&owner=-" + groupId, label: "Поиск по стене", count: -1});
+			links.push({link: "feed?act=search&ownerId=-" + groupId, label: "Поиск по стене", count: -1});
 			nodeInfo.appendChild(Site.getPageHeader("Группа"));
 			nodeInfo.appendChild(counterRow(links));
 		} else {
