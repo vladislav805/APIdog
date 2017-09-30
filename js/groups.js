@@ -513,15 +513,15 @@ var Groups = {
 			];
 
 			if (group.is_admin) {
-				links.push({link: "#groups?act=manage&groupId=" + groupId, label: "Управление", count: -1});
-				links.push({link: "#groups?act=blacklist&groupId=" + groupId, label: "Черный список", count: -1});
-				links.push({link: "#groups?act=stat&groupId=" + groupId, label: "Статистика", count: -1});
+				links.push({link: "groups?act=manage&groupId=" + groupId, label: "Управление", count: -1});
+				links.push({link: "groups?act=blacklist&groupId=" + groupId, label: "Черный список", count: -1});
+				links.push({link: "groups?act=stat&groupId=" + groupId, label: "Статистика", count: -1});
 				if (group.r > 0) {
-					links.push({link: "#groups?act=requests&groupId=" + groupId, label: "Заявки на вступление в группу", count: group.r});
+					links.push({link: "groups?act=requests&groupId=" + groupId, label: "Заявки на вступление в группу", count: group.r});
 				}
 			}
 
-			links.push({link: "#feed?act=search&owner=-" + groupId, label: "Поиск по стене", count: -1});
+			links.push({link: "feed?act=search&owner=-" + groupId, label: "Поиск по стене", count: -1});
 			nodeInfo.appendChild(Site.getPageHeader("Группа"));
 			nodeInfo.appendChild(counterRow(links));
 		} else {
@@ -551,12 +551,12 @@ var Groups = {
 		var bg, cover = group.cover, actions = Groups.getActions(group);
 
 		if (cover && cover.enabled) {
-			var img, height;
+			var img, height, targetWidth = g("page").offsetWidth;
 
 			for (var i = 0, item; item = cover.images[i]; ++i) {
-				if (item.width > 650) {
+				if (item.width > targetWidth) {
 					img = item.url;
-					height = item.height * (g("page").offsetWidth / item.width);
+					height = item.height * (targetWidth / item.width);
 					break
 				}
 			}
