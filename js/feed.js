@@ -572,7 +572,7 @@ var Feed = {
 
 	},
 
-search: {
+	search: {
 
 		getQuery: function() {
 			return {

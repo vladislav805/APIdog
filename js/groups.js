@@ -5,16 +5,8 @@ var Groups = {
 			case "invites":
 				return Groups.invites.page().then(Groups.invites.load).then(Groups.invites.show);
 
-// TODO
 			case "search":
-				if(!Site.Get("q"))
-					return [Site.Loader(), Groups.Search()];
-				else
-					return Groups.RequestSearch({
-						offset: getOffset(),
-						q: decodeURI(Site.Get("q")),
-						sort: Site.Get("sort")
-					});
+				return Groups.search.page().then(Groups.search.load).then(Groups.search.show);
 
 			case "recommends":
 				Groups.recommendations.page().then(Groups.recommendations.load).then(Groups.recommendations.show);
@@ -1080,86 +1072,97 @@ var Groups = {
 
 	},
 
+	search: {
+		getQuery: function() {
+			var p = Site.get();
 
-	/**
-	 * @deprecated
-	 */
-	Search: function () {
-		var parent = $.e("div"),
-			list = document.createElement("div");
-		list.id = "groups-search-list";
-		var tabs = [
-				["groups", "Все <i class='count'>" + formatNumber(Groups.groupsList[API.userId] && Groups.groupsList[API.userId].count || "") + "<\/i>"]
-			],
-			admins = 0;
-		if (Groups.groupsList[API.userId] && Groups.groupsList[API.userId].items)
-			for (var i = 0, l = Groups.groupsList[API.userId].items.length; i < l; ++i)
-				if (Groups.groupsList[API.userId].items[i].is_admin)
-					admins++;
-		if (admins > 0)
-			tabs.push(["groups?section=admin", "Управление <i class='count'>" + admins + "</i>"]);
-		if (Site.counters && Site.counters.groups > 0)
-			tabs.push(["groups?act=invites", "Приглашения <i class='count'>" + Site.counters.groups + "</i>"]);
-		tabs.push(["groups?act=recommends", "Рекомендованное"]);
-		tabs.push(["groups?act=search", "Поиск"]);
-		parent.appendChild(Site.getTabPanel(tabs));
-		parent.appendChild(Site.getPageHeader("<span id=\"groups-search-tip\">Введите критерии поиска<\/span>"));
-		var form = Site.createInlineForm({
-			name: "q",
-			title: "Поиск",
-			value: decodeURI(Site.Get("q") || ""),
-			onsubmit: function () {
-				window.location.hash = "#groups?act=search&q=" + encodeURI(this.q.value) + "&sort=" + this.sort.options[this.sort.selectedIndex].value;
-				return false;
-			}
-		});
-		var sort = $.e("select", {name: "sort", append: [
-			$.e("option", {value: 0, html: "по количеству пользователей"}),
-			$.e("option", {value: 1, html: "по скорости роста"}),
-			$.e("option", {value: 2, html: "по отношению дневной посещаемости к количеству пользователей"}),
-			$.e("option", {value: 3, html: "по отношению количества лайков к количеству пользователей"}),
-			$.e("option", {value: 4, html: "по отношению количества комментариев к количеству пользователей"}),
-			$.e("option", {value: 5, html: "по отношению количества записей в обсуждениях к количеству пользователей"})
-		]});
-		if (Site.Get("sort"))
-			sort.options.selectedIndex = parseInt(Site.Get("sort"));
-		form.appendChild($.e("div", {"class": "sf-wrap", append: [sort]}));
-		parent.appendChild(form);
-		parent.appendChild(list);
-		Site.setHeader("Поиск", {link: "groups"});
-		Site.append(parent);
-	},
-	/**
-	 * @deprecated
-	 */
-	RequestSearch: function (form) {
-		try {
-			var test = $.element("groups-search-list").className;
-		} catch (e) {
-			Groups.Search();
-		} finally {
-			var q = form.q,
-				sort = form.sort;
-			Site.APIv5("groups.search", {
-				q: q,
-				sort: sort,
-				offset: form.offset,
-				count: 50,
-				fields: "members_count,city",
-				v: 5.14
-			}, function (data) {
-				data = Site.isResponse(data);
-				var count = data.count;
-				data = data.items;
-				$.element("groups-search-tip").innerHTML = Lang.get("groups", "search_founded", count) + " " + count + " " + Lang.get("groups", "search_groups", count);
-				$.elements.clearChild($.element("groups-search-list"));
-				for (var i = 0, l = data.length; i < l; ++i)
-					$.element("groups-search-list").appendChild(Groups.Item(data[i]));
-				$.element("groups-search-list").appendChild(Site.getSmartPagebar(getOffset(), count, 50));
+			return {
+				q: p.q,
+				sort: p.sort || 0
+			};
+		},
+
+		page: function() {
+			return new Promise(function(resolve) {
+				var parent = $.e("div"),
+					p = Groups.search.getQuery(),
+					form = Site.createInlineForm({
+						name: "q",
+						title: "Поиск",
+						value: p.q,
+						onsubmit: function(event) {
+							event.preventDefault();
+							p.q = this.q.value.trim();
+							p.sort = this.sort.options[this.sort.selectedIndex].value;
+							window.history.replaceState(null, document.title, "#groups?act=search&" + Object.toQueryString(p));
+							Groups.search.load({sl: sl}).then(Groups.search.show);
+							return false;
+						}
+					}),
+					sort = $.e("select", {name: "sort", append: [
+						$.e("option", {value: 0, html: "по количеству пользователей"}),
+						$.e("option", {value: 1, html: "по скорости роста"}),
+						$.e("option", {value: 2, html: "по отношению дневной посещаемости к количеству пользователей"}),
+						$.e("option", {value: 3, html: "по отношению количества лайков к количеству пользователей"}),
+						$.e("option", {value: 4, html: "по отношению количества комментариев к количеству пользователей"}),
+						$.e("option", {value: 5, html: "по отношению количества записей в обсуждениях к количеству пользователей"})
+					]}),
+					sl = new SmartList({
+						data: {count: -1, items: []},
+						countPerPage: 40
+					});
+
+				p.sort && (sort.selectedIndex = parseInt(p.sort));
+
+				form.appendChild(sort);
+
+				parent.appendChild(Groups.getTabs(API.userId));
+				parent.appendChild(Site.getPageHeader(Lang.get("groups.searchTitle")));
+				parent.appendChild(form);
+				parent.appendChild(sl.getNode());
+
+				window.onScrollCallback = function(event) {
+					event.needLoading && sl.showNext();
+				};
+
+				Site.setHeader(Lang.get("groups.searchTitle"));
+				Site.append(parent);
+
+				p.q && Groups.search.load({sl: sl}).then(Groups.search.show);
+
+				resolve({sl: sl});
 			});
+		},
+
+		/**
+		 * Request for results
+		 * @returns {Promise}
+		 */
+		load: function(meta) {
+			var p = {
+				count: 250,
+				fields: "members_count,city",
+				v: 5.56
+			};
+
+			Object.merge(p, Groups.search.getQuery());
+			return api("groups.search", p).then(function(res) {
+				meta.data = res;
+				return meta;
+			});
+		},
+
+		/**
+		 * Show items on page
+		 */
+		show: function(meta) {
+			meta.sl.setData(meta.data);
 		}
-		return false;
 	},
+
+
+
+
 	Blacklist:{
 		/**
 		 * @deprecated
