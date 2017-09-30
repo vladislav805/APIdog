@@ -1190,7 +1190,7 @@ var Groups = {
 				Local.add(data[0].items.concat(data[1]).concat([group]));
 				parent.appendChild(Site.getPageHeader(
 					Lang.get("groups.bl_in") + count + " " + Lang.get("groups", "bl_users", count),
-					$.elements.create("span", {"class": "fr bold a", html: "Забанить", onclick: function (event) {
+					$.elements.create("span", {"class": "fr a", html: "Забанить", onclick: function (event) {
 						this.innerHTML = $.elements.hasClass(form, "hidden") ? "Скрыть" : "Забанить";
 						$.elements.triggerClass(form, "hidden");
 //                      $.elements.triggerClass(list, "hidden");

@@ -249,7 +249,7 @@ var Feed = {
 
 			parent.appendChild($.elements.create("a", {
 				href: "#" + user.screen_name,
-				append: $.e("img", {src: getURL(user.photo || user.photo_rec || user.photo_50), "class": "wall-left"})
+				append: $.e("img", {src: getURL(user.photo || user.photo_50), "class": "wall-left"})
 			}));
 			right.appendChild($.elements.create("div", {"class": "feed-updatePhotos-head", append: [
 				$.e("a", {href: "#" + user.screen_name, html: getName(user), "class": "bold"}),
@@ -280,13 +280,13 @@ var Feed = {
 			left.href = "#" + owner.screen_name;
 			left.appendChild(e("img", {"class": "wall-left", src: getURL(owner.photo_50)}));
 			right.appendChild(e("div", {append: [
-				e("a", {"class": "bold", href: "#" + owner.screen_name, html: owner.first_name + " " + owner.last_name + Site.isOnline(owner)}),
+				e("a", {"class": "bold", href: "#" + owner.screen_name, html: getName(owner)}),
 				document.createTextNode(" "),
-				e("span", {"class": "tip", html: Lang.get("feed.friends_added")[owner.sex] + " " + count + " " + Lang.get("feed", "friends_friends", count) + ": "}),
+				e("span", {"class": "tip", html: Lang.get("feed.friends_added")[owner.sex] + " " + count + " " + Lang.get("feed.friends_friends", count) + ": "}),
 				nodes[0],
 				nodes[1]
 			]}));
-			right.appendChild(e("div", {"class": "tip feed-updateFriends-date", html: Site.getDate(item.date)}));
+			right.appendChild(e("div", {"class": "tip feed-updateFriends-date", html: getDate(item.date, APIDOG_DATE_FORMAT_SMART)}));
 			wrap.appendChild(left);
 			wrap.appendChild(right);
 			return wrap;
@@ -298,12 +298,12 @@ var Feed = {
 				p = e("div", {"class": "feed-friends-photos"}),
 				m = function (a, b)
 				{
-					b = Local.data[a.uid];
-					return e("a", {href: "#" + b.screen_name, html: b.first_name + " " + b.last_name});
+					b = Local.data[a.id];
+					return e("a", {href: "#" + b.screen_name, html: getName(b)});
 				},
 				n = function (a, b)
 				{
-					b = Local.data[a.uid];
+					b = Local.data[a.id];
 					return e("a", {"class": "feed-friends-photo", href: "#" + b.screen_name, append: e("img", {src: getURL(b.photo_50)})});
 				},
 				i = -1,
@@ -330,37 +330,60 @@ var Feed = {
 		},
 	},
 
-	addBan: function (owner_id, type, item_id) {
-		var params = {}, curPost = $.element("wall-" + (type == "wall" ? "post" : type) + owner_id + "_" + item_id);
-		if (owner_id > 0) params.user_ids = owner_id; else params.group_ids = -owner_id;
-		Site.API("newsfeed.addBan", params, function (response) {
-			var e = document.querySelectorAll(".wall-item[id^=\"wall-post" + owner_id + "\"]");
-			for (var i = 0, l = e.length; i < l; ++i)
-				if (curPost != e[i])
+	/**
+	 * Show in UI banned author of post
+	 * @param {string} type
+	 * @param {int} ownerId
+	 * @param {int} itemId
+	 */
+	addBanByPost: function(type, ownerId, itemId) {
+		var curPost = $.element("wall-" + (type === "wall" ? "post" : type) + ownerId + "_" + itemId),
+			e = document.querySelectorAll(".wall-item[id^=\"wall-post" + ownerId + "\"]");
+
+		Feed.addBan(ownerId).then(function() {
+			for (var i = 0, l = e.length; i < l; ++i) {
+				if (curPost !== e[i]) {
 					$.elements.addClass(e[i], "hidden");
+				}
+			}
+
 			$.elements.clearChild(curPost.previousSibling);
-			curPost.previousSibling.appendChild($.elements.create("div", {html: "Все записи этого " + (owner_id > 0 ? "пользователя" : "сообщества") + " скрыты из новостной ленты"}));
-			curPost.previousSibling.appendChild($.elements.create("a", {html: "Отмена", onclick: function () {
-				Feed.removeFromBan(owner_id, function () {
-					for (var i = 0, l = e.length; i < l; ++i)
-						if (curPost != e[i])
+
+			curPost.previousSibling.appendChild($.e("div", {html: "Все записи этого " + (ownerId > 0 ? "пользователя" : "сообщества") + " скрыты из новостной ленты"}));
+			curPost.previousSibling.appendChild($.e("a", {html: "Отмена", onclick: function() {
+				Feed.removeFromBan(ownerId).then(function() {
+					for (var i = 0, l = e.length; i < l; ++i) {
+						if (curPost !== e[i]) {
 							$.elements.removeClass(e[i], "hidden");
+						}
+					}
 					$.elements.removeClass(curPost, "hidden");
 					$.elements.remove(curPost.previousSibling);
 				});
 			}}));
 		});
 	},
-	removeFromBan: function (ownerId, callback) {
+
+	/**
+	 * Request for add to ban user/group
+	 * @param {int} ownerId
+	 * @returns {Promise}
+	 */
+	addBan: function(ownerId) {
+		var params = {};
+		params[ownerId > 0 ? "user_ids" : "group_ids"] = Math.abs(ownerId);
+		return api("newsfeed.addBan", params);
+	},
+
+	/**
+	 * Request for remove user/group from ban
+	 * @param {int} ownerId
+	 * @returns {Promise}
+	 */
+	removeFromBan: function(ownerId) {
 		var options = {};
-		if (ownerId > 0)
-			options.user_ids = ownerId;
-		else
-			options.group_ids = -ownerId;
-		Site.API("newsfeed.deleteBan", options, function (data) {
-			data = Site.isResponse(data);
-			callback();
-		});
+		options[ownerId > 0 ? "user_ids" : "group_ids"] = Math.abs(ownerId);
+		return api("newsfeed.deleteBan", options);
 	},
 
 	comments: {

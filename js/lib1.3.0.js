@@ -248,7 +248,7 @@ window.$ = {
 		},
 
 		/**
-		 * @param {HTMLElement} node
+		 * @param {HTMLElement|Node} node
 		 * @returns {HTMLElement}
 		 */
 		clearChild: function(node) {

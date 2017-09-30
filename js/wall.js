@@ -493,6 +493,14 @@ var Wall = {
 			}));
 		}
 
+		/**
+		 * If feed, we can suggest delete post from news
+		 */
+		if (opts.hide) {
+			// TODO revert function of button
+			//right.appendChild(Feed.getHideNode("wall", ownerId, postId));
+		}
+
 		var linkToPost = [
 			(post.type === "post" ? "wall" : (post.type === "topic" ? "board" : post.type || "wall")),
 			(post.type === "topic" ? -ownerId : ownerId),
