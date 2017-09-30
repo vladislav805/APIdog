@@ -55,6 +55,8 @@
 
 	$jsObject["theme"] = null;
 
+	$jsObject["languageBuild"] = filemtime(sprintf("./lang/%d.json", $settings->getLanguage()));
+
 	if ($settings->getThemeId()) {
 		try {
 			$jsObject["theme"] = $cn->perform(new \Method\Theme\GetById(["themeId" => $settings->getThemeId()]));
@@ -114,7 +116,7 @@
 		<link rel="icon" href="./favicon.png?14" />
 		<link rel="shortcut icon" href="./favicon.png?4" />
 		<script>
-			var API = <?=json_encode($jsObject,JSON_UNESCAPED_UNICODE)?>;
+			(function(a,b,c){a[b]=c})(window,"API",<?=json_encode($jsObject,JSON_UNESCAPED_UNICODE)?>);
 		</script>
 		<style type="text/css">
 			html._notloaded{overflow:hidden}._notloaded .loadScreen-wrap{display:block!important;background:#4E729A;color:#FFF;position:fixed;z-index:9999;top:0;left:0;right:0;bottom:0;width:100%;height:100%}._notloaded .head-wrapper{display:none}.loadScreen-logo{background:url(//static.apidog.ru/v6.2/logo_login_2x.png) center center/300px no-repeat;overflow:hidden;width:300px;height:110px;margin:0 auto}@keyframes loaderRound{from{transform:rotate(0)}to{transform:rotate(360deg)}}@-webkit-keyframes loaderRound{from{transform:rotate(0)}to{transform:rotate(360deg)}}.loader-line{border:5px solid #4E729A;border-bottom-color:transparent;height:40px;width:40px;margin:0 auto;border-radius:50%;animation:loaderRound ease-in-out .7s infinite;-webkit-animation:loaderRound ease-in-out .7s infinite}.loadScreen-animation .loader-line{border-color:#fff;border-bottom-color:transparent}.loadScreen-content{position:absolute;top:50%;left:50%;margin:-105px 0 0 -150px}.loadScreen-label{text-align:center;line-height:50px;font-size:22px}.loadScreen-footer{text-align:center;position:absolute;bottom:10px;font-size:xx-small;color:rgba(255,255,255,.5);width:80%;left:10%;right:10%}.topNotification-wrap{background:#e8edf1;line-height:28px;font-size:14px}.topNotification-close{width:28px;height:28px;float:right;background:url("data:image/svg+xml,%3Csvg fill='rgb(93, 125, 182)' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E") center center;background-size:90%;cursor:pointer}.topNotification-content{text-align:center;padding:0 32px 0 0}.topNotification-closing{-webkit-transition:all .4s ease-in;-moz-transition:all .4s ease-in;transition:all .4s ease-in;background:#5f7fba}</style>

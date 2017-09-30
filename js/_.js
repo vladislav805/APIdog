@@ -1,3 +1,22 @@
+var API = {
+	userId: 1,
+	bitmask: 1,
+	language: 0,
+	themeId: 0,
+	authKey: "1",
+	authId: 1,
+	date: 1505504624,
+	applicationId: 1,
+	accessToken: "1",
+	salt: null,
+	theme: null,
+	languageBuild: 1506798466,
+	ad: {
+		menu: [],
+		feed: []
+	}
+};
+
 /**
  * @type {{
  *  owner_id: int,

@@ -13,10 +13,11 @@ var Lang = {
 	load: function(callback) {
 		var cache;
 		if (cache = $.localStorage(Lang.KEY_LOCAL_STORAGE)) {
-			if (parseInt($.localStorage(Lang.KEY_LOCAL_VERSION)) > window.languageModify) {
+			if (parseInt($.localStorage(Lang.KEY_LOCAL_VERSION)) > API.languageBuild) {
 				Lang.data = JSON.parse(cache);
 				console.log("Lang: language data was get from cache");
-				return callback();
+				callback && callback();
+				return;
 			} else {
 				console.log("Lang: language data was expired. Updating...");
 			}
@@ -29,7 +30,7 @@ var Lang = {
 			var date = parseInt(Date.now() / 1000);
 			$.localStorage(Lang.KEY_LOCAL_STORAGE, JSON.stringify(Lang.data));
 			$.localStorage(Lang.KEY_LOCAL_VERSION, date);
-			console.log("Lang<>: language data was loaded and cached in " + new Date(1000 * date).short());
+			console.log("Lang: language data was loaded and cached in " + new Date(1000 * date).short());
 			callback && callback();
 		}).catch(function(e) {
 			console.error("FATAL: language data not loaded", e);
