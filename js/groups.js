@@ -1,7 +1,7 @@
 var Groups = {
 
 	RequestPage: function() {
-		switch(Site.get("act")) {
+		switch (Site.get("act")) {
 			case "invites":
 				return Groups.invites.page().then(Groups.invites.load).then(Groups.invites.show);
 
@@ -15,6 +15,13 @@ var Groups = {
 // TODO
 			case "create":
 				Groups.showCreateForm();
+				break;
+
+			case "manage":
+			case "stat":
+			case "blacklist":
+			case "requests":
+				alert("Not implemented yet");
 				break;
 
 			default:
