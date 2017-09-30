@@ -403,35 +403,35 @@ var Groups = {
 // А этот кусок кода писала лично Надя Иванова :3
 		if (group.ban_info) {
 			nodeInfo.appendChild($.e("div",{"class": "block-error", style: "margin: 4px 10px 8px", append: [
-				$.e("strong", {html: "Вы в чёрном списке этого сообщества"}),
+				$.e("strong", {html: Lang.get("groups.pageBlacklistedDescription")}),
 				$.e("div", {append:[
-					$.e("strong", {html: "Oкончание блокировки: "}),
-					$.e("span", {html: group.ban_info.end_date ? getDate (group.ban_info.end_date) : "&mdash; (навсегда)"})
+					$.e("strong", {html: Lang.get("groups.pageBlacklistedEndDate")}),
+					$.e("span", {html: group.ban_info.end_date ? getDate (group.ban_info.end_date) : Lang.get("groups.pageBlacklistedForever")})
 				]}),
 				group.ban_info.comment ? $.e("div", {append: [
-					$.e("strong", {html: "Комментарий администратора: "}),
+					$.e("strong", {html: Lang.get("groups.pageBlacklistedComment")}),
 					$.e("div", {html: group.ban_info.comment.safe()})
 				]}) : null
 			]}));
 		}
 // конец
 		if (isActive) {
-			nodeInfo.appendChild(Site.getPageHeader("Информация"));
+			nodeInfo.appendChild(Site.getPageHeader(Lang.get("groups.pageInfoTitle")));
 
 			if (group.description) {
-				nodeInfo.appendChild(infoRow("Описание", group.description, true));
+				nodeInfo.appendChild(infoRow(Lang.get("groups.pageInfoDescription"), group.description, true));
 			}
 
 			if (group.site) {
-				nodeInfo.appendChild(infoRow("Сайт", group.site, true));
+				nodeInfo.appendChild(infoRow(Lang.get("groups.pageInfoSite"), group.site, true));
 			}
 
 			if (group.start_date) {
 				if (group.type === "event") {
-					nodeInfo.appendChild(infoRow("Начало", getDate(group.start_date, APIDOG_DATE_FORMAT_FULL)));
+					nodeInfo.appendChild(infoRow(Lang.get("groups.pageInfoDateStart"), getDate(group.start_date, APIDOG_DATE_FORMAT_FULL)));
 				} else {
 					try {
-						nodeInfo.appendChild(infoRow("Дата создания", (function(a) {
+						nodeInfo.appendChild(infoRow(Lang.get("groups.pageInfoDateCreated"), (function(a) {
 							var b = /(\d{4})(\d{2})(\d{2})/img.exec(a);
 							return getDate(new Date(b[1], b[2] - 1, b[3]) / 1000, APIDOG_DATE_FORMAT_FULL);
 						})(group.start_date) ));
@@ -440,11 +440,11 @@ var Groups = {
 			}
 
 			if (group.finish_date) {
-				nodeInfo.appendChild(infoRow("Конец", getDate(group.finish_date, APIDOG_DATE_FORMAT_FULL)));
+				nodeInfo.appendChild(infoRow(Lang.get("groups.pageInfoDateEnd"), getDate(group.finish_date, APIDOG_DATE_FORMAT_FULL)));
 			}
 
 			if (group.place) {
-				group.place.title = group.place.title || "Место";
+				group.place.title = group.place.title || Lang.get("groups.pageInfoUnknownPlace");
 
 				//noinspection JSValidateTypes
 				/** @var {Geo} place */
@@ -517,7 +517,7 @@ var Groups = {
 			nodeInfo.appendChild(Site.getPageHeader("Группа"));
 			nodeInfo.appendChild(counterRow(links));
 		} else {
-			nodeInfo.appendChild($.e("div", {"class": "msg-empty", html: "Сообщество заблокировано администрацией сайта ВКонтакте."}));
+			nodeInfo.appendChild($.e("div", {"class": "msg-empty", html: Lang.get("groups.pageGroupBlocked")}));
 		}
 
 		wrap.appendChild(nodeInfo);
@@ -531,7 +531,7 @@ var Groups = {
 					canSuggest: group.type === "page" && !group.ban_info
 				}));
 			} else {
-				wrap.appendChild(Site.getEmptyField("Доступ к стене ограничен"));
+				wrap.appendChild(Site.getEmptyField(Lang.get("groups.pageWallNotAvailable")));
 			}
 		}
 
@@ -637,7 +637,6 @@ var Groups = {
 						.label(Lang.get(!group.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove"))
 						.enable()
 						.commit();
-					console.log('ok', !group.is_favorite ? "profiles.actionFavoriteAdd" : "profiles.actionFavoriteRemove");
 				});
 //					APINotify.fire(DogEvent.PROFILE_USER_FAVORITE_CHANGED, { userId: user.id, favorite: user.is_favorite });
 			}
@@ -760,7 +759,7 @@ var Groups = {
 	 * @param {function=} callback
 	 */
 	leave: function(group, callback) {
-		VKConfirm("Вы действительно хотите выйти из группы `" + getName(group) + "`", function() {
+		VKConfirm("Вы действительно хотите выйти из группы `" + group.name.safe() + "`", function() {
 			api("groups.leave", {group_id: group.id}).then(function() {
 				callback && callback();
 			});

@@ -2537,6 +2537,20 @@
 	"groups.type": [{"page": "Страница", "group": "Группа", "event": "Встреча"}, {"page": "Page", "group": "Group", "event": "Event"}, null],
 	"groups.suggestionsTitle": ["Рекомендуемые страницы", "Suggested pages", null],
 
+	"groups.pageWallNotAvailable": ["Доступ к стене ограничен", "No access to wall", null],
+	"groups.pageGroupBlocked": ["Сообщество заблокировано администрацией сайта ВКонтакте.", "Group was blocked by administrator's VK.", null],
+	"groups.pageBlacklistedDescription": ["Вы в чёрном списке этого сообщества", "You are in black list of this group"],
+	"groups.pageBlacklistedEndDate": ["Окончание блокировки: ", "End date: ", null],
+	"groups.pageBlacklistedForever": ["&mdash; (навсегда)", "&mdash; (forever)", null],
+	"groups.pageBlacklistedComment": ["Комментарий администратора: ", "Comment from admin: ", null],
+	"groups.pageInfoTitle": ["Информация", "Information", null],
+	"groups.pageInfoDescription": ["Описание", "Description", null],
+	"groups.pageInfoSite": ["Сайт", "Web-site", null],
+	"groups.pageInfoDateStart": ["Начало", "Date start", null],
+	"groups.pageInfoDateCreated": ["Дата создания", "Date of create", null],
+	"groups.pageInfoDateEnd": ["Конец", "Date of end", null],
+	"groups.pageInfoUnknownPlace": ["Место", "Place", null],
+
 	"groups.searchTitle": ["Поиск", "Search", null],
 	"groups.searchButton": ["Найти", "Find", null],
 	"groups.searchSortTypes": [[
