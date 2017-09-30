@@ -1570,7 +1570,21 @@ input[type=search].sf {
 .group-cover {
 	background: no-repeat center;
 	background-size: cover;
+	display: flex;
+	align-items: end;
+	justify-content: end;
 }
+
+.group-cover .xdd-title {
+	font-weight: 900;
+	color: #66768F;
+	line-height: 30px;
+	padding: 0 12px;
+}
+
+
+
+
 
 .friends-item {
 	overflow: hidden;

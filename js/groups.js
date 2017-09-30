@@ -554,7 +554,7 @@ var Groups = {
 
 	getCover: function(group) {
 		var bg, cover = group.cover, actions = Groups.getActions(group);
-console.log(group);
+
 		if (cover && cover.enabled) {
 			var img, height;
 
@@ -570,6 +570,7 @@ console.log(group);
 			bg = $.e("div", {"class": "group-cover"});
 			bg.style.backgroundImage = "url(" + img + ")";
 			bg.style.height = height + "px";
+			bg.appendChild(actions);
 		} else {
 			return Site.getPageHeader(getName(group), actions);
 		}
