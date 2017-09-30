@@ -615,6 +615,7 @@ var Groups = {
 		p["share"] = {
 			label: Lang.get("groups.actionShare"),
 			onclick: function() {
+				//noinspection JSCheckFunctionSignatures
 				share("club", group.id, 0, null, actionAfterShare, {
 					wall: true,
 					user: false,
@@ -875,7 +876,7 @@ var Groups = {
 			/** @var {{g, r}} data */
 			Local.add(data.g);
 			var groupId = data.i;
-			data.r = data.r || {count: 0, items: []};
+			data["r"] = data.r || {count: 0, items: []};
 			data.r.groupId = groupId;
 			Groups.showRequests(data.r);
 		});
