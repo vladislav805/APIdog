@@ -23,6 +23,7 @@
  *  likes: LikesData,
  *  reposts: RepostsData,
  *  views: ViewsData,
+ *  marked_as_ads,
  *
  *  can_pin: boolean,
  *  can_edit: boolean,
@@ -172,7 +173,7 @@ var Place = {};
  *  relatives: User[],
  *  can_add_topics,
  *  is_friend,
- *  marked_as_ads,
+ *  cover,
  *
  *  r, e
  * }}

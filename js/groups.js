@@ -451,13 +451,7 @@ var Groups = {
 				nodeInfo.appendChild(infoRow("Конец", getDate(group.finish_date, APIDOG_DATE_FORMAT_FULL)));
 			}
 
-			if (group.place && group.city && !group.place.title) {
-				group.place.title = group.city.title;
-			}
-
-			if (group.city && !group.place) {
-				nodeInfo.appendChild(infoRow("Город", group.city.title));
-			} else if (group.place) {
+			if (group.place) {
 				group.place.title = group.place.title || "Место";
 
 				//noinspection JSValidateTypes
@@ -470,7 +464,7 @@ var Groups = {
 
 			if (group.wiki_page) {
 				nodeInfo.appendChild(Site.createTopButton({
-					link: "pages?oid=-" + groupId + "&p=" + group.wiki_page,
+					link: "pages?oid=-" + groupId + "&p=" + encodeURIComponent(group.wiki_page),
 					title: group.wiki_page
 				}));
 			}
@@ -507,7 +501,7 @@ var Groups = {
 					count: counters && counters.videos
 				},
 				{
-					link: "audio?oid=-" + groupId,
+					link: "audio?ownerId=-" + groupId,
 					label: "Аудиозаписи",
 					count: counters && counters.audios
 				},
@@ -519,14 +513,15 @@ var Groups = {
 			];
 
 			if (group.is_admin) {
-				links.push({link: group.screen_name + "?act=blacklist", label: "Черный список", count: -1});
-				links.push({link: group.screen_name + "?act=stat", label: "Статистика", count: -1});
+				links.push({link: "#groups?act=manage&groupId=" + groupId, label: "Управление", count: -1});
+				links.push({link: "#groups?act=blacklist&groupId=" + groupId, label: "Черный список", count: -1});
+				links.push({link: "#groups?act=stat&groupId=" + groupId, label: "Статистика", count: -1});
 				if (group.r > 0) {
-					links.push({link: group.screen_name + "?act=requests", label: "Заявки на вступление в группу", count: group.r});
+					links.push({link: "#groups?act=requests&groupId=" + groupId, label: "Заявки на вступление в группу", count: group.r});
 				}
 			}
 
-			links.push({link: group.screen_name + "?act=search", label: "Поиск по стене", count: -1});
+			links.push({link: "#feed?act=search&owner=-" + groupId, label: "Поиск по стене", count: -1});
 			nodeInfo.appendChild(Site.getPageHeader("Группа"));
 			nodeInfo.appendChild(counterRow(links));
 		} else {
