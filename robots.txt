@@ -2,3 +2,5 @@ User-agent: *
 Disallow: /modules/
 Disallow: /page/
 Disallow: /tmp/
+Disallow: /user/
+Disallow: /lang/
