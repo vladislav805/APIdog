@@ -2536,8 +2536,19 @@
 	"groups.tabSearch": ["Поиск", "Search", null],
 	"groups.type": [{"page": "Страница", "group": "Группа", "event": "Встреча"}, {"page": "Page", "group": "Group", "event": "Event"}, null],
 	"groups.suggestionsTitle": ["Рекомендуемые страницы", "Suggested pages", null],
-	"groups.search_founded":[["Нашлась", "Нашлось", "Нашлось" ], ["Found", "Found", "Found"], ["Знайшлась", "Знайшлось", "Знайшлось"]],
-	"groups.search_groups":[["группа", "группы", "групп"], ["group", "groups", "groups"], ["група", "групи", "груп"]],
+
+	"groups.searchTitle": ["Поиск", "Search", null],
+	"groups.searchButton": ["Найти", "Find", null],
+	"groups.searchSortTypes": [[
+		"по количеству пользователей",
+		"по скорости роста",
+		"по отношению дневной посещаемости к количеству пользователей",
+		"по отношению количества лайков к количеству пользователей",
+		"по отношению количества комментариев к количеству пользователей",
+		"по отношению количества записей в обсуждениях к количеству пользователей"
+	], null, null],
+	"groups.searchPlaceholder": ["Введите запрос...", "Enter keywords...", null],
+
 	"groups.requests_join_success":["Вы успешно вступили в группу","You joined to this group","Ви успішно в групу"],
 	"groups.requests_decline":["Вы отклонили приглашение",null,"Ви відхилили запрошення"],
 	"groups.request_you_have":["Вас приглашают в ","You invited in ","Вас запрошують в "],

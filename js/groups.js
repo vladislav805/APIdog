@@ -1089,7 +1089,8 @@ var Groups = {
 					p = Groups.search.getQuery(),
 					form = Site.createInlineForm({
 						name: "q",
-						title: "Поиск",
+						title: Lang.get("groups.searchButton"),
+						placeholder: Lang.get("groups.searchPlaceholder"),
 						value: p.q,
 						onsubmit: function(event) {
 							event.preventDefault();
@@ -1100,16 +1101,11 @@ var Groups = {
 							return false;
 						}
 					}),
-					sort = $.e("select", {name: "sort", append: [
-						$.e("option", {value: 0, html: "по количеству пользователей"}),
-						$.e("option", {value: 1, html: "по скорости роста"}),
-						$.e("option", {value: 2, html: "по отношению дневной посещаемости к количеству пользователей"}),
-						$.e("option", {value: 3, html: "по отношению количества лайков к количеству пользователей"}),
-						$.e("option", {value: 4, html: "по отношению количества комментариев к количеству пользователей"}),
-						$.e("option", {value: 5, html: "по отношению количества записей в обсуждениях к количеству пользователей"})
-					]}),
+					sort = $.e("select", {name: "sort", append: (Lang.get("groups.searchSortTypes") || []).map(function(item, i) {
+						return $.e("option", {value: i, html: item});
+					}) }),
 					sl = new SmartList({
-						data: {count: -1, items: []},
+						data: {count: 0, items: []},
 						countPerPage: 40
 					});
 
