@@ -434,7 +434,7 @@ var Wall = {
 	 * @param {Post} post
 	 * @param {int} ownerId
 	 * @param {int} postId
-	 * @param {{repost: boolean=, deleteBtn: boolean=, hide: boolean=, extra: object=, from: string=, item: boolean=, feed: boolean=, message: boolean=, type: string=}} opts
+	 * @param {{repost: boolean=, deleteBtn: boolean=, hide: boolean=, extra: object=, from: string=, item: boolean=, feed: boolean=, message: boolean=, type: string=}=} opts
 	 * @returns {HTMLElement}
 	 */
 	getItemPost: function(post, ownerId, postId, opts) {

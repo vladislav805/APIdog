@@ -30,11 +30,8 @@ var Feed = {
 			case "comments":
 				return Feed.page({ needSections: false, title: "Комментарии" }).then(Feed.comments.load.bind(Feed.comments, "")).then(Feed.comments.show);
 
-
 			case "search":
-				return Feed.search({q: Site.Get("q") || "", offset: getOffset()});
-
-
+				return Feed.page({ needSections: false, title: "Поиск" }).then(Feed.search.insertForm);
 
 			case "friends":
 				return Feed.page({ needSections: false, title: "Обновления друзей" }).then(Feed.friends.load).then(Feed.friends.show);
@@ -53,6 +50,8 @@ var Feed = {
 		}
 	},
 
+	DEFAULT_COUNT: 40,
+
 	/**
 	 * Counter-limiter for output advertisements
 	 */
@@ -67,16 +66,17 @@ var Feed = {
 		options = options || {};
 		return new Promise(function(resolve) {
 			var parent = $.e("div"),
-				list = $.e("div", {id: "mainFeed", append: Site.Loader(true)});
+				list = $.e("div", {id: "mainFeed", append: Site.Loader(true)}),
+				rightHead = $.e("div", {"class": "fr"});
 
 			parent.appendChild(Feed.getTabs());
-			parent.appendChild(Site.getPageHeader(options.title));
+			parent.appendChild(Site.getPageHeader(options.title, rightHead));
 			options.needSections && parent.appendChild(Feed.getSelectionsTabs());
 			parent.appendChild(list);
 
 			Site.append(parent);
 			Site.setHeader(Lang.get("feed.header_title"));
-			resolve({list: list});
+			resolve({list: list, rightHead: rightHead});
 		});
 	},
 
@@ -372,7 +372,7 @@ var Feed = {
 		load: function(from, meta) {
 			return api("newsfeed.getComments", {
 				start_from: from,
-				count: 10,
+				count: 40,
 				allow_group_comments: 1,
 				last_comments_count: 3,
 				fields: "photo_50,online,first_name_dat,last_name_dat",
@@ -488,7 +488,7 @@ var Feed = {
 			var list = d.list, data = d.data;
 
 			data.items = data.items.map(function(list) {
-				list.link = "#feed?list=" + list.id;
+				list["link"] = "#feed?list=" + list.id;
 				return list;
 			});
 
@@ -572,35 +572,93 @@ var Feed = {
 
 	},
 
+search: {
+
+		getQuery: function() {
+			return {
+				q: Site.get("q") || ""
+			};
+		},
+
+		insertForm: function(meta) {
+			var q = Feed.search.getQuery().q,
+				form = Site.createInlineForm({
+					name: "q",
+					value: q,
+					title: "Поиск",
+					onsubmit: function(event) {
+						event.preventDefault();
+						$.elements.clearChild(meta.list);
+						window.history.replaceState(null, document.title, "#feed?act=search&q=" + encodeURIComponent(this.q.value.trim()));
+						Feed.search.request("").then(Feed.search.show.bind(Feed.search, meta));
+						return false;
+					}
+				});
+
+			q && Feed.search.request("").then(Feed.search.show.bind(Feed.search, meta));
+
+			meta.list.parentNode.insertBefore(form, meta.list);
+		},
+
+		request: function(nextFrom) {
+			var p = {
+				extended: 1,
+				count: Feed.DEFAULT_COUNT,
+				start_time: parseInt((Date.now() - 60 * DAY) / 1000),
+				start_from: nextFrom,
+				end_time: getUnixTime(),
+				v: 5.56
+			};
+
+			Object.merge(p, Feed.search.getQuery());
+			return api("newsfeed.search", p).then(function(res) {
+				Local.add(res.profiles);
+				Local.add(res.groups);
+				res["wasNext"] = nextFrom;
+				return res;
+			});
+		},
+
+		/**
+		 * Show results of search
+		 * @param {{wasNext: string=, rightHead: HTMLElement, list: HTMLElement}} meta
+		 * @param {{total_count: int, count: int, next_from: string, items: Post[]}} result
+		 */
+		show: function(meta, result) {
+			meta.rightHead.textContent = result.total_count + " " + $.textCase(result.total_count, ["запись", "записи", "записей"]);
+
+			meta.wasNext && $.elements.clearChild(meta.list);
+
+			result.items.forEach(function(post) {
+				meta.list.appendChild(Wall.getItemPost(post, post.source_id, post.id));
+			});
+
+			var button;
+
+			meta.list.appendChild(button = Site.getNextButton({
+				text: "next",
+				click: function(event) {
+					event.preventDefault();
+					Feed.search.request(result.next_from).then(function(c) {
+						$.elements.remove(button);
+						return c;
+					}).then(Feed.search.show.bind(Feed.search, meta));
+					return false;
+				}
+			}));
+		}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-	/**
-	 * @param {{profiles, groups, items, next_from}} data
-	 */
-	getFriends: function(data) {
-		Local.add(data.profiles.concat(data.groups));
-		var parent = document.createElement("div"),
-			list = document.createElement("div"),
-			next = data.next_from;
-		Feed.getFriendsFeed(list, data.items, next);
-		parent.appendChild(Feed.getTabs());
-		parent.appendChild(Site.getPageHeader("Обновления друзей"));
-		parent.appendChild(list);
-		Site.append(parent);
-		Site.setHeader("Обновления друзей");
 	},
+
+
+
+
+
+
+
+
+
 
 	getFriendsFeed: function (list, data, next) {
 		for (var i = 0, l = data.length; i < l; ++i)
@@ -688,10 +746,11 @@ var Feed = {
 		});
 	},
 
+	/**
+	 * @deprecated
+	 */
 	getCommentForm: function (ownerId, postId, opts, type) {
 		return $.e("div");
-
-
 		var obj = {
 			name: "message",
 			noHead: true,
@@ -775,59 +834,10 @@ var Feed = {
 		};
 		return Site.getExtendedWriteForm(obj, ownerId, postId);
 	},
-	search: function (opts) {
-		opts.q = decodeURIComponent(opts.q);
-		Site.APIv5("newsfeed.search", {
-			extended: 1,
-			q: decodeURIComponent(opts.q),
-			count: 30,
-			offset: opts.offset,
-			start_time: Math.round(+new Date()/1000) - 2 * 31536000,
-			end_time: Math.round(+new Date()/1000),
-			v: 5.0
-		}, function (data) {
-			data = Site.isResponse(data);
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				form = document.createElement("form"),
-				elem = document.createElement("div");
-			form.className = "sf-wrap";
-			form.appendChild($.elements.create("input", {type: "text", name:"q", placeholder:"Введите ключевое слово..", value: opts.q}));
-			form.appendChild($.elements.create("input", {type: "submit", value:"Поиск"}));
-			elem.id = "feed-search";
-			elem.appendChild(Site.getPageHeader($.textCase(data.count, ["Найдена", "Найдены", "Найдено"]) + " " + data.count + " " + $.textCase(data.count, ["запись", "записи", "записей"])));
-			elem.appendChild(Site.createInlineForm({
-				name: "q",
-				value: opts.q,
-				title: "Поиск",
-				onsubmit: function (event) {
-					if ("#feed?act=search&q=" + this.q.value == window.location.hash)
-						return false;
-					window.location.hash = "#feed?act=search&q=" + encodeURIComponent(this.q.value);
-					$.elements.clearChild(list);
-					elem.appendChild($.elements.create("div", {"class": "msg-empty msg-loader"}));
-					return false;
-				}
-			}))
-			Site.append(parent);
-			var posts = data.items;
-			Local.add(data.profiles);
-			Local.add(data.groups || data.group);
-			for (var i = 0, l = posts.length; i < l; ++i) {
-				var c = posts[i];
-				try {
-					list.appendChild(Wall.getItemPost(c, c.owner_id, c.id, {ban: true, q: opts.q, from: "feed?act=search&q=" + opts.q}));
-				} catch (e) {}
-			}
-			if (!l)
-				list.appendChild(Site.getEmptyField("Ничего не найдено"))
-			list.appendChild(Site.getSmartPagebar(opts.offset, data.count, 30));
-			elem.appendChild(list);
-			parent.appendChild(Feed.getTabs());
-			parent.appendChild(elem);
-			Site.setHeader("Поиск");
-		})
-	},
+
+
+
+
 	searchByOwner: function (screenName, query, offset) {
 		Site.Loader();
 		query = decodeURIComponent(query || "") || "";
