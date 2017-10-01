@@ -1195,8 +1195,8 @@ console.log("will be loaded: ", from);
 
 		if (!Friends.friends[API.userId]) {
 			api("friends.get", {
-				fields: "online,photo_50,sex,bdate,screen_name,can_write_private_message,city,country",
-				v: 5.8,
+				fields: Friends.DEFAULT_FIELDS,
+				v: 5.56,
 				order: "hints"
 			}).then(function(data) {
 				Friends.friends[API.userId] = data;
@@ -1220,7 +1220,7 @@ console.log("will be loaded: ", from);
 
 			setStatus = function() {
 				creator.disabled = (selected <= 1 || name.value.trim());
-				status.innerHTML = Lang.get("mail", "create_status", selected).replace(/%n/img, selected);
+				status.innerHTML = Lang.get("mail.create_status", selected).replace(/%n/img, selected);
 			},
 
 			onClickItem = function (event) {
