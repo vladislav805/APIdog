@@ -177,7 +177,12 @@ var Audios = {
 				return Audios.page({ownerId: ownerId, search: true}).then(Audios.requestAlbums).then(Audios.showAlbums);
 
 			default:
-				return Audios.page({ownerId: ownerId, search: true, playlist: String(ownerId), albumId: Site.get("albumId")}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
+				return Audios.page({
+					ownerId: ownerId,
+					albumId: parseInt(Site.get("albumId")),
+					search: true,
+					playlist: String(ownerId)
+				}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
 		}
 	},
 
@@ -260,6 +265,18 @@ var Audios = {
 			}
 			meta.data = data.a;
 			Audios.storage[meta.ownerId] = data.a.items;
+
+			var albums = {};
+
+			data.a.items.forEach(function(audio) {
+				audio.album_id && (!albums[audio.album_id] ? (albums[audio.album_id] = [audio]) : albums[audio.album_id].push(audio));
+			});
+
+			Sugar.Object.forEach(albums, function(audios, playlist) {
+				Audios.storage[meta.ownerId + "_" + playlist] = audios;
+			});
+
+
 			return meta;
 		}).catch(Audios.fixAudio.bind(Audios, meta));
 	},
@@ -292,7 +309,6 @@ var Audios = {
 	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int, albumId: int?}} obj
 	 */
 	show: function(obj) {
-console.log(obj);
 		var items = !obj.albumId
 			? obj.data.items
 			: obj.data.items.filter(function(audio) {
@@ -300,6 +316,8 @@ console.log(obj);
 			});
 
 		obj.sl.setData({count: items.length, items: items});
+
+		obj.albumId && obj.sl.setOptionsItemListCreator("playlist", obj.ownerId + "_" + obj.albumId);
 
 		window.onScrollCallback = function(event) {
 			event.needLoading && obj.sl.showNext();

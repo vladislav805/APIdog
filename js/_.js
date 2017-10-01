@@ -17,6 +17,13 @@ var API = {
 	}
 };
 
+var Sugar = {
+	Object: {
+		forEach: function(array, callback) {},
+		toQueryString: function(obj) {}
+	}
+};
+
 /**
  * @type {{
  *  owner_id: int,
