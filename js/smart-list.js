@@ -115,6 +115,14 @@ SmartList.prototype = {
 		return this.mNodeWrap;
 	},
 
+	/**
+	 * Returns list node
+	 * @returns {HTMLElement}
+	 */
+	getList: function() {
+		return this.mNodeList;
+	},
+
 	add: function(item) {
 		var first = this.mItems[0];
 		this.mItems.splice(0, 0, item);

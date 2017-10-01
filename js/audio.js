@@ -114,6 +114,11 @@ var Audios = {
 	items: {},
 
 	/**
+	 * Storage for audio albums
+	 */
+	albums: {},
+
+	/**
 	 * Bitmask for audio play settings
 	 */
 	playSettings: 0,
@@ -322,6 +327,24 @@ var Audios = {
 		window.onScrollCallback = function(event) {
 			event.needLoading && obj.sl.showNext();
 		};
+
+		obj.ownerId === API.userId && !obj.albumId && Sortable.create(obj.sl.getList(), {
+			handle: ".audios-state",
+			animation: 150,
+
+			onSort: function(evt) {
+				var node = evt.item,
+					after = node.previousElementSibling,
+					before = node.nextElementSibling,
+
+					oldIndex = evt.oldIndex,
+					newIndex = evt.newIndex;
+
+				Audios.reorder(node.dataset.ownerId, node.dataset.audioId, after ? "after" : "before", after ? after.dataset.audioId : (before && before.dataset.audioId || 0));
+
+				items.splice(newIndex, 0, items.splice(oldIndex, 1)[0]);
+			},
+		});
 	},
 
 
@@ -350,7 +373,8 @@ var Audios = {
 		Audios.items[id] = audio;
 
 		item.id = "audio" + id;
-		item.dataset.audioId = id;
+		item.dataset.ownerId = audio.owner_id;
+		item.dataset.audioId = audio.id;
 
 		item.addEventListener("click", function(event) {
 			if (event.ctrlKey) {
@@ -361,7 +385,7 @@ var Audios = {
 			return $.event.cancel(event);
 		});
 
-		item.appendChild(e("div", {"class": "audios-state"}));
+		item.appendChild(e("div", {"class": "audios-state", "aria-hidden": true}));
 
 		item.appendChild(e("div", {"class": "audios-name", title: audio.artist + " — " + audio.title, append: [
 			e("span", {"class": "audios-title", html: audio.title.safe() }),
@@ -1182,12 +1206,11 @@ var Audios = {
 		meta.sl.setData(meta.data);
 	},
 
-
-
-
-	albums: {},
-
-
+	/**
+	 * Request for user's audio albums
+	 * @param {{sl: SmartList, ownerId: int, data: object?}} meta
+	 * @returns {{sl: SmartList, ownerId: int, data: {count: int, items: VKAudio[]}}|Promise}
+	 */
 	requestAlbums: function(meta) {
 		if (!Audios.albums[meta.ownerId]) {
 			return api("audio.getAlbums", {
@@ -1205,14 +1228,11 @@ var Audios = {
 		}
 	},
 
+	/**
+	 * Show user's audio albums
+	 * @param {{sl: SmartList, ownerId: int, data: {count: int, items: VKAudio[]}, list: HTMLElement}} meta
+	 */
 	showAlbums: function(meta) {
-		/*if (ownerId == API.userId || Local.data[ownerId] && Local.data[ownerId].is_admin)
-			list.appendChild($.elements.create("a", {
-				"class": "list-item",
-				href: "#audio?act=albums&action=create",
-				html: "<i class='list-icon list-icon-add'></i> Создать альбом"
-			}));*/
-console.log(arguments)
 		meta.sl.setGetItemListNode(function(album) {
 			return $.e("a", {
 				"class": "list-item",
@@ -1224,6 +1244,20 @@ console.log(arguments)
 		meta.sl.setData({count: meta.data.length, items: meta.data});
 		meta.list.parentNode.insertBefore(Site.getPageHeader("Альбомы"), meta.list);
 		Site.setHeader("Альбомы");
+	},
+
+	/**
+	 * Request for reorder audio in list
+	 * @param {int} ownerId
+	 * @param {int} audioId
+	 * @param {string} siblingType
+	 * @param {int} siblingId
+	 * @returns {Promise}
+	 */
+	reorder: function(ownerId, audioId, siblingType, siblingId) {
+		var params = { owner_id: ownerId, audio_id: audioId, v: 5.56 };
+		params[siblingType] = siblingId;
+		return api("audio.reorder", params);
 	},
 
 
