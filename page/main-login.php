@@ -36,12 +36,12 @@
 					<div id="authSimple">
 						<div class="field-wrap">
 							<label for="username">Телефон или email</label>
-							<input class="fields" id="username" name="login" />
+							<input class="field" id="username" name="login" />
 						</div>
 
 						<div class="field-wrap">
 							<label for="password">Пароль</label>
-							<input class="fields" type="password" name="password" id="password" />
+							<input class="field" type="password" name="password" id="password" />
 						</div>
 
 						<div class="field-wrap selectApp">
@@ -67,8 +67,8 @@
 
 					<div id="authCaptcha" class="hidden">
 						<input type="hidden" name="captchaId" id="captchaId" value="" />
-						<img src="about:blank" alt="" id="captchaImage" onclick="setCaptchaImage(this);" onerror="window.onErrorCaptcha&&onErrorCaptcha(this);" />
-						<input type="text" class="fields fields-nopadding" name="captchaKey" id="captchaKey" value="" autocomplete="off" />
+						<img src="about:blank" alt="" id="captchaImage" onclick="setCaptchaImage(this);" />
+						<input type="text" class="field" name="captchaKey" id="captchaKey" value="" autocomplete="off" />
 					</div>
 					<div id="authValidation" class="hidden">
 						<h2>Подтверждение входа</h2>
@@ -81,7 +81,7 @@
 							</div>
 						</div>
 						<div id="validationForm" class="hidden">
-							<input type="text" class="fields" value="" name="validationCode" id="validationCode" />
+							<input type="text" class="field" value="" name="validationCode" id="validationCode" />
 						</div>
 					</div>
 					<div class="submit">

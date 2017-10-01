@@ -61,7 +61,7 @@
 		public function run(Controller $controller, Connection $db) {
 			if (!$this->login || !$this->password || !$this->application) {
 				throw new APIdogException(ErrorCode::INVALID_PARAM);
-			};
+			}
 
 			$app = $controller->getApplication($this->application);
 

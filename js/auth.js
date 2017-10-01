@@ -113,7 +113,6 @@ var CLASS_HIDDEN = "hidden",
  * @returns {boolean}
  */
 function authorize(form, event) {
-
 	// Already request sent?
 	if (isRequested) {
 		return false;
@@ -185,6 +184,10 @@ function authorize(form, event) {
 						setValidation(error.data.extra);
 						break;
 
+					case APIdogAPIErrorCodes.AUTHORIZE_HAS_ERROR_INVALID_CLIENT:
+						showError("Неверная пара логин/пароль");
+						break;
+
 					default:
 						showError("UnexpectedError<" + error.errorId + ">: " + error.message);
 				}
@@ -206,6 +209,10 @@ function authorize(form, event) {
 	return false;
 }
 
+/**
+ * Show captcha form
+ * @param {{captchaId: string, captchaImg: string}} error
+ */
 function setCaptcha(error) {
 	g(ID_CAPTCHA_ID).value = error.captchaId;
 	g(ID_CAPTCHA_IMAGE).src = !window.__userFromUkraine ? error.captchaImg : error.captchaImg.replace("api.vk.com", "apidog.ru:4006");
@@ -222,7 +229,6 @@ function setCaptchaImage(node) {
 function setEmptyCaptchaKey() {
 	g(ID_CAPTCHA_KEY).value = "";
 	g(ID_CAPTCHA_KEY).focus();
-	g(ID_CAPTCHA_IMAGE).removeAttribute("proxed");
 }
 
 /**
@@ -258,12 +264,6 @@ function setVisibilityLoaderButton(node, state) {
 	node = typeof node === "string" ? g(node) : node;
 	node.classList[state ? "add" : "remove"](CLASS_HIDDEN);
 	node.nextElementSibling.classList[state ? "add" : "remove"](CLASS_LOADER_BUTTON);
-}
-
-function onErrorCaptcha(node) {
-	if (node.getAttribute("proxed") || node.src === "about:blank") return;
-	node.setAttribute("proxed", "yes");
-	node.src = "\/api\/v2\/apidog.proxyData?t=png&u=" + encodeURIComponent(node.src);
 }
 
 /**
@@ -336,27 +336,19 @@ function VKAPI(method, params, callback) {
 	}
 	params = params || {};
 	params.callback = callback;
-	if (!params.v) params.v = 4.99;
-	var url = [],
-		key, f = encodeURIComponent;
-	for (key in params) {
-		if (params.hasOwnProperty(key)) {
-			url.push(f(key) + "=" + f(params[key]));
-		}
-	}
-	url = url.join("&");
 	var elem = document.createElement("script");
 	elem.type = "text/javascript";
 	elem.addEventListener("load", function() {
 		elem.parentNode.removeChild(elem);
-		if (elem.remove) elem.remove();
+		elem.remove && elem.remove();
 	});
-	elem.src = "https://" + (!window.__userFromUkraine ? "api.vk.com" : "apidog.ru:4006") + "/method/" + method + "?" + url;
+	elem.src = "https://" + (!window.__userFromUkraine ? "api.vk.com" : "apidog.ru:4006") + "/method/" + method + "?" + httpBuildQuery(params);
 	document.getElementsByTagName("head")[0].appendChild(elem);
 }
 
 function showError(text) {
 	var block = g(ID_ERROR_BLOCK);
+	block.classList.remove(CLASS_HIDDEN);
 	block.classList.add(CLASS_ERROR);
 	block.innerHTML = text;
 	if (errorTimer >= 0) {
@@ -364,6 +356,7 @@ function showError(text) {
 	}
 	errorTimer = setTimeout(function() {
 		block.classList.remove(CLASS_ERROR);
+		block.classList.add(CLASS_HIDDEN);
 	}, 5000);
 }
 
