@@ -1427,31 +1427,11 @@
 			"діалогів було прочитано"
 		]
 	],
-	"mail.tabs_inbox":[
-		"Все",
-		"All",
-		"Все"
-	],
-	"mail.tabs_new":[
-		"Новые",
-		"New",
-		"Нові"
-	],
-	"mail.tabs_important":[
-		"Важные",
-		"Important",
-		"Важливі"
-	],
-	"mail.tabs_search":[
-		"Поиск",
-		"Search",
-		"Пошук"
-	],
-	"mail.tabs_dialogs":[
-		"Диалоги",
-		"Dialogs",
-		"Діалоги"
-	],
+	"mail.tabs_all":["Все","All","Все"],
+	"mail.tabs_new":["Новые","New","Нові"],
+	"mail.tabs_important":["Важные","Important","Важливі"],
+	"mail.tabs_search":["Поиск","Search","Пошук"],
+	"mail.tabs_dialogs":["Диалоги","Dialogs","Діалоги"],
 	"mail.readAllReadReady":[
 		[
 			"диалог был прочитан",
@@ -1461,157 +1441,44 @@
 		null,
 		null
 	],
-	"mail.actionReadAll":[
-		"Отметить всё прочитанным",
+	"mail.actionReadAll":["Отметить всё прочитанным","Mark as read all",null],
+	"mail.actionSwitch2messages":["Переключить режим: сообщения","Switch mode: messages",null],
+	"mail.actionSwitch2dialogs":["Переключить режим: диалоги","Switch mode: dialogs",null],
+	"mail.actionUtilites":["Утилиты","Utilites",null],
+	"mail.actionCreateChat":["Создать чат","Create chat",null],
+	"mail.actionClearCache":["Очистить кэш диалогов","Clear cache dialogs",null],
+	"mail.actionRefreshCache":["Синхронизировать кэш","Sync cache now",null],
+	"mail.readAllConfirmTitle":["Подтверждение","Confirmation",null],
+	"mail.readAllConfirmText":["Вы уверены, что хотите отметить все сообщения прочитанными?<br/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.</small>",null,null],
+	"mail.confirmStorageTitle":["Давайте решим вопрос...","Let's resolve one question...",null],
+	"mail.confirmStorageContent":["В связи с тем, что метод получения списка диалогов выбивает в онлайн аккаунт, мы предлагаем Вам на выбор два подхода к получению списка диалогов:<br><strong>Сообщениями</strong> - messages.get, офлайн. Будут загружены последние 2500 сообщений и сформирован список диалогов, при этом список будет неполным<br><strong>Диалогами</strong> - messages.getDialogs, онлайн. Будет загружен весь список по старому способу<br>После формирования списка, чтобы не показывались одни и те же сообщения, когда уже есть более новые, список будет обновляться, загружая сообщения, которых не было, это будет в разы быстрее.<br><strong>Формирование списка (любым способом) может занять от 10 секунд до минуты.</strong>",
 		null,
 		null
 	],
-	"mail.actionSwitch2messages":[
-		"Переключить режим: сообщения",
-		null,
-		null
-	],
-	"mail.actionSwitch2dialogs":[
-		"Переключить режим: диалоги",
-		null,
-		null
-	],
-	"mail.actionUtilites":[
-		"Утилиты",
-		null,
-		null
-	],
-	"mail.actionCreateChat":[
-		"Создать чат",
-		null,
-		null
-	],
-	"mail.actionClearCache":[
-		"Очистить кэш диалогов",
-		null,
-		null
-	],
-	"mail.actionRefreshCache":[
-		"Синхронизировать кэш",
-		null,
-		null
-	],
-	"mail.readAllConfirmTitle":[
-		"Подтверждение",
-		null,
-		null
-	],
-	"mail.readAllConfirmText":[
-		"Вы уверены, что хотите отметить все сообщения прочитанными?<br/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.</small>",
-		null,
-		null
-	],
-	"mail.confirmStorageTitle":[
-		"Давайте решим вопрос...",
-		null,
-		null
-	],
-	"mail.confirmStorageContent":[
-		"В связи с тем, что метод получения списка диалогов выбивает в онлайн аккаунт, мы предлагаем Вам на выбор два подхода к получению списка диалогов:<br><strong>Сообщениями</strong> - messages.get, офлайн. Будут загружены последние 2500 сообщений и сформирован список диалогов, при этом список будет неполным<br><strong>Диалогами</strong> - messages.getDialogs, онлайн. Будет загружен весь список по старому способу<br>После формирования списка, чтобы не показывались одни и те же сообщения, когда уже есть более новые, список будет обновляться, загружая сообщения, которых не было, это будет в разы быстрее.<br><strong>Формирование списка (любым способом) может занять от 10 секунд до минуты.</strong>",
-		null,
-		null
-	],
-	"mail.confirmStorageButtonMessages":[
-		"Сообщениями",
-		null,
-		null
-	],
-	"mail.confirmStorageButtonDialogs":[
-		"Диалогами",
-		null,
-		null
-	],
-	"mail.confirmStoreLoaded":[
-		"Даннаые загружены. Обновление...",
-		null,
-		null
-	],
-	"mail.confirmStorageProgress":[
-		"Загружаю данные...",
-		null,
-		null
-	],
-	"mail.syncingTitle":[
-		"Синхронизация",
-		null,
-		null
-	],
-	"mail.syncingContent":[
-		"Пожалуйста, подождите...",
-		null,
-		null
-	],
+	"mail.confirmStorageButtonMessages":["Сообщениями","By messages",null],
+	"mail.confirmStorageButtonDialogs":["Диалогами","By dialogs",null],
+	"mail.confirmStoreLoaded":["Даннаые загружены. Обновление...","Data loaded. Updating...",null],
+	"mail.confirmStorageProgress":["Загружаю данные...","Loading data...",null],
+	"mail.syncingTitle":["Синхронизация","Syncing...",null],
+	"mail.syncingContent":["Пожалуйста, подождите...","Please wait",null],
 	"mail.types_messages":[
 		[
-			[
-				"сообщение",
-				"сообщения",
-				"сообщений"
-			],
-			[
-				"сообщение",
-				"сообщения",
-				"сообщений"
-			],
-			[
-				"новое сообщение",
-				"новых сообщений",
-				"новых сообщений"
-			],
-			[
-				"важное сообщение",
-				"важных сообщения",
-				"важных сообщений"
-			]
+			["сообщение","сообщения","сообщений"],
+			["сообщение","сообщения","сообщений"],
+			["новое сообщение","новых сообщений","новых сообщений"],
+			["важное сообщение","важных сообщения","важных сообщений"]
 		],
 		[
-			[
-				"message",
-				"messages",
-				"messages"
-			],
-			[
-				"message",
-				"messages",
-				"messages"
-			],
-			[
-				"new message",
-				"new messages",
-				"new messages"
-			],
-			[
-				"important message",
-				"important messages",
-				"important messages"
-			]
+			["message","messages","messages"],
+			["message","messages","messages"],
+			["new message","new messages","new messages"],
+			["important message","important messages","important messages"]
 		],
 		[
-			[
-				"повідомлення",
-				"повідомлення",
-				"повідомлень"
-			],
-			[
-				"повідомлення",
-				"повідомлення",
-				"повідомлень"
-			],
-			[
-				"нове повідомлення",
-				"нові повідомлення",
-				"нових повідомлень"
-			],
-			[
-				"важливе повідомлення",
-				"важливих повідомлення",
-				"важливих повідомлень"
-			]
+			["повідомлення","повідомлення","повідомлень"],
+			["повідомлення","повідомлення","повідомлень"],
+			["нове повідомлення","нові повідомлення","нових повідомлень"],
+			["важливе повідомлення","важливих повідомлення","важливих повідомлень"]
 		]
 	],
 	"mail.message_id_deleted":[
@@ -1619,31 +1486,15 @@
 		"Message #%i% was deleted. ",
 		"Повідомлення #%i% видалено. "
 	],
-	"mail.message_restore":[
-		"Восстановить",
-		"Restore",
-		"Відновити"
-	],
-	"mail.success_deleted":[
-		"Сообщение удалено",
-		"Message deleted",
-		"Повідомлення видалено"
-	],
-	"mail.failed_restore":[
-		"Сообщение восстановить не удалось",
-		"Message restore failed",
-		"Повідомлення відновити не вдалось"
-	],
+	"mail.message_restore":["Восстановить","Restore","Відновити"],
+	"mail.success_deleted":["Сообщение удалено","Message deleted","Повідомлення видалено"],
+	"mail.failed_restore":["Сообщение восстановить не удалось","Message restore failed","Повідомлення відновити не вдалось"],
 	"mail.success_restore":[
 		"Сообщение восстановлено. Кликните здесь, чтобы перейти к нему",
 		"Message restored. Click here, to go to it",
 		"Повідомлення відновлено. Натисніть тут, щоб перейти до нього"
 	],
-	"mail.you_have_not":[
-		"У Вас нет ",
-		"You have no ",
-		"У Вас немає "
-	],
+	"mail.you_have_not":["У Вас нет ","You have no ","У Вас немає "],
 	"mail.you_have_not_by_types":[
 		[
 			"ни одного входящего сообщения",
@@ -1664,91 +1515,25 @@
 			"важливих повідомлень"
 		]
 	],
-	"mail.messages":[
-		"Сообщения",
-		"Messages",
-		"Повідомлення"
-	],
-	"mail.message":[
-		"Сообщение",
-		"Message",
-		"Повідомлення"
-	],
-	"mail.message_success_marked_as":[
-		"Сообщение успешно помечено ",
-		"Message successfully marked ",
-		"Повідомлення успішно помічено "
-	],
-	"mail.message_important":[
-		"важным",
-		"as important",
-		"важливим"
-	],
-	"mail.message_unimportant":[
-		"неважным",
-		"as unimportant",
-		"неважливим"
-	],
-	"mail.mark_as_important":[
-		"Отметить важным",
-		"Mark as important",
-		"Помітити важливим"
-	],
-	"mail.mark_as_unimportant":[
-		"Отметить неважным",
-		"Mark as unimportant",
-		"Помітити неважливим"
-	],
-	"mail.message_id":[
-		"Сообщение #",
-		"Message #",
-		"Повідомлення #"
-	],
-	"mail.message_for":[
-		"Сообщение для",
-		"Message for",
-		"Повідомлення для"
-	],
-	"mail.message_from":[
-		"Сообщение от",
-		"Message from",
-		"Повідомлення від"
-	],
-	"mail.message_from_chat":[
-		"Сообщение из беседы ",
-		"Message from chat ",
-		"Повідомлення із бесіди "
-	],
-	"mail.message_from_chat_from":[
-		"от",
-		"from",
-		"від"
-	],
-	"mail.message_open_dialog":[
-		"Открыть диалог",
-		"Open dialog",
-		"Відкрити діалог"
-	],
-	"mail.message_forward":[
-		"Переслать",
-		"Forward",
-		"Переслати"
-	],
-	"mail.message_mark":[
-		"Отметить ",
-		"Mark ",
-		"Відмінити "
-	],
-	"mail.message_delete":[
-		"Удалить",
-		"Delete",
-		"Видалити"
-	],
-	"mail.search":[
-		"Поиск",
-		"Search",
-		"Пошук"
-	],
+	"mail.messages":["Сообщения","Messages","Повідомлення"],
+	"mail.message":["Сообщение","Message","Повідомлення"],
+	"mail.message_success_marked_as":["Сообщение успешно помечено ","Message successfully marked ","Повідомлення успішно помічено "],
+	"mail.message_important":["важным","as important","важливим"],
+	"mail.message_unimportant":["неважным","as unimportant","неважливим"],
+	"mail.mark_as_important":["Отметить важным","Mark as important","Помітити важливим"],
+	"mail.mark_as_unimportant":["Отметить неважным","Mark as unimportant","Помітити неважливим"],
+	"mail.message_id":["Сообщение #","Message #","Повідомлення #"],
+	"mail.message_for":["Сообщение для","Message for","Повідомлення для"],
+	"mail.message_from":["Сообщение от","Message from","Повідомлення від"],
+	"mail.message_from_chat":["Сообщение из беседы ","Message from chat ","Повідомлення із бесіди "],
+	"mail.message_from_chat_from":["от","from","від"],
+	"mail.message_open_dialog":["Открыть диалог","Open dialog","Відкрити діалог"],
+	"mail.message_dialog": ["Диалог", "Dialog", "Діалог"],
+	"mail.message_find": ["Найти", "Find", "Найти"],
+	"mail.message_forward":["Переслать", "Forward", "Переслати"],
+	"mail.message_mark":["Отметить ", "Mark ", "Відмінити "],
+	"mail.message_delete":["Удалить","Delete","Видалити"],
+	"mail.search":["Поиск","Search","Пошук"],
 	"mail.search_query":[
 		"Поисковой запрос",
 		"Search query",
@@ -1833,6 +1618,9 @@
 		"Message was successfully deleted",
 		"Повідомлення успішно видалено"
 	],
+
+
+
 	"im.dialog":[
 		"Диалог",
 		"Dialog",
