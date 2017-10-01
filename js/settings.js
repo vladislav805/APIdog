@@ -59,9 +59,9 @@ var Settings = {
 			["settings",               Lang.get("settings.tabs_general")],
 			["settings?act=profile",   Lang.get("settings.tabs_profile")],
 			["settings?act=blacklist", Lang.get("settings.tabs_blacklist")],
-			["settings?act=stickers",  Lang.get("settings.tabs_stickers")],
+//			["settings?act=stickers",  Lang.get("settings.tabs_stickers")],
 			["settings?act=smiles",    Lang.get("settings.tabs_smiles")],
-			["settings?act=themes",    Lang.get("settings.tabs_themes")],
+//			["settings?act=themes",    Lang.get("settings.tabs_themes")],
 		])
 	},
 
@@ -71,7 +71,7 @@ var Settings = {
 	languages: [
 		{value: 0, code: 0, label: "Русский / Russian"},
 		{value: 1, code: 1, label: "English / English"},
-		{value: 2, code: 2, label: "Українська / Ukrainian"}
+	//	{value: 2, code: 2, label: "Українська / Ukrainian"}
 	],
 
 	/**
