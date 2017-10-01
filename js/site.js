@@ -8,8 +8,6 @@ var Site = {
 		}
 	},
 
-	getAddress: function (o) { return getAddress(o); },
-
 	/**
 	 * Show user info on initialization
 	 * @param {User} u
@@ -795,7 +793,7 @@ var Site = {
 			switch (a.type) {
 
 				case "photo": // TODO
-					photos.push(Photos.getAttachment(a.photo, {list: id, full: (ass.photo === 1), from: Site.getAddress(true)}));
+					photos.push(Photos.getAttachment(a.photo, {list: id, full: (ass.photo === 1), from: getAddress(true)}));
 					break;
 
 				case "video": // TODO

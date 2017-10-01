@@ -319,7 +319,7 @@ var Photos = {
 
 
 	getAttachment: function (photo, options) {
-		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: Site.getAddress(true)});
+		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: getAddress(true)});
 	},
 	getAttachmentAlbum: function (album) {
 		return $.e("a", {href: "#photos" + album.owner_id + "_" + album.id, "class": "attachments-album", append: [

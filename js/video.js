@@ -111,7 +111,7 @@ var Video = {
 		}
 
 		if (o.from) {
-			p.from = Site.getAddress(true);
+			p.from = getAddress(true);
 		}
 
 		return e("a", {
