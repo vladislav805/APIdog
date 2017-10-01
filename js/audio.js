@@ -174,10 +174,10 @@ var Audios = {
 				return Audios.page({ownerId: API.userId}).then(Audios.requestRadio).then(Audios.showRadio);
 
 			case "albums":
-				return Audios.getAlbums(ownerId);
+				return Audios.page({ownerId: ownerId, search: true}).then(Audios.requestAlbums).then(Audios.showAlbums);
 
 			default:
-				return Audios.page({ownerId: ownerId, search: true, playlist: String(ownerId)}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
+				return Audios.page({ownerId: ownerId, search: true, playlist: String(ownerId), albumId: Site.get("albumId")}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
 		}
 	},
 
@@ -199,7 +199,7 @@ var Audios = {
 						playlist: options.playlist
 					},
 					filter: function(q, audio) {
-						return ~audio.artist.toLowerCase().indexOf(q) || ~audio.title.toLowerCase().indexOf(q);
+						return (audio.artist && ~audio.artist.toLowerCase().indexOf(q)) || ~audio.title.toLowerCase().indexOf(q);
 					}
 				}).setState(SmartList.state.LOADING),
 				list = $.e("div", {"class": "audios-list", append: sl.getNode()}),
@@ -289,10 +289,18 @@ var Audios = {
 
 	/**
 	 * Show audio list
-	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int}} obj
+	 * @param {{list: HTMLElement, sl: SmartList, data: {count: int, items: VKAudio[]}, ownerId: int, albumId: int?}} obj
 	 */
 	show: function(obj) {
-		obj.sl.setData(obj.data);
+console.log(obj);
+		var items = !obj.albumId
+			? obj.data.items
+			: obj.data.items.filter(function(audio) {
+				return audio.album_id === obj.albumId;
+			});
+
+		obj.sl.setData({count: items.length, items: items});
+
 		window.onScrollCallback = function(event) {
 			event.needLoading && obj.sl.showNext();
 		};
@@ -1159,51 +1167,44 @@ var Audios = {
 
 
 
+	albums: {},
 
 
-
-
-Albums: {},
-
-
-	getAlbums: function (owner_id) {
-		owner_id = owner_id || API.userId;
-		if (!Audios.Albums[owner_id])
-			return Site.API("audio.getAlbums", {
-				count: 75,
-				owner_id: owner_id,
+	requestAlbums: function(meta) {
+		if (!Audios.albums[meta.ownerId]) {
+			return api("audio.getAlbums", {
+				count: 100,
+				owner_id: meta.ownerId,
 				v: 5.56
-			}, function (data) {
-				data = Site.isResponse(data);
-
-				Audios.getAlbums(owner_id);
-				Audios.Albums[owner_id] = data.items;
+			}).then(function (data) {
+				Audios.albums[meta.ownerId] = data.items;
+				meta.data = data.items;
+				return meta;
 			});
-		var parent = document.createElement("div"),
-			list = document.createElement("div"),
-			albums = Audios.Albums[owner_id];
-		if (owner_id == API.userId || Local.data[owner_id] && Local.data[owner_id].is_admin)
+		} else {
+			meta.data = Audios.albums[meta.ownerId];
+			return meta;
+		}
+	},
+
+	showAlbums: function(meta) {
+		/*if (ownerId == API.userId || Local.data[ownerId] && Local.data[ownerId].is_admin)
 			list.appendChild($.elements.create("a", {
 				"class": "list-item",
 				href: "#audio?act=albums&action=create",
 				html: "<i class='list-icon list-icon-add'></i> Создать альбом"
-			}));
+			}));*/
+console.log(arguments)
+		meta.sl.setGetItemListNode(function(album) {
+			return $.e("a", {
+				"class": "list-item",
+				href: "#audio?ownerId=" + album.owner_id + "&albumId=" + album.id,
+				html: album.title.safe()
+			});
+		});
 
-		if (albums)
-			for (var i = 0; i < albums.length; ++i) {
-				var album = albums[i];
-				list.appendChild($.e("a", {
-					"class": "list-item",
-					href: "#audio?ownerId=" + album.owner_id + "&albumId=" + album.album_id,
-					html: Site.Escape(album.title)
-				}));
-			}
-		else
-			list.appendChild(Site.getEmptyField("Альбомов нет"));
-		list.id = "audiolist";
-		parent.appendChild(Site.getPageHeader("Альбомы"));
-		parent.appendChild(list);
-		Site.append(parent);
+		meta.sl.setData({count: meta.data.length, items: meta.data});
+		meta.list.parentNode.insertBefore(Site.getPageHeader("Альбомы"), meta.list);
 		Site.setHeader("Альбомы");
 	},
 

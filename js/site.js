@@ -166,10 +166,12 @@ var Site = {
 
 	/**
 	 * updated 04/07/2015 from v6.5
+	 * updated 01/10/2017 from v6.4.6: added defaultValue
 	 * @param {string=} param
+	 * @param {*=} defaultValue
 	 * @returns {object|string}
 	 */
-	get: function(param) {
+	get: function(param, defaultValue) {
 		var hash = window.location.hash.replace("#", ""), offset, params = {};
 
 		hash = hash.slice(hash.indexOf("?") + 1).split("&");
@@ -179,7 +181,7 @@ var Site = {
 			params[item.slice(0, offset)] = decodeURIComponent(item.slice(++offset));
 		});
 
-		return param ? params[param] : params;
+		return param ? (params[param] || defaultValue) : params;
 	},
 
 	/**
