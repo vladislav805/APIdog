@@ -706,15 +706,15 @@ console.log("will be loaded: ", from);
 			][type],
 			offset = getOffset();
 		api("execute", {
-			code: "var m=API.messages.get({preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o,FILTER});return{m:m,u:API.users.get({user_ids:m.items@.user_id,v:5.8,fields:Args.f}),a:API.account.getCounters()};".replace("FILTER", params),
+			code: "var m=API.messages.search({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o,FILTER});return{m:m,u:API.users.get({user_ids:m.items@.user_id,v:5.8,fields:Args.f}),a:API.account.getCounters()};".replace("FILTER", params),
 			o: offset,
+			q: "*",
 			c: Mail.DEFAULT_COUNT,
 			f: "photo_50,online,screen_name,sex"
 		}).then(function(data) {
-			/** @var {{a: object, u: object[], m: object}} data */
-			Site.setCounters(data.a);
-			Local.add(data.u);
-			Mail.showListMessages(data.m, {list: list, type: type, offset: offset});
+			Site.setCounters(data["a"]);
+			Local.add(data["u"]);
+			Mail.showListMessages(data["m"], {list: list, type: type, offset: offset});
 		});
 	},
 
@@ -724,8 +724,7 @@ console.log("will be loaded: ", from);
 	 */
 	getListMessagesTabs: function() {
 		return Site.getTabPanel(!Mail.version ? [
-			["mail", Lang.get("mail.tabs_inbox")],
-			["mail?type=1", Lang.get("mail.tabs_outbox")],
+			["mail", Lang.get("mail.tabs_all")],
 			["mail?type=2", Lang.get("mail.tabs_new")],
 			["mail?type=3", Lang.get("mail.tabs_important")],
 			["mail?act=search", Lang.get("mail.tabs_search")]
