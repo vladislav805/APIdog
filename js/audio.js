@@ -292,7 +292,13 @@ var Audios = {
 	 * @param {TypeError|null} error
 	 */
 	fixAudio: function(meta, error) {
-		console.log(meta, error);
+		if (!API.isExtension) {
+
+			$.elements.clearChild(meta.list).appendChild(Site.getEmptyField(Lang.get("audios.warningFixNeedExtension")));
+			return;
+		}
+
+
 		if (meta.warning) {
 			meta.warning.setText(Lang.get("audio.warningFixImpossible")).setDuration(2000);
 			return;
@@ -346,6 +352,10 @@ var Audios = {
 				items.splice(newIndex, 0, items.splice(oldIndex, 1)[0]);
 			},
 		});
+
+		window.onKeyDownCallback = function(event) {
+			console.log(event);
+		};
 	},
 
 
