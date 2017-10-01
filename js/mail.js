@@ -1189,11 +1189,6 @@ console.log("will be loaded: ", from);
 	DEFAULT_CHAT_IMAGE: "\/\/static.apidog.ru\/multichat-icon50.png",
 
 	/**
-	 * @deprecated
-	 */
-	getMaterialLoader: function(o) {o = o || {}; var e = $.e, node; node = e("div", {"class": "loader-wrap",append: e("div",{"class": "md",style: "margin: 0 auto 10px;",append: e("div",{"class": "md-spinner-wrapper",append: e("div",{"class": "md-inner",append: [e("div", {"class": "md-gap"}),e("div", {"class": "md-left", append: e("div", {"class": "md-half-circle"})}),e("div", {"class": "md-right", append: e("div", {"class": "md-half-circle"})})]})})})});return o.wrapClass ? e("div", {"class": o.wrapClass, append: node}) : node},
-
-	/**
 	 * Create page and form for creating chat
 	 */
 	createChat: function() {
