@@ -289,9 +289,8 @@ var Audios = {
 	/**
 	 * Trying fix audio
 	 * @param meta
-	 * @param {TypeError|null} error
 	 */
-	fixAudio: function(meta, error) {
+	fixAudio: function(meta) {
 		if (!API.isExtension) {
 
 			$.elements.clearChild(meta.list).appendChild(Site.getEmptyField(Lang.get("audios.warningFixNeedExtension")));
@@ -354,7 +353,10 @@ var Audios = {
 		});
 
 		window.onKeyDownCallback = function(event) {
-			console.log(event);
+			if (event.originalEvent.ctrlKey && event.key === 80) {
+				event.originalEvent.preventDefault();
+				Audios.downloadM3U8();
+			}
 		};
 	},
 
@@ -701,6 +703,7 @@ var Audios = {
 				playedString = "-" + playedString;
 			}
 
+			//noinspection SpellCheckingInspection
 			$.element("player-playedtime").innerHTML = playedString;
 			$.element("head-player-line-played").style.width = percent + "%";
 
