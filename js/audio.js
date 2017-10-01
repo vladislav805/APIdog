@@ -1163,20 +1163,21 @@ var Audios = {
 
 
 
-
+Albums: {},
 
 
 	getAlbums: function (owner_id) {
 		owner_id = owner_id || API.userId;
-		if (!Audios.Albums[owner_id] && !Audios.l2a[owner_id])
+		if (!Audios.Albums[owner_id])
 			return Site.API("audio.getAlbums", {
 				count: 75,
-				owner_id: owner_id
+				owner_id: owner_id,
+				v: 5.56
 			}, function (data) {
 				data = Site.isResponse(data);
 
 				Audios.getAlbums(owner_id);
-				Audios.l2a[owner_id] = true;
+				Audios.Albums[owner_id] = data.items;
 			});
 		var parent = document.createElement("div"),
 			list = document.createElement("div"),
@@ -1190,7 +1191,7 @@ var Audios = {
 		var to = Photos.getToParam(1);
 		if (albums)
 			for (var i = 0; i < albums.length; ++i) {
-				var album = Audios.Albums[owner_id + "_" + albums[i]];
+				var album = albums[i];
 				list.appendChild($.elements.create("a", {
 					"class": "list-item",
 					href: "#audio?oid=" + album.owner_id + "&album=" + album.album_id + to,
@@ -1201,7 +1202,6 @@ var Audios = {
 			list.appendChild(Site.getEmptyField("Альбомов нет"));
 		list.id = "audiolist";
 		parent.appendChild(Site.getPageHeader("Альбомы"));
-		parent.appendChild(Audios.getRightPanel());
 		parent.appendChild(list);
 		Site.append(parent);
 		Site.setHeader("Альбомы");
