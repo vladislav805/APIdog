@@ -328,6 +328,7 @@ var Audios = {
 			event.needLoading && obj.sl.showNext();
 		};
 
+		//noinspection JSUnusedGlobalSymbols
 		obj.ownerId === API.userId && !obj.albumId && Sortable.create(obj.sl.getList(), {
 			handle: ".audios-state",
 			animation: 150,

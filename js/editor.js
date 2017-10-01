@@ -17,10 +17,10 @@ var EditItemField = {};
  * @param {{
  *     title: string,
  *     isEdit: boolean,
- *     items: *[],
+ *     items: object[],
  *     validate: boolean=,
  *     onSave: function,
- *     onValidFail: function,
+ *     onValidFail: function=,
  *     fromNode: HTMLElement=
  * }} o
  * @constructor
