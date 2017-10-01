@@ -296,7 +296,7 @@ var Mail = {
 			v: 5.56
 		}).then(function(data) {
 			Site.setCounters(data.c);
-			Local.add(data.u);
+			Local.add(data["u"]);
 			data.d.offset = offset;
 			return data.d;
 		});
@@ -808,9 +808,8 @@ console.log("will be loaded: ", from);
 			id: data,
 			f: "photo_50,screen_name,online,can_write_private_message,first_name_gen,last_name_gen,sex",
 			r: isEnabled(Setting.AUTO_READ_DIALOG) ? 1 : 0
-		}).then(function (data) {
-			/** @var {{m: Message, u: object[]}} data */
-			Local.add(data.u);
+		}).then(function(data) {
+			Local.add(data["u"]);
 			return data.m
 		}).then(Mail.showMessage);
 	},
@@ -907,8 +906,8 @@ console.log("will be loaded: ", from);
 		]}));
 
 		actions = [
-			[actions.openDialog, "Диалог"],
-			[actions.findMessageInDialog, "Сообщение"],
+			[actions.openDialog, Lang.get("mail.message_dialog")],
+			[actions.findMessageInDialog, Lang.get("mail.message_find")],
 			[actions.forwardMessage, Lang.get("mail.message_forward")],
 			[actions.markAsImportant, Lang.get("mail.message_mark") + (!data.important ? Lang.get("mail.message_important") : Lang.get("mail.message_unimportant"))],
 			[actions.deleteMessage, Lang.get("mail.message_delete")]
@@ -1041,8 +1040,8 @@ console.log("will be loaded: ", from);
 					v: 5.56
 				}
 			][type]).then(function(data) {
-				Local.add(data.u);
-				Mail.search.showResult(data.m, type, {q: q})
+				Local.add(data["u"]);
+				Mail.search.showResult(data["m"], type, {q: q})
 			}).catch(function(error) {
 				console.error(error);
 				Site.Alert({text: "error. please look for console."});
@@ -1108,7 +1107,6 @@ console.log("will be loaded: ", from);
 		return new Promise(function(resolve) {
 			var offset = 0,
 				isFound = false,
-				code,
 				active = true,
 				stoppedByUser = false,
 
@@ -1129,10 +1127,9 @@ console.log("will be loaded: ", from);
 				}).show(),
 
 				request = function () {
-					code = "var o=parseInt(Args.o),p=parseInt(Args.p),i=0,l=25,d=[],s=200;while(i<l){d=d+API.messages.getHistory({peer_id:p,offset:o+(s*i),count:s}).items@.id;i=i+1;};return d;";
 
 					api("execute", {
-						code: code,
+						code: "var o=parseInt(Args.o),p=parseInt(Args.p),i=0,l=25,d=[],s=200;while(i<l){d=d+API.messages.getHistory({peer_id:p,offset:o+(s*i),count:s}).items@.id;i=i+1;};return d;",
 						o: offset,
 						p: peerId,
 						v: 5.56
@@ -1220,7 +1217,7 @@ console.log("will be loaded: ", from);
 
 			setStatus = function() {
 				creator.disabled = (selected <= 1 || name.value.trim());
-				status.innerHTML = Lang.get("mail.create_status", selected).replace(/%n/img, selected);
+				status.innerHTML = Lang.get("mail.create_status", selected).schema({n: selected});
 			},
 
 			onClickItem = function (event) {
@@ -1242,10 +1239,10 @@ console.log("will be loaded: ", from);
 					append: [
 						e("img", {"class": "miniProfile-left", src: getURL(item.photo_50)}),
 						e("div", {"class": "_checkbox fr"}),
-						e("input", {"class": "multiple_friends hidden", type: "checkbox", name: "items[]", value: item.id || item.uid}),
+						e("input", {"class": "multiple_friends hidden", type: "checkbox", name: "items[]", value: item.id}),
 						e("div", {"class": "miniProfile-right", append: e("strong", {
 							append: e("a", {
-								href: "#" + (item.screen_name || "id" + (item.id || item.uid)),
+								href: "#" + (item.screen_name || "id" + item.id),
 								onclick: function (event) { $.event.cancel (event) },
 								html: getName(item)
 							})
