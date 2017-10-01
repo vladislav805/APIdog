@@ -177,7 +177,7 @@ var Audios = {
 				return Audios.getAlbums(ownerId);
 
 			default:
-				return Audios.page({ownerId: ownerId, search: true, playlist: ownerId}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
+				return Audios.page({ownerId: ownerId, search: true, playlist: String(ownerId)}).then(Audios.requestAudios).then(Audios.show).catch(Audios.fixAudio);
 		}
 	},
 
@@ -1188,13 +1188,13 @@ Albums: {},
 				href: "#audio?act=albums&action=create",
 				html: "<i class='list-icon list-icon-add'></i> Создать альбом"
 			}));
-		var to = Photos.getToParam(1);
+
 		if (albums)
 			for (var i = 0; i < albums.length; ++i) {
 				var album = albums[i];
-				list.appendChild($.elements.create("a", {
+				list.appendChild($.e("a", {
 					"class": "list-item",
-					href: "#audio?oid=" + album.owner_id + "&album=" + album.album_id + to,
+					href: "#audio?ownerId=" + album.owner_id + "&albumId=" + album.album_id,
 					html: Site.Escape(album.title)
 				}));
 			}
