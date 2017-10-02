@@ -388,6 +388,7 @@ var Audios = {
 		item.id = "audio" + id;
 		item.dataset.ownerId = audio.owner_id;
 		item.dataset.audioId = audio.id;
+		item.dataset.duration= audio.duration;
 
 		item.addEventListener("click", function(event) {
 			if (event.ctrlKey) {
@@ -406,7 +407,7 @@ var Audios = {
 		]}));
 
 		item.appendChild(e("div", {"class": "audios-meta", append: [
-			e("div", {"class": "audios-time", html: Audios.TIME_STR_NON_STARTED}),
+			e("div", {"class": "audios-time", html: $.toTime(audio.duration)}),
 			more = e("div", {"class": "audios-more", onclick: function(event) {
 				event.preventDefault();
 				event.stopPropagation();
@@ -554,7 +555,7 @@ var Audios = {
 	 */
 	add: function(audio) {
 		return api("audio.add", {
-			owner_id: audio.ownerId,
+			owner_id: audio.owner_id,
 			audio_id: audio.id
 		}).then(function() {
 			audio.added = true;
@@ -928,13 +929,13 @@ var Audios = {
 	 * @param audio
 	 */
 	notifyListItem: function(audio) {
-		Array.prototype.forEach.call(document.querySelectorAll(".audios-playing .audios-time"), function(item) {
-			item.textContent = Audios.TIME_STR_NON_STARTED;
+		Array.prototype.forEach.call(document.querySelectorAll(".audios-playing"), function(item) {
+			item.querySelector(".audios-time").textContent = $.toTime(parseInt(item.dataset.duration));
 		});
 		Array.prototype.forEach.call(document.querySelectorAll("." + Audios.CLASS_PLAYING), function(item) {
 			$.elements.removeClass(item, Audios.CLASS_PLAYING);
 		});
-		Array.prototype.forEach.call(document.querySelectorAll("[data-audio-id='" + audio.owner_id + "_" + audio.id + "']"), function(item) {
+		Array.prototype.forEach.call(document.querySelectorAll("[data-owner-id='" + audio.owner_id + "'][data-audio-id='" + audio.id + "']"), function(item) {
 			$.elements.addClass(item, Audios.CLASS_PLAYING);
 		});
 	},

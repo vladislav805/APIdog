@@ -9,8 +9,7 @@ var Groups = {
 				return Groups.search.page().then(Groups.search.load).then(Groups.search.show);
 
 			case "recommends":
-				Groups.recommendations.page().then(Groups.recommendations.load).then(Groups.recommendations.show);
-				break;
+				return Groups.recommendations.page().then(Groups.recommendations.load).then(Groups.recommendations.show);
 
 // TODO
 			case "create":
