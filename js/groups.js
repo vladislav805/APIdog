@@ -122,7 +122,7 @@ var Groups = {
 					},
 
 					label: {
-						content: Lang.get("groups.leave_group"),
+						content: Lang.get("groups.actionLeave"),
 						width: 190
 					}
 				},
