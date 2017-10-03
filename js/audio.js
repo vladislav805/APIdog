@@ -586,14 +586,26 @@ var Audios = {
 	 */
 	download: function(audio) {
 		var url = audio.url,
-			title = audio.artist + " - " + audio.title + ".mp3";
+			title = audio.artist + " - " + audio.title + ".mp3",
 
-		/*if ("download" in $.e("a")) {
-			$.e("a" , {href: url, target: "_blank", download: title}).click();
-		} else {*/
-			window.open("api-v3.php?method=vk.downloadAudio&ownerId=" + audio.owner_id + "&audioId=" + audio.id + "&token=" + API.accessToken);
-		//}
+			pb = new ProgressBar(0, 100),
+			modal = new Modal({
+				title: Lang.get("audios.downloadTitle"),
+				content: $.e("div", {append: [
+					$.e("div", {html: Lang.get("audios.downloadContent")}),
+					pb.getNode()
+				]}),
+				unclosableByBlock: true
+			});
 
+		modal.show();
+
+		fetch(url).then(function(result) {
+			return result.blob();
+		}).then(function(blob) {
+			modal.remove();
+			saveAs(blob, title);
+		});
 	},
 
 	/**
