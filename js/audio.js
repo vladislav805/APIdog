@@ -588,11 +588,11 @@ var Audios = {
 		var url = audio.url,
 			title = audio.artist + " - " + audio.title + ".mp3";
 
-		if ("download" in $.e("a")) {
+		/*if ("download" in $.e("a")) {
 			$.e("a" , {href: url, target: "_blank", download: title}).click();
-		} else {
-			window.open("api-v3.php?method=vk.downloadAudio&audio=" + audio.owner_id + "_" + audio.id);
-		}
+		} else {*/
+			window.open("api-v3.php?method=vk.downloadAudio&ownerId=" + audio.owner_id + "&audioId=" + audio.id + "&token=" + API.accessToken);
+		//}
 
 	},
 

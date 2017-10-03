@@ -58,6 +58,7 @@
 		"vk.getAudioBitrate" => "\Method\VK\GetAudioBitrate",
 		"vk.getUserDateRegistration" => "\Method\VK\GetUserDateRegistration",
 		"vk.fetchDocumentation" => "\Method\VK\FetchDocumentation",
+		"vk.downloadAudio" => "\Method\VK\DownloadAudio",
 
 		"internal.updateLangPack" => "\Method\Internal\UpdateLangPack",
 
@@ -92,34 +93,9 @@
 /*
 		case "apidog.downloadAudio":
 
-			$params = http_build_query([
-				"access_token" => $_REQUEST["key"],
-				"audios" => $_REQUEST["audio"],
-				"v" => 4.99
-			]);
-			$c = curl_init("https://api.vk.com/method/audio.getById?" . $params);
-			curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($c, CURLOPT_TIMEOUT, 5);
-			curl_setopt($c, CURLOPT_USERAGENT, VK_SHIT_USER_AGENT);
-			$data = json_decode(curl_exec($c));
-//			var_dump(curl_error($c));
-			curl_close($c);
 
 
-			if (!isset($data->response)) {
-				print "<pre>Error:\n\n";
-				var_dump($data);
-				exit("Error");
-			};
 
-			$data = $data->response[0];
-
-			if (isset($data->content_restricted)) {
-				printf("К сожалению, аудиозапись <strong>%s</strong> &mdash; %s скачать нельзя (content_restricted).", $data->artist, $data->title);
-				exit;
-			};
 
 			function nameRelacer ($s) {
 				return str_replace("&amp;", "&", str_replace("&lt;", "<", str_replace("&gt;", ">", $s)));
