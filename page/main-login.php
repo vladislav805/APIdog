@@ -6,6 +6,7 @@
 
 ?>
 <!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
 <html>
 	<head>
 		<meta charset="utf-8" />
@@ -67,7 +68,7 @@
 
 					<div id="authCaptcha" class="hidden">
 						<input type="hidden" name="captchaId" id="captchaId" value="" />
-						<img src="about:blank" alt="" id="captchaImage" onclick="setCaptchaImage(this);" />
+						<label for="captchaKey"><img src="about:blank" alt="" id="captchaImage" onclick="setCaptchaImage(this);" /></label>
 						<input type="text" class="field" name="captchaKey" id="captchaKey" value="" autocomplete="off" />
 					</div>
 					<div id="authValidation" class="hidden">
@@ -81,7 +82,10 @@
 							</div>
 						</div>
 						<div id="validationForm" class="hidden">
-							<input type="text" class="field" value="" name="validationCode" id="validationCode" />
+							<div class="field-wrap">
+								<label for="validationCode">Код из SMS</label>
+								<input class="field" type="text" name="validationCode" id="validationCode" />
+							</div>
 						</div>
 					</div>
 					<div class="submit">
@@ -95,7 +99,7 @@
 					<?}?>
 					<div class="hidden" id="errorBlock"></div>
 					<div class="text-footer">
-						<p>Нажимая кнопку "Войти",  Вы даете свое согласие на передачу Ваших данных через сервера APIdog <string>без их последующей записи</string>.</p>
+						<p>Нажимая кнопку "Войти",  Вы даете свое согласие на передачу Ваших данных через сервера APIdog <strong>без их последующей записи</strong>.</p>
 					</div>
 				</form>
 
