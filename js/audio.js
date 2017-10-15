@@ -407,7 +407,7 @@ var Audios = {
 		]}));
 
 		item.appendChild(e("div", {"class": "audios-meta", append: [
-			e("div", {"class": "audios-time", html: $.toTime(audio.duration)}),
+			e("div", {"class": "audios-time", html: audio.duration !== Infinity ? $.toTime(audio.duration) : ""}),
 			more = e("div", {"class": "audios-more", onclick: function(event) {
 				event.preventDefault();
 				event.stopPropagation();
@@ -942,7 +942,9 @@ var Audios = {
 	 */
 	notifyListItem: function(audio) {
 		Array.prototype.forEach.call(document.querySelectorAll(".audios-playing"), function(item) {
-			item.querySelector(".audios-time").textContent = $.toTime(parseInt(item.dataset.duration));
+			var n = parseInt(item.dataset.duration);
+			console.log(n);
+			item.querySelector(".audios-time").textContent = !isNaN(n) ? $.toTime(n) : "";
 		});
 		Array.prototype.forEach.call(document.querySelectorAll("." + Audios.CLASS_PLAYING), function(item) {
 			$.elements.removeClass(item, Audios.CLASS_PLAYING);
