@@ -62,7 +62,7 @@ var Profile = {
 				}),
 				e("div", {"class": "profile-right", append: [
 					e("div", {"class": "profile-name",
-						html: user.first_name.safe() + " " + user.last_name.safe() + Site.isOnline(user) + Site.isVerify(user)
+						html: user.first_name.safe() + " " + user.last_name.safe() + Site.isOnline(user) + Site.isVerify(user) + Site.getLastSeenString(user)
 					}),
 
 					Profile.getStatusNode(user),

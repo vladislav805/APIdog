@@ -78,9 +78,9 @@
 
 
 	"profiles.profile_was_in":[
-		["было в сети", "была в сети", "был в сети"],
-		["was online", "was online", "was online"],
-		["null", "була у мережі", "був у мережі"]
+		["было", "была", "был"],
+		["was", "was", "was"],
+		["null", "була", "був"]
 	],
 	"profiles.wasMinutesAgo":[["минуту", "минуты", "минут"], null, null],
 	"profiles.wasSecondsAgo":[["секунду", "секунды", "секунд"], null, null],
