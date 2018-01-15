@@ -47,7 +47,6 @@ function getValue(node) {
 				default:
 					return null;
 			}
-			break;
 
 		case "select":
 			/** @var {HTMLSelectElement} node */
@@ -150,7 +149,7 @@ function authorize(form, event) {
 	}).catch(function(error) {
 
 		/**
-		 * @var {{reason: int, data: {errorId, extra: object=}}} error
+		 * @var {{reason: int, data: {errorId, extra: {validationId=, phone=, captchaId=, captchaImg=}=}}} error
 		 */
 		isRequested = false;
 		g(ID_SUBMIT_MAIN).disabled = false;
