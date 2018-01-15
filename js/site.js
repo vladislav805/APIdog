@@ -409,7 +409,7 @@ var Site = {
 	 * Returns icon of online for user
 	 * @param {User} data
 	 */
-	isOnline: function (data) {
+	isOnline: function(data) {
 		if (data && data.online) {
 			if (data.online_app) {
 				var title, className;
