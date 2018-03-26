@@ -243,7 +243,8 @@ function sendValidationSMS() {
 	setVisibilityLoaderButton(ID_SUBMIT_SMS, true);
 	g(ID_VALIDATION_TIME).innerHTML = "";
 	VKAPI("auth.validatePhone", {
-		sid: validationId
+		sid: validationId,
+		v: 5.58
 	}, function(result) {
 		setVisibilityLoaderButton(ID_SUBMIT_SMS, false);
 		if (result.response) {
