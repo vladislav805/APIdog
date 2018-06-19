@@ -1,5 +1,6 @@
 var Mail = {
 
+	/** @deprecated */
 	version: 1, // 1 - dialogs, 0 - messages
 
 	explain: function() {
@@ -48,6 +49,7 @@ var Mail = {
 
 	/**
 	 * Get and parse dialogs list from local storage
+	 * @deprecated
 	 */
 	parseFromStorage: function() {
 		var data = $.localStorage(Mail.KEY_STORAGE_DIALOGS);
@@ -60,9 +62,9 @@ var Mail = {
 	 * @param {HTMLElement} list
 	 */
 	requestDialogs: function(list) {
-		if (isEnabled(Setting.ENABLED_ONLINE)) {
+		//if (isEnabled(Setting.ENABLED_ONLINE)) {
 			Mail.getDialogs(0).then(Mail.showDialogs.bind(Mail, list));
-			return;
+		/*	return;
 		}
 
 		var cached = Mail.parseFromStorage();
@@ -71,12 +73,13 @@ var Mail = {
 			Mail.showConfirmStorage(list);
 		} else {
 			Mail.getMessagesForDialogList(null, 0).then(Mail.showDialogs.bind(Mail, list)).then(Mail.syncDialogs);
-		}
+		}*/
 	},
 
 	/**
 	 * Confirm user about caching
 	 * @param {HTMLElement} list
+	 * @deprecated
 	 */
 	showConfirmStorage: function(list) {
 		var progress = new ProgressBar(0, 100),
@@ -115,6 +118,7 @@ var Mail = {
 
 	/**
 	 * @param {Array} data
+	 * @deprecated
 	 */
 	storeDialogs: function(data) {
 		$.localStorage(Mail.KEY_STORAGE_DIALOGS, JSON.stringify(data));
@@ -125,6 +129,7 @@ var Mail = {
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @param {Array} result
 	 * @returns {{modal: Modal, progress: ProgressBar}}
+	 * @deprecated
 	 */
 	parseCacheMessagesFromAPI: function(ui, result) {
 		var messageIds = result[0],
@@ -148,6 +153,7 @@ var Mail = {
 	 * Request for cache dialogs by messages
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @returns {Promise.<Array>}
+	 * @deprecated
 	 */
 	performCacheByMessages: function(ui) {
 		return api("execute", {
@@ -187,6 +193,7 @@ var Mail = {
 	 * Request for cache dialogs by dialogs (width online)
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @returns {Promise.<Array>}
+	 * @deprecated
 	 */
 	performCacheByDialogs: function(ui) {
 		return api("execute", {
@@ -205,6 +212,7 @@ var Mail = {
 	 * Returns chunk of cached dialogs from storage
 	 * @param {int} offset
 	 * @param {int} count
+	 * @deprecated
 	 */
 	getChunkCache: function(offset, count) {
 		if (!Mail.mStorage) {
@@ -217,6 +225,7 @@ var Mail = {
 	/**
 	 * Add messages to cache storage
 	 * @param {object[]} messages
+	 * @deprecated
 	 */
 	addCacheStorage: function(messages) {
 		var d = Mail.mStorage, o = {};
@@ -244,6 +253,7 @@ var Mail = {
 	/**
 	 * Returns last cached message with max id
 	 * @returns {int}
+	 * @deprecated
 	 */
 	getLastMessageId: function() {
 		return Mail.getChunkCache(0, 1)[0][Mail.INDEX_MESSAGE_ID];
@@ -261,6 +271,7 @@ var Mail = {
 	 * Request info about messages, profiles and groups
 	 * @param {{modal: Modal, progress: ProgressBar}|null} ui
 	 * @param {int} offset
+	 * @deprecated
 	 */
 	getMessagesForDialogList: function(ui, offset) {
 		var chunk = Mail.getChunkCache(offset || 0, Mail.DEFAULT_COUNT);
@@ -288,16 +299,17 @@ var Mail = {
 	 * @param {int} offset
 	 */
 	getDialogs: function(offset) {
-		api("execute", {
-			code: 'var m=API.messages.getDialogs({count:parseInt(Args.c),offset:parseInt(Args.o),preview_length:120,v:5.14});API.account.setOffline();return{c:API.account.getCounters(),d:m,u:API.users.get({user_ids:m.items@.message@.user_id+m.items@.message@.source_mid,fields:Args.f})};',
+		return api("execute", {
+			code: 'return{c:API.account.getCounters(),d:API.messages.getConversations({count:parseInt(Args.c),offset:parseInt(Args.o),extended:1})};',
 			f: "photo_50,online,sex",
 			o: offset,
 			c: Mail.DIALOGS_PER_PAGE,
 			v: 5.56
 		}).then(function(data) {
 			Site.setCounters(data.c);
-			Local.add(data["u"]);
+			Local.add(data.d.profiles.concat(data.d.groups));
 			data.d.offset = offset;
+			console.log(data);
 			return data.d;
 		});
 	},
@@ -314,7 +326,7 @@ var Mail = {
 			!data.offset && $.elements.clearChild(list);
 
 			data.items.map(function (item) {
-				list.appendChild(Mail.item(item));
+				list.appendChild(Mail.item(item, {conversations: true}));
 			});
 
 
@@ -344,6 +356,7 @@ var Mail = {
 
 	/**
 	 * Syncing messages for dialog list cache
+	 * @deprecated
 	 */
 	syncDialogs: function() {
 		var modal = new Modal({title: Lang.get("mail.syncingTitle"), content: Lang.get("mail.syncingContent"), unclosableByBlock: true, width: 220}).show(),
@@ -389,6 +402,9 @@ console.log("will be loaded: ", from);
 		});
 	},
 
+	/**
+	 * @deprecated
+	 */
 	loadChunkOfSyncCache: function(ids) {
 		return api("messages.getById", {message_ids: Array.isArray(ids) ? ids.join(",") : ids, v: 5.56});
 	},
@@ -396,6 +412,7 @@ console.log("will be loaded: ", from);
 	/**
 	 *
 	 * @param {Message[]} messages
+	 * @deprecated
 	 */
 	syncList: function(messages) {
 		if (!$.element("_mail-wrap")) {
@@ -434,8 +451,8 @@ console.log("will be loaded: ", from);
 
 	/**
 	 * Item message
-	 * @param {Message|{message: Message, unread: int}} message
-	 * @param {{unread: int=, highlight: string=, toMessage: boolean=}=} options
+	 * @param {Message|{message: Message, unread: int}|{conversation: {peer: {id: int, type: string, local_id: int}, in_read: int, out_read: int, unread_count: int, important: boolean, last_message_id: int, chat_settings: {title: string, members_count: int, state: string, photo: {photo_50: string, photo_100: string, photo_200: string}=} }, last_message: object}} message
+	 * @param {{unread: int=, highlight: string=, toMessage: boolean=, conversations: boolean=}=} options
 	 * @returns {HTMLElement}
 	 */
 	item: function(message, options) {
@@ -445,6 +462,24 @@ console.log("will be loaded: ", from);
 
 		if (Mail.version && message.message) {
 			message = message.message;
+		}
+
+		if (options.conversations) {
+			var info = message.conversation,
+				msg = message.last_message;
+			message = {
+				id: msg.id,
+				date: msg.date,
+				out: msg.out,
+				user_id: msg.peer_id,
+				chat_id: info.peer.type === "chat" ? info.peer.local_id : null,
+				read_state: info.in_read === info.out_read,
+				title: info.chat_settings && info.chat_settings.title,
+				body: msg.text,
+				attachments: msg.attachments,
+				fwd_messages: msg.fwd_messages,
+				geo: msg.geo
+			};
 		}
 
 		user = Local.data[message.user_id] || {last_name: "", first_name: ""};
