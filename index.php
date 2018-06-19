@@ -17,10 +17,10 @@
 	if (isAuthorize()) {
 		require_once "page/main-authorized.php";
 	} else {
-		if (!isset($_SESSION["invite"])) {
+		/*if (!isset($_SESSION["invite"])) {
 			header("HTTP/1.1 403 Forbidden");
 			print "Access forbidden without invite key or active session on site.";
 			exit;
-		}
+		}*/
 		require_once "page/main-login.php";
 	}

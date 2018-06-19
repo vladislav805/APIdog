@@ -29,7 +29,7 @@
 	}
 
 
-	if (isset($_SESSION["invite"])) {
+	/*if (isset($_SESSION["invite"])) {
 		if (hash_hmac("sha256", "q" . $cn->getSession()->getUserId() . "d", "apidog") !== $_SESSION["invite"]) {
 			print "Invite key was given to another account.";
 			exit;
@@ -40,7 +40,7 @@
 		unset($items[$_SESSION["invite"]]);
 		invite_save($items);
 		unset($_SESSION["invite"]);
-	}
+	}*/
 
 
 	/** @var \Model\Settings $settings */
