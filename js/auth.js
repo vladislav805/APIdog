@@ -138,7 +138,6 @@ function authorize(form, event) {
 		/**
 		 * @var {{accessToken, authId, authKey, salt}} data
 		 */
-		isRequested = false;
 		setCookie("userAccessToken", data.accessToken, expireDays);
 		setCookie("authId", data.authId, expireDays);
 		setCookie("authKey", data.authKey, expireDays);
@@ -149,7 +148,7 @@ function authorize(form, event) {
 	}).catch(function(error) {
 
 		/**
-		 * @var {{reason: int, data: {errorId, extra: {validationId=, phone=, captchaId=, captchaImg=}=}}} error
+		 * @var {{reason: int, data: {errorId: int, extra: {validationId: string=, phone: string=, captchaId: int=, captchaImg: string=, error_description: string=, error: string=}=}}} error
 		 */
 		isRequested = false;
 		g(ID_SUBMIT_MAIN).disabled = false;
@@ -165,7 +164,7 @@ function authorize(form, event) {
 						setVisibility(ID_FORM_VALIDATION, false);
 						setVisibility(ID_SUBMIT_SMS, false);
 						setVisibility(ID_SUBMIT_MAIN, true);
-						showError("#" + error.errorId + ": " + error.message);
+						showError(error.extra && error.extra.error_description || ("#" + error.errorId + ": " + error.message));
 						break;
 
 					case APIdogAPIErrorCodes.AUTHORIZE_HAS_ERROR_CAPTCHA:
@@ -210,10 +209,10 @@ function authorize(form, event) {
 
 /**
  * Show captcha form
- * @param {{captchaId: string, captchaImg: string}} error
+ * @param {{captchaId: int, captchaImg: string, error_description: string=, error: string=}} error
  */
 function setCaptcha(error) {
-	g(ID_CAPTCHA_ID).value = error.captchaId;
+	g(ID_CAPTCHA_ID).value = error.captchaId.toString();
 	g(ID_CAPTCHA_IMAGE).src = !window.__userFromUkraine ? error.captchaImg : error.captchaImg.replace("api.vk.com", "apidog.ru:4006");
 	setEmptyCaptchaKey();
 }
@@ -242,10 +241,9 @@ function sendValidationSMS() {
 	var validationId = getValue(ID_VALIDATION_ID);
 	setVisibilityLoaderButton(ID_SUBMIT_SMS, true);
 	g(ID_VALIDATION_TIME).innerHTML = "";
-	VKAPI("auth.validatePhone", {
-		sid: validationId,
-		v: 5.58
-	}, function(result) {
+	APIdogRequest("vk.validatePhone", {
+		validationId: validationId
+	}).then(function(result) {
 		setVisibilityLoaderButton(ID_SUBMIT_SMS, false);
 		if (result.response) {
 			setVisibility(ID_SUBMIT_SMS, false);
@@ -332,7 +330,7 @@ function VKAPI(method, params, callback) {
 	if (typeof callback === "function") {
 		var now = APIdogAuthCallback.length;
 		APIdogAuthCallback[now] = callback;
-		callback = "APIdogAuthCallback[" + now + "]";
+		callback = "window.APIdogAuthCallback[" + now + "]";
 	}
 	params = params || {};
 	params.callback = callback;

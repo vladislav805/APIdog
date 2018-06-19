@@ -59,6 +59,7 @@
 		"vk.getUserDateRegistration" => "\Method\VK\GetUserDateRegistration",
 		"vk.fetchDocumentation" => "\Method\VK\FetchDocumentation",
 		"vk.downloadAudio" => "\Method\VK\DownloadAudio",
+		"vk.validatePhone" => "\\Method\\VK\\ValidatePhone",
 
 		"internal.updateLangPack" => "\Method\Internal\UpdateLangPack",
 
