@@ -1609,12 +1609,6 @@ console.log(data.offset);
 			n.play();
 	},
 
-
-
-	convert2peer: function(to) {
-		return to > 0 ? to : 2000000000 + -to;
-	},
-
 	/**
 	 * Show attachments page
 	 * @param {Peer} peer
