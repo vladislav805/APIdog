@@ -380,8 +380,6 @@ var Groups = {
 		group.country && group.country.title && location.push(group.country.title);
 		group.city && group.city.title && location.push(group.city.title);
 
-		buttons.push(getJoinLeaveButton());
-
 		wrap.appendChild(Groups.getCover(group));
 
 
@@ -397,8 +395,8 @@ var Groups = {
 
 					Groups.getStatusNode(group),
 
-					e("div", {"class": "tip", html: location.join(", ")}),
-				]}),
+					e("div", {"class": "tip", html: location.join(", ")})
+				].concat(buttons)}),
 				e("div", {
 					"class": "profile-left",
 					append: e("a", { href: "#photos-" + groupId + "_-6", append: lz(getURL(group.photo_100 || group.photo_50), 80, 80)})
@@ -616,6 +614,15 @@ var Groups = {
 					onclick: function() {}
 				};*/
 				break;
+		}
+
+		if (group.can_message) {
+			p["msg"] = {
+				label: "write msg",
+				onclick: function() {
+					window.location.hash = "#im?to=-" + group.id;
+				}
+			};
 		}
 
 		p["share"] = {
