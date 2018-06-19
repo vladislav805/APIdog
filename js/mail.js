@@ -451,7 +451,8 @@ console.log("will be loaded: ", from);
 
 	/**
 	 * Item message
-	 * @param {Message|{message: Message, unread: int}|{conversation: {peer: {id: int, type: string, local_id: int}, in_read: int, out_read: int, unread_count: int, important: boolean, last_message_id: int, chat_settings: {title: string, members_count: int, state: string, photo: {photo_50: string, photo_100: string, photo_200: string}=} }, last_message: object}} message
+	 * TODO: replace converter by normal function
+	 * @param {Message|{message: Message, unread: int}|{conversation: {peer: {id: int, type: string, local_id: int}, in_read: int, out_read: int, unread_count: int, important: boolean, last_message_id: int, chat_settings: {title: string, members_count: int, state: string, photo: {photo_50: string, photo_100: string, photo_200: string}=} }, last_message: object, unread_count: int=}} message
 	 * @param {{unread: int=, highlight: string=, toMessage: boolean=, conversations: boolean=}=} options
 	 * @returns {HTMLElement}
 	 */
@@ -464,6 +465,8 @@ console.log("will be loaded: ", from);
 			message = message.message;
 		}
 
+		peer = new Peer(message.chat_id ? Peer.LIMIT + message.chat_id : message.user_id);
+
 		if (options.conversations) {
 			var info = message.conversation,
 				msg = message.last_message;
@@ -471,7 +474,7 @@ console.log("will be loaded: ", from);
 				id: msg.id,
 				date: msg.date,
 				out: msg.out,
-				user_id: msg.peer_id,
+				user_id: info.peer.type === "chat" ? msg.from_id : msg.peer_id,
 				chat_id: info.peer.type === "chat" ? info.peer.local_id : null,
 				read_state: info.in_read === info.out_read,
 				title: info.chat_settings && info.chat_settings.title,
@@ -480,11 +483,23 @@ console.log("will be loaded: ", from);
 				fwd_messages: msg.fwd_messages,
 				geo: msg.geo
 			};
+
+			if (info.peer.type === "chat" && info.chat_settings && info.chat_settings.photo_50) {
+				message.photo_50 = info.chat_settings.photo_50;
+				message.photo_100 = info.chat_settings.photo_100;
+				message.photo_200 = info.chat_settings.photo_200;
+			}
+
+			unread = info.unread_count;
+
+			peer = new Peer(info.peer.id);
+
+			console.log(peer.isChat(), message);
 		}
 
 		user = Local.data[message.user_id] || {last_name: "", first_name: ""};
+console.log(user);
 
-		peer = new Peer(message.chat_id ? Peer.LIMIT + message.chat_id : message.user_id);
 
 		text = message.body.replace(/\n/g, " ").replace(/\n/ig, " \\ ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + ".." : text;

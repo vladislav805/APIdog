@@ -2372,7 +2372,8 @@ strong span {
 }
 
 /** TODO: */
-.dialogs-in.dialogs-item-new .dialogs-meta[data-count]::after {
+.dialogs-in.dialogs-item-new .dialogs-meta[data-count=""]::after,
+.dialogs-in.dialogs-item-new .dialogs-meta[data-count="0"]::after{
 	content: "?";
 }
 
