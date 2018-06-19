@@ -37,6 +37,12 @@ var Lang = {
 		});
 	},
 
+	clear: function() {
+		$.localStorage(Lang.KEY_LOCAL_STORAGE, null);
+		$.localStorage(Lang.KEY_LOCAL_VERSION, null);
+		console.info("Lang: language data was cleared. In next reload new data will be fetched");
+	},
+
 	get: function(category, variable, count) {
 		var id, result;
 

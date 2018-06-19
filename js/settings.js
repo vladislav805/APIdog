@@ -405,6 +405,7 @@ var Settings = {
 		Settings.redrawMBOClass();
 
 		if (isLanguageChanged) {
+			Lang.clear();
 			Settings.showPromoteReloadPage();
 		}
 	},
