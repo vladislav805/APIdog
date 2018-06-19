@@ -411,14 +411,14 @@ Modal.prototype = {
 	 * @return   {Modal}
 	 */
 	show: function(fromNodeAnimation) {
-		if (fromNodeAnimation) {
+		/*if (fromNodeAnimation) {
 
 			if (~Object.prototype.toString.call(fromNodeAnimation).toLowerCase().indexOf("html")) {
 				fromNodeAnimation = this.computeFrom(fromNodeAnimation);
 			}
 
 			this._showAnimate(fromNodeAnimation);
-		}
+		}*/
 
 		$.elements.removeClass(this.wrap, "hidden");
 
