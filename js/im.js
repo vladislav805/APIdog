@@ -1611,31 +1611,32 @@ console.log(data.offset);
 
 
 
-	convert2peer: function (to) {
+	convert2peer: function(to) {
 		return to > 0 ? to : 2000000000 + -to;
 	},
 
-	getAttachmentsDialog: function (to) {
-
+	/**
+	 * Show attachments page
+	 * @param {Peer} peer
+	 */
+	getAttachmentsDialog: function(peer) {
 		var e = $.e,
 			list,
 			items = [],
 			filter = "photo",
-			accepted = ["photo", "video", "audio", "doc"],
-			r = Array.prototype.forEach,
-			currentPositionLoaded = 0,
-			currentPosition = 0,
 			nextFrom = "",
-			load = function (o) {
-				Site.APIv5("messages.getHistoryAttachments", {
-					peer_id: IM.convert2peer(to),
+			load = function(o) {
+				api("messages.getHistoryAttachments", {
+					peer_id: peer.get(),
 					media_type: filter,
 					start_from: nextFrom,
 					count: 50,
 					v: 5.49
-				}, function (d) {
-					d = Site.isResponse(d);
-					if (!d || !d.items.length) return;
+				}).then(function (d) {
+					if (!d || !d.items.length) {
+						return;
+					}
+
 					var oldLength = items.length;
 					nextFrom = d.next_from;
 					//currentPositionLoaded += d.length;
@@ -1643,14 +1644,15 @@ console.log(data.offset);
 					d = d.items;
 
 					items = items.concat(d);
-					if (!o) $.elements.clearChild(list);
+					if (!o) {
+						$.elements.clearChild(list);
+					}
+
 					show(items, oldLength);
 				});
 			},
 
-			audioLid = Audios.createList([]).lid,
-
-			setFilter = function (f) {
+			setFilter = function(f) {
 				filter = f;
 				$.elements.clearChild(list);
 				items = [];
@@ -1658,67 +1660,84 @@ console.log(data.offset);
 				load(0);
 			},
 
-			show = function (data, fromPosition) {
+			show = function(data, fromPosition) {
 				var i = fromPosition, item, a, node, size = 0, empty;
 				while (item = data[i++]) {
 					size++;
-					if (filter && filter !== item.type)
+
+					if (filter && filter !== item.type) {
 						continue;
+					}
+
 					a = item[item.type];
+
 					switch (item.type) {
 						case "photo":
 							node = Photos.getAttachment(a, {options: "im_photo_attachment"});
 							break;
+
 						case "video":
 							node = Video.getAttachment(a, {from: true});
 							break;
+
 						case "audio":
-							Audios.Data[a.owner_id + "_" + a.id] = a;
+							//Audios.Data[a.owner_id + "_" + a.id] = a;
 
 							//node = Audios.Item(a, {lid: audioLid});
 							break;
+
 						case "doc":
 							node = Docs.item(a, {type: 1});
 							break;
+
 						default:
 							console.info("Skipped: Attachment<" + item.type + ">: ", item[item.type]);
 							continue;
-					};
+					}
 					list.appendChild(node);
-				};
-				if (!size)
+				}
+
+				if (!size) {
 					list.appendChild(empty = Site.getEmptyField(Lang.get("im.attach_view_noone")));
+				}
+
 				if (nextFrom) {
 					list.appendChild(Site.getNextButton({
-						click: function (event) {
+						click: function(event) {
 							event.preventDefault();
-							if (empty) $.elements.remove(empty);
+							if (empty) {
+								$.elements.remove(empty);
+							}
 							load(1);
 							$.elements.remove(this);
 							return false;
 						},
 						text: Lang.get("im.next")
 					}));
-				};
+				}
 			},
+
 			parent = e("div", {append: [
 				Site.getPageHeader(
 					Lang.get("im.attach_view"),
-					Site.CreateDropDownMenu(Lang.get("im.attach_view_filter"), (function (a, b) {
-						a[b("im.attach_view_photo")] = function (event) { setFilter("photo") };
-						a[b("im.attach_view_video")] = function (event) { setFilter("video") };
-						a[b("im.attach_view_audio")] = function (event) { setFilter("audio") };
-						a[b("im.attach_view_doc")] = function (event) { setFilter("doc") };
-						return a;
-					})({}, Lang.get))
+					new DropDownMenu(Lang.get("im.attach_view_filter"), {
+							photo: { label: Lang.get("im.attach_view_photo"), onclick: setFilter.bind(this, "photo") },
+							video: { label: Lang.get("im.attach_view_video"), onclick: setFilter.bind(this, "video") },
+							//audio: { label: Lang.get("im.attach_view_audio"), onclick: setFilter.bind(this, "audio") },
+							doc: { label: Lang.get("im.attach_view_doc"), onclick: setFilter.bind(this, "doc") }
+					}).getNode()
 				),
 				list = e("div", {append: Site.Loader(true)})
 			]});
+
 		load(0);
 
 		Site.append(parent);
-		Site.setHeader(Lang.get("im.attach_view"), {link: "im?to=" + to});
+		Site.setHeader(Lang.get("im.attach_view"), {link: "im?to=" + peer.get()});
 	},
+
+
+
 	Resolve: function (a) {
 		if (a === "mail")
 			Mail.explain();
