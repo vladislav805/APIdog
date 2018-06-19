@@ -2362,6 +2362,7 @@
 	"groups.actionDoneLeave": ["Вы покинули группу", "You leaved from group", null],
 	"groups.actionDoneCancelRequest": ["Вы отменили заявку", "You canceled request", null],
 	"groups.actionShare": ["Поделиться", "Share", null],
+	"groups.actionOpenDialog": ["Написать сообществу", "Write message", null],
 
 
 

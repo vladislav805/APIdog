@@ -618,7 +618,7 @@ var Groups = {
 
 		if (group.can_message) {
 			p["msg"] = {
-				label: "write msg",
+				label: Lang.get("groups.actionOpenDialog"),
 				onclick: function() {
 					window.location.hash = "#im?to=-" + group.id;
 				}
