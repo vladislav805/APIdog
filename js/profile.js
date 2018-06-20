@@ -1017,7 +1017,7 @@ var Profile = {
 			var user = data.u,
 				app = data.a,
 				left = data.t,
-				startString = user.first_name + " " + Lang.get("general.was_sex")[user.sex] + " ",
+				startString = user.first_name.safe() + " " + Lang.get("general.was_sex")[user.sex] + " ",
 				platformId = user.last_seen.platform,
 
 				computeDifferentTime = function(d) {
