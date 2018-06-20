@@ -499,7 +499,8 @@ var Feed = {
 		load: function(list) {
 			return api("newsfeed.getLists", {v: 5.56}).then(function(data) {
 				Feed.lists.data = data.items;
-				return {list: list, data: data};
+				list.data = data;
+				return list;
 			});
 		},
 
