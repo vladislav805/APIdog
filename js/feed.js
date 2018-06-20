@@ -99,7 +99,7 @@ var Feed = {
 			f: filter,
 			i: lists,
 			t: "asc",
-			v: 5.63,
+			v: 5.72,
 			o: next,
 			n: +isEnabled(Setting.COMMENTS_IN_FEED) // TODO: comments
 		}).then(
