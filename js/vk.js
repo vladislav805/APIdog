@@ -53,7 +53,7 @@ api.fx = {
 
 		var url = httpBuildQuery(p);
 
-		if (API.extension && API.extension.versionSDK >= 1.3) {
+		if (API.extension && API.extension.versionSDK >= 1.3 && API.extension.versionSDK < 3.0) {
 			api.fx.performExtension(om);
 		} else if (isEnabled(Setting.USING_PROXY) || url.length > 4096 - 38) {
 			api.fx.performProxy(om);
@@ -72,7 +72,7 @@ api.fx = {
 		if (typeof window.fetch === "function") {
 			// TODO III
 		} else {
-			var xhr = new XMLHttpRequest(url);
+			var xhr = new XMLHttpRequest();
 			xhr.open("POST", url);
 			xhr.send(om.getParams());
 		}

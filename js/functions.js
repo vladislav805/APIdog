@@ -2010,7 +2010,7 @@ function handleExtensionEvent(event) {
 	receivingEvents && receivingEvents[event.method] && receivingEvents[event.method](event);
 }
 
-receiveEvent("onAccessTokenRequire", function (event) {
+receiveEvent("onAccessTokenRequire", function(event) {
 	if ((API.bitmask & 4))
 		return;
 	LongPoll._ext = true;
@@ -2022,16 +2022,17 @@ receiveEvent("onAccessTokenRequire", function (event) {
 	sendEvent(event.callback, {
 		useraccesstoken: API.accessToken,
 		userAgent: API.vkShitUserAgent,
-		settings: API.bitmask
+		settings: API.bitmask,
+		apiVersion: 5.78
 	});
 });
 
-receiveEvent("onLongPollDataReceived", function (event) {
+receiveEvent("onLongPollDataReceived", function(event) {
 	try {
 		var json = typeof event.updates === "string" ? JSON.parse(event.updates) : event.updates;
 		LongPoll.getResult({updates: json}, null, true);
 	} catch (e) {
-		console.error("APIdogExtensionReceiveError<EmptyResponse>");
+		console.error("APIdogExtensionReceiveError", e, event);
 	}
 });
 
@@ -2039,7 +2040,7 @@ receiveEvent("onAPIRequestExecuted", function (data) {
 	api.fx.sRequests[data.requestId](data.requestResult);
 });
 
-window.addEventListener("message", function (event) {
+window.addEventListener("message", function(event) {
 	if (event.source !== window)
 		return;
 	console.log("DOG", event.data);
@@ -2047,7 +2048,7 @@ window.addEventListener("message", function (event) {
 });
 
 
-function onExtensionInited (v, a) {
+function onExtensionInited(v, a) {
 	API.isExtension = true;
 	API.extension = {
 		versionSDK: v,
