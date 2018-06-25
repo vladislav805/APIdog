@@ -1099,7 +1099,7 @@ function createInputDate(options, date) {
 		y = getSelectNumbersInRange({
 			name: options.name + "Year",
 			onchange: recount
-		}, 2017, 2018, u.getFullYear()),
+		}, 2018, 2019, u.getFullYear()),
 
 		h = getSelectNumbersInRange({
 			name: options.name + "Hours"
