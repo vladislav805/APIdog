@@ -10,6 +10,8 @@
 
 	class UploadTask {
 
+		const API_VERSION = "5.2";
+
 		/** @var string */
 		private $target;
 
@@ -29,7 +31,6 @@
 		private $result;
 
 		/**
-		 * Get constructor.
 		 * @param string $file
 		 * @param string $target
 		 * @throws APIdogException
@@ -42,6 +43,7 @@
 		}
 
 		/**
+		 * Инициализация и проверка входных данных на ошибки
 		 * @return mixed
 		 * @throws APIdogException
 		 */
@@ -72,9 +74,12 @@
 
 			$this->method = $d->method;
 			$this->params = (array) $d->params;
+			$this->params["v"] = self::API_VERSION;
 		}
 
 		/**
+		 * Получение дополнительных данных о загрузке файла по названию метода
+		 * получения адреса, который передает клиент
 		 * @param string $method
 		 * @return array|null
 		 */
@@ -96,6 +101,7 @@
 		}
 
 		/**
+		 * Запрос на получение адреса сервера загрузки
 		 * @return boolean
 		 * @throws APIdogException
 		 */
@@ -113,6 +119,7 @@
 		}
 
 		/**
+		 * Процесс загрузки файла
 		 * @param string|boolean $filename
 		 * @return boolean
 		 * @throws APIdogException
@@ -149,6 +156,7 @@
 		}
 
 		/**
+		 * Запрос на сохранение файла
 		 * @return $this|mixed|stdClass
 		 * @throws APIdogException
 		 */
@@ -164,6 +172,7 @@
 			}
 
 			$this->result["access_token"] = $this->params["access_token"];
+			$this->result["v"] = self::API_VERSION;
 
 			$saver = new VKRequest($p["method"], $this->result);
 
@@ -189,22 +198,14 @@
 			return $response;
 		}
 
+		/**
+		 * Парсер для фотографий
+		 * @param object $p
+		 * @return object
+		 */
 		public static function photo($p) {
-			return [
-				"type" => "photo",
-				"id" => $p->pid,
-				"owner_id" => $p->owner_id,
-				"date" => $p->created,
-				"photo_75" => $p->src_small,
-				"photo_130" => $p->src,
-				"photo_604" => $p->src_big,
-				"photo_807" => isset($p->src_xbig) ? $p->src_xbig : null,
-				"photo_1280" => isset($p->src_xxbig) ? $p->src_xxbig : null,
-				"photo_2560" => isset($p->src_xxxbig) ? $p->src_xxxbig : null,
-				"width" => $p->width,
-				"height" => $p->height,
-				"album_id" => $p->aid
-			];
+			$p->type = "photo";
+			return $p;
 		}
 
 		/*\
@@ -227,6 +228,11 @@
 			];
 		}
 
+		/**
+		 * Парсер для аудио
+		 * @param object $a
+		 * @return array
+		 */
 		public static function audio($a) {
 			return [
 				"type" => "audio",
@@ -241,19 +247,14 @@
 			];
 		}
 
+		/**
+		 * Парсер для документов
+		 * @param object $d
+		 * @return object
+		 */
 		public static function document($d) {
-			return [
-				"type" => "doc",
-				"id" => $d->did,
-				"owner_id" => $d->owner_id,
-				"title" => $d->title,
-				"size" => $d->size,
-				"ext" => $d->ext,
-				"url" => $d->url,
-				"date" => time(),
-				"photo_100" => isset($d->thumb_s) ? $d->thumb_s : null,
-				"photo_130" => isset($d->thumb) ? $d->thumb : null
-			];
+			$d->type = "doc";
+			return $d;
 		}
 
 	}
