@@ -546,6 +546,10 @@
 
 .sl-list[data-state="1"]:empty::after {
 	content: attr(data-ph-empty-search);
+	text-align: center;
+	display: block;
+	padding: 100px 30px;
+	color: #808080;
 }
 
 .sl-list[data-state="2"] > * {
