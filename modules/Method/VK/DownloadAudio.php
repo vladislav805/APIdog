@@ -43,7 +43,7 @@
 			$req = new VKRequest("audio.getById", [
 				"access_token" => $this->token,
 				"audios" => sprintf("%d_%d", $this->ownerId, $this->audioId),
-				"v" => 5.63
+				"v" => 5.67
 			]);
 
 			$data = $req->send();
