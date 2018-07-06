@@ -1450,6 +1450,17 @@
 	"mail.actionRefreshCache":["Синхронизировать кэш","Sync cache now",null],
 	"mail.readAllConfirmTitle":["Подтверждение","Confirmation",null],
 	"mail.readAllConfirmText":["Вы уверены, что хотите отметить все сообщения прочитанными?<br/><small class=tip>Внимание! За раз эта функция отмечает только 24 диалога.</small>",null,null],
+	"mail.confirmStorageTitle":["Давайте решим вопрос...","Let's resolve one question...",null],
+	"mail.confirmStorageContent":["В связи с тем, что метод получения списка диалогов выбивает в онлайн аккаунт, мы предлагаем Вам на выбор два подхода к получению списка диалогов:<br><strong>Сообщениями</strong> - messages.get, офлайн. Будут загружены последние 2500 сообщений и сформирован список диалогов, при этом список будет неполным<br><strong>Диалогами</strong> - messages.getDialogs, онлайн. Будет загружен весь список по старому способу<br>После формирования списка, чтобы не показывались одни и те же сообщения, когда уже есть более новые, список будет обновляться, загружая сообщения, которых не было, это будет в разы быстрее.<br><strong>Формирование списка (любым способом) может занять от 10 секунд до минуты.</strong>",
+		null,
+		null
+	],
+	"mail.confirmStorageButtonMessages":["Сообщениями","By messages",null],
+	"mail.confirmStorageButtonDialogs":["Диалогами","By dialogs",null],
+	"mail.confirmStoreLoaded":["Даннаые загружены. Обновление...","Data loaded. Updating...",null],
+	"mail.confirmStorageProgress":["Загружаю данные...","Loading data...",null],
+	"mail.syncingTitle":["Синхронизация","Syncing...",null],
+	"mail.syncingContent":["Пожалуйста, подождите...","Please wait",null],
 	"mail.types_messages":[
 		[
 			["сообщение","сообщения","сообщений"],
