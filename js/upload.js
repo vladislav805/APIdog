@@ -304,6 +304,7 @@ function Modal (o) {
 	this._setOptions(o);
 	this._windowStateChanged();
 }
+//noinspection JSUnusedLocalSymbols
 Modal.prototype = {
 
 	/**
@@ -408,58 +409,14 @@ Modal.prototype = {
 
 	/**
 	 * Open modal and show it on document
+	 * @param {object=} fromNodeAnimation
 	 * @return   {Modal}
 	 */
 	show: function(fromNodeAnimation) {
-		/*if (fromNodeAnimation) {
-
-			if (~Object.prototype.toString.call(fromNodeAnimation).toLowerCase().indexOf("html")) {
-				fromNodeAnimation = this.computeFrom(fromNodeAnimation);
-			}
-
-			this._showAnimate(fromNodeAnimation);
-		}*/
-
 		$.elements.removeClass(this.wrap, "hidden");
 
 		this._onResizeDocument();
 		return this;
-	},
-
-	_showAnimate: function(from) {
-		var modal = this.modal,
-			setStyle = function(left, top, scale, opacity) {
-				modal.style.opacity = opacity;
-				prefix(modal, "transform", "translate(" + left + "px, " + top + "px) scale(" + scale + ")");
-			},
-			doc = {height: document.documentElement.clientHeight, width: document.documentElement.clientWidth};
-
-		$.elements.removeClass(modal, "modal-animation");
-		$.elements.addClass(modal, "modal-targetAnimated");
-
-		setStyle(
-			from.left - (doc.width / 2),
-			from.top - (doc.height / 2),
-			.1,
-			.1
-		);
-
-		setTimeout(function() {
-			setStyle(0, 0, 1, 1);
-		}, 50);
-
-		setTimeout(function() {
-			$.elements.removeClass(modal, "modal-targetAnimated");
-		}, 320);
-	},
-
-	computeFrom: function(node) {
-		var pos = $.getPosition(node);
-		pos.top -= getScroll();
-		return {
-			top: pos.top + pos.height / 2,
-			left: pos.left + pos.width / 2
-		};
 	},
 
 	/**
