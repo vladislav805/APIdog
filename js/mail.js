@@ -1,6 +1,5 @@
 var Mail = {
 
-	/** @deprecated */
 	version: 1, // 1 - dialogs, 0 - messages
 
 	explain: function() {
@@ -49,7 +48,6 @@ var Mail = {
 
 	/**
 	 * Get and parse dialogs list from local storage
-	 * @deprecated
 	 */
 	parseFromStorage: function() {
 		var data = $.localStorage(Mail.KEY_STORAGE_DIALOGS);
@@ -62,9 +60,9 @@ var Mail = {
 	 * @param {HTMLElement} list
 	 */
 	requestDialogs: function(list) {
-		//if (isEnabled(Setting.ENABLED_ONLINE)) {
+		if (isEnabled(Setting.ENABLED_ONLINE)) {
 			Mail.getDialogs(0).then(Mail.showDialogs.bind(Mail, list));
-		/*	return;
+			return;
 		}
 
 		var cached = Mail.parseFromStorage();
@@ -73,13 +71,12 @@ var Mail = {
 			Mail.showConfirmStorage(list);
 		} else {
 			Mail.getMessagesForDialogList(null, 0).then(Mail.showDialogs.bind(Mail, list)).then(Mail.syncDialogs);
-		}*/
+		}
 	},
 
 	/**
 	 * Confirm user about caching
 	 * @param {HTMLElement} list
-	 * @deprecated
 	 */
 	showConfirmStorage: function(list) {
 		var progress = new ProgressBar(0, 100),
@@ -118,7 +115,6 @@ var Mail = {
 
 	/**
 	 * @param {Array} data
-	 * @deprecated
 	 */
 	storeDialogs: function(data) {
 		$.localStorage(Mail.KEY_STORAGE_DIALOGS, JSON.stringify(data));
@@ -129,7 +125,6 @@ var Mail = {
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @param {Array} result
 	 * @returns {{modal: Modal, progress: ProgressBar}}
-	 * @deprecated
 	 */
 	parseCacheMessagesFromAPI: function(ui, result) {
 		var messageIds = result[0],
@@ -153,7 +148,6 @@ var Mail = {
 	 * Request for cache dialogs by messages
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @returns {Promise.<Array>}
-	 * @deprecated
 	 */
 	performCacheByMessages: function(ui) {
 		return api("execute", {
@@ -193,7 +187,6 @@ var Mail = {
 	 * Request for cache dialogs by dialogs (width online)
 	 * @param {{modal: Modal, progress: ProgressBar}} ui
 	 * @returns {Promise.<Array>}
-	 * @deprecated
 	 */
 	performCacheByDialogs: function(ui) {
 		return api("execute", {
@@ -212,7 +205,6 @@ var Mail = {
 	 * Returns chunk of cached dialogs from storage
 	 * @param {int} offset
 	 * @param {int} count
-	 * @deprecated
 	 */
 	getChunkCache: function(offset, count) {
 		if (!Mail.mStorage) {
@@ -225,7 +217,6 @@ var Mail = {
 	/**
 	 * Add messages to cache storage
 	 * @param {object[]} messages
-	 * @deprecated
 	 */
 	addCacheStorage: function(messages) {
 		var d = Mail.mStorage, o = {};
@@ -253,7 +244,6 @@ var Mail = {
 	/**
 	 * Returns last cached message with max id
 	 * @returns {int}
-	 * @deprecated
 	 */
 	getLastMessageId: function() {
 		return Mail.getChunkCache(0, 1)[0][Mail.INDEX_MESSAGE_ID];
@@ -271,7 +261,6 @@ var Mail = {
 	 * Request info about messages, profiles and groups
 	 * @param {{modal: Modal, progress: ProgressBar}|null} ui
 	 * @param {int} offset
-	 * @deprecated
 	 */
 	getMessagesForDialogList: function(ui, offset) {
 		var chunk = Mail.getChunkCache(offset || 0, Mail.DEFAULT_COUNT);
@@ -320,13 +309,14 @@ var Mail = {
 	 * Show dialogs in page
 	 * @param {{count: int, items: Message[], offset: int, _countType: int}} data
 	 * @param {HTMLElement} list
+	 * @returns {Promise}
 	 */
 	showDialogs: function(list, data) {
 		return new Promise(function(resolve) {
 			!data.offset && $.elements.clearChild(list);
 
 			data.items.map(function (item) {
-				list.appendChild(Mail.item(item, {conversations: true}));
+				list.appendChild(Mail.item(item, {conversations: !$.localStorage(Mail.KEY_STORAGE_DIALOGS)}));
 			});
 
 
@@ -356,7 +346,6 @@ var Mail = {
 
 	/**
 	 * Syncing messages for dialog list cache
-	 * @deprecated
 	 */
 	syncDialogs: function() {
 		var modal = new Modal({title: Lang.get("mail.syncingTitle"), content: Lang.get("mail.syncingContent"), unclosableByBlock: true, width: 220}).show(),
@@ -403,7 +392,6 @@ console.log("will be loaded: ", from);
 	},
 
 	/**
-	 * @deprecated
 	 */
 	loadChunkOfSyncCache: function(ids) {
 		return api("messages.getById", {message_ids: Array.isArray(ids) ? ids.join(",") : ids, v: 5.56});
@@ -412,7 +400,6 @@ console.log("will be loaded: ", from);
 	/**
 	 *
 	 * @param {Message[]} messages
-	 * @deprecated
 	 */
 	syncList: function(messages) {
 		if (!$.element("_mail-wrap")) {
@@ -445,6 +432,10 @@ console.log("will be loaded: ", from);
 		node.querySelector(".dialogs-attachments").textContent = Mail.getStringAttachments(message);
 		node.querySelector(".dialogs-date").textContent = getDate(message.date, APIDOG_DATE_FORMAT_SMART);
 		node.querySelector(".dialogs-date").dataset.time = message.date;
+
+		if (node.parentNode.firstChild !== node) {
+			node.parentNode.insertBefore(node, node.parentNode.firstChild);
+		}
 	},
 
 	photosChats: {},
@@ -498,8 +489,6 @@ console.log("will be loaded: ", from);
 		}
 
 		user = Local.data[message.user_id] || {last_name: "", first_name: ""};
-console.log(user);
-
 
 		text = message.body.replace(/\n/g, " ").replace(/\n/ig, " \\ ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + ".." : text;
