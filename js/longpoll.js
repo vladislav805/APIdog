@@ -448,7 +448,7 @@ var LongPoll = {
 					IM.setUserTyping(id, c[2], isListMessages);
 					break;
 				case 80:
-					g("count-messages").innerHTML = (!id ? "" : "<i>" + id + "</i>");
+					q("[data-menu='messages']").innerHTML = (!id ? "" : "<i>" + id + "</i>");
 					break;
 			}
 		}
