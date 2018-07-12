@@ -224,7 +224,6 @@ var Site = {
 			Notes:      /^(notes(\d+)?|note(\d+)_(\d+))$/ig,
 			Pages:      /^(pages|page(-?\d+)_(\d+))$/ig,
 			Apps:       /^apps$/ig,
-			Snapster:	/^chronicle$/ig,
 			Polls:      /^poll(-?\d+)_(\d+)$/ig,
 			Dev:		/^dev(\/([A-Za-z0-9._]+))?$/ig,
 			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig
