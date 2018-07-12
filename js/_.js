@@ -24,6 +24,8 @@ var Sugar = {
 	}
 };
 
+Date.prototype.relative = function() {};
+
 /**
  * @type {{
  *  owner_id: int,

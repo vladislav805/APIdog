@@ -1,12 +1,4 @@
 var Site = {
-	initialization: function () {
-		if (!window.longpollStarted) {
-			window.longpollStarted = true;
-			if (!LongPoll._ext)
-				setTimeout(LongPoll.start, 3000);
-			//Site.setAPIdogActivity(Site.setAPIdogActivityTimer = setInterval(Site.setAPIdogActivity, 2 * 60 * 1000));
-		}
-	},
 
 	/**
 	 * Show user info on initialization
@@ -91,7 +83,7 @@ var Site = {
 			} catch (e) {}
 	},
 
-	showCaptcha: function (p) {
+	showCaptcha: function(p) {
 		var e = $.e,
 			captchaId = p.captcha_sid,
 			url = p.captcha_img,
@@ -123,7 +115,7 @@ var Site = {
 			}).show();
 	},
 
-	reCaptcha: function (captchaId, captchaKey, params) {
+	reCaptcha: function(captchaId, captchaKey, params) {
 		var p = {};
 		(params || []).forEach(function (i) {
 			p[i.key] = i.value;
@@ -137,20 +129,22 @@ var Site = {
 		return false;
 	},
 
+	SECTIONS: ["friends","messages","photos","videos","groups","notifications"],
+
 	setCounters: function(data) {
 		data = data || Site.counters || {};
-		"friends,messages,photos,videos,groups,notifications".split(",").forEach(function(name) {
+		Site.SECTIONS.forEach(function(name) {
 			q("[data-menu='" + name + "']").dataset.count = data[name] || 0;
 		});
 		Site.counters = data;
 	},
 
-	onClickHead: function (event, node) {
+	onClickHead: function(event, node) {
 		var u;
 		if (u = node.getAttribute("data-url")) {
 			setLocation(u);
 		} else if (u = node.onclicked) {
-			node.onclicked();
+			u();
 			node.onclicked = null;
 		}
 	},
@@ -559,7 +553,7 @@ var Site = {
 					}
 				}
 
-				if (url.hostname === "vk.cc") {
+				if (url.hostname === "vk.cc" || url.hostname === "goo.gl") {
 					attr.push("onmouseenter=\"Site.fetchShortLinkVKCC(this)\"");
 				}
 
@@ -601,7 +595,7 @@ var Site = {
 			content: "Загрузка..."
 		});
 
-		node.dataset.requested = 1;
+		node.dataset.requested = "1";
 		api("utils.checkLink", {url: node.href}).then(function(res) {
 			tooltip.setContent(res.link);
 		});
@@ -616,7 +610,7 @@ var Site = {
 		if (node.dataset.requested) {
 			return;
 		}
-		node.dataset.requested = 1;
+		node.dataset.requested = "1";
 		var l = user;
 		if (/^(photo|video|audio|market\d+|album\d+|topic\d+|page-\d+|feed$|groups$|fave|wall-?\d+$)/img.test(l)) {
 			return;
@@ -872,7 +866,7 @@ var Site = {
 
 
 	/**
-	 * @param {int} offset
+	 * @param {int|string} offset
 	 * @param {int} count
 	 * @param {int} step
 	 * @param {{onClick: function=}=} options
@@ -951,7 +945,7 @@ var Site = {
 								}
 							}
 						]
-					}).show(from);
+					}).show();
 				userPage.addEventListener("keydown", function (event) {
 					var code = event.keyCode;
 					if (code >= 96 && code <= 105 || code >= 48 && code <= 57) return;
