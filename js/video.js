@@ -1149,7 +1149,7 @@ var Video = {
 				]}),
 				e("div", {"class": "fr vp-quality", append: [
 					e("div", {"class": "vp-sq-current", html: getAvailableSizes(video.files, true), onclick: function (event) {
-						$.elements.triggerClass(this.nextSibling, "hidden");
+						$.elements.toggleClass(this.nextSibling, "hidden");
 						$.event.cancel(event);
 					}}),
 					selectSpeed = e("div", {"class": "vp-sq-list hidden", append: getAvailableSizes(video.files), onclick: function () {
@@ -1158,7 +1158,7 @@ var Video = {
 				]}),
 				player.playbackRate ? e("div", {"class": "fr vp-quality vp-speed", append: [
 					e("div", {"class": "vp-ss-current", html: "1", onclick: function (event) {
-						$.elements.triggerClass(this.nextSibling, "hidden");
+						$.elements.toggleClass(this.nextSibling, "hidden");
 						$.event.cancel(event);
 					}}),
 					selectQuality = e("div", {"class": "vp-ss-list hidden", append: getSpeedSelect(), onclick: function () {

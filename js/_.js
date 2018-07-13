@@ -25,6 +25,7 @@ var Sugar = {
 };
 
 Date.prototype.relative = function() {};
+Date.prototype.long = function() {};
 
 /**
  * @type {{

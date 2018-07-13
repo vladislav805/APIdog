@@ -1198,8 +1198,8 @@ var Groups = {
 					Lang.get("groups.bl_in") + count + " " + Lang.get("groups", "bl_users", count),
 					$.elements.create("span", {"class": "fr a", html: "Забанить", onclick: function (event) {
 						this.innerHTML = $.elements.hasClass(form, "hidden") ? "Скрыть" : "Забанить";
-						$.elements.triggerClass(form, "hidden");
-//                      $.elements.triggerClass(list, "hidden");
+						$.elements.toggleClass(form, "hidden");
+//                      $.elements.toggle(list, "hidden");
 					}})
 				));
 				parent.appendChild((function (f) {
@@ -1207,8 +1207,8 @@ var Groups = {
 						var uid = form.user.value,
 							reason = form.reason.options[form.reason.selectedIndex].value,
 							comment = form.comment.value;
-						comment_visible = +form.comment_visible.checked;
-						end_date = form.end_date.options[form.end_date.selectedIndex].value;
+						var comment_visible = +form.comment_visible.checked;
+						var end_date = form.end_date.options[form.end_date.selectedIndex].value;
 // fast fix begin
 						uid = uid.split("/")
 						uid = uid[uid.length - 1].replace(/#/img, "").split("?")[0];

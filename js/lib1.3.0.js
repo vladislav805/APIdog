@@ -1,31 +1,22 @@
 //noinspection JSUnusedLocalSymbols
 /**
- * +-----------------------------------------------+
- * | Vladislav Veluga (c) 2009-2014                |
- * | http://vlad805.ru/                            |
- * | http://apidog.ru/                             |
- * +-----------------------------------------------+
- * | Library v1.3.0 / 17 july 2014                 |
- * |         v1.3.1 / 13 january 2016 (compatible) |
- * |         v1.3.2 / 21 july 2017                 |
- * |         v1.3.3 / 01 september 2017            |
- * +-----------------------------------------------+
+ * +-------------------------------------------+
+ * | Vladislav Veluga (c) 2009-2014            |
+ * | http://vlad805.ru/                        |
+ * | http://apidog.ru/                         |
+ * +-------------------------------------------+
+ * | Library v1.3.0 / 17 july 2014             |
+ * |         v1.3.1 / 13 january 2016 (compat) |
+ * |         v1.3.2 / 21 july 2017             |
+ * |         v1.3.3 / 01 september 2017        |
+ * |         v1.3.4 / 12 july 2018             |
+ * +-------------------------------------------+
  */
 
 window.$ = {
-	ajax: {
-		/**
-		 * @deprecated
-		 * @returns {XMLHttpRequest}
-		 */
-		init: function () {
-			return  new XMLHttpRequest();
-		}
-	},
-
 	/**
 	 * @param {string} id
-	 * @returns {HTMLElement}
+	 * @returns {HTMLElement|Node}
 	 */
 	element: function(id) {
 		return typeof id === "string" ? document.getElementById(id) : id;
@@ -37,9 +28,9 @@ window.$ = {
 		 * refactored 13.01.2016
 		 * @param {string} tagName
 		 * @param {object=} attr
-		 * @returns {HTMLElement}
+		 * @returns {HTMLElement|Node}
 		 */
-		create: function (tagName, attr) {
+		create: function(tagName, attr) {
 			var node = document.createElement(tagName), key, value;
 			for (key in attr) {
 				value = attr[key];
@@ -77,7 +68,7 @@ window.$ = {
 		},
 
 		/**
-		 * @param {Node} elem
+		 * @param {HTMLElement|Node} elem
 		 */
 		remove: function(elem) {
 			if (!elem) {
@@ -89,9 +80,9 @@ window.$ = {
 		},
 
 		/**
-		 * @param {HTMLElement} elem
-		 * @param {HTMLElement[]} nodes
-		 * @returns {HTMLElement}
+		 * @param {HTMLElement|Node} elem
+		 * @param {HTMLElement[]|Node[]} nodes
+		 * @returns {HTMLElement|Node}
 		 */
 		append: function(elem, nodes) {
 			for (var i = 0, l = nodes.length; i < l; ++i) {
@@ -104,14 +95,14 @@ window.$ = {
 
 		/**
 		 * @param {HTMLElement} elem
-		 * @returns {string}
+		 * @returns {string|CSSStyleDeclaration}
 		 */
 		getStyle: function(elem) {
-			return typeof window.getComputedStyle !== "undefined" ? getComputedStyle(elem) : elem.currentStyle;
+			return typeof window.getComputedStyle !== "undefined" ? getComputedStyle(elem) : elem["currentStyle"];
 		},
 
 		/**
-		 * @param {HTMLElement} elem
+		 * @param {HTMLElement|Node} elem
 		 * @returns {object}
 		 */
 		getPosition: function(elem) {
@@ -141,9 +132,9 @@ window.$ = {
 
 		/**
 		 * refactored 13.01.2016
-		 * @param {HTMLElement|HTMLElement[]} elem
+		 * @param {HTMLElement|HTMLElement[]|Node|Node[]} elem
 		 * @param {string} className
-		 * @returns {HTMLElement|HTMLElement[]}
+		 * @returns {HTMLElement|HTMLElement[]|Node|Node[]}
 		 */
 		addClass: function(elem, className) {
 			if (!elem) {
@@ -168,9 +159,9 @@ window.$ = {
 
 		/**
 		 * refactored 13.01.2016
-		 * @param {HTMLElement|HTMLElement[]} elem
+		 * @param {HTMLElement|HTMLElement[]|Node|Node[]} elem
 		 * @param {string} className
-		 * @returns {HTMLElement|HTMLElement[]}
+		 * @returns {HTMLElement|HTMLElement[]|Node|Node[]}
 		 */
 		removeClass: function(elem, className) {
 			if (!elem) {
@@ -196,7 +187,7 @@ window.$ = {
 		},
 
 		/**
-		 * @param {HTMLElement} elem
+		 * @param {HTMLElement|Node} elem
 		 * @param {string} className
 		 * @returns {boolean}
 		 */
@@ -211,11 +202,6 @@ window.$ = {
 
 			return !!~elem.className.split(" ").indexOf(className);
 		},
-
-		/**
-		 * @deprecated $.elements.triggerClass instead
-		 */
-		triggerClass: function(a, b) { return $.elements.toggleClass(a, b); },
 
 		/**
 		 * @param {HTMLElement|HTMLElement[]} elem
@@ -261,21 +247,21 @@ window.$ = {
 	},
 
 	// 13.01.2016 refactored
-	// 12.03.2016 fixed triming all \n in webkit
+	// 12.03.2016 fixed trimming all \n in webkit
 	/**
 	 * @deprecated
 	 * @param text
 	 * @returns {string}
 	 */
-	trim: function (text) {
+	trim: function(text) {
 		return String.prototype.trim ? text.trim() : text.replace(/^\s+|\s+$/igm, "");
 	},
 
 	cookie: function(name, value, days) {
 		var set = function(name, value, days) {
-			var exdate = new Date();
-			exdate.setDate(exdate.getDate() + days);
-			value = escape(value) + ((exdate === null) ? "" : "; expires=" + exdate.toUTCString());
+			var expiresDate = new Date();
+			expiresDate.setDate(expiresDate.getDate() + days);
+			value = encodeURIComponent(value) + ((expiresDate === null) ? "" : "; expires=" + expiresDate.toUTCString());
 			document.cookie = name + "=" + value;
 			return true;
 		};
@@ -345,10 +331,14 @@ window.$ = {
 	event: {
 
 		// refactored 13.01.2016
-		add: function (node, event, callback){
+		add: function(node, event, callback){
 			if (window.addEventListener) {
 				node.addEventListener(event, callback);
-			} else if (node.attachEvent) {
+				return;
+			}
+
+			//noinspection JSUnresolvedVariable
+			if (node.attachEvent) {
 				node.attachEvent("on" + event, callback);
 			} else {
 				node["on" + event] = callback;
@@ -356,17 +346,21 @@ window.$ = {
 		},
 
 		// refactored 13.01.2016
-		remove: function (node, event, callback) {
+		remove: function(node, event, callback) {
 			if (node.removeEventListener) {
 				node.removeEventListener(event, callback);
-			} else if (node.detachEvent) {
+				return;
+			}
+
+			//noinspection JSUnresolvedVariable
+			if (node.detachEvent) {
 				node.detachEvent("on" + event, callback);
 			} else {
 				node["on" + event] = null;
 			}
 		},
 
-		cancel: function (e) {
+		cancel: function(e) {
 			e = e || window.event;
 
 			if (!e) {
@@ -391,7 +385,7 @@ window.$ = {
 		return new Date(timestamp * 1000).long();
 	},
 
-	toTime: function (number) {
+	toTime: function(number) {
 		var second = Math.floor(number % 60),
 			minute = Math.floor(number / 60 % 60),
 			hour = Math.floor(number / 60 / 60 % 60),
@@ -399,7 +393,7 @@ window.$ = {
 		return (hour ? hour + ":" : "") + n(minute) + ":" + n(second);
 	},
 
-	textCase: function (number, titles) {
+	textCase: function(number, titles) {
 		number = Math.abs(number);
 		return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? number % 10 : 5]];
 	},
@@ -425,7 +419,7 @@ window.$ = {
  *
  * @param {string} tag
  * @param {object=} attrs
- * @returns {HTMLElement}
+ * @returns {HTMLElement|Node}
  */
 $.e = function(tag, attrs) { return $.elements.create(tag, attrs) };
 $.getStyle = $.elements.getStyle;

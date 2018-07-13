@@ -41,7 +41,7 @@ var LongPoll = {
 		MEDIA: 512
 	},
 
-	request: $.ajax.init(),
+	request: null,
 
 	/**
 	 * Is enabled longpoll
@@ -65,8 +65,10 @@ var LongPoll = {
 		}
 
 		LongPoll.enabled = true;
-		LongPoll.request.abort();
-		LongPoll.request = $.ajax.init();
+
+		LongPoll.request && LongPoll.request.abort();
+
+		LongPoll.request = new XMLHttpRequest;
 
 
 		var url = {
