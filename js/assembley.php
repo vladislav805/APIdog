@@ -1,7 +1,7 @@
 <?
 	$list = scanDir(".");
 
-	$ignore = [".", "..", "auth.js", "assembley.php", "_.js"];
+	$ignore = [".", "..", "auth.js", "assembley.php"];
 
 	header("Content-type: text/javascript");
 

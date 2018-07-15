@@ -481,7 +481,7 @@ var LongPoll = {
 	},
 
 	stop: function() {
-		LongPoll.request.abort();
+		LongPoll.request && LongPoll.request.abort();
 	},
 
 	abort: function() {

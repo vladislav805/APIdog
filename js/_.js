@@ -1,369 +1,501 @@
-var API = {
-	userId: 1,
-	bitmask: 1,
-	language: 0,
-	themeId: 0,
-	authKey: "1",
-	authId: 1,
-	date: 1505504624,
-	applicationId: 1,
-	accessToken: "1",
-	salt: null,
-	theme: null,
-	languageBuild: 1506798466,
-	ad: {
-		menu: [],
-		feed: []
-	}
-};
+if (Date.now() < 0) {
+	/**
+	 * @type {{
+	 *  owner_id: int,
+	 *  from_id: int,
+	 *  to_id: int.
+	 *  source_id: int,
+	 *  id: int,
+	 *  post_id: int,
+	 *  type: string,
+	 *  post_type: string,
+	 *  text: string,
+	 *  date: int,
+	 *  attachments: Attachment[],
+	 *  post_source: PostSource,
+	 *  copy_history: Post[]=,
+	 *  signer_id: int,
+	 *  geo: Geo,
+	 *  is_pinned: boolean,
+	 *  friends_only: boolean,
+	 *  final_post: boolean,
+	 *
+	 *  comments: CommentsData,
+	 *  likes: LikesData,
+	 *  reposts: RepostsData,
+	 *  views: ViewsData,
+	 *  marked_as_ads,
+	 *
+	 *  can_pin: boolean,
+	 *  can_edit: boolean,
+	 *  can_delete: boolean
+	 * }}
+	 */
+	var Post = {};
 
-var Sugar = {
-	Object: {
-		forEach: function(array, callback) {},
-		toQueryString: function(obj) {}
-	}
-};
+	/**
+	 * @type {{count: int, can_comment: boolean, items: Comment=}}
+	 */
+	var CommentsData = {};
 
-Date.prototype.relative = function() {};
-Date.prototype.long = function() {};
+	/**
+	 * @type {{count: int, user_likes: boolean, can_like: boolean, can_publish: boolean}}
+	 */
+	var LikesData = {};
 
-/**
- * @type {{
- *  owner_id: int,
- *  from_id: int,
- *  to_id: int.
- *  source_id: int,
- *  id: int,
- *  post_id: int,
- *  type: string,
- *  post_type: string,
- *  text: string,
- *  date: int,
- *  attachments: Attachment[],
- *  post_source: PostSource,
- *  copy_history: Post[]=,
- *  signer_id: int,
- *  geo: Geo,
- *  is_pinned: boolean,
- *  friends_only: boolean,
- *  final_post: boolean,
- *
- *  comments: CommentsData,
- *  likes: LikesData,
- *  reposts: RepostsData,
- *  views: ViewsData,
- *  marked_as_ads,
- *
- *  can_pin: boolean,
- *  can_edit: boolean,
- *  can_delete: boolean
- * }}
- */
-var Post = {};
+	/**
+	 * @type {{count: int, user_reposted: boolean}}
+	 */
+	var RepostsData = {};
 
-/**
- * @type {{count: int, can_comment: boolean, items: Comment=}}
- */
-var CommentsData = {};
+	/**
+	 * @type {{count: int}}
+	 */
+	var ViewsData = {};
 
-/**
- * @type {{count: int, user_likes: boolean, can_like: boolean, can_publish: boolean}}
- */
-var LikesData = {};
+	/**
+	 * @type {{
+	 *  platform: string,
+	 *  type: string
+	 * }}
+	 */
+	var PostSource = {};
 
-/**
- * @type {{count: int, user_reposted: boolean}}
- */
-var RepostsData = {};
+	/**
+	 * @type {{coordinates: string, showmap: boolean=, place: Place, title: string=, onClick: function=}}
+	 */
+	var Geo = {};
 
-/**
- * @type {{count: int}}
- */
-var ViewsData = {};
+	/**
+	 * @type {{title: string, address: string, id: int}}
+	 */
+	var Place = {};
 
-/**
- * @type {{
- *  platform: string,
- *  type: string
- * }}
- */
-var PostSource = {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  description: string,
+	 *  wiki_page: string,
+	 *  members_count: int,
+	 *  links: GroupLink,
+	 *  activity: string,
+	 *  place: Place,
+	 *  ban_info: BanInfo,
+	 *  start_date: string,
+	 *  finish_date: string,
+	 *  sex: int,
+	 *  photo_50: string,
+	 *  photo_100: string,
+	 *  photo_200: string,
+	 *  friend_status: int,
+	 *  photo_id: int,
+	 *  maiden_name: string,
+	 *  online: int,
+	 *  online_mobile: boolean,
+	 *  online_app: string,
+	 *  last_seen: {time: int, platform: int},
+	 *  counters: {notes, followers, subscriptions, pages},
+	 *  activites: string,
+	 *  bdate: string,
+	 *  can_write_private_message: boolean,
+	 *  status: string,
+	 *  can_post: boolean,
+	 *  is_closed: boolean,
+	 *  is_admin: boolean,
+	 *  is_member: boolean,
+	 *  city: City,
+	 *  country: Country,
+	 *  screen_name: string,
+	 *  blacklisted: boolean,
+	 *  blacklisted_by_me: boolean,
+	 *  are_friends: boolean,
+	 *  first_name_acc: string,
+	 *  first_name_abl: string,
+	 *  first_name_gen: string,
+	 *  first_name_ins: string,
+	 *  first_name_dat: string,
+	 *  last_name_acc: string,
+	 *  last_name_abl: string,
+	 *  last_name_gen: string,
+	 *  last_name_ins: string,
+	 *  last_name_dat: string,
+	 *  site: string,
+	 *  common_count: int,
+	 *  contacts: User[],
+	 *  relation: int,
+	 *  relation_partner: User,
+	 *  nickname: string,
+	 *  home_town: string,
+	 *  verified: boolean,
+	 *  can_see_gifts: boolean,
+	 *  is_favorite: boolean,
+	 *  friend_status: int,
+	 *  crop_photo: object,
+	 *  member_status: int,
+	 *  type: string,
+	 *  first_name: string,
+	 *  last_name: string,
+	 *  name: string,
+	 *  status_audio: Audio,
+	 *  deactivated: string,
+	 *  invited_by: int,
+	 *  mobile_phone: string,
+	 *  home_phone: string,
+	 *  twitter: string,
+	 *  facebook: string,
+	 *  facebook_name: string,
+	 *  instagram: string,
+	 *  livejournal: string,
+	 *  rate: int,
+	 *  skype: string,
+	 *  schools: School[],
+	 *  religion: string,
+	 *  political: int,
+	 *  life_main: int,
+	 *  people_main: int,
+	 *  smoking: int,
+	 *  alcohol: int,
+	 *  inspired: string,
+	 *  interests: string,
+	 *  music: string,
+	 *  movies: string,
+	 *  tv: string,
+	 *  books: string,
+	 *  games: string,
+	 *  about: string,
+	 *  quotes: string,
+	 *  grandparent,
+	 *  child,
+	 *  grandchild,
+	 *  relatives: User[],
+	 *  can_add_topics: boolean,
+	 *  is_friend: int,
+	 *  cover: GroupCover,
+	 *
+	 *  r, e
+	 * }}
+	 */
+	var User = {};
 
-/**
- * @type {{coordinates: string, showmap: boolean=, place: Place, title: string=, onClick: function=}}
- */
-var Geo = {};
+	/**
+	 * @type {{year_from: int, year_to: int, class: string, name: string, type: int, type_str: string}}
+	 */
+	var School = {};
 
-/**
- * @type {{title: string, address: string, id: int}}
- */
-var Place = {};
+	/**
+	 * @type {{
+	 *  id,
+	 *  name,
+	 *  screen_name,
+	 *  is_closed: boolean,
+	 *  deactivated: string=,
+	 *  is_admin: boolean,
+	 *  admin_level: int,
+	 *  is_member: boolean,
+	 *  invited_by: int,
+	 *  type: string,
+	 *  photo_50: string=,
+	 *  photo_100: string=,
+	 *  photo_200: string=,
+	 *  activity: string=,
+	 *  age_limits: int=,
+	 *  ban_info: BanInfo=,
+	 *  can_create_topic: boolean=,
+	 *  can_message: boolean=,
+	 *  can_post: boolean=,
+	 *  can_see_all_posts: boolean=,
+	 *  can_upload_doc: boolean=,
+	 *  can_upload_video: boolean=,
+	 *  city: City=,
+	 *  contacts: GroupContact[]=,
+	 *  counters: object=,
+	 *  country: Country=,
+	 *  cover: GroupCover,
+	 *  crop_photo: object=,
+	 *  description: string=,
+	 *  fixed_post: string=,
+	 *  has_photo: boolean=,
+	 *  is_favorite: boolean=,
+	 *  is_hidden_from_feed: boolean=,
+	 *  is_messages_blocked: boolean=,
+	 *  links: GroupLink[]=,
+	 *  main_album_id: int=,
+	 *  main_section: int=,
+	 *  member_status: int=,
+	 *  place: Place=,
+	 *  public_date_label: string=,
+	 *  site: string=,
+	 *  start_date: string=,
+	 *  finish_date: string=,
+	 *  status: string=,
+	 *  verified: boolean,
+	 *  wall: int,
+	 *  wiki_page: string
+	 * }}
+	 */
+	var Group = {
+		MEMBER_STATUS: {
+			NOT_MEMBER: 0,
+			MEMBER: 1,
+			NOT_SURE: 2,
+			REJECTED_INVITE: 3,
+			REQUESTED_JOIN: 4,
+			INVITED_BY_SOMEBODY: 5
+		}
+	};
 
-/**
- * @type {{
- *  id,
- *  description,
- *  wiki_page,
- *  members_count,
- *  links,
- *  activity,
- *  place,
- *  ban_info,
- *  start_date,
- *  finish_date,
- *  sex,
- *  photo_50,
- *  photo_100,
- *  photo_200,
- *  friend_status,
- *  photo_id,
- *  maiden_name,
- *  online,
- *  online_mobile,
- *  online_app,
- *  last_seen,
- *  counters: {notes, followers, subscriptions, pages},
- *  activites,
- *  bdate,
- *  can_write_private_message,
- *  status,
- *  can_post,
- *  is_closed,
- *  is_admin,
- *  is_member,
- *  city,
- *  country,
- *  exports,
- *  screen_name,
- *  blacklisted,
- *  blacklisted_by_me,
- *  are_friends,
- *  first_name_acc,
- *  first_name_abl,
- *  first_name_gen,
- *  first_name_ins,
- *  first_name_dat,
- *  last_name_acc,
- *  last_name_abl,
- *  last_name_gen,
- *  last_name_ins,
- *  last_name_dat,
- *  site,
- *  common_count,
- *  contacts,
- *  relation,
- *  relation_partner,
- *  nickname,
- *  home_town,
- *  verified,
- *  can_see_gifts,
- *  is_favorite,
- *  friend_status,
- *  crop_photo,
- *  member_status,
- *  type,
- *  first_name,
- *  last_name,
- *  name,
- *  last_seen: {time, platform},
- *  status_audio,
- *  deactivated,
- *  invited_by,
- *  mobile_phone,
- *  home_phone,
- *  personal,
- *  twitter,
- *  facebook,
- *  facebook_name,
- *  instagram,
- *  livejournal,
- *  rate,
- *  skype,
- *  schools,
- *  religion,
- *  political,
- *  life_main,
- *  people_main,
- *  smoking,
- *  alcohol,
- *  inspired,
- *  activities
- *  interests,
- *  music,
- *  movies,
- *  tv,
- *  books,
- *  games,
- *  about,
- *  quotes,
- *  grandparent,
- *  child,
- *  grandchild,
- *  relatives: User[],
- *  can_add_topics,
- *  is_friend,
- *  cover,
- *
- *  r, e
- * }}
- */
-var User = {
+	/**
+	 * @type {{
+	 *  end_date: int,
+	 *  comment: string,
+	 *
+	 *  admin_id: int=,
+	 *  date: int=,
+	 *  reason: int=,
+	 *  comment_visible: boolean=
+	 * }}
+	 */
+	var BanInfo = {
+		REASON: {
+			OTHER: 0,
+			SPAM: 1,
+			VERBAL_ABUSE: 2,
+			STRONG_LANGUAGE: 3,
+			IRRELEVANT_MESSAGES: 4
+		}
+	};
 
-};
+	/**
+	 * @type {{
+	 *  enabled: boolean,
+	 *  images: {
+	 *   url: string,
+	 *   width: int,
+	 *   height: int
+	 *  }[]
+	 * }}
+	 */
+	var GroupCover = {};
 
-/**
- * @type {{year_from: int, year_to: int, class: string, name: string, type: int, type_str: string}}
- */
-var School = {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  url: string,
+	 *  name: string,
+	 *  desc: string,
+	 *  photo_50: string=,
+	 *  photo_100: string=
+	 * }}
+	 */
+	var GroupLink = {};
 
-/**
- * @type {{
- *  count: int,
- *  items: object[],
- *  profiles: object[],
- *  groups: object[]
- * }}
- */
-var VkList = {};
+	/**
+	 * @type {{id: int, title: string, important: boolean=, area: string=, region: string=}}
+	 */
+	var City = {};
 
-/**
- * @type {{
- *  id: int,
- *  title: string,
- *  left: boolean=,
- *  kicked: boolean,
- *  users: User[]=,
- *  admin_id: int
- * }}
- */
-var Chat = {};
+	/**
+	 * @type {{id: int, title: string}}
+	 */
+	var Country = {};
 
-/**
- * @type {{
- *  id: int,
- *  chat_id: int,
- *  peer_id: int,
- *  user_id: int,
- *  title: string,
- *  body: string,
- *  date: int,
- *  attachments: Attachment[]=,
- *  geo: string,
- *  fwd_messages: Message[]=,
- *  read_state: boolean,
- *  important: boolean,
- *  out: boolean,
- *  photo_50: string=,
- *  photo_100: string=,
- *  photo_200: string=,
- *  action: string,
- *  action_mid: string,
- *  in_read: int,
- *  out_read: int
- * }}
- */
-var Message = {};
+	/**
+	 * @type {{
+	 *  count: int,
+	 *  items: object[],
+	 *  profiles: object[],
+	 *  groups: object[]
+	 * }}
+	 */
+	var VkList = {};
 
-/**
- * @type {{
- *  id: int,
- *  from_id: int,
- *  text: string,
- *  attachments: Attachment[],
- *  date: int,
- *  reply_to_user: int,
- *  reply_to_comment: int,
- *  can_edit: boolean,
- *  can_delete: boolean
- * }}
- */
-var Comment = {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  title: string,
+	 *  left: boolean=,
+	 *  kicked: boolean,
+	 *  users: User[]=,
+	 *  admin_id: int
+	 * }}
+	 */
+	var Chat = {};
 
-/**
- * @type {{type: string}}
- */
-var Attachment = {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  chat_id: int,
+	 *  peer_id: int,
+	 *  user_id: int,
+	 *  title: string,
+	 *  body: string,
+	 *  date: int,
+	 *  attachments: Attachment[]=,
+	 *  geo: string,
+	 *  fwd_messages: Message[]=,
+	 *  read_state: boolean,
+	 *  important: boolean,
+	 *  out: boolean,
+	 *  photo_50: string=,
+	 *  photo_100: string=,
+	 *  photo_200: string=,
+	 *  action: string,
+	 *  action_mid: string,
+	 *  in_read: int,
+	 *  out_read: int
+	 * }}
+	 */
+	var Message = {};
 
-/**
- * @type {{id: int, title: string, type: string, purchased: boolean, active: boolean, base_url, stickers: {sticker_ids: int[]}, items: int[]}}
- */
-var StickerPack = {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  from_id: int,
+	 *  text: string,
+	 *  attachments: Attachment[],
+	 *  date: int,
+	 *  reply_to_user: int,
+	 *  reply_to_comment: int,
+	 *  can_edit: boolean,
+	 *  can_delete: boolean
+	 * }}
+	 */
+	var Comment = {};
 
-/**
- * @type {{owner_id: int, id: int, title: string, size: int, ext: string, url: string, type: int, date: int, preview: {photo: object}=}}
- */
-var VkDocument = {};
+	/**
+	 * @type {{type: string}}
+	 */
+	var Attachment = {};
 
-/**
- * @type {{error_msg: string, error_code: int, captcha_img: string, captcha_sid: int, confirmation_text: string=}}
- */
-var VkError = {};
+	/**
+	 * @type {{id: int, title: string, type: string, purchased: boolean, active: boolean, base_url, stickers: {sticker_ids: int[]}, items: int[]}}
+	 */
+	var StickerPack = {};
 
-/**
- * @type {{themeId: int, title: string, changelog: string, fileCSS: string, date: int, installCount: int, authorId: int, isPrivate: boolean, isVerified: boolean, version: string}}
- */
-var APIdogTheme = {};
+	/**
+	 * @type {{owner_id: int, id: int, title: string, size: int, ext: string, url: string, type: int, date: int, preview: {photo: object}=}}
+	 */
+	var VkDocument = {};
 
-/**
- * @type {{owner_id: int, id: int, artist: string, title: string, duration: int, no_search: boolean, lyrics_id: int=, album_id: int=, date: int genre_id: int=, added: boolean=}}
- */
-var VKAudio = {};
+	/**
+	 * @type {{error_msg: string, error_code: int, captcha_img: string, captcha_sid: int, confirmation_text: string=}}
+	 */
+	var VkError = {};
 
-/**
- * @type {{lyrics_id: int, text: string}}
- */
-var VKAudioLyrics = {};
+	/**
+	 * @type {{themeId: int, title: string, changelog: string, fileCSS: string, date: int, installCount: int, authorId: int, isPrivate: boolean, isVerified: boolean, version: string}}
+	 */
+	var APIdogTheme = {};
 
-/**
- * @type {{stationId: int, title: string, frequency: float, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string, _city}}
- */
-var RadioStation = {};
+	/**
+	 * @type {{
+	 *  owner_id: int,
+	 *  id: int,
+	 *  artist: string,
+	 *  title: string,
+	 *  duration: int,
+	 *  no_search: boolean,
+	 *  lyrics_id: int=,
+	 *  album_id: int=,
+	 *  date: int,
+	 *  genre_id: int=,
+	 *  added: boolean=
+	 * }}
+	 */
+	var VKAudio = {};
 
-/**
- * @type {{cityId: int, title: string, country: string}}
- */
-var RadioCity = {};
+	/**
+	 * @type {{lyrics_id: int, text: string}}
+	 */
+	var VKAudioLyrics = {};
 
-/**
- * @type {{user_id: int, name: string, phone: string, email: string, desc: string, photo_50: string, url: string}}
- */
-var GroupContact = {};
+	/**
+	 * @type {{id: int, icon_150: string, title: string, published_date: int, members_count: int, section: string=, type: string=, banner_560: string, author_id: int=, author_group: int=}}
+	 */
+	var VKApp = {};
 
-/**
- * @type {{url: string, bitrate: int, streamId: int, format: int}}
- */
-var RadioStream = {};
+	/**
+	 * @type {{stationId: int, title: string, frequency: real, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string, _city}}
+	 */
+	var RadioStation = {};
 
-var ymaps = {
-	Map: function() {},
-	geoObjects: [],
-	events: {},
-	Placemark: function() {},
-	setCenter: function() {}
-};
+	/**
+	 * @type {{cityId: int, title: string, country: string}}
+	 */
+	var RadioCity = {};
 
-var Hammer = {
-	on: function() {},
-	DIRECTION_LEFT: 1,
-	DIRECTION_RIGHT: 1
-};
+	/**
+	 * @type {{user_id: int, name: string, phone: string, email: string, desc: string, photo_50: string, url: string}}
+	 */
+	var GroupContact = {};
 
-var vlad805 = {api: { radio: { get: function(){}, getCurrentBroadcastingTrack: function(){} } }};
+	/**
+	 * @type {{url: string, bitrate: int, streamId: int, format: int}}
+	 */
+	var RadioStream = {};
 
-/**
- * @type {{
- *  id: int,
- *  title: string,
- *  updated: int,
- *  is_fixed: boolean
- *  is_closed: boolean,
- *  updated_by: int,
- *  updated: int
- * }}
- */
-var Topic = {};
+	/**
+	 * @type {{
+	 *  userId: int,
+	 *  bitmask: int,
+	 *  language: int,
+	 *  themeId: int,
+	 *  authKey: string,
+	 *  authId: int,
+	 *  date: int,
+	 *  applicationId: int,
+	 *  accessToken: string,
+	 *  salt: string,
+	 *  theme: null,
+	 *  languageBuild: int,
+	 *  ad: {
+	 *   menu: object[],
+	 *   feed: object[]
+	 *  }
+	 * }}
+	 */
+	var API = {};
+	var ymaps = {
+		Map: function () {
+		},
+		geoObjects: [],
+		events: {},
+		Placemark: function () {
+		},
+		setCenter: function () {
+		}
+	};
+	var Hammer = {
+		on: function() {},
+		DIRECTION_LEFT: 1,
+		DIRECTION_RIGHT: 1
+	};
 
-function require() {};
+	var vlad805 = {api: { radio: { get: function(){}, getCurrentBroadcastingTrack: function(){} } }};
+	function require() {}
+	var Sugar = {
+		Object: {
+			forEach: function(array, callback) {},
+			toQueryString: function(obj) {}
+		}
+	};
+
+	Date.prototype.relative = function() {};
+	Date.prototype.long = function() {};
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  title: string,
+	 *  updated: int,
+	 *  is_fixed: boolean
+	 *  is_closed: boolean,
+	 *  updated_by: int,
+	 *  updated: int
+	 * }}
+	 */
+	var Topic = {};
+
+}
 
 /*var item = event.clipboardData && event.clipboardData.items[0] && event.clipboardData.items[0].getAsFile && event.clipboardData.items[0].getAsFile();
 
