@@ -292,7 +292,6 @@ var Audios = {
 	 */
 	fixAudio: function(meta) {
 		if (!API.isExtension) {
-
 			$.elements.clearChild(meta.list).appendChild(Site.getEmptyField(Lang.get("audios.warningFixNeedExtension")));
 			return;
 		}
@@ -308,7 +307,8 @@ var Audios = {
 			duration: 6000
 		});
 		meta.warning.show();
-		return APIdogRequest("app.fixAudio", {token: API.accessToken}).then(function() {
+		return APIdogRequest("app.fixAudio", {t: API.accessToken}).then(function(res) {
+			API.accessToken = res.userAccessToken;
 			meta.warning.setText(Lang.get("audio.warningFixDone")).setDuration(3000);
 			return Audios.requestAudios(meta);
 		});

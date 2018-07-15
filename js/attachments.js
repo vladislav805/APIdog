@@ -304,7 +304,7 @@ AttachmentController.prototype = {
 							return callback(audios);
 						}
 
-						api("audio.get", {owner_id: self.ownerId, v: 5.52}).then(function(result) {
+						api("audio.get", {owner_id: self.ownerId, v: 5.68}).then(function(result) {
 							callback(audios = parse(result.items, VKAudio));
 							self.saveIntoCache(AttachmentController.mediaCache.audio, result.items);
 						});
@@ -352,10 +352,10 @@ AttachmentController.prototype = {
 							return callback(documents);
 						}
 
-						api("docs.get", {owner_id: ownerId, v: 5.52}).then(function(result) {
-							callback(parse(result.items, VKDocument));
+						api("docs.get", {owner_id: ownerId, v: 5.68}).then(function(result) {
+							callback(documents = parse(result.items, VKDocument));
 							self.saveIntoCache(AttachmentController.mediaCache.doc, result.items);
-						});
+						}).catch(function(er) {console.error(er)});
 					},
 
 					showDocuments = function(documents) {
@@ -405,7 +405,7 @@ AttachmentController.prototype = {
 				}
 				host = new TabHost(tabs, {});
 
-				this.open(button);
+				this.open();
 				this.modal.setContent(host.getNode());
 				break;
 
