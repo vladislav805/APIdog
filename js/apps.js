@@ -116,13 +116,15 @@ var Apps = {
 
 	/**
 	 *
-	 * @param {{id: int, icon_100: string, title: string, published_date: int, members_count: int, section: string, banner_186: string}} app
+	 * @param {{count: int, items: VKApp[], profiles: User[], groups: Group[]}} data
 	 */
-	display: function(app) {
+	display: function(data) {
+		Local.add(data.profiles.concat(data.groups));
+		var app = data.items[0];
 		var e = $.e,
 			wrap;
 		wrap = e("div", {"class": "profile-info", append: [
-			e("div", {"class": "profile-left", append: e("img", {src: getURL(app.icon_100)})}),
+			e("div", {"class": "profile-left", append: e("img", {src: getURL(app.icon_150)})}),
 			e("div", {"class": "profile-right", append: [
 				e("strong", {html: app.title.safe()}),
 
@@ -134,8 +136,11 @@ var Apps = {
 					? e("div", {"class": "tip", html: "Установили: " + app.members_count + " " + $.textCase(app.members_count, ["человек", "человека", "человек"])})
 					: null,
 
-				e("div", {"class": "tip", html: "Тип приложения: " + app.section}),
-				e("div", {style: "padding: 20px 0; margin: 0 auto;", append: e("img", {src: getURL(app.banner_186), style: "display: block;"})}),
+				e("div", {"class": "tip", html: "Тип приложения: " + (app.section || app.type)}),
+				app.author_id || app.author_group
+					? e("div", {"class": "tip", html: "Автор: " + getName(app.author_id ? Local.data[app.author_id] : Local.data[-app.author_group])})
+					: null,
+				e("div", {style: "padding: 20px 0; margin: 0 auto;", append: e("img", {src: getURL(app.banner_560), style: "display: block;"})}),
 				e("a", {"class": "btn", target: "_blank", href: "\/\/vk.com\/app" + app.id, html: "Запустить (vk.com)", onclick: function (event) {
 					if (confirm("Вы уверены, что хотите перейти на vk.com? Вы станете онлайн!")) {
 						return true;
