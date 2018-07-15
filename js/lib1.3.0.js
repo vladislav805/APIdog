@@ -238,6 +238,9 @@ window.$ = {
 		 * @returns {HTMLElement}
 		 */
 		clearChild: function(node) {
+			if (!node) {
+				return null;
+			}
 			var nodes = node.children;
 			for (var i = nodes.length - 1, item; item = nodes[i]; --i) {
 				node.removeChild(item);
