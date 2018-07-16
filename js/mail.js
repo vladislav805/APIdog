@@ -421,6 +421,7 @@ console.log("will be loaded: ", from);
 		}
 
 		$.elements[!message.out && !message.read_state ? "addClass" : "removeClass"](node, "dialogs-item-new");
+		$.elements[message.out && !message.read_state ? "removeClass" : "addClass"](node, "dialogs-readed");
 		$.elements[!message.out ? "addClass" : "removeClass"](node, "dialogs-in");
 		$.elements[message.out ? "addClass" : "removeClass"](node, "dialogs-out");
 
