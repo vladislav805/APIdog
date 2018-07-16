@@ -3731,6 +3731,8 @@
 	"audio.editText": ["Текст", "Text", null],
 	"audio.editSuccess": ["Успешно сохранено", "Successfully saved", null],
 	"audio.radioTitle": ["Онлайн-радио", "Online-radio", null],
+	"audio.downloadTitle": ["Загрузка аудио..", "Downloading audio", null],
+	"audios.downloadContent": ["Скачиваю файл, подождите, пожалуйста...", "Please, wait...", null],
 
 
 
