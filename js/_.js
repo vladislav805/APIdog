@@ -182,88 +182,7 @@ if (Date.now() < 0) {
 	 */
 	var School = {};
 
-	/**
-	 * @type {{
-	 *  id,
-	 *  name,
-	 *  screen_name,
-	 *  is_closed: boolean,
-	 *  deactivated: string=,
-	 *  is_admin: boolean,
-	 *  admin_level: int,
-	 *  is_member: boolean,
-	 *  invited_by: int,
-	 *  type: string,
-	 *  photo_50: string=,
-	 *  photo_100: string=,
-	 *  photo_200: string=,
-	 *  activity: string=,
-	 *  age_limits: int=,
-	 *  ban_info: BanInfo=,
-	 *  can_create_topic: boolean=,
-	 *  can_message: boolean=,
-	 *  can_post: boolean=,
-	 *  can_see_all_posts: boolean=,
-	 *  can_upload_doc: boolean=,
-	 *  can_upload_video: boolean=,
-	 *  city: City=,
-	 *  contacts: GroupContact[]=,
-	 *  counters: object=,
-	 *  country: Country=,
-	 *  cover: GroupCover,
-	 *  crop_photo: object=,
-	 *  description: string=,
-	 *  fixed_post: string=,
-	 *  has_photo: boolean=,
-	 *  is_favorite: boolean=,
-	 *  is_hidden_from_feed: boolean=,
-	 *  is_messages_blocked: boolean=,
-	 *  links: GroupLink[]=,
-	 *  main_album_id: int=,
-	 *  main_section: int=,
-	 *  member_status: int=,
-	 *  place: Place=,
-	 *  public_date_label: string=,
-	 *  site: string=,
-	 *  start_date: string=,
-	 *  finish_date: string=,
-	 *  status: string=,
-	 *  verified: boolean,
-	 *  wall: int,
-	 *  wiki_page: string
-	 * }}
-	 */
-	var Group = {
-		MEMBER_STATUS: {
-			NOT_MEMBER: 0,
-			MEMBER: 1,
-			NOT_SURE: 2,
-			REJECTED_INVITE: 3,
-			REQUESTED_JOIN: 4,
-			INVITED_BY_SOMEBODY: 5
-		}
-	};
 
-	/**
-	 * @type {{
-	 *  end_date: int,
-	 *  comment: string,
-	 *
-	 *  admin_id: int=,
-	 *  date: int=,
-	 *  reason: int=,
-	 *  comment_visible: boolean=
-	 * }}
-	 */
-	var BanInfo = {
-		REASON: {
-			OTHER: 0,
-			SPAM: 1,
-			VERBAL_ABUSE: 2,
-			STRONG_LANGUAGE: 3,
-			IRRELEVANT_MESSAGES: 4
-		}
-	};
 
 	/**
 	 * @type {{
@@ -456,14 +375,11 @@ if (Date.now() < 0) {
 	 */
 	var API = {};
 	var ymaps = {
-		Map: function () {
-		},
+		Map: function () {},
 		geoObjects: [],
 		events: {},
-		Placemark: function () {
-		},
-		setCenter: function () {
-		}
+		Placemark: function () {},
+		setCenter: function () {}
 	};
 	var Hammer = {
 		on: function() {},
@@ -496,6 +412,89 @@ if (Date.now() < 0) {
 	var Topic = {};
 
 }
+
+/**
+ * @type {{
+ *  id,
+ *  name,
+ *  screen_name,
+ *  is_closed: boolean,
+ *  deactivated: string=,
+ *  is_admin: boolean,
+ *  admin_level: int,
+ *  is_member: boolean,
+ *  invited_by: int,
+ *  type: string,
+ *  photo_50: string=,
+ *  photo_100: string=,
+ *  photo_200: string=,
+ *  activity: string=,
+ *  age_limits: int=,
+ *  ban_info: BanInfo=,
+ *  can_create_topic: boolean=,
+ *  can_message: boolean=,
+ *  can_post: boolean=,
+ *  can_see_all_posts: boolean=,
+ *  can_upload_doc: boolean=,
+ *  can_upload_video: boolean=,
+ *  city: City=,
+ *  contacts: GroupContact[]=,
+ *  counters: object=,
+ *  country: Country=,
+ *  cover: GroupCover,
+ *  crop_photo: object=,
+ *  description: string=,
+ *  fixed_post: string=,
+ *  has_photo: boolean=,
+ *  is_favorite: boolean=,
+ *  is_hidden_from_feed: boolean=,
+ *  is_messages_blocked: boolean=,
+ *  links: GroupLink[]=,
+ *  main_album_id: int=,
+ *  main_section: int=,
+ *  member_status: int=,
+ *  place: Place=,
+ *  public_date_label: string=,
+ *  site: string=,
+ *  start_date: string=,
+ *  finish_date: string=,
+ *  status: string=,
+ *  verified: boolean,
+ *  wall: int,
+ *  wiki_page: string
+ * }}
+ */
+var Group = {
+	MEMBER_STATUS: {
+		NOT_MEMBER: 0,
+		MEMBER: 1,
+		NOT_SURE: 2,
+		REJECTED_INVITE: 3,
+		REQUESTED_JOIN: 4,
+		INVITED_BY_SOMEBODY: 5
+	}
+};
+
+/**
+ * @type {{
+ *  end_date: int,
+ *  comment: string,
+ *
+ *  admin_id: int=,
+ *  date: int=,
+ *  reason: int=,
+ *  comment_visible: boolean=
+ * }}
+ */
+var BanInfo = {
+	REASON: {
+		OTHER: 0,
+		SPAM: 1,
+		VERBAL_ABUSE: 2,
+		STRONG_LANGUAGE: 3,
+		IRRELEVANT_MESSAGES: 4
+	}
+};
 
 /*var item = event.clipboardData && event.clipboardData.items[0] && event.clipboardData.items[0].getAsFile && event.clipboardData.items[0].getAsFile();
 
