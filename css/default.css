@@ -3784,58 +3784,79 @@ img.wall-left {
 	margin: 0 3px
 }
 
+
+
+
+
+
+
+
 .albums-item {
 	overflow: hidden;
-	display: block;
-	-webkit-tap-highlight-color: rgba(255, 255, 255, 0)!important;
-	-webkit-focus-ring-color: rgba(255, 255, 255, 0)!important;
-	outline: none!important;
-	margin: 0 15px;
+	display: flex;
+	flex-flow: row nowrap;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-focus-ring-color: transparent;
+	outline: none;
 	border-bottom: 1px solid #E9ECEE;
-	padding: 10px 0
+	padding: 10px 15px;
 }
 
 .albums-item:hover {
 	background: rgb(242, 244, 247);
-	margin: 0;
-	border-top: 1px solid #E9EBEC;
-	padding: 10px 15px;
-	margin-top: -1px
 }
 
 .albums-left {
-	float: left;
-	height: 45px;
+	width: 120px;
+	height: 65px;
 	overflow: hidden;
-	text-align: center;
 	position: relative;
 	line-height: 0;
-	border-radius: 3px
+	border-radius: 2px;
+	background: no-repeat center;
+	background-size: cover;
 }
 
 .albums-left img {
-	width: 75px
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
 }
 
-.albums-size {
+.albums-left[data-size]::after {
+	content: attr(data-size);
+	display: block;
 	position: absolute;
-	bottom: 3px;
-	right: 3px;
-	padding: 2px 3px;
+	bottom: 0;
+	right: 0;
 	color: #ffffff;
-	background: rgba(0, 0, 0, .5);
-	line-height: 1;
-	font-size: x-small
+	background: rgba(0, 0, 0, .6);
+	line-height: 25px;
+	width: 25px;
+	text-align: center;
+	border-radius: 14px;
+	font-size: 12px;
 }
 
 .albums-info {
-	margin-left: 83px
+	margin-left: 15px;
+	/*	display: flex;
+		flex-flow: column nowrap;
+		justify-content: space-around;*/
 }
 
 .albums-created {
 	font-size: 11px;
-	color: #888888
+	color: #888888;
+	margin-top: 8px;
 }
+
+
+
+
+
+
+
 
 .photos-tips {
 	display: block;

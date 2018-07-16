@@ -2736,13 +2736,8 @@
 	],
 	"photos.albums":[
 		"Альбомы",
-		null,
+		"Albums",
 		"Альбоми"
-	],
-	"photos.albums_actions":[
-		"Дополнительно",
-		null,
-		"Додатково"
 	],
 	"photos.albums_actions_create":[
 		"Создать альбом",
@@ -4163,40 +4158,16 @@
 
 
 
-	"polls.poll":[
-		"Опрос",
-		"Poll",
-		"Опитування"
-	],
-	"polls.noun":[
-		"опрос",
-		null,
-		null
-	],
+	"polls.poll":["Опрос", "Poll", "Опитування"],
+	"polls.noun":["опрос", "poll", null],
 	"polls.votersCounts":[
-		[
-			"проголосовавший",
-			"проголосовавших",
-			"проголосовавших"
-		],
-		null,
+		["проголосовавший", "проголосовавших", "проголосовавших"],
+		["voted", "voted", "voted"],
 		null
 	],
-	"polls.typeClose":[
-		"закрытый",
-		null,
-		null
-	],
-	"polls.typeOpen":[
-		"открытый",
-		null,
-		null
-	],
-	"polls.cancelVote":[
-		"Отменить мой выбор",
-		null,
-		null
-	],
+	"polls.typeClose":["закрытый", "closed", null],
+	"polls.typeOpen":["открытый", "open", null],
+	"polls.cancelVote":["Отменить мой выбор", "Cancel vote", null],
 	"polls.updating":[
 		"Обновление данных опроса...",
 		"Updating poll data...",
@@ -4207,11 +4178,9 @@
 		"Info about voters by answer &laquo;%t&raquo;",
 		"Дані про проголосувавших на вибiр &laquo;%t&raquo;"
 	],
-	"polls.voters":[
-		"Проголосовавшие",
-		"Voters",
-		"Проголосувавші"
-	],
+	"polls.voters":["Проголосовавшие","Voters","Проголосувавші"],
+
+
 	"notes.note":[
 		"Заметка",
 		"Note",

@@ -1041,7 +1041,7 @@ var Profile = {
 				text:
 				startString +
 				(left > 3600
-						? new Date(user.last_seen && user.last_seen.time || 0).long()
+						? new Date((user.last_seen && user.last_seen.time || 0) * 1000).long()
 						: computeDifferentTime(left)
 				) + (
 					app || platformId

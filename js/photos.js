@@ -127,182 +127,66 @@ VKPhotoAlbum.prototype = {
 };
 
 var Photos = {
-	Resolve: function (url) {
-		var albums = /^photos(-?\d+)?$/img,
-			album = /^photos(-?\d+)_(-?\d+)$/img,
-			photo = /^photo(-?\d+)_(\d+)$/img;
-		if (albums.test(url)) {
-			var id = /^photos(-?\d+)?$/img.exec(url); id = id[1] || API.userId;
-			switch(Site.Get("act")) {
-				case "all":			return Photos.getAll(id); break;
-				case "comments":	return Photos.getAllComments(id); break;
-				case "create":		return Photos.createAlbum(id); break;
-				case "tagged":		return Photos.getUserTagged(id); break;
-				case "new_tags":	return Photos.getNewTags(id); break;
-				case "map":			return Photos.showMapWithAllPhotos(id); break;
-				default:			return Photos.getAlbums(id); break;
+
+	route: function(url) {
+		var result, ownerId, id, act = Site.get("act");
+
+		if (/^photos(-?\d+)?$/img.test(url)) {
+			result = /^photos(-?\d+)?$/img.exec(url);
+			id = Math.floor(result[1] || API.userId);
+
+			switch (act) {
+				case "all":
+					return Photos.requestAllPhotos(id, getOffset()).then(Photos.showAlbum);
+
+				case "comments":
+					return Photos.getAllComments(id);
+
+				case "create":
+					return Photos.createAlbum(id);
+
+				case "tagged":
+					return Photos.requestUserTagged(id, getOffset()).then(Photos.showAlbum);
+
+				case "new_tags":
+					return Photos.getNewTags(id);
+
+				default:
+					return Photos.getAlbums(id);
 			}
-		} else if (album.test(url)) {
-			var id = /^photos(-?\d+)_(-?\d+)$/img.exec(url), owner_id = id[1], album_id = id[2];
-			switch(Site.Get("act")){
-				case "comments": return Photos.getAllComments(owner_id, album_id); break;
-				case "upload":   return Photos.getUploadForm(owner_id, album_id); break;
-				default:         return Photos.requestAlbum(owner_id, album_id, getOffset(), !Site.get("rev"));
+		} else if (/^photos(-?\d+)_(-?\d+)$/img.test(url)) {
+			result = /^photos(-?\d+)_(-?\d+)$/img.exec(url);
+			ownerId = result[1];
+			id = result[2];
+
+			switch (act) {
+				case "comments":
+					return Photos.getAllComments(ownerId, id);
+
+				case "upload":
+					return Photos.getUploadForm(ownerId, id);
+
+				default:
+					return Photos.requestAlbum(ownerId, id, getOffset()).then(Photos.showAlbum);
 			}
 		} else {
-			var id = /^photo(-?\d+)_(\d+)$/img.exec(url),
-				owner_id = id[1],
-				photo_id = id[2],
-				access_key = Site.Get("access_key"),
-				list = Site.Get("list");
-			switch(Site.Get("act")){
-				case "likes": return Photos.getLikes(owner_id, photo_id, access_key, list); break;
-				default:      return Photos.getShow(owner_id, photo_id, access_key, list);
-			}
+			result = /^photo(-?\d+)_(\d+)$/img.exec(url);
+			ownerId = result[1];
+			id = result[2];
+			var accessKey = Site.get("access_key");
+			var list = Site.get("list");
+
+			return Photos.getShow(ownerId, id, accessKey, list);
 		}
-	},
-
-	loadYandexMaps: function (callback)
-	{
-		var YandexAPI = "//api-maps.yandex.ru/2.1/?lang=ru_RU",
-			scripts = document.getElementsByTagName("script");
-		for (var i = 0; i < scripts.length; ++i)
-			if (scripts[i].src == YandexAPI)
-				return callback();
-		document.getElementsByTagName("head")[0].appendChild($.e("script",
-			{
-				type: "text/javascript",
-				src: YandexAPI,
-				onload: function (event) { callback() }
-			}));
-	},
-
-	showMapWithAllPhotos: function (ownerId)
-	{
-		var e = $.e,
-			wrap,
-			mapNode,
-			map,
-			status,
-			loadPhotos = function (offset)
-			{
-				Site.API("photos.getAll",
-					{
-						owner_id: ownerId,
-						count: 200,
-						offset: offset,
-						extended: 1
-					},
-					function (data)
-					{
-						data = Site.isResponse(data);
-						var count = data.shift();
-						addPhotos(data.map(Photos.v5normalize));
-						setStatus("Загрузка фотографий (" + items.length + "/" + count + ")..");
-						if (items.length < count)
-							loadPhotos(offset + 200);
-						else
-							onComplete();
-					});
-			},
-			syncSize = function ()
-			{
-				var h = $.getPosition(document.documentElement).clientHeight + "px";
-				wrap.style.height = h;
-				mapNode.style.height = h;
-				map.container.fitToViewport();
-			},
-			addPhotos = function (photos)
-			{
-				photos.forEach(function (photo)
-				{
-					if (photo.hasOwnProperty("lat"))
-						insertPhotoIntoMap(photo);
-				});
-				items = items.concat(photos);
-				syncSize();
-			},
-			setStatus = function (text)
-			{
-				status.innerHTML = text;
-			},
-			items = [],
-			points = [],a = 0,
-			insertPhotoIntoMap = function (photo)
-			{
-				var m = Math.min(photo.width, photo.height),
-					k = (30 * 100 / m),
-					z = k * 0.01,
-					w = photo.width * z,
-					h = photo.height * z,
-					s = {
-						type: "Circle",
-						coordinates: [0, 0],
-						radius: 15
-					},
-					point = new ymaps.Placemark([photo.lat, photo["long"]],
-						{
-							hintContent: $.getDate(photo.date)
-						},
-						{
-							iconLayout: ymaps.templateLayoutFactory.createClass("<div class=\"photos-map-item\"><img src=\"" + photo.photo_130 + "\" width=" + w + " height=" + h + " \/><\/div>"),
-							iconShape: s,
-							iconImageOffset: [-(w / 2), -(h / 2)]
-						});
-				map.geoObjects.add(point);
-				point._id = points.push(point);
-			},
-			onComplete = function ()
-			{
-				setStatus("Фотографии загружены");
-				setTimeout(function ()
-				{
-					setStatus(points.length + " " + $.textCase(points.length, ["фотография", "фотографии", "фотографий"]) + " на карте");
-				}, 2000);
-			};
-
-		wrap = e("div", {"class": "photos-map-wrap", append: [
-			mapNode = e("div", {"class": "photos-map"}),
-			status = e("div", {"class": "photos-map-status"})
-		]});
-
-		Photos.loadYandexMaps(function ()
-		{
-			ymaps.ready(function (event)
-			{
-				setStatus("Яндекс.Карты загружены");
-				map = new ymaps.Map(mapNode, {
-					center: [0, 0],
-					yandexMapAutoSwitch: false,
-					controls: [],
-					zoom: 1,
-					autoFitToViewport: "always"
-				});
-				map.controls
-				   .add("typeSelector", {position: {top: 5, left: 5}})
-				   .add("zoomControl", {position: {top: 70, left: 5}});
-
-				window.onResizeCallback = function () { syncSize() };
-				document.body.style.overflow = "hidden";
-				document.documentElement.style.overflow = "hidden";
-				window.onLeavePage = function ()
-				{
-					document.body.style.overflow = "auto";
-					document.documentElement.style.overflow = "auto";
-				};
-				syncSize();
-				loadPhotos(0);
-				setStatus("Загрузка фотографий..");
-			});
-		});
-		Site.append(wrap);
 	},
 
 
 	/* Helper */
 
-
-	v5normalize: function (photo) {
+	/**
+	 * @deprecated
+	 */
+	v5normalize: function(photo) {
 		photo.id         = photo.pid        || photo.id;
 		photo.album_id   = photo.album_id   || photo.aid;
 		photo.date       = photo.date       || photo.created;
@@ -312,16 +196,15 @@ var Photos = {
 		photo.photo_604  = photo.photo_604  || photo.src_big;
 		photo.photo_130  = photo.photo_130  || photo.src;
 		photo.photo_75   = photo.photo_75   || photo.src_small;
-		photo.width      = photo.width;
-		photo.height     = photo.height;
 		return photo;
 	},
 
 
-	getAttachment: function (photo, options) {
+	getAttachment: function(photo, options) {
 		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: getAddress(true)});
 	},
-	getAttachmentAlbum: function (album) {
+
+	getAttachmentAlbum: function(album) {
 		return $.e("a", {href: "#photos" + album.owner_id + "_" + album.id, "class": "attachments-album", append: [
 			$.e("img", {src: getURL(album.thumb.photo_604 || album.thumb.photo_big)}),
 			$.e("div", {"class": "attachments-album-footer sizefix", append: [
@@ -331,79 +214,112 @@ var Photos = {
 		]});
 	},
 
-	getToParam: function (t) {
-		var to = Site.Get("to");
-		return (to ? ["?", "&"][t || 0] + "to=" + to : "");
-	},
-	getTabs: function (owner_id) {
+	/**
+	 *
+	 * @param {int} ownerId
+	 * @returns {HTMLElement|Node}
+	 */
+	getTabs: function(ownerId) {
 		var tabs = [
-			["photos" + owner_id + "?act=all" + Photos.getToParam(1), Lang.get("photos", "albums_all_photos")],
-			["photos" + owner_id + Photos.getToParam(0), Lang.get("photos", "albums")]
+			["photos" + ownerId + "?act=all", Lang.get("photos.albums_all_photos")],
+			["photos" + ownerId, Lang.get("photos.albums")]
 		];
-		var to = Site.Get("to");
-		if (owner_id > 0 && !to)
-			tabs.push(["photos" + owner_id + "?act=tagged", Lang.get("photos", "albums_tagged")]);
-		if (owner_id == API.userId && Site.counters && Site.counters.photos > 0 && !to)
-			tabs.push(["photos" + owner_id + "?act=new_tags", "Отметки <i class=count>" + Site.counters.photos + "</i>"]);
+
+		ownerId > 0 && tabs.push(["photos" + ownerId + "?act=tagged", Lang.get("photos.albums_tagged")]);
+
+		if (ownerId === API.userId && Site.counters && Site.counters.photos > 0) {
+			tabs.push(["photos" + ownerId + "?act=new_tags", "Отметки", Site.counters.photos]);
+		}
+
 		return Site.getTabPanel(tabs);
 	},
 
-
-	/* Albums */
-
-
-	getAlbums: function (owner_id) {
+	/**
+	 * Get albums
+	 * @param {int} ownerId
+	 */
+	getAlbums: function(ownerId) {
 		var offset = getOffset();
 		Site.Loader();
-		Site.API("execute", {
-			code: 'return API.photos.getAlbums({owner_id:%u,offset:%o,need_system:1,need_covers:1,count:30,v:5.8});'
-				.replace(/%u/i, owner_id)
-				.replace(/%o/i, offset)
-		}, function (data) {
-			var data = Site.isResponse(data),
-				count = data.count,
-				albums = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div"),
-				to = Site.Get("to");
-			for (var i = 0, l = albums.length; i < l; ++i)
-				list.appendChild(Photos.itemAlbum(albums[i], {}));
-			var menu = {
-				"Все комментарии": function (event) {window.location.hash = "#photos" + owner_id + "?act=comments"}
+		api("photos.getAlbums", {
+			owner_id: ownerId,
+			offset: offset,
+			need_system: 1,
+			need_covers: 1,
+			count: 40,
+			v: 5.56
+		}).then(function(data) {
+			var count = data.count,
+				parent,
+
+				list = $.e("div", {
+					append: data.items.map(function(album) {
+						return Photos.itemAlbum(album);
+					})
+				}),
+				menu = {
+					allComments: {
+						label: "Все комментарии",
+						onclick: function() {
+							window.location.hash = "#photos" + ownerId + "?act=comments"
+						}
+					}
 			};
-			if ((Local.data[owner_id] && Local.data[owner_id].is_admin) || owner_id == API.userId)
-				menu[Lang.get("photos", "albums_actions_create")] = function (event) {window.location.hash = "#photos" + owner_id + "?act=create"};
-			parent.appendChild(Photos.getTabs(owner_id));
-			parent.appendChild(
-				Site.getPageHeader(count + " " + Lang.get("photos", "albums_count", count),
-					!to ? Site.CreateDropDownMenu(Lang.get("photos", "albums_actions"), menu) : null
-				));
-			if (to)
-				parent.appendChild(Site.createTopButton({link: "im?act=upload_photo&to=" + to, title: "Загрузить"}));
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(offset, count, 30));
+
+			if (ownerId === API.userId || (Local.data[ownerId] && Local.data[ownerId].is_admin)) {
+				menu.createAlbum = {
+					label: Lang.get("photos", "albums_actions_create"),
+					onclick: function() {
+						window.location.hash = "#photos" + ownerId + "?act=create"
+					}
+				};
+			}
+
+			parent = $.e("div", {append: [
+					Photos.getTabs(ownerId),
+					Site.getPageHeader(data.count + " " + Lang.get("photos", "albums_count", data.count),
+						new DropDownMenu(Lang.get("general.actions"), menu).getNode()
+					),
+					list,
+					Site.getSmartPagebar(offset, count, 30)
+			]});
+
 			Site.append(parent);
-			Site.setHeader(Lang.get("photos", "albums"), !to ? {} : {link: "im?to=" + to});
+			Site.setHeader(Lang.get("photos.albums"));
+		}).catch(function() {
+
 		});
 	},
-	itemAlbum: function (c, opts) {
-		var img = new Image(), e = $.e;
-		img.src = getURL(c.thumb_src);
+
+	/**
+	 * @param {PhotoAlbum} album
+	 * @returns {HTMLElement|Node}
+	 */
+	itemAlbum: function(album) {
+		var img = $.e("div", {"class": "albums-left", "data-size": album.size}),
+			e = $.e;
+
+		//noinspection JSPrimitiveTypeWrapperUsage
+		img.style.backgroundImage = "url(" + getURL(album.thumb_src) + ")";
+
 		return e("a", {
-			href: "#photos" + c.owner_id + "_" + (c.aid || c.album_id || c.id) + Photos.getToParam(0),
 			"class": "albums-item",
+			href: "#photos" + album.owner_id + "_" + album.id,
 			append: [
-				e("div", {"class": "albums-left", append: [
-					img,
-					e("div", {"class": "albums-size", html: c.size})
-				]}),
+				img,
 				e("div", {"class": "albums-info", append: [
-					e("div", {"class": "bold", html: Site.Escape(c.title)}),
-					e("div", {"class": "albums-created", html: (c.updated ? Lang.get("photos", "album_updated") + " " + $.getDate(c.updated) : "")})
+					e("div", {"class": "bold", html: album.title.safe()}),
+					album.updated
+						? e("div", {
+							"class": "albums-created",
+							html: Lang.get("photos.album_updated") + " " + new Date(album.updated * 1000).long()
+						})
+						: null
 				]})
 			]
 		});
 	},
+
 	createAlbum: function (owner_id) {
 		var Form = document.createElement("div"),
 			getPrivacySelect = function (name) {
@@ -470,77 +386,236 @@ var Photos = {
 		//Site.append(parent);
 		//Site.setHeader(Lang.get("photos", "new_album"), {link: "photos" + owner_id});
 	},
-	albumsInfo: {},
-	albumsContent: {},
-	requestAlbum: function (owner_id, album_id, offset) {
-		console.log("requestAlbum", arguments);
-		offset = offset || 0;
-		if (Photos.albumsInfo[owner_id + "_" + album_id] && Photos.albumsContent[owner_id + "_" + album_id] && Photos.albumsContent[owner_id + "_" + album_id].items[offset] && offset + 30 >= Photos.albumsContent[owner_id + "_" + album_id].size && Photos.albumsContent[owner_id + "_" + album_id].items[offset + 30])
-		//if (!offset || offset + 31 < Photos.albumsContent[owner_id + "_" + album_id].length)
-			return Photos.getAlbum(owner_id, album_id, [Photos.albumsContent[owner_id + "_" + album_id], Photos.albumsInfo[owner_id + "_" + album_id]], 0);
-		Site.Loader();
-		Site.API("execute", {
-			code: 'var o=%o,a=%a;return [API.photos.get({owner_id:o,album_id:a,extended:1,v:5.0,offset:%q,count:1000}),API.photos.getAlbums({owner_id:o,album_ids:a,v:5}).items[0]];'
-				.replace(/%o/g, owner_id)
-				.replace(/%a/g, album_id)
-				.replace(/%q/g, offset)
-		}, function (data) {
-			Photos.getAlbum(owner_id, album_id, Site.isResponse(data), offset );
-		})
+
+	albumInfo: {},
+	albumContentChunk: {},
+	listContent: {},
+
+	albumContent: {},
+
+
+	ITEMS_PER_PAGE: 50,
+
+	/**
+	 *
+	 * @param {int} offset
+	 * @returns {int}
+	 * @private
+	 */
+	__getChunkIdByOffset: function(offset) {
+		return Math.floor(offset / 100);
 	},
-	chateAlbum: function (owner_id, album_id, info, content, offset) {
-		console.log("chateAlbum", arguments);
-		Photos.albumsInfo[owner_id + "_" + album_id] = info;
-		if (!offset) {
-			Photos.albumsContent[owner_id + "_" + album_id] = content;
-		} else {
-			if (!Photos.albumsContent[owner_id + "_" + album_id]) {
-				Photos.albumsContent[owner_id + "_" + album_id] = {count: info.size, items: []};
-			}
-			for (var i = 0, l = content.items.length; i < l; ++i) {
-				Photos.albumsContent[owner_id + "_" + album_id].items[offset + i] = content.items[i];
-			}
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} offset
+	 * @param {{count: int, items: Photo[]}} data
+	 * @param {PhotoAlbum=} album
+	 */
+	putAlbumContent: function(ownerId, albumId, offset, data, album) {
+		var key = ownerId + "_" + albumId;
+
+		if (!Photos.albumContent[key]) {
+			Photos.albumContent[key] = [];
+		}
+
+		Photos.albumContent[key][Photos.__getChunkIdByOffset(offset)] = data;
+
+		if (album) {
+			Photos.albumInfo[albumId] = album;
 		}
 	},
 
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} offset
+	 * @returns {null|{count: int, items: Photo[]}}
+	 */
+	getAlbumContent: function(ownerId, albumId, offset) {
+		var key, data;
 
-	/* Photos in albums */
+		key = ownerId + "_" + albumId;
+		data = Photos.albumContent[key];
 
+		if (!data) {
+			return null;
+		}
 
-	getAll: function (owner_id) {
-		var offset = getOffset();
-		Site.Loader();
-		Site.API("execute", {
-			code: 'return API.photos.getAll({owner_id:%u,offset:%o,extended:1,count:30,v:5});'
-				.replace(/%u/i, owner_id)
-				.replace(/%o/i, offset)
-		}, function (data) {
-			data = Site.isResponse(data);
-			var count = data.count,
-				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Photos.getTabs(owner_id));
-			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
-			if (count == 0)
-				list.appendChild(Site.getEmptyField(Lang.get("photos", "photos_empty")));
-			for (var i = 0, l = photos.length; i < l; ++i) {
-				if (photos[i] == null)
-					break;
-				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
+		return data[Photos.__getChunkIdByOffset(offset)];
+	},
+
+	/**
+	 * @param {string} list
+	 * @param {int} offset
+	 * @param {{count: int, items: Photo[]}} data
+	 */
+	putListContent: function(list, offset, data) {
+		if (!Photos.listContent[list]) {
+			Photos.listContent[list] = [];
+		}
+
+		Photos.listContent[list][Photos.__getChunkIdByOffset(offset)] = data;
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} offset
+	 * @returns {Promise<{album: PhotoAlbum, count: int, items: Photo[], offset: int}>}
+	 */
+	requestAlbum: function(ownerId, albumId, offset) {
+		return new Promise(function(resolve, reject) {
+			var data;
+
+			if (data = Photos.getAlbumContent(ownerId, albumId, offset)) {
+				resolve({
+					album: Photos.albumInfo[albumId],
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+				return;
 			}
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(getOffset(), count, 30));
-			Site.append(parent);
-			Site.setHeader(Lang.get("photos", "photos_all"), {link: "photos" + owner_id});
+
+			api("execute", {
+				code: "var h=parseInt(Args.h),a=parseInt(Args.a),o=parseInt(Args.o);return{data:API.photos.get({owner_id:h,album_id:a,extended:1,v:5.56,offset:o,count:100}),album:API.photos.getAlbums({owner_id:h,album_ids:a,v:5.56}).items[0]};",
+				h: ownerId,
+				a: albumId,
+				o: Math.floor(offset / 100) * 100
+			}).then(function(data) {
+				Photos.putAlbumContent(ownerId, albumId, offset, data.data, data.album);
+				resolve({
+					album: data.album,
+					count: data.data.count,
+					items: data.data.items,
+					offset: offset
+				});
+			}).catch(reject);
 		});
 	},
+
+	/**
+	 * @param {{album: PhotoAlbum, count: int, items: Photo[], offset: int}} data
+	 */
+	showAlbum: function(data) {
+		var album = data.album,
+
+			items = data.items,
+
+			ownerId = album.owner_id,
+			albumId = album.id,
+
+			parent = $.e("div"),
+			list = $.e("div"),
+
+			menu = {};
+
+
+		if (albumId) {
+			menu.comments = {
+				label: Lang.get("photos.photos_comments_album"),
+				onclick: function() {
+					window.location.hash = "#photos" + ownerId + "?act=comments&albumId=" + albumId;
+				}
+			};
+		}
+
+		if (albumId > 0) {
+			menu.edit = {
+				label: Lang.get("photos.photos_edit_album"),
+				onclick: Photos.editAlbumPage.bind(Photos, ownerId, albumId)
+			};
+
+			menu.deleteAlbum = {
+				label: Lang.get("photos.photos_delete_album"),
+				onclick: function() {
+					VKConfirm(Lang.get("photos.photos_delete_album_confirm"), function() {
+						api("photos.deleteAlbum", {
+							owner_id: ownerId,
+							album_id: albumId
+						}).then(function() {
+							Site.Alert({text: Lang.get("photos.photos_delete_album_success")});
+							window.location.hash = "#photos" + ownerId;
+						});
+					});
+				}
+			};
+		}
+
+		parent.appendChild(Site.getPageHeader(data.count + " " + Lang.get("photos", "photos_count", data.count),
+			new DropDownMenu(Lang.get("general.actions"), menu).getNode()
+		));
+
+		if (albumId > 0 && (ownerId === API.userId || album.can_upload)) {
+			parent.appendChild(Site.createTopButton({
+				tag: "div",
+				title: Lang.get("photos.photos_upload"),
+				onclick: function() {
+					Photos.getUploadForm(ownerId, albumId);
+				}
+			}));
+		}
+
+		if (!data.count) {
+			list.appendChild(Site.getEmptyField(Lang.get("photos.photos_empty")));
+		} else {
+			//for (var i = data.offset, l = Math.min(data.offset + Photos.ITEMS_PER_PAGE, data.count); i < l; ++i) {
+			for (var i = data.offset % 100, l = ((data.offset + Photos.ITEMS_PER_PAGE) % 100) || 100; i < l; ++i) {
+				if (!items[i]) {
+					continue;
+				}
+
+				list.appendChild(Photos.itemPhoto(items[i], {
+					likes: true,
+					comments: true,
+					list: album.list
+				}));
+			}
+		}
+
+		parent.appendChild(list);
+		parent.appendChild(Site.getSmartPagebar(data.offset, data.count, Photos.ITEMS_PER_PAGE));
+		Site.append(parent);
+		Site.setHeader(album.title, {link: "photos" + ownerId});
+
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} offset
+	 * @returns {Promise<{album: PhotoAlbum, count: int, items: Photo[], offset: int}>}
+	 */
+	requestAllPhotos: function(ownerId, offset) {
+		return new Promise(function(resolve, reject) {
+			api("photos.getAll", {
+				owner_id: ownerId,
+				offset: Math.floor(offset / 100) * 100,
+				extended: 1,
+				count: 100,
+				v: 5.56
+			}).then(function(data) {
+				var listName = "all" + ownerId;
+				Photos.putListContent(listName, offset, data);
+				resolve({
+					album: {id: 0, owner_id: ownerId, title: Lang.get("photos.photos_all")},
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+			}).catch(reject);
+		});
+	},
+
+
 	getAlbum: function (owner_id, album_id, data, offset) {
 		var info = data[1],
 			content = data[0];
 		console.log("getAlbum", arguments);
 		Photos.chateAlbum(owner_id, album_id, info, content, offset);
-		content = Photos.albumsContent[owner_id + "_" + album_id];
+		content = Photos.albumContent[owner_id + "_" + album_id];
 		var count = content.count,
 			photos = content.items,
 			title = Site.Escape(info.title),
@@ -565,7 +640,7 @@ var Photos = {
 									text: Lang.get("photos", "photos_delete_album_success")
 								});
 								window.location.hash = "#photos" + owner_id;
-							};
+							}
 						});
 					});
 				};
@@ -582,7 +657,7 @@ var Photos = {
 			list.appendChild(Site.getEmptyField(Lang.get("photos", "photos_empty")));
 		console.log(offset);
 		for (var i = offset, l = offset + 30; i < l; ++i) {
-			console.log(i, photos[i]);;
+			console.log(i, photos[i]);
 			if (photos[i] == null)
 				continue;
 			list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: true}));
@@ -590,7 +665,7 @@ var Photos = {
 		parent.appendChild(list);
 		parent.appendChild(Site.getSmartPagebar(getOffset(), count, 30));
 		Site.append(parent);
-		Site.setHeader(Lang.get("photos", "album"), {link: "photos" + owner_id + Photos.getToParam(0)});
+		Site.setHeader(Lang.get("photos", "album"), {link: "photos" + owner_id});
 	},
 	getPrivacySelect: function (name, defaultValue) {
 		var select = document.createElement("select");
@@ -608,7 +683,7 @@ var Photos = {
 		return $.e("div", {"class": "tip tip-form", html: text});
 	},
 	editAlbumPage: function (owner_id, album_id) {
-		var album = Photos.albumsInfo[owner_id + "_" + album_id],
+		var album = Photos.albumInfo[owner_id + "_" + album_id],
 			parent = document.createElement("div"),
 			Form = document.createElement("form"),
 			toInt = function (str) {
@@ -649,14 +724,14 @@ var Photos = {
 			}, function (data) {
 				data = Site.isResponse(data);
 				if (data) {
-					var a = Photos.albumsInfo[owner_id + "_" + album_id];
+					var a = Photos.albumInfo[owner_id + "_" + album_id];
 					a.title = title;
 					a.description = description;
 					a.privacy_view = privacy;
 					a.privacy_comment = comment_privacy;
 					Site.route(window.location.hash = "#photos" + owner_id + "_" + album_id)
 				}
-			})
+			});
 			return false;
 		};
 		parent.appendChild(Site.getPageHeader(Lang.get("photos", "edit_album_verb")));
@@ -664,41 +739,35 @@ var Photos = {
 		parent.appendChild(Form);
 		Site.append(parent);
 	},
-	getUserTagged: function (owner_id) {
-		Site.APIv5("photos.getUserPhotos", {
-			user_id: owner_id,
-			offset: getOffset(),
-			count: 40,
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} offset
+	 */
+	requestUserTagged: function(ownerId, offset) {
+		return api("photos.getUserPhotos", {
+			user_id: ownerId,
+			offset: offset,
+			count: 100,
 			extended: 1,
 			sort: 0,
-			v: 5.0
-		}, function (data) {
-			if (!data.response) {
-				Site.append(Site.getEmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
-				Site.setHeader("Назад", {link: "photos" + owner_id});
-			}
-			data = Site.isResponse(data);
-			var count = data.count,
-				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Photos.getTabs(owner_id));
-			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
-			if (count == 0)
-				list.appendChild(Site.getEmptyField(Lang.get("photos", "photos_empty")));
-			Photos.lists["tags" + owner_id] = [];
-			for (var i = 0, l = photos.length; i < l; ++i) {
-				if (photos[i] == null)
-					break;
-				Photos.lists["tags" + owner_id].push(photos[i]);
-				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false}));
-			}
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(getOffset(), count, 40));
-			Site.append(parent);
-			Site.setHeader("Отмеченные фотографии", {link: "photos" + owner_id});
+			v: 5.56
+		}).then(function(data) {
+			var listName = "tagged" + ownerId;
+			Photos.putListContent(listName, offset, data);
+			return {
+				album: {id: 0, owner_id: ownerId, list: listName, title: "Отмеченные фотографии"},
+				list: listName,
+				count: data.count,
+				items: data.items,
+				offset: offset
+			};
+		}).catch(function() {
+			Site.append(Site.getEmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
+			Site.setHeader("Назад", {link: "photos" + ownerId});
 		});
 	},
+
 	getNewTags: function () {
 		Site.APIv5("photos.getNewTags", {
 			offset: getOffset(),
@@ -741,54 +810,65 @@ var Photos = {
 		})(photos);
 		return list_id;
 	},
+
+	/**
+	 * @deprecated
+	 */
 	addPhotoChate: function (c) {
 		Photos.photos[c.owner_id + "_" + c.id] = c;
 		if (c.access_key)
 			Photos.access_keys[c.owner_id + "_" + c.id] = c.access_key;
 	},
-	itemPhoto: function (c, opts) {
+
+	/**
+	 * @param {Photo} photo
+	 * @param {{accessKey: string=, list: string=, likes: boolean=, comments: boolean=}} opts
+	 * @returns {HTMLElement|Node}
+	 */
+	itemPhoto: function(photo, opts) {
 		opts = opts || {};
-		var item = document.createElement("a"),
+		var item = $.e("a", {"class": "photos-item"}),
 			list = opts && opts.list,
-			access_key = c.access_key || c.accessKey,
-			params = {},
-			to = Site.Get("to");
-		c = Photos.v5normalize(c);
-		item.className = "photos-item";
-		if (access_key)
-			params.access_key = access_key;
+			params = {};
+
+
+		if (photo.access_key) {
+			params.accessKey = photo.access_key;
+		}
+
 		if (list) {
-			if (/^(wall|comment|mail|new|photo)/ig.test(list))
+			/*if (/^(wall|comment|mail|new|photo)/ig.test(list))
 				params.list = list;
 			if (!Photos.lists[list])
 				Photos.lists[list] = [];
-			c.list = list;
-			if (!$.inArray(c, Photos.lists[list]))
-				Photos.lists[list].push(c);
-		};
-		if (to)
-			params.to = to;
-		if (opts.from)
-			params.from = opts.from;
+			photo.list = list;
+			if (!$.inArray(photo, Photos.lists[list]))
+				Photos.lists[list].push(photo);*/
+		}
+
 		params = httpBuildQuery(params);
-		item.href = "#photo" + (c.owner_id || c.ownerId) + "_" + (c.id || c.photoId) + (params ? "?" + params : "");
-		Photos.addPhotoChate(c);
-		item.appendChild($.e("img", {src: getURL(opts.wall ? c.photo_604 || c.photo604 : c.photo_130 || c.photo130)}));
-		var f;
-		f = (opts && opts.likes && c.likes && c.likes.count > 0);
-		item.appendChild($.e("div", {"class": "photos-likes photos-tips" + (!f ? " hidden" : ""), append: [
-			$.e("div", {"class": "wall-icons likes-icon" + (c.likes && !c.likes.user_likes ? "-on" : "")}),
-			$.e("span", {html: " " + (c.likes && c.likes.count), id: "minilike-count_" + c.owner_id + "_" + c.id})
+
+		item.href = "#photo" + photo.owner_id + "_" + photo.id + (params ? "?" + params : "");
+
+
+		item.appendChild($.e("img", {src: getURL(photo.photo_604) }));
+
+		/*var likes;
+		likes = (opts && opts.likes && photo.likes && photo.likes.count > 0);
+		item.appendChild($.e("div", {"class": "photos-likes photos-tips" + (!likes ? " hidden" : ""), append: [
+			$.e("div", {"class": "wall-icons likes-icon" + (photo.likes && !photo.likes.user_likes ? "-on" : "")}),
+			$.e("span", {html: " " + (photo.likes && photo.likes.count), id: "minilike-count_" + photo.owner_id + "_" + photo.id})
 		]}));
-		f = false;
-		f = opts && opts.comments && c.comments && c.comments.count > 0;
-		item.appendChild($.e("div", {"class": "photos-comments photos-tips" + (!f ? " hidden" : ""), append: [
+		likes = false;
+		likes = opts && opts.comments && photo.comments && photo.comments.count > 0;
+		item.appendChild($.e("div", {"class": "photos-comments photos-tips" + (!likes ? " hidden" : ""), append: [
 			$.e("div", {"class": "wall-icons wall-comments"}),
-			$.e("span", {html: " " + (c.comments && c.comments.count)})
-		]}));
+			$.e("span", {html: " " + (photo.comments && photo.comments.count)})
+		]}));*/
 
 		return item;
 	},
+
 	getUploadForm: function (ownerId, albumId) {
 		var node = $.e("input", {type: "file", multiple: true, accept: "image/*", onchange: function () {
 			Photos.upload(ownerId, albumId, node);
@@ -806,17 +886,17 @@ var Photos = {
 
 				Site.Alert({text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"});
 
-				var hasObject = !!Photos.albumsContent[ownerId + "_" + albumId];
+				var hasObject = !!Photos.albumContent[ownerId + "_" + albumId];
 
 				result.forEach(function (p) {
 					Photos.photos[ownerId + "_" + p.id] = Photos.v5normalize(p);
 					if (hasObject) {
-						Photos.albumsContent[ownerId + "_" + albumId].count++;
-						Photos.albumsContent[ownerId + "_" + albumId].items.push(p);
-					};
+						Photos.albumContent[ownerId + "_" + albumId].count++;
+						Photos.albumContent[ownerId + "_" + albumId].items.push(p);
+					}
 				});
 				window.location.hash = "#photos" + ownerId + "_" + albumId +
-					"?offset=" + (hasObject ? (Math.floor(Photos.albumsContent[ownerId + "_" + albumId].items.length / 30) * 30) : 0);
+					"?offset=" + (hasObject ? (Math.floor(Photos.albumContent[ownerId + "_" + albumId].items.length / 30) * 30) : 0);
 			}
 		});
 	},
@@ -960,7 +1040,18 @@ var Photos = {
 			footer     = document.createElement("div"),
 			commentsWrap   = document.createElement("div"),
 			like       = getLikeButton("photo", owner_id, photo_id, access_key, photo.likes && photo.likes.count, photo.likes && photo.likes.user_likes),
-			links      = (function (a,b,c,d,e,f,g,h,i,j,k,l){for(;e<f;++e){l={};if(a[c+d[e]]==g)continue;l[j]=(((((l[i]=((((100*d[e])/a[i])*a[i])/100))*100)/a[i])*a[j])/100);l[k]=a[c+d[e]];b[h](l);};return b;})(photo,[],"photo_",[75,130,604,807,1280,2560],0,6,undefined,"push","width","height","url",{}),
+			links = (function (a, b, c, d, e, f, g, h, i, j, k, l) {
+				for (; e < f; ++e) {
+					l = {};
+					if (a[c + d[e]] == g) {
+						continue;
+					}
+					l[j] = (((((l[i] = ((((100 * d[e]) / a[i]) * a[i]) / 100)) * 100) / a[i]) * a[j]) / 100);
+					l[k] = a[c + d[e]];
+					b[h](l);
+				}
+				return b;
+			})(photo, [], "photo_", [75, 130, 604, 807, 1280, 2560], 0, 6, undefined, "push", "width", "height", "url", {}),
 			actions    = {},
 			headerText = Lang.get("photos", "photo_noun") + " " + (position.current + 1 || 1) + Lang.get("photos", "photo_count_of") + (position.current != -1 ? list.length : 1);
 		header.id    = "photo_actions_head";
@@ -1016,7 +1107,7 @@ var Photos = {
 			}));
 		}
 		// Photo-block
-		headerFull.appendChild($.elements.create("div", {"class": "photo-view-full-header-title", html: headerText}))
+		headerFull.appendChild($.elements.create("div", {"class": "photo-view-full-header-title", html: headerText}));
 		shower.className = "photo-shower";
 		shower.appendChild(makeLike);
 		shower.appendChild(Photos.getMoveablePanelViewer([previous, photo, next]));
@@ -1071,7 +1162,7 @@ var Photos = {
 			{
 				case KeyboardCodes.left: onClickPhoto(0); break;
 				case KeyboardCodes.right: onClickPhoto(100); break;
-			};
+			}
 		};
 
 
@@ -1095,14 +1186,15 @@ var Photos = {
 							placeNode.appendChild(Wall.getGeoAttachment(obj, false));
 							$.elements.remove(placeNode);
 						});
-			*/		};
+			*/
+		}
 		footer.appendChild($.e("div", {"class": "photo-uploaded", append: [
 			$.e("span", {"class": "tip", html: Lang.get("photos.photo_view_uploaded")}),
 			document.createTextNode($.getDate(photo.date))
 		]}));
 		footer.appendChild($.e("div", {"class": "photo-album", append: [
 			$.e("span", {"class": "tip", html: Lang.get("photos.photo_view_album")}),
-			$.e("a", {href: "#photos" + owner_id + "_" + album_id, html: Site.Escape(Photos.albumsInfo[owner_id + "_" + album_id] && Photos.albumsInfo[owner_id + "_" + album_id].title) || "< Альбом >"})
+			$.e("a", {href: "#photos" + owner_id + "_" + album_id, html: Site.Escape(Photos.albumInfo[owner_id + "_" + album_id] && Photos.albumInfo[owner_id + "_" + album_id].title) || "< Альбом >"})
 		]}));
 		var authorLink, authorID;
 		footer.appendChild($.elements.create("div", {"class": "photo-uploader", append: [
@@ -1273,7 +1365,7 @@ var Photos = {
 							});
 						};
 					})(owner_id, photo_id, (u.id || u.tag_id))}));
-				};
+				}
 				if (u.user_id == API.userId || owner_id == API.userId) {
 					users.push(document.createTextNode(" "));
 					users.push($.e("span", {"class": "a", html: "[x]", onclick: (function (o,p,t){
@@ -1292,7 +1384,7 @@ var Photos = {
 							});
 						};
 					})(owner_id, photo_id, (u.id || u.tag_id))}));
-				};
+				}
 				users.push(document.createTextNode(", "));
 			}
 			users.length = users.length - 1;
@@ -1302,7 +1394,7 @@ var Photos = {
 	setFullViewMode: function (state) {
 		var e = document.getElementsByTagName("html")[0], c = "photo-view-full";
 		if (state)
-			$.elements.addClass(e, c)
+			$.elements.addClass(e, c);
 		else
 			$.elements.removeClass(e, c)
 	},
@@ -1370,8 +1462,7 @@ var Photos = {
 			move = function() {
 				if (!loaded || albumsSelect.disabled) {
 					return;
-				};
-
+				}
 				var album = albumsSelect.options[albumsSelect.selectedIndex].value;
 
 				loaded = false;
@@ -1483,7 +1574,7 @@ var Photos = {
 			}, function (data) {
 				if (data.response)
 					Site.route(window.location.hash);
-			})
+			});
 			return false;
 		};
 		Site.append(Form);
@@ -1552,7 +1643,7 @@ var Photos = {
 			var link = links[i];
 			parent.appendChild(item(link.url, link.width, link.height));
 		}
-		parent.appendChild($.elements.create("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}))
+		parent.appendChild($.elements.create("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}));
 		Site.append(parent);
 		Site.setHeader("Оригиналы", {fx: function (event) {
 			Site.route(window.location.hash);
@@ -1595,42 +1686,7 @@ var Photos = {
 				onCompleteCallback({owner_id: owner_id, photo_id: photo_id}, {count: data[1], me: data[0]})
 		});
 	},
-	getLikes: function (ownerId, photoId, accessKey, list) {
-		Site.Loader();
-		var offset = getOffset();
-		Site.APIv5("likes.getList", {
-			type: "photo",
-			owner_id: ownerId,
-			item_id: photoId,
-			access_key: accessKey,
-			filter: "likes",
-			fields: "photo_50,online,screen_name",
-			extended: 1,
-			offset: offset,
-			count: 50,
-			v: 5.20
-		}, function (data) {
-			if (!(data = Site.isResponse(data)))
-				return;
-			var parent = document.createElement("div"),
-				list = document.createElement("div"),
-				count = data.count,
-				data = data.items;
 
-			if (count)
-				for (var i = 0, l = data.length; i < l; ++i)
-					list.appendChild(Templates.getMiniUser(data[i]));
-			else
-				list.appendChild(Site.getEmptyField("Никто не оценил"));
-
-			parent.appendChild(Site.getPageHeader(count ? count + " " + $.textCase(count, ["пользователь оценил", "пользователя оценили", "пользователей оценили"]) : "Оценили"));
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(offset, count, 50));
-
-			Site.append(parent);
-			Site.setHeader("Оценили", {link: "photo" + ownerId + "_" + photoId});
-		});
-	},
 
 
 	/* Event Helpers */
@@ -1787,7 +1843,7 @@ var Photos = {
 					var max = Math.max(start.x, touch.x),
 						min = Math.min(start.x, touch.x),
 						per = ((100 * (max - min)) / widthItem);
-					setCurrentPosition(element, -(((33.33 + (start.x < touch.x ? -per : per)) * 3) / 3))
+					setCurrentPosition(element, -(((33.33 + (start.x < touch.x ? -per : per)) * 3) / 3));
 					//element.style.transform = "translateX(-" +  + "%)";
 					$.event.cancel(event);
 				}
@@ -1796,7 +1852,7 @@ var Photos = {
 					window.scrollBy(0, top);
 				}
 				is.count++;
-			})
+			});
 			addEvent("touchend", function (event) {
 				var touch = getTouch(event);
 				end = touch;

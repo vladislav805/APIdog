@@ -65,7 +65,7 @@ var Friends = {
 				for (var b=0,c=0,d=a.length;b<d;++b)a[b][e]&&++c;return c;
 			})(Friends.friends[ownerId].items, "online") : 0,
 			tabs = [
-				["friends" + (userId ? "?id=" + userId : "") + Photos.getToParam(0), Lang.get("friends.tabs_all"), count],
+				["friends" + (userId ? "?id=" + userId : ""), Lang.get("friends.tabs_all"), count],
 				["friends?section=online" + (userId ? "&id=" + userId : ""), Lang.get("friends.tabs_online"), countOnline],
 				["friends?act=lists" + (userId ? "&id=" + userId : ""), Lang.get("friends.tabs_lists")]
 			];

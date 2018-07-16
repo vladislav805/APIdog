@@ -256,7 +256,7 @@ var Site = {
 		Menu.hide();
 
 		if (reg.Photos.test(url))
-			return Photos.Resolve(url);
+			return Photos.route(url);
 		if (reg.Video.test(url))
 			return Video.Resolve(url);
 

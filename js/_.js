@@ -219,6 +219,45 @@ if (Date.now() < 0) {
 	var VKAudio = {};
 
 	/**
+	 * @type {{
+	 *  owner_id: int,
+	 *  id: int,
+	 *  album_id: int,
+	 *  date: int,
+	 *  width: int,
+	 *  height: int,
+	 *  photo_75: string,
+	 *  photo_130: string,
+	 *  photo_604: string,
+	 *  photo_807: string,
+	 *  photo_1280: string,
+	 *  photo_2560: string,
+	 *  access_key: string=,
+	 *  likes: {count: int, user_likes: boolean}
+	 * }}
+	 */
+	var Photo = {};
+
+	/**
+	 * @type {{
+	 *  id: int,
+	 *  owner_id: int,
+	 *  title: string,
+	 *  description: string,
+	 *  can_upload: boolean,
+	 *  size: int,
+	 *  thumb_id: int,
+	 *  thumb_src: string,
+	 *  created: int,
+	 *  updated: int,
+	 *  thumb_is_last: boolean,
+	 *  privacy_view: string[],
+	 *  privacy_comment: string[]
+	 * }}
+	 */
+	var PhotoAlbum = {};
+
+	/**
 	 * @type {{lyrics_id: int, text: string}}
 	 */
 	var VKAudioLyrics = {};
