@@ -245,6 +245,13 @@ var Audios = {
 		return Site.getTabPanel(tabs);
 	},
 
+	/**
+	 * Return needed version API for successful fetching info about audio
+	 * @returns {string}
+	 */
+	getAPIVersion: function() {
+		return API.applicationId !== Apps.APP.KATE_MOBILE ? "5.71" : "5.56";
+	},
 
 	/**
 	 * Request audio data by owner
@@ -261,7 +268,7 @@ var Audios = {
 		return api("execute", {
 			code: "var a=API.audio.get({owner_id:Args.o,count:5000}),s=API.account.getCounters();return{a:a,s:s};",
 			o: ownerId,
-			v: API.applicationId !== Apps.APP.KATE_MOBILE ? "5.71" : "5.56"
+			v: Audios.getAPIVersion()
 		}).then(function(data) {
 			Site.setCounters(data.s);
 
@@ -280,7 +287,6 @@ var Audios = {
 			Sugar.Object.forEach(albums, function(audios, playlist) {
 				Audios.storage[meta.ownerId + "_" + playlist] = audios;
 			});
-
 
 			return meta;
 		}).catch(Audios.fixAudio.bind(Audios, meta));
@@ -556,7 +562,8 @@ var Audios = {
 	add: function(audio) {
 		return api("audio.add", {
 			owner_id: audio.owner_id,
-			audio_id: audio.id
+			audio_id: audio.id,
+			v: Audios.getAPIVersion()
 		}).then(function() {
 			audio.added = true;
 			Site.Alert({text: "Аудиозапись &laquo;" + audio.artist.safe() + " &mdash; " + audio.title.safe() + "&raquo; успешно добавлена в Ваши аудиозаписи"});
@@ -573,7 +580,8 @@ var Audios = {
 		VKConfirm(Lang.get("audio.confirmAudioRemove"), function () {
 			api("audio.delete", {
 				owner_id: audio.owner_id,
-				audio_id: audio.id
+				audio_id: audio.id,
+				v: Audios.getAPIVersion()
 			}).then(function(data) {
 				// todo
 			});
@@ -638,7 +646,7 @@ var Audios = {
 	 * @returns {Promise.<{audio: VKAudio, modal: Modal=, lyrics: VKAudioLyrics=}>}
 	 */
 	getLyrics: function(meta) {
-		return api("audio.getLyrics", { lyrics_id: meta.audio.lyrics_id, v: 5.56 }).then(function(data) {
+		return api("audio.getLyrics", { lyrics_id: meta.audio.lyrics_id, v: Audios.getAPIVersion() }).then(function(data) {
 			meta.lyrics = data;
 			return meta;
 		});
@@ -960,7 +968,7 @@ var Audios = {
 	 * @returns {Promise}
 	 */
 	setBroadcast: function(audioId) {
-		return api("audio.setBroadcast", {audio: audioId});
+		return api("audio.setBroadcast", {audio: audioId, v: Audios.getAPIVersion()});
 	},
 
 	/**
@@ -1050,7 +1058,7 @@ var Audios = {
 		return api("audio.getRecommendations", {
 			count: 500,
 			user_id: meta.ownerId,
-			v: 5.56
+			v: Audios.getAPIVersion()
 		}).then(function(data) {
 			meta.data = data;
 			Audios.storage["recommendations" + meta.ownerId] = data.items;
@@ -1078,7 +1086,7 @@ var Audios = {
 		return api("audio.getPopular", {
 			count: 500,
 			genre_id: meta.albumId,
-			v: 5.56
+			v: Audios.getAPIVersion()
 		}).then(function(data) {
 			var count = data.length;
 			meta.data = {count: count, items: data};
@@ -1098,7 +1106,8 @@ var Audios = {
 		return api("audio.getBroadcastList", {
 			filter: "all",
 			active: 1,
-			fields: "online,photo_50,screen_name"
+			fields: "online,photo_50,screen_name",
+			v: Audios.getAPIVersion()
 		}).then(function(data) {
 			meta.data = {count: data.length, items: data};
 			Audios.storage["broadcast"] = data;
@@ -1215,7 +1224,7 @@ var Audios = {
 			lyrics: meta.query.lyricsOnly,
 			sort: meta.query.sort,
 			count: 200,
-			v: 5.63
+			v: Audios.getAPIVersion()
 		}).then(function(data) {
 			meta.data = data;
 			return meta;
@@ -1245,7 +1254,7 @@ var Audios = {
 			return api("audio.getAlbums", {
 				count: 100,
 				owner_id: meta.ownerId,
-				v: 5.56
+				v: Audios.getAPIVersion()
 			}).then(function (data) {
 				Audios.albums[meta.ownerId] = data.items;
 				meta.data = data.items;
@@ -1284,7 +1293,7 @@ var Audios = {
 	 * @returns {Promise}
 	 */
 	reorder: function(ownerId, audioId, siblingType, siblingId) {
-		var params = { owner_id: ownerId, audio_id: audioId, v: 5.56 };
+		var params = { owner_id: ownerId, audio_id: audioId, v: Audios.getAPIVersion() };
 		params[siblingType] = siblingId;
 		return api("audio.reorder", params);
 	},
@@ -1339,6 +1348,7 @@ var Audios = {
 			onSave: function(values, modal) {
 				values.owner_id = audio.ownerId;
 				values.id = audio.id;
+				values.v = Audios.getAPIVersion();
 				api("audio.edit", values)
 					.then(function(data) {
 						modal.setContent(Site.getEmptyField("audio.editSuccess")).setFooter("").closeAfter(1500);
@@ -1510,7 +1520,7 @@ var Audios = {
 	 * Request all playlist from VK and returns file m3u8
 	 */
 	downloadM3U8: function() {
-		api("audio.get", {v: 5.56}).then(function(result) {
+		api("audio.get", {v: Audios.getAPIVersion()}).then(function(result) {
 			var lines = result.items.map(function(i) {
 				return "#EXTINF:" + i.duration + "," + i.artist + " - " + i.title + "\n" + i.url;
 			});
