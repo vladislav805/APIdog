@@ -140,7 +140,7 @@ var onLoad = function() {
 			truncateDefaultOptions.moreText = Lang.get("general.showMore");
 		});
 
-
+		Settings.redrawMBOClass();
 
 		$.elements.removeClass(document.documentElement, "_notloaded");
 
