@@ -1069,23 +1069,26 @@ console.log("will be loaded: ", from);
 		 * @returns {boolean}
 		 */
 		onSubmit: function(q, type) {
-			api(["execute", "messages.searchDialogs"][type], [
+			api(["messages.search", "messages.searchConversations"][type], [
 				{
-					code: 'var m=API.messages.search({q:Args.q,preview_length:120,count:parseInt(Args.c),offset:parseInt(Args.o)});return{m:m,u:API.users.get({user_ids:m.items@.user_id,fields:Args.f})};',
 					v: 5.56,
-					c: Mail.DEFAULT_COUNT,
-					o: getOffset(),
-					f: "photo_50,online,screen_name",
-					q: q
+					count: Mail.DEFAULT_COUNT,
+					offset: getOffset(),
+					fields: "photo_50,online,screen_name",
+					preview_length: 120,
+					q: q,
+					extended: 1
 				}, {
 					q: q,
-					limit: 16,
+					limit: 32,
+					extended: 1,
 					fields: "photo_50,online,screen_name,sex",
 					v: 5.56
 				}
 			][type]).then(function(data) {
-				Local.add(data["u"]);
-				Mail.search.showResult(data["m"], type, {q: q})
+				Local.add(data.profiles);
+				Local.add(data.groups);
+				Mail.search.showResult(data, type, {q: q})
 			}).catch(function(error) {
 				console.error(error);
 				Site.Alert({text: "error. please look for console."});
@@ -1113,26 +1116,38 @@ console.log("will be loaded: ", from);
 
 					/**
 					 * Parser for search dialog
-					 * @param {User|Chat|{email: string}} i
+					 * @param {User|Chat|{email: string, peer: {id: int}, chat_settings: object}} i
 					 * @returns {HTMLElement}
 					 */
 					function(i) {
-						console.log(i);
-						var e = $.elements.create;
-						return e("a", {"class": "miniProfile-item", href: "#im?to=" + (i.admin_id ? Peer.LIMIT + i.id : i.id), append: [
-							e("img", {"class": "miniProfile-left", src: i.photo_50 ? getURL(i.photo_50) : Mail.DEFAULT_CHAT_IMAGE}),
-							e("div", {"class": "miniProfile-right", html: {profile: getName(i), chat: i.title.safe().emoji(), email: i.email.safe()}[i.type]})
+						var e = $.elements.create,
+							href = "#im?to=" + i.peer.id,
+							info = i.peer.id < 2e9 ? Local.data[i.peer.id] : i.chat_settings,
+							title = i.peer.id < 2e9 ? getName(info) : info.title.safe();
+						return e("div", {"class": "sl-item sl-content-bold", append: [
+							e("a", {"class": "sl-photo-wrap", href: href, append:
+								e("img", {src: info.photo_50 ? getURL(info.photo_50) : Mail.DEFAULT_CHAT_IMAGE}),
+							}),
+							e("a", {"class": "sl-content-wrap", href: href, append:
+								e("div", {"class": "sl-content", html: title})
+							})
 						]})
 					}][type],
 				founded = $.e("div"),
-				items = [data.items, data][type];
+				items = data.items;
 
 			items.forEach(function(i) {
 				founded.appendChild(item(i));
 			});
 
-			$.element("__mail-search-count").innerHTML = data.count ? Lang.get("mail.search_founded") + data.count + " " + $.textCase(data.count, Lang.get("mail.search_messages")) : "";
 			var list = $.element("__mail-search-list");
+
+			if (type === 1) {
+				list.classList.add("sl-list");
+			}
+
+			$.element("__mail-search-count").innerHTML = data.count ? Lang.get("mail.search_founded") + data.count + " " + $.textCase(data.count, Lang.get("mail.search_messages")) : "";
+
 			$.elements.clearChild(list);
 			list.appendChild(founded);
 
