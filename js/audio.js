@@ -598,9 +598,9 @@ var Audios = {
 
 			pb = new ProgressBar(0, 100),
 			modal = new Modal({
-				title: Lang.get("audios.downloadTitle"),
+				title: Lang.get("audio.downloadTitle"),
 				content: $.e("div", {append: [
-					$.e("div", {html: Lang.get("audios.downloadContent")}),
+					$.e("div", {html: Lang.get("audio.downloadContent")}),
 					pb.getNode()
 				]}),
 				unclosableByBlock: true
