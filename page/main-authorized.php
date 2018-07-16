@@ -9,19 +9,6 @@
 
 	$cn->init($_COOKIE[KEY_ACCESS_TOKEN], $_COOKIE[KEY_AUTH_KEY], $_COOKIE[KEY_SALT]);
 
-	if (isset($_REQUEST["page"])) {
-		$path = "./page/" . basename($_REQUEST["page"]) . ".php";
-
-		if (file_exists($path)) {
-			/** @noinspection PhpIncludeInspection */
-			require_once $path;
-		} else {
-			header("HTTP/1.1 404 Not found");
-		}
-
-		exit;
-	}
-
 
 	if (!$cn->getSession()->isAuthorized()) {
 		header("Location: ./?page=logout");

@@ -82,17 +82,6 @@
 			<h6>с июля 2014 до сентября 2017</h6>
 		</div>
 	</div>
-	<h1>Дружественные проекты</h1>
-	<div class="about-team">
-		<p class="about-text">Благодаря тому, что мы создали сайт, который почти полностью использует API ВКонтакте, у нас есть дружественные проекты, которым мы помогли в процессе разработки, как и они нам.</p>
-		<div class="about-team-friendlyProject">
-			<img class="about-team-friendlyProject-photo" src=" /images/svg/vkcoffee.svg" />
-			<div class="about-team-friendlyProject-content">
-				<h3><a href='/#operator_555_public'>VK Coffee</a></h3>
-				<h5>Модифицированная версия официального приложения ВКонтакте для Android, созданная Эдуардом Безменовым. Некоторые фичи были взяты нами из этой модификации, а некоторые &mdash; Эдуардом из APIdog :)</h5>
-			</div>
-		</div>
-	</div>
 	<h1>Есть вопросы?</h1>
 	<div class="about-team">
 		<p class="about-text">Пишите:<br/>по поводу разработки и идей &mdash; разработчику на vladislav805@yandex.com<br/>по поводу рекламы &mdash; финансовому директору Антону Карпович<br/>...</p>

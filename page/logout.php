@@ -1,6 +1,10 @@
 <?
 	/** @var Controller $cn */
 
+	if (!defined("APIDOG_IS_AUTHORIZED") || !APIDOG_IS_AUTHORIZED) {
+		exit;
+	}
+
 	try {
 		$cn->perform(new \Method\Session\Kill(["authId" => $cn->getSession()->getAuthId()]));
 	} catch (Exception $e) {
