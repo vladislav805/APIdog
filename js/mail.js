@@ -732,6 +732,11 @@ console.log("will be loaded: ", from);
 
 	deletedMessage: false,
 
+	TYPE: {
+		ALL: 0,
+		IMPORTANT: 3
+	},
+
 	/**
 	 * Request list of messages
 	 * @param {HTMLElement} list
@@ -739,14 +744,14 @@ console.log("will be loaded: ", from);
 	 */
 	getListMessages: function(list, type) {
 		var params = [
-				'"out":0', // inbox
-				'"out":1', // outbox
-				'"out":0,"filters":1', // new
-				'"filters":8' // important
-			][type],
+				'', // all messages
+				null,
+				null,
+				',"filters":8' // important
+			],
 			offset = getOffset();
 		api("execute", {
-			code: "var m=API.messages.search({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o,FILTER});return{m:m,u:API.users.get({user_ids:m.items@.user_id,v:5.8,fields:Args.f}),a:API.account.getCounters()};".replace("FILTER", params),
+			code: "var m=API.%METHOD%({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o%FILTER});return{m:m,u:API.users.get({user_ids:m.items@.user_id,v:5.8,fields:Args.f}),a:API.account.getCounters()};".replace("%FILTER", params[type]).replace("%METHOD%", type === Mail.TYPE.IMPORTANT ? "messages.get" : "messages.search"),
 			o: offset,
 			q: "*",
 			c: Mail.DEFAULT_COUNT,
@@ -765,7 +770,6 @@ console.log("will be loaded: ", from);
 	getListMessagesTabs: function() {
 		return Site.getTabPanel(!Mail.version ? [
 			["mail", Lang.get("mail.tabs_all")],
-			["mail?type=2", Lang.get("mail.tabs_new")],
 			["mail?type=3", Lang.get("mail.tabs_important")],
 			["mail?act=search", Lang.get("mail.tabs_search")]
 		] : [

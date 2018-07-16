@@ -353,7 +353,7 @@ function getBody() {
 
 /**
  * Returns "pathname" or full address from hash
- * @param {boolean} o
+ * @param {boolean=} o
  * @returns {string}
  */
 function getAddress(o) {
