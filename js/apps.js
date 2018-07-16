@@ -155,5 +155,22 @@ var Apps = {
 			Site.getPageHeader("Приложение"),
 			wrap
 		]}));
+	},
+
+	APP: {
+		APIDOG: 0,
+		ANDROID: 1,
+		IPHONE: 2,
+		IPAD: 3,
+		WINDOWS_PHONE: 4,
+		APIDOG_OAUTH: 5,
+		WINDOWS: 6,
+		API_CONSOLE: 7,
+		BLACKBERRY: 8,
+		SNAPSTER_ANDROID: 9,
+		KATE_MOBILE: 10,
+		LYNT: 11,
+		DESKTOP_MESSENGER: 12,
+		WINDOWS_PHONE_2: 13
 	}
 };

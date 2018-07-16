@@ -261,7 +261,7 @@ var Audios = {
 		return api("execute", {
 			code: "var a=API.audio.get({owner_id:Args.o,count:5000}),s=API.account.getCounters();return{a:a,s:s};",
 			o: ownerId,
-			v: 5.56
+			v: API.applicationId !== Apps.APP.KATE_MOBILE ? "5.71" : "5.56"
 		}).then(function(data) {
 			Site.setCounters(data.s);
 
