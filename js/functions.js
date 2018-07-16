@@ -983,10 +983,10 @@ var Local = {
 
 	/**
 	 * Add data about profiles and groups
-	 * @param {User[]} users
+	 * @param {User[]|Group[]} users
 	 * @returns {Object}
 	 */
-	add: function (users) {
+	add: function(users) {
 		if (!users) {
 			return Local.data;
 		}
@@ -998,7 +998,11 @@ var Local = {
 
 		for (var i = 0, id, j, l; j = users[i]; ++i) {
 
-			id = [j.id, -j.id][j.type && j.type !== "profile" ? 1 : 0];
+			id = j.id;
+
+			if ((j.type && j.type !== "profile") || ("name" in j)) {
+				id = -id;
+			}
 
 			if (!Local.data[id]) {
 				Local.data[id] = {};
@@ -1007,7 +1011,7 @@ var Local = {
 			l = Local.data[id];
 
 			if (!l.screen_name && !j.screen_name) {
-				l.screen_name = (id > 0 ? "id" + id : "club" + (-id));
+				l.screen_name = id > 0 ? "id" + id : "club" + -id;
 			}
 
 			Object.merge(l, j);

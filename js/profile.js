@@ -1032,20 +1032,20 @@ var Profile = {
 						Lang.get("profiles", "wasSecondsAgo", t[1]) + Lang.get("profiles.wasAgo");
 				};
 
-			platformId = platformId === 1 || platformId === 7 ? false : platformId;
+			user.online_mobile = user.online_mobile || platformId === User.PLATFORM.M_VK_COM;
+			user.online = user.online || platformId === User.PLATFORM.WEB;
 
-			user.online_mobile = user.online_mobile || platformId === 1;
-			user.online = user.online || platformId === 7;
+			platformId = platformId === User.PLATFORM.M_VK_COM || platformId === User.PLATFORM.WEB ? false : platformId;
 
 			new Snackbar({
 				text:
 				startString +
 				(left > 3600
-						? $.getDate(user.last_seen && user.last_seen.time || 0)
+						? new Date(user.last_seen && user.last_seen.time || 0).long()
 						: computeDifferentTime(left)
 				) + (
 					app || platformId
-						? Lang.get("profiles.wasViaApp").schema({n: (app && app.title || ["мобильный", "iPhone", "iPad", "Android", "Windows Phone", "Windows 8", "ПК"][platformId - 1])})
+						? Lang.get("profiles.wasViaApp").schema({n: (app && app.title || Lang.get("profiles.wasApp")[platformId - 1])})
 						: Lang.get(user.online_mobile ? "profiles.wasViaMobile" : "profiles.wasViaPC")
 				)
 			}).show();

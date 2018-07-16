@@ -86,8 +86,15 @@
 	"profiles.wasSecondsAgo":[["секунду", "секунды", "секунд"], null, null],
 	"profiles.wasAgo":[" назад", null, null],
 	"profiles.wasViaApp":[" через приложение &laquo;%n&raquo;", " via application &laquo;%n&raquo;", null],
-	"profiles.wasViaMobile":[" через мобильный (m.vk.com)", " via mobile (m.v.com)", null],
+	"profiles.wasViaMobile":[" через мобильный (m.vk.com)", " via mobile (m.vk.com)", null],
 	"profiles.wasViaPC":[" через полную версию", " via desktop", null],
+	"profiles.wasApp":[
+		[
+			[null, "iPhone", "iPad", "Android", "Windows Phone", "Windows", null, "VK Mobile"],
+			[null, "iPhone", "iPad", "Android", "Windows Phone", "Windows", null, "VK Mobile"],
+			[null, "iPhone", "iPad", "Android", "Windows Phone", "Windows", null, "VK Mobile"]
+		]
+	],
 	"profiles.pageHead":["Профиль %n", "Profile %n", null],
 	"profiles.statusChange":["изменить статус", "change status", null],
 	"profiles.statusChangeSubmit":["Готово","Done", null],
