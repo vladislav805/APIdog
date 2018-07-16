@@ -62,6 +62,7 @@
 		"vk.validatePhone" => "\\Method\\VK\\ValidatePhone",
 
 		"internal.updateLangPack" => "\Method\Internal\UpdateLangPack",
+		"internal.fetchUpdates" => "\\Method\\Internal\\FetchTelegraphUpdates",
 
 		"app.fixAudio" => "\Method\VK\FixAudio",
 

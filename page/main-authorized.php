@@ -255,7 +255,7 @@
 						<div class="footer">
 							<div class="tip" style="font-size: x-small;">APIdog v<?=APIDOG_VERSION;?> / b<?=APIDOG_BUILD;?> &copy; 2012&ndash;2018</div>
 						</div>
-						<a href="https://telegra.ph/APIdog-v646-dev-08-20#<?=APIDOG_BUILD;?>" target="_blank" class="cglg">ChangeLog</a>
+						<a href="?page=updates#<?=APIDOG_BUILD;?>" target="_blank" class="cglg">Обновления</a>
 					</aside>
 					<div id="birthdays"></div>
 					<div class="avmn-wrap">
