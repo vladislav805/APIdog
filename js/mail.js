@@ -483,10 +483,6 @@ console.log("will be loaded: ", from);
 			}
 
 			unread = info.unread_count;
-
-			peer = new Peer(info.peer.id);
-
-			console.log(peer.isChat(), message);
 		}
 
 		user = Local.data[message.user_id] || {last_name: "", first_name: ""};
@@ -539,7 +535,7 @@ console.log("will be loaded: ", from);
 					]}),
 				]}),
 
-				date = e("div", {"class": "dialogs-meta", "data-count": parseInt(unread), append: [
+				date = e("div", {"class": "dialogs-meta", append: [
 					e("div", {"class": "dialogs-date", "data-time": message.date, html: getDate(message.date, APIDOG_DATE_FORMAT_SMART)})
 				]})
 			]});
@@ -560,6 +556,10 @@ console.log("will be loaded: ", from);
 
 		date.lastChild.style.marginLeft = "-128px";
 		date.lastChild.style.bottom = "36px";
+
+		if (!("toMessage" in options)) {
+			date.dataset.count = unread;
+		}
 
 		if (!message.out) {
 			if (!message.read_state) {
@@ -751,14 +751,15 @@ console.log("will be loaded: ", from);
 			],
 			offset = getOffset();
 		api("execute", {
-			code: "var m=API.%METHOD%({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o%FILTER});return{m:m,u:API.users.get({user_ids:m.items@.user_id,v:5.8,fields:Args.f}),a:API.account.getCounters()};".replace("%FILTER", params[type]).replace("%METHOD%", type === Mail.TYPE.IMPORTANT ? "messages.get" : "messages.search"),
+			code: "var m=API.%METHOD%({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o%FILTER,extended:1});return{m:m,a:API.account.getCounters()};".replace("%FILTER", params[type]).replace("%METHOD%", type === Mail.TYPE.IMPORTANT ? "messages.get" : "messages.search"),
 			o: offset,
 			q: "*",
 			c: Mail.DEFAULT_COUNT,
 			f: "photo_50,online,screen_name,sex"
 		}).then(function(data) {
 			Site.setCounters(data["a"]);
-			Local.add(data["u"]);
+			Local.add(data["m"]["profiles"]);
+			Local.add(data["m"]["groups"]);
 			Mail.showListMessages(data["m"], {list: list, type: type, offset: offset});
 		});
 	},
