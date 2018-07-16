@@ -196,7 +196,7 @@ var Profile = {
 					},
 					{
 						link: function() { Profile.showFullInfo(user.id, this); },
-						label: "full_info",
+						label: "fullInfoTitle",
 						count: -1,
 						icon: "profile-i-fullInfo"
 					}

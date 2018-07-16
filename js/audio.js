@@ -298,7 +298,7 @@ var Audios = {
 	 */
 	fixAudio: function(meta) {
 		if (!API.isExtension) {
-			$.elements.clearChild(meta.list).appendChild(Site.getEmptyField(Lang.get("audios.warningFixNeedExtension")));
+			$.elements.clearChild(meta.list).appendChild(Site.getEmptyField(Lang.get("audio.warningFixNeedExtension")));
 			return;
 		}
 
@@ -1413,7 +1413,7 @@ var Audios = {
 	 */
 	requestRadio: function(meta) {
 		return new Promise(function(resolve) {
-			meta.list.parentNode.insertBefore(Site.getPageHeader(Lang.get("audios.radioTitle"), $.e("a", {
+			meta.list.parentNode.insertBefore(Site.getPageHeader(Lang.get("audio.radioTitle"), $.e("a", {
 				"class": "fr",
 				href: "http:\/\/radio.vlad805.ru\/",
 				target: "_blank",
