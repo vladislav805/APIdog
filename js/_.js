@@ -252,7 +252,9 @@ if (Date.now() < 0) {
 	 *  updated: int,
 	 *  thumb_is_last: boolean,
 	 *  privacy_view: string[],
-	 *  privacy_comment: string[]
+	 *  privacy_comment: string[],
+	 *  upload_by_admins_only: boolean=,
+	 *  comments_disabled: boolean=
 	 * }}
 	 */
 	var PhotoAlbum = {};
