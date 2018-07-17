@@ -5,8 +5,8 @@
  *     title: string,
  *     value: string,
  *     checked: boolean=,
- *     items: object[]
- *     items: object[]
+ *     items: object[]=,
+ *     multiple: boolean=
  * }}
  */
 var EditItemField = {};
@@ -17,7 +17,7 @@ var EditItemField = {};
  * @param {{
  *     title: string,
  *     isEdit: boolean,
- *     items: object[],
+ *     items: EditItemField[],
  *     validate: boolean=,
  *     onSave: function,
  *     onValidFail: function=,
@@ -41,9 +41,6 @@ function EditWindow (o) {
 	this.content = null;
 	this.nodes = {};
 	this.state = false;
-
-	// others
-	this.fromNode = o.fromNode;
 
 	// initialize
 	this.init(o);
@@ -74,7 +71,7 @@ EditWindow.prototype = {
 					}
 				}
 			]
-		}).show(this.fromNode || false);
+		}).show();
 	},
 
 	label: function(key) {
@@ -97,13 +94,19 @@ EditWindow.prototype = {
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_SELECT:
-					node = e("select", {name: i.name, append: i.items.map(function(s) {
+					node = e("select", {name: i.name});
+
+					if (i.multiple) {
+						node.multiple = true;
+					}
+
+					i.items.forEach(function(s) {
 						if (s.value === i.value) {
-							//noinspection JSUndefinedPropertyAssignment
 							s.selected = true;
 						}
-						return e("option", s);
-					})});
+						node.appendChild(e("option", s));
+					})
+
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_CHECKBOX:
@@ -175,7 +178,15 @@ EditWindow.prototype = {
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_SELECT:
-					value = node.options[node.selectedIndex].value;
+					if (!node.multiple) {
+						value = node.options[node.selectedIndex].value;
+					} else {
+						value = [];
+						Array.prototype.forEach.call(node.options, function(opt) {
+							opt.selected && value.push(opt.value);
+						});
+						value = value.join(",");
+					}
 					break;
 
 				case APIDOG_UI_EW_TYPE_ITEM_CHECKBOX:
