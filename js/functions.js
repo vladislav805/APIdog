@@ -28,6 +28,8 @@ var onLoad = function() {
 	 * Initializations
 	 */
 	Audios.player.initEvents();
+	Photos.__init();
+	Settings.redrawMBOClass();
 
 	if (isEnabled(Setting.USING_PROXY)) {
 		$.elements.remove($.element("_link_ext"));
@@ -140,7 +142,7 @@ var onLoad = function() {
 			truncateDefaultOptions.moreText = Lang.get("general.showMore");
 		});
 
-		Settings.redrawMBOClass();
+
 
 		$.elements.removeClass(document.documentElement, "_notloaded");
 

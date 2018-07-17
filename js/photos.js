@@ -129,7 +129,7 @@ VKPhotoAlbum.prototype = {
 var Photos = {
 
 	route: function(url) {
-		var result, ownerId, id, act = Site.get("act");
+		var result, ownerId, id, act = Site.get("act"), offset = getOffset();
 
 		if (/^photos(-?\d+)?$/img.test(url)) {
 			result = /^photos(-?\d+)?$/img.exec(url);
@@ -137,7 +137,7 @@ var Photos = {
 
 			switch (act) {
 				case "all":
-					return Photos.requestAllPhotos(id, getOffset()).then(Photos.showAlbum);
+					return Photos.requestAllPhotos(id, offset).then(Photos.showAlbum);
 
 				case "comments":
 					return Photos.getAllComments(id);
@@ -146,13 +146,13 @@ var Photos = {
 					return Photos.createAlbum(id);
 
 				case "tagged":
-					return Photos.requestUserTagged(id, getOffset()).then(Photos.showAlbum);
+					return Photos.requestUserTagged(id, offset).then(Photos.showAlbum);
 
 				case "new_tags":
-					return Photos.getNewTags(id);
+					return Photos.requestNewTags(offset).then(Photos.showAlbum);
 
 				default:
-					return Photos.getAlbums(id);
+					return Photos.getAlbums(id, offset).then(Photos.showAlbums);
 			}
 		} else if (/^photos(-?\d+)_(-?\d+)$/img.test(url)) {
 			result = /^photos(-?\d+)_(-?\d+)$/img.exec(url);
@@ -162,9 +162,6 @@ var Photos = {
 			switch (act) {
 				case "comments":
 					return Photos.getAllComments(ownerId, id);
-
-				case "upload":
-					return Photos.getUploadForm(ownerId, id);
 
 				default:
 					return Photos.requestAlbum(ownerId, id, getOffset()).then(Photos.showAlbum);
@@ -187,29 +184,25 @@ var Photos = {
 	 * @deprecated
 	 */
 	v5normalize: function(photo) {
-		photo.id         = photo.pid        || photo.id;
-		photo.album_id   = photo.album_id   || photo.aid;
-		photo.date       = photo.date       || photo.created;
-		photo.photo_2560 = photo.photo_2560 || photo.src_xxxbig;
-		photo.photo_1280 = photo.photo_1280 || photo.src_xxbig;
-		photo.photo_807  = photo.photo_807  || photo.src_xbig;
-		photo.photo_604  = photo.photo_604  || photo.src_big;
-		photo.photo_130  = photo.photo_130  || photo.src;
-		photo.photo_75   = photo.photo_75   || photo.src_small;
 		return photo;
 	},
 
 
 	getAttachment: function(photo, options) {
-		return Photos.itemPhoto(Photos.v5normalize(photo), {list: options.list, wall: options.full, from: getAddress(true)});
+		return Photos.itemPhoto(photo, {list: options.list, wall: options.full, from: getAddress(true)});
 	},
 
+	/**
+	 * @param {PhotoAlbum|{thumb: {photo_604: string, photo_big: string}}} album
+	 * @deprecated
+	 * @returns {HTMLElement|Node}
+	 */
 	getAttachmentAlbum: function(album) {
 		return $.e("a", {href: "#photos" + album.owner_id + "_" + album.id, "class": "attachments-album", append: [
 			$.e("img", {src: getURL(album.thumb.photo_604 || album.thumb.photo_big)}),
 			$.e("div", {"class": "attachments-album-footer sizefix", append: [
 				$.e("div", {"class": "fr", html:album.size}),
-				$.e("div", {"class": "attachments-album-title sizefix", html: Site.Escape(album.title)}),
+				$.e("div", {"class": "attachments-album-title sizefix", html: album.title.safe()}),
 			]})
 		]});
 	},
@@ -234,61 +227,67 @@ var Photos = {
 		return Site.getTabPanel(tabs);
 	},
 
+	ALBUMS_PER_PAGE: 40,
+
 	/**
 	 * Get albums
 	 * @param {int} ownerId
+	 * @param {int} offset
 	 */
-	getAlbums: function(ownerId) {
-		var offset = getOffset();
-		Site.Loader();
-		api("photos.getAlbums", {
+	getAlbums: function(ownerId, offset) {
+		return api("photos.getAlbums", {
 			owner_id: ownerId,
 			offset: offset,
 			need_system: 1,
 			need_covers: 1,
-			count: 40,
+			count: Photos.ALBUMS_PER_PAGE,
 			v: 5.56
-		}).then(function(data) {
-			var count = data.count,
-				parent,
+		}).then(function(res) {
+			res.ownerId = ownerId;
+			res.offset = offset;
+			return res;
+		});
+	},
 
-				list = $.e("div", {
-					append: data.items.map(function(album) {
-						return Photos.itemAlbum(album);
-					})
-				}),
-				menu = {
-					allComments: {
-						label: "Все комментарии",
-						onclick: function() {
-							window.location.hash = "#photos" + ownerId + "?act=comments"
-						}
+	/**
+	 * @param {{count: int, items: Photo[], ownerId: int=, offset: int=}} data
+	 */
+	showAlbums: function(data) {
+		var list = $.e("div", {
+				append: data.items.map(function(album) {
+					return Photos.itemAlbum(album);
+				})
+			}),
+			ownerId = data.ownerId,
+			offset = data.offset,
+			menu = {
+				allComments: {
+					label: "Все комментарии",
+					onclick: function() {
+						window.location.hash = "#photos" + ownerId + "?act=comments"
 					}
+				}
 			};
 
-			if (ownerId === API.userId || (Local.data[ownerId] && Local.data[ownerId].is_admin)) {
-				menu.createAlbum = {
-					label: Lang.get("photos", "albums_actions_create"),
-					onclick: function() {
-						window.location.hash = "#photos" + ownerId + "?act=create"
-					}
-				};
-			}
+		if (ownerId === API.userId || (Local.data[ownerId] && Local.data[ownerId].is_admin)) {
+			menu.createAlbum = {
+				label: Lang.get("photos", "albums_actions_create"),
+				onclick: function() {
+					window.location.hash = "#photos" + ownerId + "?act=create"
+				}
+			};
+		}
 
-			parent = $.e("div", {append: [
-					Photos.getTabs(ownerId),
-					Site.getPageHeader(data.count + " " + Lang.get("photos", "albums_count", data.count),
-						new DropDownMenu(Lang.get("general.actions"), menu).getNode()
-					),
-					list,
-					Site.getSmartPagebar(offset, count, 30)
-			]});
 
-			Site.append(parent);
-			Site.setHeader(Lang.get("photos.albums"));
-		}).catch(function() {
-
-		});
+		Site.append($.e("div", {append: [
+				Photos.getTabs(ownerId),
+				Site.getPageHeader(data.count + " " + Lang.get("photos", "albums_count", data.count),
+					new DropDownMenu(Lang.get("general.actions"), menu).getNode()
+				),
+				list,
+				Site.getSmartPagebar(offset, data.count, Photos.ALBUMS_PER_PAGE)
+			]}));
+		Site.setHeader(Lang.get("photos.albums"));
 	},
 
 	/**
@@ -460,6 +459,39 @@ var Photos = {
 	},
 
 	/**
+	 *
+	 * @param {string} key
+	 * @param {int} offset
+	 * @returns {{count: int, items: Photo[]}|null}
+	 */
+	getListContent: function(key, offset) {
+		var data;
+
+		data = Photos.listContent[key];
+
+		if (!data) {
+			return null;
+		}
+
+		return data[Photos.__getChunkIdByOffset(offset)];
+	},
+
+	CUSTOM_ALBUMS: {
+		ALL_PHOTOS: function(ownerId) {
+			return {id: 0, owner_id: ownerId, list: "all" + ownerId, title: Lang.get("photos.photos_all")};
+		},
+		TAGGED: function(ownerId) {
+			return {id: 0, owner_id: ownerId, list: "tagged" + ownerId, title: "Отмеченные фотографии"};
+		},
+		NEW_TAGGED: function() {
+			return {id: 0, owner_id: API.userId, list: "newTags", title: "Новые отметки"};
+		}
+	},
+
+	__init: function() {
+	},
+
+	/**
 	 * @param {int} ownerId
 	 * @param {int} albumId
 	 * @param {int} offset
@@ -495,6 +527,120 @@ var Photos = {
 			}).catch(reject);
 		});
 	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} offset
+	 * @returns {Promise<{album: PhotoAlbum, count: int, items: Photo[], offset: int}>}
+	 */
+	requestAllPhotos: function(ownerId, offset) {
+		var data, listName = "all" + ownerId;
+
+		return new Promise(function(resolve, reject) {
+			if (data = Photos.getListContent(listName, offset)) {
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.ALL_PHOTOS(ownerId),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+				return;
+			}
+
+			api("photos.getAll", {
+				owner_id: ownerId,
+				offset: Math.floor(offset / 100) * 100,
+				extended: 1,
+				count: 100,
+				v: 5.56
+			}).then(function(data) {
+
+				Photos.putListContent(listName, offset, data);
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.ALL_PHOTOS(ownerId),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+			}).catch(reject);
+		});
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} offset
+	 */
+	requestUserTagged: function(ownerId, offset) {
+		var data, listName = "tagged" + ownerId;
+		return new Promise(function(resolve, reject) {
+			if (data = Photos.getListContent(listName, offset)) {
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.TAGGED(ownerId),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+				return;
+			}
+
+			api("photos.getUserPhotos", {
+				user_id: ownerId,
+				offset: offset,
+				count: 100,
+				extended: 1,
+				sort: 0,
+				v: 5.56
+			}).then(function(data) {
+				Photos.putListContent(listName, offset, data);
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.TAGGED(ownerId),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+			}).catch(function() {
+				Site.append(Site.getEmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
+				Site.setHeader("Назад", {link: "photos" + ownerId});
+				reject();
+			});
+		});
+	},
+
+	requestNewTags: function(offset) {
+		var listName = "newTags";
+		return new Promise(function(resolve, reject) {
+			if (data = Photos.getListContent(listName, offset)) {
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.NEW_TAGGED(),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+				return;
+			}
+
+			api("photos.getNewTags", {
+				offset: offset,
+				count: 100,
+				v: 5.56
+			}).then(function (data) {
+				Photos.putListContent(listName, offset, data);
+				resolve({
+					album: Photos.CUSTOM_ALBUMS.NEW_TAGGED(),
+					list: listName,
+					count: data.count,
+					items: data.items,
+					offset: offset
+				});
+			}).catch(reject);
+		});
+	},
+
 
 	/**
 	 * @param {{album: PhotoAlbum, count: int, items: Photo[], offset: int}} data
@@ -545,7 +691,9 @@ var Photos = {
 		}
 
 		parent.appendChild(Site.getPageHeader(data.count + " " + Lang.get("photos", "photos_count", data.count),
-			new DropDownMenu(Lang.get("general.actions"), menu).getNode()
+			Sugar.Object.size(menu)
+				? new DropDownMenu(Lang.get("general.actions"), menu).getNode()
+				: null
 		));
 
 		if (albumId > 0 && (ownerId === API.userId || album.can_upload)) {
@@ -553,7 +701,7 @@ var Photos = {
 				tag: "div",
 				title: Lang.get("photos.photos_upload"),
 				onclick: function() {
-					Photos.getUploadForm(ownerId, albumId);
+					Photos.chooseFilesForUpload(ownerId, albumId);
 				}
 			}));
 		}
@@ -582,91 +730,109 @@ var Photos = {
 
 	},
 
+
+	/**
+	 * @param {Photo} photo
+	 * @param {{accessKey: string=, list: string=, likes: boolean=, comments: boolean=}} opts
+	 * @returns {HTMLElement|Node}
+	 */
+	itemPhoto: function(photo, opts) {
+		opts = opts || {};
+		var item, image,
+			list = opts && opts.list,
+			params = {};
+
+		if (photo.access_key) {
+			params.accessKey = photo.access_key;
+		}
+
+		if (list) {
+			params.list = list;
+		}
+
+		params = httpBuildQuery(params);
+
+		//noinspection JSUnusedAssignment
+		item = $.e("a", {
+			"class": "photos-item",
+			href: "#photo" + photo.owner_id + "_" + photo.id + (params ? "?" + params : ""),
+			append: image = $.e("img", {src: getURL(photo.photo_604) })
+		});
+
+		/*var likes;
+		likes = (opts && opts.likes && photo.likes && photo.likes.count > 0);
+		item.appendChild($.e("div", {"class": "photos-likes photos-tips" + (!likes ? " hidden" : ""), append: [
+			$.e("div", {"class": "wall-icons likes-icon" + (photo.likes && !photo.likes.user_likes ? "-on" : "")}),
+			$.e("span", {html: " " + (photo.likes && photo.likes.count), id: "minilike-count_" + photo.owner_id + "_" + photo.id})
+		]}));
+		likes = false;
+		likes = opts && opts.comments && photo.comments && photo.comments.count > 0;
+		item.appendChild($.e("div", {"class": "photos-comments photos-tips" + (!likes ? " hidden" : ""), append: [
+			$.e("div", {"class": "wall-icons wall-comments"}),
+			$.e("span", {html: " " + (photo.comments && photo.comments.count)})
+		]}));*/
+
+		return item;
+	},
+
 	/**
 	 * @param {int} ownerId
-	 * @param {int} offset
-	 * @returns {Promise<{album: PhotoAlbum, count: int, items: Photo[], offset: int}>}
+	 * @param {int} albumId
 	 */
-	requestAllPhotos: function(ownerId, offset) {
-		return new Promise(function(resolve, reject) {
-			api("photos.getAll", {
-				owner_id: ownerId,
-				offset: Math.floor(offset / 100) * 100,
-				extended: 1,
-				count: 100,
-				v: 5.56
-			}).then(function(data) {
-				var listName = "all" + ownerId;
-				Photos.putListContent(listName, offset, data);
-				resolve({
-					album: {id: 0, owner_id: ownerId, title: Lang.get("photos.photos_all")},
-					list: listName,
-					count: data.count,
-					items: data.items,
-					offset: offset
+	chooseFilesForUpload: function(ownerId, albumId) {
+		var node = $.e("input", {
+			type: "file",
+			multiple: true,
+			accept: "image/*",
+			onchange: function() {
+				Photos.upload(ownerId, albumId, node);
+			}
+		});
+		node.click();
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {HTMLElement|Node} node
+	 */
+	upload: function(ownerId, albumId, node) {
+		uploadFiles(node, {
+			maxFiles: 50,
+			method: "photos.getUploadServer",
+			params: {
+				group_id: ownerId < 0
+					? -ownerId
+					: 0,
+				album_id: albumId
+			}
+		}, {
+			onTaskFinished: function (result) {
+
+				Site.Alert({
+					text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"
 				});
-			}).catch(reject);
+
+				// TODO getAllChunksAlbum/List
+				var hasObject = !!Photos.albumContent[ownerId + "_" + albumId];
+
+				result.forEach(function (p) {
+					Photos.photos[ownerId + "_" + p.id] = Photos.v5normalize(p); // todo: v5normalize ok
+					if (hasObject) {
+						Photos.albumContent[ownerId + "_" + albumId].count++;
+						Photos.albumContent[ownerId + "_" + albumId].items.push(p);
+					}
+				});
+				window.location.hash = "#photos" + ownerId + "_" + albumId +
+					"?offset=" + (hasObject ? (Math.floor(Photos.albumContent[ownerId + "_" + albumId].items.length / 30) * 30) : 0);
+			}
 		});
 	},
 
 
-	getAlbum: function (owner_id, album_id, data, offset) {
-		var info = data[1],
-			content = data[0];
-		console.log("getAlbum", arguments);
-		Photos.chateAlbum(owner_id, album_id, info, content, offset);
-		content = Photos.albumContent[owner_id + "_" + album_id];
-		var count = content.count,
-			photos = content.items,
-			title = Site.Escape(info.title),
-			parent = document.createElement("div"),
-			list = document.createElement("div"),
-			offset = getOffset(),
-			menu = {},
-			to = Site.Get("to");
-		console.log(photos);
-		menu[Lang.get("photos", "photos_comments_album")] = ((function (owner_id, album_id) {return function (event) {window.location.hash = "#photos" + owner_id + "?act=comments&album_id=" + album_id;}})(owner_id, album_id));
-		if (album_id > 0) {
-			menu[Lang.get("photos", "photos_edit_album")] = ((function (owner_id, album_id) {return function (event) {Photos.editAlbumPage(owner_id, album_id)};})(owner_id, album_id));
-			menu[Lang.get("photos", "photos_delete_album")] = ((function (owner_id, album_id) {
-				return function (event) {
-					VKConfirm(Lang.get("photos", "photos_delete_album_confirm"), function () {
-						Site.API("photos.deleteAlbum", {
-							owner_id: owner_id,
-							album_id: album_id
-						}, function (data) {
-							if (Site.isResponse(data) == 1) {
-								Site.Alert({
-									text: Lang.get("photos", "photos_delete_album_success")
-								});
-								window.location.hash = "#photos" + owner_id;
-							}
-						});
-					});
-				};
-			})(owner_id, album_id));
-		}
-		parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count),
-			!to ? Site.CreateDropDownMenu("Действия", menu) : null
-		));
-		if ((owner_id == API.userId || info.can_upload) && !to && album_id > 0)
-			parent.appendChild(Site.createTopButton({tag: "div", title: Lang.get("photos", "photos_upload"), onclick: function () {
-				Photos.getUploadForm(owner_id, album_id);
-			}}));
-		if (!count)
-			list.appendChild(Site.getEmptyField(Lang.get("photos", "photos_empty")));
-		console.log(offset);
-		for (var i = offset, l = offset + 30; i < l; ++i) {
-			console.log(i, photos[i]);
-			if (photos[i] == null)
-				continue;
-			list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: true}));
-		}
-		parent.appendChild(list);
-		parent.appendChild(Site.getSmartPagebar(getOffset(), count, 30));
-		Site.append(parent);
-		Site.setHeader(Lang.get("photos", "album"), {link: "photos" + owner_id});
-	},
+
+
+
 	getPrivacySelect: function (name, defaultValue) {
 		var select = document.createElement("select");
 		select.name = name;
@@ -740,167 +906,9 @@ var Photos = {
 		Site.append(parent);
 	},
 
-	/**
-	 * @param {int} ownerId
-	 * @param {int} offset
-	 */
-	requestUserTagged: function(ownerId, offset) {
-		return api("photos.getUserPhotos", {
-			user_id: ownerId,
-			offset: offset,
-			count: 100,
-			extended: 1,
-			sort: 0,
-			v: 5.56
-		}).then(function(data) {
-			var listName = "tagged" + ownerId;
-			Photos.putListContent(listName, offset, data);
-			return {
-				album: {id: 0, owner_id: ownerId, list: listName, title: "Отмеченные фотографии"},
-				list: listName,
-				count: data.count,
-				items: data.items,
-				offset: offset
-			};
-		}).catch(function() {
-			Site.append(Site.getEmptyField(Lang.get("photos", "photos_access_denied_userphotos")));
-			Site.setHeader("Назад", {link: "photos" + ownerId});
-		});
-	},
-
-	getNewTags: function () {
-		Site.APIv5("photos.getNewTags", {
-			offset: getOffset(),
-			count: 40,
-			v: 5.0
-		}, function (data) {
-			data = Site.isResponse(data);
-			var count = data.count,
-				photos = data.items,
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			parent.appendChild(Photos.getTabs(API.userId));
-			parent.appendChild(Site.getPageHeader(count + " " + Lang.get("photos", "photos_count", count)));
-			if (count == 0)
-				list.appendChild(Site.getEmptyField(Lang.get("photos", "photos_empty")));
-			//Photos.lists["newtags"] = [];
-			for (var i = 0, l = photos.length; i < l; ++i) {
-				if (photos[i] == null)
-					break;
-				//Photos.lists["newtags"].push(photos[i]);
-				list.appendChild(Photos.itemPhoto(photos[i], {likes: true, comments: false, list: "newtags"}));
-			}
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(getOffset(), count, 40));
-			Site.append(parent);
-			Site.setHeader("Новые отметки", {link: "photos" + API.userId});
-		})
-	},
 	photos: {},
 	access_keys: {},
 	lists: {},
-	createList: function (list_id, photos) {
-		Photos.lists[list_id] = (function (data) {
-			for (var ids = [], i = 0, l = data.length; i < l; ++i) {
-				data[i] = Photos.v5normalize(data[i]);
-				ids.push(data[i].owner_id + "_" + data[i].id);
-				Photos.addPhotoChate(data[i]);
-			}
-			return ids;
-		})(photos);
-		return list_id;
-	},
-
-	/**
-	 * @deprecated
-	 */
-	addPhotoChate: function (c) {
-		Photos.photos[c.owner_id + "_" + c.id] = c;
-		if (c.access_key)
-			Photos.access_keys[c.owner_id + "_" + c.id] = c.access_key;
-	},
-
-	/**
-	 * @param {Photo} photo
-	 * @param {{accessKey: string=, list: string=, likes: boolean=, comments: boolean=}} opts
-	 * @returns {HTMLElement|Node}
-	 */
-	itemPhoto: function(photo, opts) {
-		opts = opts || {};
-		var item = $.e("a", {"class": "photos-item"}),
-			list = opts && opts.list,
-			params = {};
-
-
-		if (photo.access_key) {
-			params.accessKey = photo.access_key;
-		}
-
-		if (list) {
-			/*if (/^(wall|comment|mail|new|photo)/ig.test(list))
-				params.list = list;
-			if (!Photos.lists[list])
-				Photos.lists[list] = [];
-			photo.list = list;
-			if (!$.inArray(photo, Photos.lists[list]))
-				Photos.lists[list].push(photo);*/
-		}
-
-		params = httpBuildQuery(params);
-
-		item.href = "#photo" + photo.owner_id + "_" + photo.id + (params ? "?" + params : "");
-
-
-		item.appendChild($.e("img", {src: getURL(photo.photo_604) }));
-
-		/*var likes;
-		likes = (opts && opts.likes && photo.likes && photo.likes.count > 0);
-		item.appendChild($.e("div", {"class": "photos-likes photos-tips" + (!likes ? " hidden" : ""), append: [
-			$.e("div", {"class": "wall-icons likes-icon" + (photo.likes && !photo.likes.user_likes ? "-on" : "")}),
-			$.e("span", {html: " " + (photo.likes && photo.likes.count), id: "minilike-count_" + photo.owner_id + "_" + photo.id})
-		]}));
-		likes = false;
-		likes = opts && opts.comments && photo.comments && photo.comments.count > 0;
-		item.appendChild($.e("div", {"class": "photos-comments photos-tips" + (!likes ? " hidden" : ""), append: [
-			$.e("div", {"class": "wall-icons wall-comments"}),
-			$.e("span", {html: " " + (photo.comments && photo.comments.count)})
-		]}));*/
-
-		return item;
-	},
-
-	getUploadForm: function (ownerId, albumId) {
-		var node = $.e("input", {type: "file", multiple: true, accept: "image/*", onchange: function () {
-			Photos.upload(ownerId, albumId, node);
-		}});
-		node.click();
-	},
-
-	upload: function (ownerId, albumId, node) {
-		uploadFiles(node, {
-			maxFiles: 50,
-			method: "photos.getUploadServer",
-			params: { group_id: ownerId < 0 ? -ownerId : 0, album_id: albumId }
-		}, {
-			onTaskFinished: function (result) {
-
-				Site.Alert({text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"});
-
-				var hasObject = !!Photos.albumContent[ownerId + "_" + albumId];
-
-				result.forEach(function (p) {
-					Photos.photos[ownerId + "_" + p.id] = Photos.v5normalize(p);
-					if (hasObject) {
-						Photos.albumContent[ownerId + "_" + albumId].count++;
-						Photos.albumContent[ownerId + "_" + albumId].items.push(p);
-					}
-				});
-				window.location.hash = "#photos" + ownerId + "_" + albumId +
-					"?offset=" + (hasObject ? (Math.floor(Photos.albumContent[ownerId + "_" + albumId].items.length / 30) * 30) : 0);
-			}
-		});
-	},
-
 
 	/* Comments */
 
