@@ -226,6 +226,12 @@ var Photos = {
 
 	ALBUMS_PER_PAGE: 40,
 
+	ALBUM_ID: {
+		PROFILE: -6,
+		WALL: -7,
+		SAVED: -15
+	},
+
 	/**
 	 * Get albums
 	 * @param {int} ownerId
@@ -364,7 +370,7 @@ var Photos = {
 	/**
 	 * @param {int} ownerId
 	 * @param {int} albumId
-	 * @param {int} offset
+	 * @param {int=} offset
 	 * @returns {null|{count: int, items: Photo[]}}
 	 */
 	getAlbumContent: function(ownerId, albumId, offset) {
@@ -377,7 +383,69 @@ var Photos = {
 			return null;
 		}
 
-		return data[Photos.__getChunkIdByOffset(offset)];
+		return offset === undefined ? data : data[Photos.__getChunkIdByOffset(offset)];
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @returns {int}
+	 */
+	getAlbumSize: function(ownerId, albumId) {
+		if (this.albumInfo[ownerId + "_" + albumId]) {
+			return this.albumInfo[ownerId + "_" + albumId].size;
+		}
+
+		var chunks = this.getAlbumContent(ownerId, albumId);
+		for (var i = 0, l = chunks.length; i < l; ++i) {
+			if (chunks[i]) {
+				return chunks[i].count;
+			}
+		}
+		return NaN;
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} newSize
+	 */
+	setAlbumSize: function(ownerId, albumId, newSize) {
+		if (this.albumInfo[ownerId + "_" + albumId]) {
+			this.albumInfo[ownerId + "_" + albumId].size = newSize;
+		}
+
+		var chunks = this.getAlbumContent(ownerId, albumId);
+		for (var i = 0, l = chunks.length; i < l; ++i) {
+			if (chunks[i]) {
+				chunks[i].count = newSize;
+			}
+		}
+	},
+
+	/**
+	 * Добавляет фотографии в нужный чанк альбома.
+	 * Возвращет новую длину альбома после вставки фотографий.
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {Photo[]} photos
+	 * @returns {int}
+	 */
+	pushNewPhotos: function(ownerId, albumId, photos) {
+		var chunks = this.getAlbumContent(ownerId, albumId), lastChunk;
+
+		var size;
+		if (!(lastChunk = chunks[chunks.length - 1])) {
+			size = Photos.getAlbumSize(ownerId, albumId);
+		} else {
+			photos.forEach(function () {
+				lastChunk.items.push(photos);
+			});
+			size = (chunks.length - 1) * 100 + photos.length;
+		}
+
+		this.setAlbumSize(ownerId, albumId, size);
+		return size;
 	},
 
 	/**
@@ -396,7 +464,7 @@ var Photos = {
 	/**
 	 * Возвращает нужный чанк с фотками из листа по сдвигу
 	 * @param {string} key
-	 * @param {int} offset
+	 * @param {int=} offset
 	 * @returns {{count: int, items: Photo[]}|null}
 	 */
 	getListContent: function(key, offset) {
@@ -406,7 +474,7 @@ var Photos = {
 			return null;
 		}
 
-		return data[Photos.__getChunkIdByOffset(offset)];
+		return offset === undefined ? data : data[Photos.__getChunkIdByOffset(offset)];
 	},
 
 	/**
@@ -779,24 +847,16 @@ var Photos = {
 				album_id: albumId
 			}
 		}, {
-			onTaskFinished: function (result) {
+			onTaskFinished: function(result) {
 
 				Site.Alert({
 					text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"
 				});
 
-				// TODO getAllChunksAlbum/List
-				var hasObject = !!Photos.albumContent[ownerId + "_" + albumId];
+				var size = Photos.pushNewPhotos(ownerId, albumId, result.map(Photos.v5normalize));
 
-				result.forEach(function (p) {
-					Photos.photos[ownerId + "_" + p.id] = Photos.v5normalize(p); // todo: v5normalize ok
-					if (hasObject) {
-						Photos.albumContent[ownerId + "_" + albumId].count++;
-						Photos.albumContent[ownerId + "_" + albumId].items.push(p);
-					}
-				});
 				window.location.hash = "#photos" + ownerId + "_" + albumId +
-					"?offset=" + (hasObject ? (Math.floor(Photos.albumContent[ownerId + "_" + albumId].items.length / 30) * 30) : 0);
+					"?offset=" + (size ? (Math.floor(size / Photos.ITEMS_PER_PAGE) * Photos.ITEMS_PER_PAGE) : 0);
 			}
 		});
 	},
@@ -827,17 +887,25 @@ var Photos = {
 					name: "description",
 					title: "photo.editAlbumDescription",
 					value: album.description
-				},
-				{
+				}
+			];
+
+			if (ownerId > 0) {
+				items.push({
 					type: APIDOG_UI_EW_TYPE_ITEM_SELECT,
 					name: "privacy_view",
 					title: "photo.editAlbumPrivacyView",
 					items: Photos.DEFAULT_PRIVACY_ITEMS,
 					value: album.privacy_view
-				}
-			];
-
-			if (ownerId < 0) {
+				});
+				items.push({
+					type: APIDOG_UI_EW_TYPE_ITEM_SELECT,
+					name: "privacy_comment",
+					title: "photo.editAlbumPrivacyComment",
+					items: Photos.DEFAULT_PRIVACY_ITEMS,
+					value: album.privacy_comment
+				});
+			} else {
 				items.push({
 					type: APIDOG_UI_EW_TYPE_ITEM_CHECKBOX,
 					name: "upload_by_admins_only",
@@ -878,13 +946,18 @@ var Photos = {
 		}
 	},
 
+	/** @deprecated */
 	photos: {},
+
+	/** @deprecated */
 	access_keys: {},
+
+	/** @deprecated */
 	lists: {},
 
 	/* Comments */
 
-
+	/** @deprecated */
 	getAllComments: function (owner_id) {
 		Site.Loader();
 		Site.API("execute", {
@@ -917,6 +990,7 @@ var Photos = {
 	},
 
 	// SEE HERE
+	/** @deprecated */
 	reply: function (ownerId, photoId, commentId, toId){
 		var area = $.element("photo-comment-writearea"),
 			to = Local.data[toId],
@@ -943,10 +1017,8 @@ var Photos = {
 		]}))
 	},
 
-
 	/* Viewer v3.0 */
-
-
+	/** @deprecated */
 	getShow: function (owner_id, photo_id, access_key, list) {
 		if (list && Photos.lists[list] && (list = Photos.lists[list])) {
 			return Photos.getViewer(list, Photos.getCurrentPositionInViewedList(list, {owner_id: owner_id, id: photo_id}, {place: null}));
@@ -993,6 +1065,8 @@ var Photos = {
 			})
 		}
 	},
+
+	/** @deprecated */
 	getCurrentPositionInViewedList: function (list, object) {
 		for (var i = 0, l = list.length, o = object.owner_id, p = (object.id || object.pid), c = -1; i < l && c == -1; ++i)
 			if (list[i].list == object || list[i].owner_id == o && (list[i].id == p || list[i].pid == p))
@@ -1001,6 +1075,8 @@ var Photos = {
 			{current: c, previous: list[c - 1] ? c - 1 : false, next: list[c + 1] ? c + 1 : false} :
 			{current: -1, previous: false, next: false, photo: Photos.photos[object.owner_id + "_" + object.id]};
 	},
+
+	/** @deprecated */
 	getViewer: function (list, position, objects) {
 		var previous   = list[position.previous],
 			next       = list[position.next],
@@ -1009,14 +1085,12 @@ var Photos = {
 			album_id   = photo.album_id || photo.aid,
 			photo_id   = photo.id || photo.pid,
 			access_key = photo.access_key || Site.Get("access_key") || "",
-			place      = objects && objects.place,
 			parent     = document.createElement("div"),
 			header     = document.createElement("div"),
 			frame      = document.createElement("div"),
 			shower     = document.createElement("div"),
 			headerFull = document.createElement("div"),
 			footerFull = document.createElement("div"),
-			makeLike   = Photos.getLikeEffect(owner_id, photo_id),
 			footer     = document.createElement("div"),
 			commentsWrap   = document.createElement("div"),
 			like       = getLikeButton("photo", owner_id, photo_id, access_key, photo.likes && photo.likes.count, photo.likes && photo.likes.user_likes),
@@ -1089,7 +1163,6 @@ var Photos = {
 		// Photo-block
 		headerFull.appendChild($.elements.create("div", {"class": "photo-view-full-header-title", html: headerText}));
 		shower.className = "photo-shower";
-		shower.appendChild(makeLike);
 		shower.appendChild(Photos.getMoveablePanelViewer([previous, photo, next]));
 
 
@@ -1109,7 +1182,7 @@ var Photos = {
 			}
 		};
 
-		Photos.touchEvent(shower, function (event)
+		/*Photos.touchEvent(shower, function (event)
 			{
 				var element = shower,
 					x = event.clientX - element.offsetLeft,
@@ -1135,7 +1208,8 @@ var Photos = {
 						$.elements.removeClass(icon, "photo-likeeffect-active");
 					}
 				});
-			}, 550);
+			}, 550);*/
+		// TODO: проверка на то, что нажатие произошло не в текстовом поле, а на странице
 		window.onKeyDownCallback = function (event)
 		{
 			switch (event.key)
@@ -1257,6 +1331,12 @@ var Photos = {
 			Photos.tagsPhoto(owner_id, photo_id, access_key);
 	},
 
+	/**
+	 * @param {int} ownerId
+	 * @param {int} photoId
+	 * @param {string=} accessKey
+	 * @param {boolean=} canRepost
+	 */
 	share: function(ownerId, photoId, accessKey, canRepost) {
 		share("photo", ownerId, photoId, accessKey, actionAfterShare, {
 			wall: canRepost,
@@ -1265,6 +1345,7 @@ var Photos = {
 		});
 	},
 
+	/** @deprecated */
 	tagsPhoto: function (owner_id, photo_id, access_key) {
 		Site.APIv5("photos.getTags", {owner_id: owner_id, photo_id: photo_id, access_key: access_key, v: 5.10}, function (data) {
 			data = data.response;
@@ -1371,6 +1452,8 @@ var Photos = {
 			$.element("photo_tags_" + owner_id + "_" + photo_id).appendChild($.elements.create("div", {append: users}));
 		});
 	},
+
+	/** @deprecated */
 	setFullViewMode: function (state) {
 		var e = document.getElementsByTagName("html")[0], c = "photo-view-full";
 		if (state)
@@ -1378,6 +1461,8 @@ var Photos = {
 		else
 			$.elements.removeClass(e, c)
 	},
+
+	/** @deprecated */
 	getFooterPanelFullView: function (owner_id, photo_id, access_key) {
 		var panel = document.createElement("div"),
 			photo = Photos.photos[owner_id + "_" + photo_id],
@@ -1409,7 +1494,11 @@ var Photos = {
 		}));
 		return panel;
 	},
+
+	/** @deprecated */
 	alreadySaved: {},
+
+	/** @deprecated */
 	savePhoto: function (owner_id, photo_id, access_key) {
 		var save = function () {
 			Site.API("photos.copy", {
@@ -1428,6 +1517,8 @@ var Photos = {
 			VKConfirm("Вы только что сохранили эту фотографию к себе в альбом. Хотите сделать это еще раз?", save);
 		} else save();
 	},
+
+	/** @deprecated */
 	showChooseAlbumsForMovePhoto: function(ownerId, photoId, albumId) {
 		var albumsSelect = $.e("select", {name: "album", disabled: "disabled"}),
 			loaded = false,
@@ -1505,6 +1596,7 @@ var Photos = {
 		});
 	},
 
+	/** @deprecated */
 	getReportSelect: function (type) {
 		var parent = document.createElement("div"),
 			tip    = document.createElement("div"),
@@ -1523,6 +1615,8 @@ var Photos = {
 		//parent.appendChild(select);
 		return parent;
 	},
+
+	/** @deprecated */
 	reportPhoto: function (owner_id, photo_id) {
 		var photo = Photos.photos[owner_id + "_" + photo_id],
 			Form = document.createElement("form"),
@@ -1559,6 +1653,8 @@ var Photos = {
 		};
 		Site.append(Form);
 	},
+
+	/** @deprecated */
 	deletePhoto: function (owner_id, photo_id, access_key, node) {
 		VKConfirm(Lang.get("photos", "photo_action_delete"), function () {
 			Site.API("photos.delete", {
@@ -1583,6 +1679,8 @@ var Photos = {
 			})
 		});
 	},
+
+	/** @deprecated */
 	restorePhoto: function (ownerId, photoId, accessKey, node) {
 		Site.API("photos.restore", {
 			owner_id: ownerId,
@@ -1597,6 +1695,8 @@ var Photos = {
 			}
 		})
 	},
+
+	/** @deprecated */
 	makeCover: function (owner_id, album_id, photo_id) {
 		VKConfirm(Lang.get("photos", "photo_action_makeCover"), function () {
 			Site.API("photos.makeCover", {
@@ -1611,136 +1711,78 @@ var Photos = {
 			});
 		});
 	},
-	downloadPhoto: function (owner_id, photo_id, access_key, links) {
-		var parent = document.createElement("div"),
-			item = function (url, width, height) {
-				return $.elements.create("a", {href: url, target: "_blank", html: parseInt(width) + "&times;" + parseInt(height)});
-			};
-		parent.id = "photo_downloadlinks" + owner_id + "_" + photo_id;
-		parent.className = "profile-lists";
-		parent.appendChild(Site.getPageHeader("Ссылки на оригиналы"));
-		for (var i = 0, l = links.length; i < l; ++i) {
-			var link = links[i];
-			parent.appendChild(item(link.url, link.width, link.height));
-		}
-		parent.appendChild($.elements.create("img", {src: "//static.apidog.ru/im-attachload.gif", style: "display: block; margin: 7px auto;"}));
-		Site.append(parent);
-		Site.setHeader("Оригиналы", {fx: function (event) {
-			Site.route(window.location.hash);
-		}});
-		Site.API("execute", {
-			code: 'return API.photos.getById({photos:"%id%",photo_sizes:1})[0].sizes;'
-				.replace(/%id%/ig, owner_id + "_" + photo_id + (access_key ? "_" + access_key : ""))
-		}, function (data) {
-			data = Site.isResponse(data);
-			if (!data)
-				return;
-			$.elements.clearChild(parent);
-			parent.appendChild(Site.getPageHeader("Ссылки на оригиналы"));
 
-			data.sort(function (a, b)
-			{
-				return a.width > b.width ? -1 : a.width < b.width ? 1 : 0;
-			});
-
-			for (var i = 0, l = data.length; i < l; ++i) {
-				var link = data[i];
-				parent.appendChild(item(link.src, link.width, link.height));
-			}
-		})
-	},
-	setProfilePhoto: function (ownerId, photoId) {
-		Site.API("execute", {
-			code: "return API.photos.reorderPhotos({owner_id:%o,photo_id:%p,after:API.photos.get({owner_id:%o,album_id:-6,rev:1,count:1,v:5.28}).items[0].id,v:5.28});".replace(/%o/img, ownerId).replace(/%p/img, photoId)
-		}, function (data) {
-			if (data.response)
-				Site.Alert({text: Lang.get("photos.successfully_setted_profile_photo")});
-		});
-	},
-	likePhoto: function (owner_id, photo_id, access_key, onCompleteCallback) {
-		Site.API("execute", {
-			code: 'var p={type:"photo",access_key:"' + access_key + '",item_id:' + photo_id + ',owner_id:' + owner_id + '},me=API.likes.isLiked(p),act;if(me==0)act=API.likes.add(p);else act=API.likes.delete(p);return [(-me)+1,act.likes];'
-		}, function (result) {
-			data = Site.isResponse(result);
-			if (onCompleteCallback && typeof onCompleteCallback === "function")
-				onCompleteCallback({owner_id: owner_id, photo_id: photo_id}, {count: data[1], me: data[0]})
-		});
-	},
-
-
-
-	/* Event Helpers */
-
-
-	initTouchEventPhoto: function (node) {
-		node.onclick = function (event) {
-			return false;
-		};
-		var id = node.href.split("#")[1].replace(/photo/i, "").split("_"),
-			owner_id = parseInt(id[0]),
-			photo_id = parseInt(id[1]);
-		Photos.touchEvent(node, function (event) {
-			window.location.href = node.href;
-		}, function (event) {
-			Photos.likePhoto(owner_id, photo_id, "", function (photo, likes) {
-				var link = $.element("minilike" + photo.owner_id + "_" + photo.photo_id),
-					count = $.element("minilike-count_" + photo.owner_id + "_" + photo.photo_id),
-					icon = count.previousSibling;
-				count.innerHTML = " " + likes.count;
-				if (likes.me == 1) {
-					$.elements.addClass(link, "photos-minilike-active");
-					icon.className = "wall-icons likes-icon";
-				} else {
-					$.elements.removeClass(link, "photos-minilike-active");
-					icon.className = "wall-icons likes-icon-on";
+	/**
+	 * @param {int} ownerId
+	 * @param {int} photoId
+	 * @param {string=} accessKey
+	 */
+	downloadPhoto: function(ownerId, photoId, accessKey) {
+		var sl = new SmartList({
+				data: {count: -1, items: []},
+				countPerPage: 50,
+				getItemListNode: function(i) {
+					return SmartList.getDefaultItemListNode({
+						link: i.src,
+						title: i.width + "×" + i.height,
+						icon: ""
+					})
+				},
+				optionsItemListCreator: {
+					textContentBold: true
 				}
-				if (likes.count)
-					$.elements.removeClass(count.parentNode, "hidden");
-				else
-					$.elements.addClass(count.parentNode, "hidden");
-			});
-		});
+			}),
+			modal = new Modal({
+				title: "Ссылки на оригиналы",
+				content: sl.getNode(),
+				footer: [
+					{
+						title: "cancel",
+						name: "cancel",
+						onclick: function() {
+							this.close();
+						}
+					}
+				],
+				noPadding: true
+			}),
+			sorter = function(a, b) {
+				return a.width > b.width ? -1 : a.width < b.width ? 1 : 0;
+			},
+			showItems = function(data) {
+				var items = data[0].sizes.sort(sorter);
 
-	},
-	isTouch: function () {
-		var agent = navigator.userAgent.toLowerCase();
-		return !!(agent.indexOf("iphone") >= 0 || agent.indexOf("ipad") >= 0 || agent.indexOf("android") >= 0);
-	},
-	touchEvent: function(node, onTapCallback, onDoubleTapCallback, delay){
+				sl.setData({count: items.length, items: items.map(function(a, b) {a.id = b + 1; return a;})});
+			};
 
-		if ((API.bitmask & 512) != 0) {
-			$.event.add(node, "click", onTapCallback);
-			return;
-		}
+		modal.show();
 
-		var isiOS = Photos.isTouch(),
-			action;
-		delay = delay == null ? 500 : delay;
-		$.event.add(node, isiOS == true ? "touchend" : "click", function (event) {
-			var now = new Date().getTime(),
-				lastTouch = node.getAttribute("lasttouch") || now + 1,
-				delta = now - lastTouch;
-			clearTimeout(action);
-			if (delta < 500 && delta > 0) {
-				if (onDoubleTapCallback != null && typeof onDoubleTapCallback == "function")
-					onDoubleTapCallback(event);
-			} else {
-				node.setAttribute("lasttouch", now);
-				action = setTimeout(function () {
-					if (onTapCallback != null && typeof onTapCallback == "function")
-						onTapCallback(event);
-					clearTimeout(action);
-				}, delay, [event]);
-			}
-			node.setAttribute("lasttouch", now);
+		api("photos.getById", {
+			photos: ownerId + "_" + photoId + "_" + accessKey,
+			photo_sizes: 1,
+			v: 5.80
+		}).then(showItems).catch(function(e) {
+			console.error("downloadPhoto", e);
 		});
 	},
 
-	/* UI Effects */
-
-	getLikeEffect: function (owner_id, photo_id) {
-		return $.elements.create("div", {"class": "photo-likeeffect", id: "photo_like_effect" + owner_id + "_" + photo_id});
+	/**
+	 * @param {int} ownerId
+	 * @param {int} photoId
+	 * @returns {Promise}
+	 */
+	setProfilePhoto: function(ownerId, photoId) {
+		return api("execute", {
+			code: "return API.photos.reorderPhotos({owner_id:parseInt(Args.o),photo_id:parseInt(Args,p),after:API.photos.get({owner_id:parseInt(Args.o),album_id:-6,rev:1,count:1,v:5.56}).items[0].id,v:5.56});",
+			o: ownerId,
+			p: photoId
+		}).then(function(data) {
+			Site.Alert({text: Lang.get("photos.successfully_setted_profile_photo")});
+			return data;
+		});
 	},
+
+	/** @deprecated */
 	getMoveablePanelViewer: function (photos) {
 		var moveable = document.createElement("div"),
 			getId = function (photo) {
@@ -1864,6 +1906,8 @@ var Photos = {
 		});
 		return moveable;
 	},
+
+	/** @deprecated */
 	onResizedWindowUpdateMarginsPhotosMoveableFullScreenView: function (event) {
 		return;
 		var imgs = document.querySelectorAll(".photo-view-full .photo-view-item"),

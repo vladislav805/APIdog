@@ -253,7 +253,7 @@ SmartList.state = {
  *       content: string,
  *       width: int=
  *     }=
- *   },
+ *   }=,
  *   remove: {
  *     filter: function=,
  *     onClick: function=,
@@ -261,12 +261,14 @@ SmartList.state = {
  *       content: string,
  *       width: int=
  *     }=
- *   },
+ *   }=,
  *   getSubtitle: function=,
- *   icon: string=}} options
+ *   icon: string=
+ * }=} options
  * @returns {HTMLElement}
  */
 SmartList.getDefaultItemListNode = function(item, options) {
+	options = options || {};
 	var link = item.link || "#" + item.screen_name, wrap, nImage, nAdd, nRemove, nContentWrap, nSubtitle;
 	wrap = $.e("div", {"class": "sl-item", append: [
 		$.e("a", {"class": "sl-photo-wrap", href: link, append: nImage = item.photo_50 ? $.e("img", {src: getURL(item.photo_50)}) : $.e("div", {"class": "sl-photo-icon"})}),
