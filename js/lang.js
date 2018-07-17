@@ -70,6 +70,6 @@ var Lang = {
 			result = $.textCase(count, result);
 		}
 
-		return result !== undefined ? result : "%" + id + "%";
+		return result !== undefined && result !== null ? result : "%" + id + "%";
 	}
 };
