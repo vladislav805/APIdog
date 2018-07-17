@@ -142,9 +142,6 @@ var Photos = {
 				case "comments":
 					return Photos.getAllComments(id);
 
-				case "create":
-					return Photos.createAlbum(id);
-
 				case "tagged":
 					return Photos.requestUserTagged(id, offset).then(Photos.showAlbum);
 
@@ -271,9 +268,9 @@ var Photos = {
 
 		if (ownerId === API.userId || (Local.data[ownerId] && Local.data[ownerId].is_admin)) {
 			menu.createAlbum = {
-				label: Lang.get("photos", "albums_actions_create"),
+				label: Lang.get("photos.albums_actions_create"),
 				onclick: function() {
-					window.location.hash = "#photos" + ownerId + "?act=create"
+					Photos.createAlbum(ownerId);
 				}
 			};
 		}
@@ -319,77 +316,15 @@ var Photos = {
 		});
 	},
 
-	createAlbum: function (owner_id) {
-		var Form = document.createElement("div"),
-			getPrivacySelect = function (name) {
-				var select = document.createElement("select");
-				select.name = name;
-				var types = Lang.get("photos", "new_album_private");
-				for (var i = 0, l = types.length; i < l; ++i)
-					select.appendChild($.e("option", {html: types[i], value: i}));
-				return select;
-			},
-			getTip = function (text) {
-				return $.e("div", {"class": "tip tip-form", html: text});
-			};
-
-		var title, description, privacy, comment_privacy;
-
-		Form.className = "sf-wrap";
-		Form.appendChild(getTip(Lang.get("photos", "new_album_title")));
-		Form.appendChild(title = $.elements.create("input", {type: "text", name: "title", required: true}));
-		Form.appendChild(getTip(Lang.get("photos", "new_album_description")));
-		Form.appendChild(description = $.elements.create("textarea", {name: "description"}));
-		Form.appendChild(getTip(Lang.get("photos", "new_album_who_can_view")));
-		Form.appendChild(privacy = getPrivacySelect("privacy"));
-		Form.appendChild(getTip(Lang.get("photos", "new_album_who_can_comment")));
-		Form.appendChild(comment_privacy = getPrivacySelect("comment_privacy"));
-		//Form.appendChild($.elements.create("input", {type: "submit", value: "Создать альбом"}));
-
-
-		var modal = new Modal({
-			title: Lang.get("photos", "new_album_verb"),
-			content: Form,
-			footer: [
-				{
-					name: "create",
-					title: Lang.get("photos.albums_actions_create"),
-					onclick: function () {
-						var _title = $.trim(title.value),
-							_description = $.trim(description.value),
-							_privacy = privacy.options[privacy.selectedIndex].value,
-							_comment_privacy = comment_privacy.options[comment_privacy.selectedIndex].value;
-						if (!title) {
-							Site.Alert({text: Lang.get("photos", "new_album_error1")});
-							return false;
-						}
-						Site.APIv5("photos.createAlbum", {
-							group_id: (owner_id < 0 ? -owner_id : ""),
-							title: _title,
-							description: _description,
-							privacy: _privacy,
-							comment_privacy: _comment_privacy,
-							v: 5.0
-						}, function (data) {
-							data = Site.isResponse(data);
-							modal.close();
-							if (data)
-								window.location.hash = "#photos" + data.owner_id + "_" + (data.id || data.aid)
-						})
-					}
-				}
-			]
-		}).show();
-
-
-		//Site.append(parent);
-		//Site.setHeader(Lang.get("photos", "new_album"), {link: "photos" + owner_id});
+	/**
+	 * @param {int} ownerId
+	 */
+	createAlbum: function (ownerId) {
+		Photos.editAlbumPage(ownerId, 0);
 	},
 
 	albumInfo: {},
-	albumContentChunk: {},
 	listContent: {},
-
 	albumContent: {},
 
 
@@ -459,21 +394,58 @@ var Photos = {
 	},
 
 	/**
-	 *
+	 * Возвращает нужный чанк с фотками из листа по сдвигу
 	 * @param {string} key
 	 * @param {int} offset
 	 * @returns {{count: int, items: Photo[]}|null}
 	 */
 	getListContent: function(key, offset) {
-		var data;
-
-		data = Photos.listContent[key];
+		var data = Photos.listContent[key];
 
 		if (!data) {
 			return null;
 		}
 
 		return data[Photos.__getChunkIdByOffset(offset)];
+	},
+
+	/**
+	 * Ищет чанк в альбоме по фотке
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} photoId
+	 * @returns {{count: int, items: Photo[]}|null}
+	 */
+	getChunkContentByAlbum: function(ownerId, albumId, photoId) {
+		return this.__getChunkContentInList(this.albumContent[ownerId + "_" + albumId], photoId);
+	},
+
+	/**
+	 * Ищет чанк в листе по фотке
+	 * @param {string} list
+	 * @param {int} photoId
+	 * @returns {{count: int, items: Photo[]}|null}
+	 */
+	getChunkContentByList: function(list, photoId) {
+		return this.__getChunkContentInList(this.listContent[list], photoId);
+	},
+
+	/**
+	 * Ищет чанк в списке альбома или листа по фотке
+	 * @param {{count: int, items: Photo[]}[]} data
+	 * @param {int} photoId
+	 * @returns {{count: int, items: Photo[]}|null}
+	 * @private
+	 */
+	__getChunkContentInList: function(data, photoId) {
+		for (var i = 0, l = data.length; i < l; ++i) {
+			for (var j = 0, k = data[i].items.length; j < k; ++j) {
+				if (data[i].items[j].id === photoId) {
+					return data[i];
+				}
+			}
+		}
+		return null;
 	},
 
 	CUSTOM_ALBUMS: {
@@ -829,81 +801,81 @@ var Photos = {
 		});
 	},
 
+	DEFAULT_PRIVACY_ITEMS: [
+		{value: "all", html: "photo.editAlbumPrivacyAll"},
+		{value: "friends", html: "photo.editAlbumPrivacyFriends"},
+		{value: "friends_of_friends", html: "photo.editAlbumPrivacyFriendOfFriends"},
+		{value: "friends_of_friends_only", html: "photo.editAlbumPrivacyFriendsOfFriendsOnly"},
+		{value: "nobody", html: "photo.editAlbumPrivacyNobody"},
+		{value: "custom", html: "photo.editAlbumPrivacyCustom"}
+	],
 
+	editAlbumPage: function(ownerId, albumId) {
+		var handle = function(data) {
+			/** @type {PhotoAlbum} */
+			var album = data.album;
 
+			var items = [
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_SIMPLE,
+					name: "title",
+					title: "photo.editAlbumTitle",
+					value: album.title
+				},
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_TEXTAREA,
+					name: "description",
+					title: "photo.editAlbumDescription",
+					value: album.description
+				},
+				{
+					type: APIDOG_UI_EW_TYPE_ITEM_SELECT,
+					name: "privacy_view",
+					title: "photo.editAlbumPrivacyView",
+					items: Photos.DEFAULT_PRIVACY_ITEMS,
+					value: album.privacy_view
+				}
+			];
 
-
-	getPrivacySelect: function (name, defaultValue) {
-		var select = document.createElement("select");
-		select.name = name;
-		var types = Lang.get("photos", "new_album_private"), obj;
-		for (var i = 0, l = types.length; i < l; ++i) {
-			obj = {html: types[i], value: i};
-			if (i == defaultValue)
-				obj.selected = true;
-			select.appendChild($.elements.create("option", obj));
-		}
-		return select;
-	},
-	getTip: function (text) {
-		return $.e("div", {"class": "tip tip-form", html: text});
-	},
-	editAlbumPage: function (owner_id, album_id) {
-		var album = Photos.albumInfo[owner_id + "_" + album_id],
-			parent = document.createElement("div"),
-			Form = document.createElement("form"),
-			toInt = function (str) {
-				return typeof str === "number" ? str : {
-					all: 0,
-					friends: 1,
-					friends_of_friends: 2,
-					nobody: 3,
-					users: 1
-				}[str.type];
-			};
-		Form.className = "sf-wrap";
-		Form.appendChild(Photos.getTip(Lang.get("photos", "new_album_title")));
-		Form.appendChild($.elements.create("input", {type: "text", name: "title", required: true, value: album.title}));
-		Form.appendChild(Photos.getTip(Lang.get("photos", "new_album_description")));
-		Form.appendChild($.elements.create("textarea", {name: "description", html: album.description}));
-		Form.appendChild(Photos.getTip(Lang.get("photos", "new_album_who_can_view")));
-		Form.appendChild(Photos.getPrivacySelect("privacy", toInt(album.privacy_view)));
-		Form.appendChild(Photos.getTip(Lang.get("photos", "new_album_who_can_comment")));
-		Form.appendChild(Photos.getPrivacySelect("comment_privacy", toInt(album.privacy_comment)));
-		Form.appendChild($.elements.create("input", {type: "submit", value: Lang.get("photos", "edit_album_save")}));
-		Form.onsubmit = function (event) {
-			var title = this.title && $.trim(this.title.value),
-				description = this.description && $.trim(this.description.value),
-				privacy = this.privacy && this.privacy.options[this.privacy.selectedIndex].value,
-				comment_privacy = this.comment_privacy && this.comment_privacy.options[this.comment_privacy.selectedIndex].value;
-			if (!title) {
-				Site.Alert({text: Lang.get("photos", "new_album_error1")});
-				return false;
+			if (ownerId < 0) {
+				items.push({
+					type: APIDOG_UI_EW_TYPE_ITEM_CHECKBOX,
+					name: "upload_by_admins_only",
+					title: "photo.editAlbumUploadOnlyAdmins",
+					checked: album.upload_by_admins_only
+				});
+				items.push({
+					type: APIDOG_UI_EW_TYPE_ITEM_CHECKBOX,
+					name: "comments_disabled",
+					title: "photo.editAlbumDisabledComments",
+					checked: album.comments_disabled
+				});
 			}
-			Site.API("photos.editAlbum", {
-				owner_id: owner_id,
-				album_id: album_id,
-				title: title,
-				description: description,
-				privacy: privacy,
-				comment_privacy: comment_privacy
-			}, function (data) {
-				data = Site.isResponse(data);
-				if (data) {
-					var a = Photos.albumInfo[owner_id + "_" + album_id];
-					a.title = title;
-					a.description = description;
-					a.privacy_view = privacy;
-					a.privacy_comment = comment_privacy;
-					Site.route(window.location.hash = "#photos" + owner_id + "_" + album_id)
+
+			new EditWindow({
+				title: "photo.editAlbumWindowTitle",
+				isEdit: true,
+				items: items,
+				onSave: function(values, modal) {
+					values.owner_id = ownerId;
+					albumId && (values.album_id = albumId);
+					values.v = 5.56;
+					api(albumId ? "photos.editAlbum" : "photos.createAlbum", values)
+						.then(function() {
+							modal.setContent(Site.getEmptyField("photo.editAlbumSuccess")).setFooter("").closeAfter(1500);
+							album.title = values.title;
+							album.description = values.description;
+							!albumId && Site.route();
+						});
 				}
 			});
-			return false;
 		};
-		parent.appendChild(Site.getPageHeader(Lang.get("photos", "edit_album_verb")));
-		Site.setHeader(Lang.get("photos", "new_album"), {link: "photos" + owner_id});
-		parent.appendChild(Form);
-		Site.append(parent);
+
+		if (albumId) {
+			Photos.requestAlbum(ownerId, albumId, -1).then(handle);
+		} else {
+			handle({album: {title: "", description: "", privacy_view: ["all"], privacy_comment: ["all"]}});
+		}
 	},
 
 	photos: {},
