@@ -191,6 +191,10 @@ var Site = {
 
 
 	route: function(url) {
+		if (!url) {
+			url = window.location.hash.substring(1);
+		}
+
 		if (Site.get("w") || Site.get("z")) {
 			return window.location.hash = "#" + (Site.get("w") || Site.get("z"));
 		}
