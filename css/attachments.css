@@ -485,6 +485,7 @@
 .emotions-sticker-wrap {
 	flex: 1 1 25%;
 	cursor: pointer;
+	box-sizing: border-box;
 }
 
 .emotions-sticker-wrap img {
