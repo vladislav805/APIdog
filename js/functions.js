@@ -2036,7 +2036,15 @@ receiveEvent("onAccessTokenRequire", function(event) {
 receiveEvent("onLongPollDataReceived", function(event) {
 	try {
 		var json = typeof event.updates === "string" ? JSON.parse(event.updates) : event.updates;
-		LongPoll.getResult({updates: json}, null, true);
+
+		Promise.resolve(json).then(LongPoll.normalize)
+		        .then(LongPoll.fireAllEvents)
+		        .catch(function(e) {
+		        	console.error(e)
+		        });
+
+
+		//LongPoll.getResult({updates: json}, null, true);
 	} catch (e) {
 		console.error("APIdogExtensionReceiveError", e, event);
 	}

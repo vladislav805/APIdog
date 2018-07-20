@@ -353,7 +353,9 @@ var IM = {
 
 		$.elements.addClass(node, "imdialog-list");
 		$.elements.addClass(node, peer.isUser() ? "imdialog-list-user" : "imdialog-list-chat");
-console.log(data.offset);
+
+		IM.__initLongPollEvents(peer, node);
+
 		if (!data.offset || isForce) {
 			$.elements.clearChild(node);
 		}
@@ -683,6 +685,55 @@ console.log(data.offset);
 		$.elements.removeClass($.element("im-typing-wrap"), "hidden");
 
 		return ids;
+	},
+
+	/**
+	 * @private
+	 */
+	__initLongPollEvents: function(peer, list) {
+		var needEvents = [
+			LongPoll.event.MESSAGE_NEW,
+			LongPoll.event.MESSAGE_EDIT,
+			LongPoll.event.MESSAGE_READ_IN,
+			LongPoll.event.MESSAGE_READ_OUT,
+			LongPoll.event.TYPING_USER,
+			LongPoll.event.TYPING_CHAT
+		];
+
+		var listener = this.__longPollEventListener.bind(IM, peer, list);
+
+		LongPoll.addListener(needEvents, listener);
+
+		window.onLeavePage = function() {
+			LongPoll.removeListener(needEvents, listener);
+		};
+	},
+
+	/**
+	 * @param {Peer} peer
+	 * @param {HTMLElement|Node} list
+	 * @param {int} eventId
+	 * @param {Message|object} data
+	 * @private
+	 * @todo attachments, forwarded, actions, etc
+	 */
+	__longPollEventListener: function(peer, list, eventId, data) {
+		var list = q(".imdialog-list"), node;
+
+		switch (eventId) {
+			case LongPoll.event.MESSAGE_NEW:
+				if (data.peer_id !== peer.get()) {
+					return;
+				}
+
+				node = IM.item(data, {peer: peer});
+
+				if (list.firstChild) {
+					list.insertBefore(node, list.firstChild);
+				} else {
+					list.appendChild(node);
+				}
+		}
 	},
 
 

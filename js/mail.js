@@ -223,7 +223,7 @@ var Mail = {
 
 		d.forEach(function(i) { o[i[Mail.INDEX_PEER_ID]] = i; });
 
-		console.log("was", d);
+//		console.log("was", d);
 
 		messages.sort(function(a, b) {
 			return a.id - b.id;
@@ -232,7 +232,7 @@ var Mail = {
 			o[peer] = [a.id, a.date, peer];
 		});
 
-		console.log("now", o);
+//		console.log("now", o);
 
 		Mail.mStorage = Object.values(o).sort(function(a, b) {
 			return b[Mail.INDEX_MESSAGE_ID] - a[Mail.INDEX_MESSAGE_ID];
@@ -319,6 +319,7 @@ var Mail = {
 				list.appendChild(Mail.item(item, {conversations: !$.localStorage(Mail.KEY_STORAGE_DIALOGS)}));
 			});
 
+			Mail.__initLongPollEvents();
 
 			if (data.offset + data.items.length + Mail.DIALOGS_PER_PAGE < data.count + Mail.DIALOGS_PER_PAGE)
 				list.appendChild(Site.getNextButton({
@@ -344,6 +345,45 @@ var Mail = {
 		});
 	},
 
+	__initLongPollEvents: function() {
+		var needEvents = [
+			LongPoll.event.MESSAGE_NEW,
+			LongPoll.event.MESSAGE_EDIT,
+			LongPoll.event.MESSAGE_READ_IN,
+			LongPoll.event.MESSAGE_READ_OUT,
+			LongPoll.event.TYPING_USER,
+			LongPoll.event.TYPING_CHAT
+		];
+
+		var listener = this.__longPollEventListener;
+
+		LongPoll.addListener(needEvents, listener);
+
+		window.onLeavePage = function() {
+			LongPoll.removeListener(needEvents, listener);
+		};
+	},
+
+	/**
+	 *
+	 * @param {int} eventId
+	 * @param {Message|{peerId: int, userId: int}} data
+	 * @private
+	 */
+	__longPollEventListener: function(eventId, data) {
+		console.log(eventId, data);
+		switch (eventId) {
+			case LongPoll.event.MESSAGE_NEW:
+				Mail.updateDialogNode(data);
+				break;
+
+			case LongPoll.event.TYPING_USER:
+			case LongPoll.event.TYPING_CHAT:
+				Mail.__setTypingUser(data.peerId, data.userId);
+				break;
+		}
+	},
+
 	/**
 	 * Syncing messages for dialog list cache
 	 */
@@ -363,7 +403,7 @@ var Mail = {
 			for (var i = lastLocalId; i <= lastRealId; ++i) {
 				from.push(i);
 			}
-console.log("will be loaded: ", from);
+//console.log("will be loaded: ", from);
 			return new Promise(function(resolve) {
 
 				if (!from.length) {
@@ -414,28 +454,31 @@ console.log("will be loaded: ", from);
 	 * @param {Message} message
 	 */
 	updateDialogNode: function(message) {
-		var peer = new Peer(message.chat_id ? message.chat_id + Peer.LIMIT : message.user_id), node, text;
+		var peer = new Peer(message.chat_id ? message.chat_id + Peer.LIMIT : message.user_id), node, text, parent;
 
-		if (!(node = g("mail-dialog" + peer.get()))) {
-			return;
+		if (!(node = q("[data-peer-id='" + peer.get() + "']"))) {
+			node = Mail.item(message);
+			parent = $.element("_mail-wrap");
+		} else {
+
+			$.elements[!message.out && !message.read_state ? "addClass" : "removeClass"](node, "dialogs-item-new");
+			$.elements[message.out && !message.read_state ? "removeClass" : "addClass"](node, "dialogs-readed");
+			$.elements[!message.out ? "addClass" : "removeClass"](node, "dialogs-in");
+			$.elements[message.out ? "addClass" : "removeClass"](node, "dialogs-out");
+
+			text = message.body.replace(/\n{2,}/g, " ").replace(/\n/ig, " \\ ").safe();
+			text = text.length > 120 ? text.substring(0, 120) + ".." : text;
+			text = text.emoji();
+
+			node.querySelector(".dialogs-rawText").innerHTML = !message.action ? text : IM.getStringActionFromSystemVKMessage(message);
+			node.querySelector(".dialogs-attachments").textContent = Mail.getStringAttachments(message);
+			node.querySelector(".dialogs-date").textContent = getDate(message.date, APIDOG_DATE_FORMAT_SMART);
+			node.querySelector(".dialogs-date").dataset.time = String(message.date);
+			parent = node.parentNode;
 		}
 
-		$.elements[!message.out && !message.read_state ? "addClass" : "removeClass"](node, "dialogs-item-new");
-		$.elements[message.out && !message.read_state ? "removeClass" : "addClass"](node, "dialogs-readed");
-		$.elements[!message.out ? "addClass" : "removeClass"](node, "dialogs-in");
-		$.elements[message.out ? "addClass" : "removeClass"](node, "dialogs-out");
-
-		text = message.body.replace(/\n{2,}/g, " ").replace(/\n/ig, " \\ ").safe();
-		text = text.length > 120 ? text.substring(0, 120) + ".." : text;
-		text = text.emoji();
-
-		node.querySelector(".dialogs-rawText").innerHTML = !message.action ? text : IM.getStringActionFromSystemVKMessage(message);
-		node.querySelector(".dialogs-attachments").textContent = Mail.getStringAttachments(message);
-		node.querySelector(".dialogs-date").textContent = getDate(message.date, APIDOG_DATE_FORMAT_SMART);
-		node.querySelector(".dialogs-date").dataset.time = message.date;
-
-		if (node.parentNode.firstChild !== node) {
-			node.parentNode.insertBefore(node, node.parentNode.firstChild);
+		if (parent.firstChild !== node) {
+			parent.insertBefore(node, parent.firstChild);
 		}
 	},
 
@@ -512,7 +555,7 @@ console.log("will be loaded: ", from);
 
 				e("div", {"class": "dialogs-content", append: [
 					e("div", {"class": "dialogs-title", append: [
-						e("span", {"class": "tip", html: (peer.isChat() ? Lang.get("mail.chat_noun") : "")}),
+						e("span", {"class": "tip", html: peer.isChat() ? Lang.get("mail.chat_noun") : ""}),
 						e("strong", {html: peer.isChat() ? message.title.safe().emoji() : getName(user)}),
 					]}),
 					e("div", {"class": "dialogs-text", append: [
@@ -576,6 +619,31 @@ console.log("will be loaded: ", from);
 		}
 
 		return link;
+	},
+
+	__setTypingUser: function(peerId, userId) {
+		var node = q("[data-peer-id='" + peerId + "']");
+
+		if (!node || !Local.data[userId]) {
+			return;
+		}
+
+		var time = String(Date.now());
+
+		node = node.querySelector(".dialogs-text");
+
+		$.elements.addClass(node, "dialogs-text-typing");
+
+		var u = Local.data[userId];
+
+		node.dataset.typingText = (userId > 0 ? u.first_name + " " + u.last_name : Lang.get("mail.typingCommunity")) + Lang.get("mail.typing");
+		node.dataset.typingTime = time;
+
+		setTimeout(function() {
+			if (node.dataset.typingTime === time) {
+				$.elements.removeClass(node, "dialogs-text-typing");
+			}
+		}, 7500);
 	},
 
 	dialogsSettings: null,
@@ -680,7 +748,7 @@ console.log("will be loaded: ", from);
 			label: Lang.get(Mail.version ? "mail.actionSwitch2messages" : "mail.actionSwitch2dialogs"),
 			onclick: function() {
 				Mail.version = +!Mail.version;
-				Mail.explain();
+				Site.route();
 			}
 		};
 
@@ -689,7 +757,7 @@ console.log("will be loaded: ", from);
 			onclick: function() {
 				Mail.mStorage = null;
 				Mail.storeDialogs(null);
-				Mail.explain();
+				Site.route();
 			}
 		};
 
@@ -832,6 +900,29 @@ console.log("will be loaded: ", from);
 		list.appendChild(Site.getSmartPagebar(getOffset(), count, Mail.DEFAULT_COUNT));
 
 		Site.setHeader(Lang.get("mail.messages"));
+		Mail.__initLongPollEventsForMessages();
+	},
+
+	__initLongPollEventsForMessages: function() {
+		var needEvents = [
+			LongPoll.event.MESSAGE_NEW
+		];
+
+		var listener = function(eventId, data) {
+			switch (eventId) {
+				case LongPoll.event.MESSAGE_NEW:
+					var wrap = $.element("mail-list");
+
+					wrap.insertBefore(Mail.item(data, {toMessage: true}), wrap.firstChild);
+					break;
+			}
+		};
+
+		LongPoll.addListener(needEvents, listener);
+
+		window.onLeavePage = function() {
+			LongPoll.removeListener(needEvents, listener);
+		};
 	},
 
 	/**

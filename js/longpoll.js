@@ -6,9 +6,12 @@ var LongPoll = {
 	event: {
 		FLAG_SET: 1,
 		FLAG_ADD: 2,
+
+		/** @deprecated */
 		FLAG_REMOVE: 3,
 
 		MESSAGE_NEW: 4,
+		MESSAGE_EDIT: 5,
 		MESSAGE_READ_IN: 6,
 		MESSAGE_READ_OUT: 7,
 
@@ -18,7 +21,9 @@ var LongPoll = {
 		MESSAGE_REMOVE: 13,
 		MESSAGE_RESTORE: 14,
 
+		/** @deprecated */
 		CHAT_EDITED: 51,
+		CHAT_MODIFY_INFO: 52,
 
 		TYPING_USER: 61,
 		TYPING_CHAT: 62,
@@ -36,9 +41,19 @@ var LongPoll = {
 		OUTBOX: 2,
 		IMPORTANT: 8,
 		FRIEND: 32,
-		SPAN: 64,
-		DELETED: 128,
-		MEDIA: 512
+		SPAM: 64,
+		DELETED: 128
+	},
+
+	chatEditType: {
+		MODIFIED_TITLE: 1, // "0"
+		MODIFIED_PHOTO: 2, // "0"
+		ADMIN_ADDED: 3,    // admin_id
+		ADMIN_REMOVED: 9,  // user_id
+		MESSAGE_FIXED: 5,  // conversation_message_id
+		USER_ENTERED: 6,   // user_id
+		USER_LEAVED: 7,    // user_id
+		USER_KICKED: 8     // user_id
 	},
 
 	request: null,
@@ -60,7 +75,7 @@ var LongPoll = {
 	 */
 	start: function(data, error) {
 
-		if (!isEnabled(Setting.ENABLED_LONGPOLL) || ~navigator.userAgent.toLowerCase().indexOf("opera mini")) {
+		/*if (!isEnabled(Setting.ENABLED_LONGPOLL) || ~navigator.userAgent.toLowerCase().indexOf("opera mini")) {
 			return;
 		}
 
@@ -114,7 +129,7 @@ var LongPoll = {
 			} else {
 				Site.Alert({text: "А у Вас соединение с Интернетом, случаем, не пропало?"});
 			}
-		};
+		};*/
 	},
 
 	/**
@@ -136,39 +151,51 @@ var LongPoll = {
 	},
 
 	normalize: function(events) {
+		console.log("normalize", events);
 		return events.map(function(event) {
-			var eventCode = event[0], data = null;
+			var eventCode = event[0], data = null,
+				isOut, peer, extra, attachments, hasAttach, hasForwarded, hasGeo;
 			switch (eventCode) {
 				case LongPoll.event.MESSAGE_NEW:
-					var isOut = event[2] & LongPoll.flag.OUTBOX,
-						peer = new Peer(event[3]),
-						extra = event[7] || {},
-						attachments = [],
-						hasAttach = "attach1" in extra,
-						hasForwarded = "fwd" in extra,
-						hasGeo = "geo" in extra;
+					isOut = event[2] & LongPoll.flag.OUTBOX;
+					peer = new Peer(event[3]);
+					extra = event[7] || {};
+					attachments = [];
+					hasAttach = "attach1" in extra;
+					hasForwarded = "fwd" in extra;
+					hasGeo = "geo" in extra;
 
 					if (extra["attach1_type"] === "sticker") {
-						attachments.push({type: "sticker", sticker: {id: extra["attach1"]}});
+						attachments.push({
+							type: "sticker",
+							sticker: {
+								id: extra["attach1"]
+							}
+						});
 						hasAttach = false;
 					}
 
 					if (extra["attach1_type"] === "link" && !extra["attach2"] && !hasGeo) {
-						attachments.push({type: "link", link: {
-							url: extra["attach1_url"],
-							title: extra["attach1_title"],
-							description: extra["attach1_desc"],
-							photo: extra["attach1_photo"],
-						}});
+						attachments.push({
+							type: "link",
+							link: {
+								url: extra["attach1_url"],
+								title: extra["attach1_title"],
+								description: extra["attach1_desc"],
+								photo: extra["attach1_photo"],
+							}
+						});
 						hasAttach = false;
 					}
 
 					data = {
 						id: event[1],
 						from_id: !peer.isChat() ? (isOut ? API.userId : peer.get()) : parseInt(extra.from),
+						peer_id: peer.get(),
 						date: event[4],
 						title: event[5].unsafe(),
-						body: c[6].unsafe(),
+						body: event[6].unsafe(),
+						out: isOut,
 						read_state: !(event[2] & LongPoll.flag.UNREAD),
 						action: extra["source_act"],
 						action_mid: extra["source_mid"],
@@ -178,9 +205,96 @@ var LongPoll = {
 						}
 					};
 
-					if (peer > Peer.LIMIT) {
+					if (attachments.length) {
+						data.attachments = attachments;
+					}
+
+					if (data.action) {
+						data.action_text = data.title;
+					}
+
+					data.user_id = data.from_id;
+
+					if (peer.isChat()) {
 						data.chat_id = peer.getId();
 					}
+					break;
+
+					// 5,831884,16,203384908,1532119126,"","fff",{"attach1_type":"doc","attach1":"203384908_469306861"}
+
+				case LongPoll.event.MESSAGE_EDIT:
+					isOut = event[2] & LongPoll.flag.OUTBOX;
+					peer = new Peer(event[3]);
+					extra = event[7] || {};
+					attachments = [];
+					hasAttach = "attach1" in extra;
+					hasForwarded = "fwd" in extra;
+					hasGeo = "geo" in extra;
+
+					if (extra["attach1_type"] === "sticker") {
+						attachments.push({
+							type: "sticker",
+							sticker: {
+								id: extra["attach1"]
+							}
+						});
+						hasAttach = false;
+					}
+
+					if (extra["attach1_type"] === "link" && !extra["attach2"] && !hasGeo) {
+						attachments.push({
+							type: "link",
+							link: {
+								url: extra["attach1_url"],
+								title: extra["attach1_title"],
+								description: extra["attach1_desc"],
+								photo: extra["attach1_photo"],
+							}
+						});
+						hasAttach = false;
+					}
+
+					data = {
+						id: event[1],
+						from_id: !peer.isChat() ? (isOut ? API.userId : peer.get()) : parseInt(extra.from),
+						peer_id: peer.get(),
+						date: event[4],
+						title: event[5].unsafe(),
+						body: event[6].unsafe(),
+						read_state: !(event[2] & LongPoll.flag.UNREAD),
+						action: extra["source_act"],
+						action_mid: extra["source_mid"],
+						__longpollData: {
+							attachments: hasAttach || hasForwarded || hasGeo,
+							randomId: 0 // TODO
+						}
+					};
+
+					if (attachments.length) {
+						data.attachments = attachments;
+					}
+
+					data.user_id = data.from_id;
+
+					if (peer.isChat()) {
+						data.chat_id = peer.getId();
+					}
+					break;
+
+				case LongPoll.event.MESSAGE_READ_OUT:
+				case LongPoll.event.MESSAGE_READ_IN:
+					data = {
+						peerId: event[1],
+						messageId: event[2]
+					};
+					break;
+
+				case LongPoll.event.CHAT_MODIFY_INFO:
+					data = {
+						type: event[1],
+						peerId: event[2],
+						info: event[3]
+					};
 					break;
 
 				case LongPoll.event.FRIEND_ONLINE:
@@ -190,7 +304,12 @@ var LongPoll = {
 
 				case LongPoll.event.TYPING_USER:
 				case LongPoll.event.TYPING_CHAT:
-					data = {userId: event[1], peerId: eventCode === LongPoll.event.TYPING_USER ? event[1] : Peer.LIMIT + event[2]};
+					data = {
+						userId: event[1],
+						peerId: eventCode === LongPoll.event.TYPING_USER
+							? event[1]
+							: Peer.LIMIT + event[2]
+					};
 					break;
 
 				case LongPoll.event.COUNTER_MAIL_UPDATED:
@@ -202,10 +321,84 @@ var LongPoll = {
 		});
 	},
 
+	/**
+	 * Вызов слушателей событий
+	 * @param {{event: int, data: object}[]} events
+	 */
 	fireAllEvents: function(events) {
 		events.forEach(LongPoll.fireEvent);
 	},
 
+	/**
+	 * Вызов слушателей для каждого события
+	 * @param {{event: int, data: object}} event
+	 */
+	fireEvent: function(event) {
+		if (LongPoll.__listeners[event.event]) {
+			LongPoll.__listeners[event.event].forEach(function(listener) {
+				listener(event.event, event.data);
+			});
+		}
+	},
+
+	/**
+	 * Слушатели событий
+	 */
+	__listeners: {},
+
+	/**
+	 * Добаление слушателя событий
+	 * @param {int[]} eventCodes
+	 * @param {function} listener
+	 */
+	addListener: function(eventCodes, listener) {
+		if (!Array.isArray(eventCodes)) {
+			eventCodes = [eventCodes];
+		}
+
+		eventCodes.forEach(function(eventCode) {
+			this.__putListener(eventCode, listener);
+		}.bind(this));
+	},
+
+	/**
+	 * Удаление слушателя событий
+	 * @param eventCodes
+	 * @param listener
+	 */
+	removeListener: function(eventCodes, listener) {
+		if (!Array.isArray(eventCodes)) {
+			eventCodes = [eventCodes];
+		}
+
+		eventCodes.forEach(function(eventCode) {
+			this.__removeListener(eventCode, listener);
+		}.bind(this));
+	},
+
+	__putListener: function(eventCode, listener) {
+		if (!this.__listeners[eventCode]) {
+			this.__listeners[eventCode] = [];
+		}
+
+		this.__listeners[eventCode].push(listener);
+	},
+
+	__removeListener: function(eventCode, listener) {
+		if (!this.__listeners[eventCode]) {
+			this.__listeners[eventCode] = [];
+		}
+
+		var index = this.__listeners[eventCode].indexOf(listener);
+
+		if (~index) {
+			this.__listeners[eventCode].splice(index, 1);
+		}
+	},
+
+	/**
+	 * @deprecated
+	 */
 	getResult: function(data, server, isExtension) {
 		LongPoll.lastRequest = parseInt(Date.now() / 1000);
 

@@ -2382,6 +2382,32 @@ strong span {
 	align-items: center;
 	flex-flow: row nowrap;
 	margin-top: 7px;
+	position: relative;
+	-webkit-transition: opacity .2s ease-out;
+	transition: opacity .2s ease-out;
+}
+
+.dialogs-text-typing * {
+	opacity: 0;
+}
+
+.dialogs-text-typing::after {
+	position: absolute;
+	content: attr(data-typing-text);
+	animation: dialogsTextTyping .2s ease-in 1;
+	animation-fill-mode: forwards;
+}
+
+@keyframes dialogsTextTyping {
+	from {
+		opacity: 0;
+		top: 100%;
+	}
+
+	to {
+		opacity: 1;
+		top: 0;
+	}
 }
 
 .dialogs-wrapRawText {

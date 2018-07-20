@@ -1468,6 +1468,8 @@
 	"mail.confirmStorageProgress":["Загружаю данные...","Loading data...",null],
 	"mail.syncingTitle":["Синхронизация","Syncing...",null],
 	"mail.syncingContent":["Пожалуйста, подождите...","Please wait",null],
+	"mail.typing": [" набирает..", " is typing..", null],
+	"mail.typingCommunity": ["Сообщество", "Community", null],
 	"mail.types_messages":[
 		[
 			["сообщение","сообщения","сообщений"],
