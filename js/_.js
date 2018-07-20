@@ -574,7 +574,7 @@ var BanInfo = {
 										modal.close();
 
 										var id = ["photo", i.owner_id, i.pid || i.id];
-										Photos.photos[id[1] + "_" + id[2]] = Photos.v5normalize(i);
+										Photos.photos[id[1] + "_" + id[2]] = Photos.normalizePhoto(i);
 
 										IM.attachs[to] = (IM.attachs[to] || []).push(id);
 

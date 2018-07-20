@@ -769,6 +769,7 @@ var Site = {
 		}
 
 		var photos = [],
+			photosItems = [],
 			videos = [],
 			audios = [],
 			docs = [],
@@ -792,7 +793,8 @@ var Site = {
 			switch (a.type) {
 
 				case "photo": // TODO
-					photos.push(Photos.getAttachment(a.photo, {list: id, full: (ass.photo === 1), from: getAddress(true)}));
+					photos.push(Photos.getAttachment(a.photo, {list: id, full: ass.photo === 1, from: getAddress(true)}));
+					photosItems.push(a.photo);
 					break;
 
 				case "video": // TODO
@@ -852,6 +854,11 @@ var Site = {
 					break;
 			}
 		}
+
+		if (photosItems.length) {
+			Photos.putListContent(id, 0, {count: photosItems.length, items: photosItems});
+		}
+
 		return $.e("div",{append: [
 			$.e("div", {append: photos}),
 			$.e("div", {append: albums}),

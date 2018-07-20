@@ -139,9 +139,6 @@ var Photos = {
 				case "all":
 					return Photos.requestAllPhotos(id, offset).then(Photos.showAlbum);
 
-				case "comments":
-					return Photos.getAllComments(id);
-
 				case "tagged":
 					return Photos.requestUserTagged(id, offset).then(Photos.showAlbum);
 
@@ -156,34 +153,25 @@ var Photos = {
 			ownerId = result[1];
 			id = result[2];
 
-			switch (act) {
-				case "comments":
-					return Photos.getAllComments(ownerId, id);
-
-				default:
-					return Photos.requestAlbum(ownerId, id, getOffset()).then(Photos.showAlbum);
-			}
+			return Photos.requestAlbum(ownerId, id, getOffset()).then(Photos.showAlbum);
 		} else {
 			result = /^photo(-?\d+)_(\d+)$/img.exec(url);
-			ownerId = result[1];
-			id = result[2];
-			var accessKey = Site.get("access_key");
+			ownerId = parseInt(result[1]);
+			id = parseInt(result[2]);
+			var accessKey = Site.get("accessKey");
 			var list = Site.get("list");
 
-			return Photos.getShow(ownerId, id, accessKey, list);
+			return Photos.requestPhoto(ownerId, id, accessKey, list).then(Photos.showPhoto);
 		}
 	},
 
 
 	/* Helper */
 
-	/**
-	 * @deprecated
-	 */
-	v5normalize: function(photo) {
+	/** @deprecated */
+	normalizePhoto: function(photo) {
 		return photo;
 	},
-
 
 	getAttachment: function(photo, options) {
 		return Photos.itemPhoto(photo, {list: options.list, wall: options.full, from: getAddress(true)});
@@ -478,6 +466,47 @@ var Photos = {
 	},
 
 	/**
+	 * @param {string} list
+	 * @returns {int}
+	 */
+	getListSize: function(list) {
+		var chunks = this.getListContent(list);
+		for (var i = 0, l = chunks.length; i < l; ++i) {
+			if (chunks[i]) {
+				return chunks[i].count;
+			}
+		}
+		return NaN;
+	},
+
+	/**
+	 * @param {int} ownerId
+	 * @param {int} albumId
+	 * @param {int} photoId
+	 * @returns {int}
+	 */
+	getRealOffsetInAlbumByPhoto: function(ownerId, albumId, photoId) {
+		var albumChunks = this.albumContent[ownerId + "_" + albumId];
+
+		if (!albumChunks) {
+			return -1;
+		}
+
+		for (var i = 0, l = albumChunks.length; i < l; ++i) {
+			if (!albumChunks[i]) {
+				continue
+			}
+			for (var j = 0, k = albumChunks[i].items.length; j < k; ++j) {
+				if (albumChunks[i].items[j].id === photoId) {
+					return i * 100 + j;
+				}
+			}
+		}
+
+		return -1;
+	},
+
+	/**
 	 * Ищет чанк в альбоме по фотке
 	 * @param {int} ownerId
 	 * @param {int} albumId
@@ -507,6 +536,9 @@ var Photos = {
 	 */
 	__getChunkContentInList: function(data, photoId) {
 		for (var i = 0, l = data.length; i < l; ++i) {
+			if (!data[i]) {
+				continue
+			}
 			for (var j = 0, k = data[i].items.length; j < k; ++j) {
 				if (data[i].items[j].id === photoId) {
 					return data[i];
@@ -514,6 +546,33 @@ var Photos = {
 			}
 		}
 		return null;
+	},
+
+	photo2album: {},
+
+	/**
+	 * Сохраняет ассоциацию между фото и альбомом
+	 * @param {Photo|Photo[]} photo
+	 */
+	putPhotoForAlbum: function(photo) {
+		if (Array.isArray(photo)) {
+			photo.forEach(Photos.putPhotoForAlbum);
+			return;
+		}
+
+		this.photo2album[photo.id] = photo.album_id;
+	},
+
+	/**
+	 * Возвращает идентификтор альбома, в которой находится фото
+	 * @param {int|Photo} photo
+	 * @returns {int|null}
+	 */
+	getAlbumIdByPhotoId: function(photo) {
+		if (typeof photo === "object") {
+			photo = photo.id;
+		}
+		return this.photo2album[photo];
 	},
 
 	CUSTOM_ALBUMS: {
@@ -755,6 +814,8 @@ var Photos = {
 					continue;
 				}
 
+				Photos.putPhotoForAlbum(items[i]);
+
 				list.appendChild(Photos.itemPhoto(items[i], {
 					likes: true,
 					comments: true,
@@ -853,7 +914,7 @@ var Photos = {
 					text: Lang.get("photos", "album_uploaded_success", result.length) + " " + result.length + " " + Lang.get("photos", "album_uploaded_photos", result.length) + "!"
 				});
 
-				var size = Photos.pushNewPhotos(ownerId, albumId, result.map(Photos.v5normalize));
+				var size = Photos.pushNewPhotos(ownerId, albumId, result.map(Photos.normalizePhoto));
 
 				window.location.hash = "#photos" + ownerId + "_" + albumId +
 					"?offset=" + (size ? (Math.floor(size / Photos.ITEMS_PER_PAGE) * Photos.ITEMS_PER_PAGE) : 0);
@@ -955,126 +1016,216 @@ var Photos = {
 	/** @deprecated */
 	lists: {},
 
-	/* Comments */
+	/**
+	 *
+	 * @param ownerId
+	 * @param photoId
+	 * @param accessKey
+	 * @param list
+	 * @returns {Promise<{
+	 *     ownerId: int,
+	 *     photoId: int,
+	 *     albumId: int=,
+	 *     accessKey: string=,
+	 *     list: string=,
+	 *     chunk: {
+	 *         count: int,
+	 *         items: Photo[]
+	 *     },
+	 *     previous: Photo|null,
+	 *     current: Photo,
+	 *     next: Photo|null,
+	 *     position: int
+	 * }>}
+	 */
+	requestPhoto: function(ownerId, photoId, accessKey, list) {
+		return new Promise(function(resolve, reject) {
+			var chunk, position, result, prev, next, size, realOffset = -1;
 
-	/** @deprecated */
-	getAllComments: function (owner_id) {
-		Site.Loader();
-		Site.API("execute", {
-			code: 'var c=API.photos.getAllComments({owner_id:%h%,album_id:%a%,count:30,offset:%o%,need_likes:1,v:5}),p=[],i=0;while(i<c.items.length){p.push("%h%_"+c.items[i].pid);i=i+1;}return[c,API.users.get({user_ids:c.items@.from_id+c.items@.reply_to_user,fields:"photo_rec,screen_name,online,first_name_dat,last_name_dat",v:5.0}),API.photos.getById({photos:p,extended:1,v:5.0})];'
-				.replace(/%h%/ig, owner_id)
-				.replace(/%a%/ig, Site.Get("album_id"))
-				.replace(/%o%/ig, getOffset())
-		}, function (data) {
-			data = Site.isResponse(data);
-			var comments = data[0],
-				count = comments.count,
-				comments = comments.items,
-				users = Local.add(data[1]),
-				photos = (function (photos) {
-					var data = {};
-					for (var i = 0, l = photos.length; i < l; ++i)
-						data[photos[i].owner_id + "_" + (photos[i].id || photos[i].pid)] = photos[i];
-					return data;
-				})(data[2]),
-				parent = document.createElement("div"),
-				list = document.createElement("div");
-			for (var i = 0, l = comments.length; i < l; ++i)
-				list.appendChild(Photos.itemComment(comments[i], owner_id, comments[i].pid, {photo: photos[owner_id + "_" + comments[i].pid]}));
-			parent.appendChild(Site.getPageHeader(Lang.get("photos", "photos_all")));
-			parent.appendChild(list);
-			parent.appendChild(Site.getSmartPagebar(getOffset(), count, 30));
-			Site.append(parent);
-			Site.setHeader(Lang.get("photos", "photos_all"), {link: "photos" + owner_id});
-		})
-	},
+			result = { ownerId: ownerId, photoId: photoId, accessKey: accessKey };
 
-	// SEE HERE
-	/** @deprecated */
-	reply: function (ownerId, photoId, commentId, toId){
-		var area = $.element("photo-comment-writearea"),
-			to = Local.data[toId],
-			reply = $.element("wall-comments-reply" + ownerId + "_" + photoId),
-			replyUI = $.element("wall-comments-replyUI" + ownerId + "_" + photoId),
-			e = $.e;
+			if (list) {
+				chunk = Photos.getChunkContentByList(list, photoId);
 
-		if (reply.value == commentId)
-			return;
-
-		if (!$.trim(area.value))
-			reply.value = commentId;
-		area.value += " [" + (to.screen_name || (toId > 0 ? "id" + toId : "club" + (-toId))) + "|" + (to.name || to.first_name) + "], ";
-		var l = area.value.length - 1;
-		area.setSelectionRange(l, l);
-		$.elements.clearChild(replyUI);
-		replyUI.appendChild(e("div", {append: [
-			e("a", {href: "#" + to.screen_name, html: (to.name || to.first_name_dat + " " + to.last_name_dat)}),
-			e("div", {"class": "feed-close a", onclick: function (event) {
-				area.value = area.value.replace(new RegExp("^\[" + to.screen_name + "|" + (to.name || to.first_name) + "\], " ,"img"), "");
-				reply.value = "";
-				$.elements.clearChild(replyUI);
-			}})
-		]}))
-	},
-
-	/* Viewer v3.0 */
-	/** @deprecated */
-	getShow: function (owner_id, photo_id, access_key, list) {
-		if (list && Photos.lists[list] && (list = Photos.lists[list])) {
-			return Photos.getViewer(list, Photos.getCurrentPositionInViewedList(list, {owner_id: owner_id, id: photo_id}, {place: null}));
-		} else {
-			if (
-				Photos.photos[owner_id + "_" + photo_id] &&
-				Photos.lists[owner_id + "_" + Photos.photos[owner_id + "_" + photo_id].album_id]
-			) {
-				return Photos.getViewer(
-					Photos.lists[owner_id + "_" + Photos.photos[owner_id + "_" + photo_id].album_id],
-					Photos.getCurrentPositionInViewedList(
-						Photos.lists[owner_id + "_" + Photos.photos[owner_id + "_" + photo_id].album_id],
-						{owner_id: owner_id, id: photo_id}
-					)
-				);
-			}
-			Site.API("execute", {
-				code: 'var a=API.photos.getById({photos:"%o%_%p%%a%",extended:1,v:5.7})[0];return [API.photos.get({owner_id:%o%,album_id:a.album_id,extended:1,v:5.7}),"%o%_"+a.album_id,a];'
-					.replace(/%o%/ig, owner_id)
-					.replace(/%p%/ig, photo_id)
-					.replace(/%a%/ig, access_key ? "_" + access_key : "")
-			}, function (data) {
-				data = Site.isResponse(data);
-				var photos = data[0],
-					list = list || data[1],
-					item = data[2];
-				if (!Photos.lists[list])
-					Photos.lists[list] = [];
-				if (!photos)
-					photos = {items: [item]};
-
-				item && (item.list = list);
-
-				for (var i = 0, l = photos.items.length; i < l; ++i) {
-					photos.items[i] = Photos.v5normalize(photos.items[i]);
-					Photos.lists[list].push(photos.items[i]);
-					Photos.photos[photos.items[i].owner_id + "_" + photos.items[i].id] = photos.items[i];
+				if (!chunk) {
+					// TODO: if that list not exists (for example, direct enter)
+					return;
 				}
-				Photos.photos[item.owner_id + "_" + item.id] = item;
-				var name = String(Site.Get("list"));
-				list = Photos.lists[list];
-				var pos = (/^mail/igm.test(name)) ? list && list[0] : {owner_id: owner_id, id: photo_id};
-				return Photos.getViewer(list, Photos.getCurrentPositionInViewedList(list, pos));
-			})
-		}
+
+				position = chunk.items.map(function(photo) {
+					return photo.id;
+				}).indexOf(photoId);
+
+				size = Photos.getListSize(list);
+
+				if (position - 1 < 0 && size > 2) {
+					prev = null; // TODO
+				}
+
+				if (position + 1 > size && size > 2) {
+					next = null; // TODO
+				}
+
+				result.list = list;
+				result.chunk = chunk;
+				result.position = position;
+			} else {
+				var albumId = Photos.getAlbumIdByPhotoId(photoId);
+
+				if (!albumId) {
+					// TODO: if that album not exists in cache
+					console.log("!albumId");
+					return;
+				}
+
+				chunk = Photos.getChunkContentByAlbum(ownerId, albumId, photoId);
+
+				if (!chunk) {
+					// TODO ??
+					return;
+				}
+
+				position = chunk.items.map(function(photo) {
+					return photo.id;
+				}).indexOf(photoId);
+
+				size = Photos.getAlbumSize(ownerId, albumId);
+
+				realOffset = Photos.getRealOffsetInAlbumByPhoto(ownerId, albumId, photoId);
+				var roundOffset = realOffset - (realOffset % 100);
+
+				if (position - 1 < 0 && size > 2) {
+					prev = null; // TODO
+				}
+
+				if (position + 1 > size && size > 2) {
+					next = null; // TODO
+				}
+
+				result.albumId = albumId;
+				result.chunk = chunk;
+				result.position = position;
+				result.realOffset = realOffset;
+			}
+
+			result.current = chunk.items[position];
+
+			result.previous = position > 0
+				? (prev
+					? prev
+					: chunk.items[position - 1]
+				)
+				: null;
+
+			result.next = position + 1 < size
+				? (next
+					? next
+					: chunk.items[position + 1]
+				)
+				: null;
+
+			resolve(result);
+		});
 	},
 
-	/** @deprecated */
-	getCurrentPositionInViewedList: function (list, object) {
-		for (var i = 0, l = list.length, o = object.owner_id, p = (object.id || object.pid), c = -1; i < l && c == -1; ++i)
-			if (list[i].list == object || list[i].owner_id == o && (list[i].id == p || list[i].pid == p))
-				c = i;
-		return c != -1 ?
-			{current: c, previous: list[c - 1] ? c - 1 : false, next: list[c + 1] ? c + 1 : false} :
-			{current: -1, previous: false, next: false, photo: Photos.photos[object.owner_id + "_" + object.id]};
+
+	/**
+	 * @param {{
+	 *     ownerId: int,
+	 *     photoId: int,
+	 *     albumId: int=,
+	 *     accessKey: string=,
+	 *     list: string=,
+	 *     chunk: {
+	 *         count: int,
+	 *         items: Photo[]
+	 *     },
+	 *     position: int,
+	 *     size: int,
+	 *     previous: Photo|null,
+	 *     current: Photo,
+	 *     next: Photo|null,
+	 *     realOffset: int
+	 * }} data
+	 */
+	showPhoto: function(data) {
+		console.log(data);
+		var e = $.e,
+
+			ownerId = data.ownerId,
+			albumId = data.albumId,
+			photoId = data.photoId,
+			accessKey = data.accessKey,
+
+			l = Lang.get,
+
+			current = data.current,
+
+			header,
+			viewer = e("div", {append: e("img", {src: current.photo_604})}),
+			footer = e("div", {html: new Date(current.date * 1000).long()}),
+
+			menu = {};
+
+		menu.share = {
+			label: l("photo.viewActionShare"),
+			onclick: function() {
+				Photos.share(ownerId, photoId, accessKey, current.can_repost);
+			}
+		};
+
+		if (ownerId === API.userId) {
+
+			menu.changeCaption = {
+				label: l("photo.viewActionChangeCaption"),
+				onclick: function() {
+					Photos.changeCaption(ownerId, photoId);
+				}
+			};
+
+			if (albumId === Photos.ALBUM_ID.PROFILE) {
+				menu.makeProfilePhoto = {
+					label: l("photo.viewActionMakeProfilePhoto"),
+					onclick: function() {
+						Photos.setProfilePhoto(ownerId, photoId);
+					}
+				};
+			}
+		}
+
+		if (ownerId === API.userId || ownerId < 0 && Local.data[ownerId] && Local.data[ownerId].is_admin) {
+			menu.deletePhoto = {
+				label: l("photo.viewActionDelete"),
+				onclick: function() {
+					Photos.deletePhoto(ownerId, photoId, accessKey).then(function() {
+						var block;
+						footer.insertBefore(block = e("div", {
+							"class": "photo-deleted",
+							append: [
+								$.e("span", {html: l("photos.viewPhotoDeleted")}),
+								$.e("span", {
+									"class": "a",
+									html: l("photo.viewActionRestore"),
+									onclick: function() {
+										//Photos.restorePhoto(ownerId, photoId, accessKey).then();
+									}
+								})
+							]
+						}), node.nextSibling);
+					});
+				}
+			};
+		}
+
+		header = Site.getPageHeader("photo M of N", new DropDownMenu(l("general.actions"), menu).getNode());
+
+		Site.append(e("div", {append: [
+			header,
+			viewer,
+			footer
+		]}));
 	},
+
 
 	/** @deprecated */
 	getViewer: function (list, position, objects) {
@@ -1654,29 +1805,21 @@ var Photos = {
 		Site.append(Form);
 	},
 
-	/** @deprecated */
-	deletePhoto: function (owner_id, photo_id, access_key, node) {
-		VKConfirm(Lang.get("photos", "photo_action_delete"), function () {
-			Site.API("photos.delete", {
-				owner_id: owner_id,
-				photo_id: photo_id,
-				access_key: access_key
-			}, function (data) {
-				data = Site.isResponse(data);
-				if (data) {
-					var bl;
-					node.parentNode.insertBefore(bl = $.e("div", {
-						"class": "photo-deleted",
-						append: [
-							$.e("span", {html: Lang.get("photos", "photo_action_deleted")}),
-							document.createTextNode(" "),
-							$.e("span", {"class": "a", html: "Восстановить", onclick: function (event) {
-								Photos.restorePhoto(owner_id, photo_id, access_key, bl);
-							}})
-						]
-					}), node.nextSibling);
-				}
-			})
+	/**
+	 * @param {int} ownerId
+	 * @param {int} photoId
+	 * @param {string=} accessKey
+	 * @returns {Promise<boolean>}
+	 */
+	deletePhoto: function (ownerId, photoId, accessKey) {
+		return new Promise(function(resolve, reject) {
+			VKConfirm(Lang.get("photos.photo_action_delete"), function() {
+				api("photos.delete", {
+					owner_id: ownerId,
+					photo_id: photoId,
+					access_key: accessKey
+				}).then(resolve).catch(reject);
+			});
 		});
 	},
 

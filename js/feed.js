@@ -257,7 +257,7 @@ var Feed = {
 			]}));
 			list.className = "feed-updatePhotos-previews";
 			for (var i = 0; i < photos.items.length; ++i)
-				list.appendChild(Photos.itemPhoto(Photos.v5normalize(photos.items[i])));
+				list.appendChild(Photos.itemPhoto(Photos.normalizePhoto(photos.items[i])));
 			right.appendChild(list);
 			right.appendChild($.elements.create("div", {"class": "tip", html: Site.getDate(item.date)}));
 			right.className = "wall-right";

@@ -26,8 +26,8 @@ function comments(options) {
 	var API_FIELDS_DATA = "online,screen_name,first_name_dat,last_name_dat,sex,photo_50",
 
 		type = options.type,
-		ownerId = parseInt(options.ownerId),
-		itemId = parseInt(options.itemId),
+		ownerId = Math.floor(options.ownerId),
+		itemId = Math.floor(options.itemId),
 		ownerField = options.ownerField || "owner_id",
 
 		db = {},
@@ -229,7 +229,7 @@ function comments(options) {
 			},
 
 			report: function(comment) {
-				showReportWindow("wall.reportComment", ownerId, "comment", comment.id, null, false);
+				showReportWindow("wall.reportComment", ownerId, "comment", comment.id, "", false);
 			},
 
 			getRestorePlaceholder: function(comment) {
@@ -261,7 +261,7 @@ function comments(options) {
 					from_id: fromGroup ? ownerId : API.userId,
 					id: commentId,
 					text: text,
-					date: parseInt(Date.now() / 1000),
+					date: Math.floor(Date.now() / 1000),
 					likes: {count: 0, user_likes: 0, can_like: 1},
 					can_edit: 1,
 					can_delete: 1

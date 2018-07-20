@@ -1341,25 +1341,32 @@ console.log(data.offset);
 		return parent;
 	},
 	photos: {},
-	getDynamicPhotoAttachment: function (o, msgId) {
-		o = Photos.v5normalize(o);
+	getDynamicPhotoAttachment: function(o, msgId) {
+		var list = "msg" + msgId;
 
-		o.list = "mail" + msgId;
 		IM.photos[o.owner_id + "_" + o.id] = o;
-		Photos.photos[o.owner_id + "_" + o.id] = o;
-		var p = {};
-		if (o.access_key)
-			p.access_key = o.access_key;
-		if (msgId)
-			p.list = "mail" + msgId;
-		p.from = "im?to=" + Site.Get("to");
-		p = httpBuildQuery(p, true);
 
-		var e = $.e, img, p = e(!o.n ? "a" : "div", {
+		Photos.putListContent(list, 0, {count: 1, items: [o]});
+
+		var p = {};
+		if (o.access_key) {
+			p.accessKey = o.access_key;
+		}
+
+		if (msgId) {
+			p.list = list;
+		}
+
+		p.from = getAddress(true);
+		p = httpBuildQuery(p);
+
+		var e = $.e;
+
+		p = e(!o.n ? "a" : "div", {
 			"class": "imdialog-attachment-item-photo-wrap",
 			href: "#photo" + o.owner_id + "_" + o.id + (p ? "?" + p : ""),
 			"data-photoid": o.owner_id + "_" + o.id,
-			append: (img = e("img", {"class": "__dynamic_photo imdialog-attachment-item-photo", src: getURL(o.photo_604)}))
+			append: e("img", {"class": "__dynamic_photo imdialog-attachment-item-photo", src: getURL(o.photo_604)})
 		});
 
 		return p;
