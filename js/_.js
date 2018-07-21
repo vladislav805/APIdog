@@ -306,7 +306,11 @@ if (Date.now() < 0) {
 	 *  ad: {
 	 *   menu: object[],
 	 *   feed: object[]
-	 *  }
+	 *  },
+	 *  vkShitUserAgent: string=,
+	 *  isExtension: boolean=,
+	 *  extension: {versionSDK: int, agentSDK: string}=,
+	 *  userBalance: {votes: int}=
 	 * }}
 	 */
 	var API = {};

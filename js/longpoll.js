@@ -403,8 +403,6 @@ var LongPoll = {
 		LongPoll.lastRequest = parseInt(Date.now() / 1000);
 
 		if (!isExtension) {
-			if (data.response)
-				return LongPoll.getError(data);
 			if (!data.updates)
 				return LongPoll.start(server);
 		};
@@ -636,15 +634,6 @@ var LongPoll = {
 				case 51:
 //                  IM.UpdateChat(id);
 					break;
-				case 61:
-					IM.setUserTyping(id, false, isListMessages);
-					break;
-				case 62:
-					IM.setUserTyping(id, c[2], isListMessages);
-					break;
-				case 80:
-					q("[data-menu='messages']").dataset.count = id;
-					break;
 			}
 		}
 		if (inRead.length && isEnabled(2)) {
@@ -681,45 +670,5 @@ var LongPoll = {
 		LongPoll.stop();
 		LongPoll.enabled = false;
 		console.log("LongPoll.stop: stopped");
-	},
-
-	getError: function(data) {
-		var result = data.response,
-			eid = result.error_id,
-			description = result.description;
-		Site.Alert({
-			text: "LongPoll Error: " + eid + ": " + description,
-			icon: "//static.apidog.ru/apple-touch-icon-57x57.png"
-		});
-	},
-	resolveProblem: function(error) {
-		switch (error[0]) {
-			case 1:
-				Site.showCaptchaBox({
-					captchaImage: error[1].captchaImg,
-					handler: function (value) {
-						LongPoll.start(null, {id: error[1].captchaId, value: value});
-
-					}
-				});
-				break;
-
-			case 3:
-			case 4:
-			case 5:
-			case 7:
-				setTimeout(LongPoll.start, 2000);
-				break;
-
-			case 6:
-				setTimeout(function() {
-					LongPoll.start(LongPoll.lastRequest);
-				}, 2000);
-				break;
-
-			case 2:
-				alert("longpoll server api error\n\n"+JSON.stringify(error[2].source));
-				break;
-		}
 	}
 };

@@ -103,6 +103,7 @@
 		<link rel="icon" href="./favicon.png?14" />
 		<link rel="shortcut icon" href="./favicon.png?4" />
 		<script>
+			console.time("BaseLoad");
 			(function(a,b,c){a[b]=c})(window,"API",<?=json_encode($jsObject,JSON_UNESCAPED_UNICODE)?>);
 		</script>
 		<style type="text/css">

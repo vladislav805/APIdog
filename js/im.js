@@ -163,6 +163,10 @@ var IM = {
 
 						IM.send(peer, data);
 						return false;
+					},
+
+					onKeyUp: function(event) {
+						IM.__setTyping(peer);
 					}
 				}, API.userId, 0),
 				page = $.e("div"),
@@ -713,7 +717,7 @@ var IM = {
 	 * @param {Peer} peer
 	 * @param {HTMLElement|Node} list
 	 * @param {int} eventId
-	 * @param {Message|object} data
+	 * @param {Message|{peerId: int, userId: int}} data
 	 * @private
 	 * @todo attachments, forwarded, actions, etc
 	 */
@@ -733,6 +737,43 @@ var IM = {
 				} else {
 					list.appendChild(node);
 				}
+				break;
+
+			case LongPoll.event.MESSAGE_EDIT:
+				node = q("[data-message-id='" + data.id + "']");
+				break;
+
+			case LongPoll.event.TYPING_USER:
+			case LongPoll.event.TYPING_CHAT:
+				if (peer.get() !== data.peerId) {
+					return;
+				}
+
+				var str, user;
+
+				user = Local.data[data.userId];
+				if (peer.isChat()) {
+					str = user.first_name + " " + user.last_name + " " + Lang.get("im.typing");
+				} else if (peer.isUser()) {
+					str = user.first_name + " " + Lang.get("im.typing");
+				} else {
+					str = Lang.get("mail.typingCommunity") + " " + Lang.get("im.typing");
+				}
+
+				node = q(".form-footer-action span");
+				var time = String(getUnixTime());
+
+				$.elements.addClass(node, "im-typing");
+				node.dataset.typingText = str;
+				node.dataset.typingTime = time;
+
+				setTimeout(function() {
+					if (node.dataset.typingTime === time) {
+						$.elements.removeClass(node, "im-typing");
+					}
+				}, 7500);
+
+				break;
 		}
 	},
 
@@ -744,7 +785,7 @@ var IM = {
 	/**
 	 * Request for send message
 	 * @param {Peer} peer
-	 * @param {object} event
+	 * @param {{text: string, asAdmin: boolean, attachments: AttachmentController, textAreaNode: HTMLElement}} event
 	 * @returns {boolean}
 	 */
 	send: function(peer, event) {
@@ -757,7 +798,7 @@ var IM = {
 				forward_messages: event.fwd || "",
 				attachment: event.attachments.toString()
 			},
-				f = IM.getIdSelectedMessages();
+			f = IM.getIdSelectedMessages();
 
 		if (f.length > 0 && !o.fwd) {
 			p.forward_messages = f.join(",");
@@ -765,11 +806,9 @@ var IM = {
 
 		if (event.attachments.getGeo()) {
 			var g = event.attachments.getGeo();
-			p.lat = g[0];
+			p["lat"] = g[0];
 			p["long"] = g[1];
 		}
-
-		console.log("IM.send: ", p);
 
 		if (!p.message.trim() && !p.attachment.trim() && !p.forward_messages.trim() && !p.lat && !p["long"]) {
 			return false;
@@ -786,6 +825,7 @@ var IM = {
 			v: 5.56
 		}).then(function(messageId) {
 			IM.clearUnreadMessagesFix(peer.get());
+			event.textAreaNode.value = "";
 			IM.sent(peer, uniqueId, messageId);
 		});
 
@@ -856,6 +896,21 @@ var IM = {
 		});
 	},
 
+	__lastTyping: 0,
+
+	/**
+	 *
+	 * @param {Peer} peer
+	 * @private
+	 */
+	__setTyping: function(peer) {
+		var unixtime = getUnixTime();
+		if (isEnabled(Setting.SEND_TYPING) && unixtime - IM.__lastTyping > 5) {
+			IM.__lastTyping = unixtime;
+			//noinspection JSIgnoredPromiseFromCall
+			api("messages.setActivity", {peer_id: peer.get(), v: 5.56, type: "typing"});
+		}
+	},
 
 
 
@@ -1244,6 +1299,8 @@ var IM = {
 				basis = l("im.message_action_chat_photo_remove_source");
 				act = l("im.message_action_chat_photo_remove");
 				break;
+			default:
+				return "unknown action";
 		};
 		html = basis.schema({
 			"if": "<a href='#" + init.screen_name + "'>" + Site.Escape(init.first_name),
@@ -1440,7 +1497,7 @@ var IM = {
 			width,
 			photo,
 			allWidth = 0,
-			allHeigth = 0;
+			allHeight = 0;
 
 		for (var g = 0, k = elements.length; g < k; ++g) {
 			parent = elements[g];
@@ -1645,28 +1702,6 @@ var IM = {
 	},
 
 
-	notifyAudio: null,
-	notify: function () {
-		if (!(API.bitmask & 64))
-			return;
-
-		if (!IM.notifyAudio) {
-
-			var format, n = new Audio();
-			if (n.canPlayType("audio/mpeg"))
-				format = "mp3";
-			else if (n.canPlayType("audio/ogg"))
-				format = "ogg";
-			else
-				return;
-			n.src = "\/\/static.apidog.ru\/v6.3/notify." + format;
-			IM.notifyAudio = n;
-		};
-		n = IM.notifyAudio;
-		if (n.src)
-			n.play();
-	},
-
 	/**
 	 * Show attachments page
 	 * @param {Peer} peer
@@ -1794,7 +1829,7 @@ var IM = {
 		if (a === "mail")
 			Mail.explain();
 		else
-			IM.explain(Site.Get("to"));
+			IM.explain(Site.get("to"));
 	},
 	requestScroll: function (force) {
 		if (IM.isAsVK() && (force || Site.getScrolled() < document.documentElement.offsetHeight - document.documentElement.clientHeight * 1.5))

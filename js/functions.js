@@ -31,6 +31,9 @@ var onLoad = function() {
 	Photos.__init();
 	Settings.redrawMBOClass();
 
+	LongPoll.addListener([LongPoll.event.MESSAGE_NEW], Mail.__longPollGlobalListener);
+	LongPoll.addListener([LongPoll.event.FRIEND_ONLINE, LongPoll.event.FRIEND_OFFLINE], Site.__listenerLongPollData);
+
 	if (isEnabled(Setting.USING_PROXY)) {
 		$.elements.remove($.element("_link_ext"));
 		$.elements.remove($.element("_notify_ext"));
@@ -45,13 +48,22 @@ var onLoad = function() {
 
 	/**
 	 * Initial request
+	 * u = текущий пользователь
+	 * c = счетчики меню
+	 * b = баланс пользователя
+	 * a = права доступа
+	 * s = активные стикеры
+	 * l = недавние стикеры
+	 * f = друзья пользователя
+	 * d = время на сервере ВК (для настройки времени на сайте)
+	 * i = информация об аккаунте
+	 * q = пуш-настройки
 	 */
-
 	api("execute", {
 		code: "return{u:API.users.get({fields:Args.uf})[0],c:API.account.getCounters(),b:API.account.getBalance(),a:API.account.getAppPermissions(),s:API.store.getProducts({merchant:Args.m,filters:Args.sf,type:Args.st,extended:1}),l:API.messages.getRecentStickers().sticker_ids,f:API.friends.get({fields:Args.uf,order:Args.o}),d:API.utils.getServerTime(),i:API.account.getInfo(),q:API.account.getPushSettings({device_id:1})};",
 		uf: "online,photo_50,sex,bdate,screen_name,can_write_private_message,city,country,last_seen", // user fields
 		m: "google",
-		sf: "active,promoted", // store filter
+		sf: "active", // store filter
 		st: "stickers", // store type
 		o: "hints", // friends order
 		v: 5.64
@@ -60,7 +72,7 @@ var onLoad = function() {
 		 * @param {{
 		 *   u: User,
 		 *   c: object,
-		 *   b: int,
+		 *   b: {votes: int},
 		 *   a: int,
 		 *   s: {
 		 *     count: int,
@@ -83,7 +95,9 @@ var onLoad = function() {
 		 * }} data
 		 */
 	function(data) {
-		var user = data.u, friends, isAlreadyStarted = false;
+		/** @var {User} user */
+		var user = data.u;
+		var friends, isAlreadyStarted = false;
 
 		Local.add(user);
 
@@ -104,7 +118,7 @@ var onLoad = function() {
 		}
 
 
-		window._timeOffset = parseInt(Date.now() / 1000) - data.d;
+		window._timeOffset = Math.floor(Date.now() / 1000) - data.d;
 
 		if (data.s && data.s.items) {
 			EmotionController.populate(data.s.items.filter(function(i) {
@@ -142,7 +156,7 @@ var onLoad = function() {
 			truncateDefaultOptions.moreText = Lang.get("general.showMore");
 		});
 
-
+		console.timeEnd("BaseLoad");
 
 		$.elements.removeClass(document.documentElement, "_notloaded");
 
@@ -974,7 +988,6 @@ window.onKeyDownCallback;
 window.onLeavePage;
 //noinspection BadExpressionStatementJS
 window.onScrollCallback;
-window.vkLastCheckNotifications = getUnixTime();
 window.isMobile = /(mobile?|android|ios|bada|j2me|wp|phone)/ig.test(navigator.userAgent.toLowerCase());
 
 
@@ -985,7 +998,7 @@ var Local = {
 
 	/**
 	 * Add data about profiles and groups
-	 * @param {User[]|Group[]} users
+	 * @param {User|Group|User[]|Group[]} users
 	 * @returns {Object}
 	 */
 	add: function(users) {
@@ -1024,18 +1037,18 @@ var Local = {
 
 };
 
-window.vkLastCheckNotifications = null;
+var vkLastCheckNotifications = null;
 
 function requestCounters() {
 	api("execute", {
-		code: "if(Args.il==\"1\"){API.account.setOnline({voip:0});};return{c:API.account.getCounters(),f:API.friends.getOnline({v:5.8,online_mobile:1}),n:API.notifications.get({start_time:Args.st,count:5})};",
 		st: vkLastCheckNotifications,
-		il: isEnabled(1) ? 1 : 0
+		il: isEnabled(1) ? 1 : 0,
+		code: "if(Args.il==\"1\"){API.account.setOnline({voip:0});};return{c:API.account.getCounters(),f:API.friends.getOnline({v:5.8,online_mobile:1})};" // ,n:API.notifications.get({start_time:Args.st,count:5})
 	}).then(function(data) {
-		window.vkLastCheckNotifications = getUnixTime();
+		vkLastCheckNotifications = getUnixTime();
 
 		Site.setCounters(data.c);
-		Site.showNewNotifications(data.n);
+		//Site.showNewNotifications(data.n);
 
 		var friends = Friends.friends[API.userId] && Friends.friends[API.userId].items || [],
 			f = data.f,
@@ -1985,7 +1998,6 @@ var Analyzes = {
 };
 
 var eelid = 0;
-var eels = {};
 function sendEvent(method, data, callback) {
 	if (callback) {
 		if (typeof callback !== "string") {
@@ -2017,12 +2029,10 @@ function handleExtensionEvent(event) {
 }
 
 receiveEvent("onAccessTokenRequire", function(event) {
-	if ((API.bitmask & 4))
+	if (isEnabled(Setting.USING_PROXY)) {
 		return;
-	LongPoll._ext = true;
-	LongPoll.enabled = false;
-	LongPoll.start = function () {};
-	LongPoll.abort();
+	}
+
 	console.info("Extension: token is required");
 	onExtensionInited(event && event.version || 1.2, event && event.agent);
 	sendEvent(event.callback, {
@@ -2042,9 +2052,6 @@ receiveEvent("onLongPollDataReceived", function(event) {
 		        .catch(function(e) {
 		        	console.error(e)
 		        });
-
-
-		//LongPoll.getResult({updates: json}, null, true);
 	} catch (e) {
 		console.error("APIdogExtensionReceiveError", e, event);
 	}
@@ -2057,7 +2064,7 @@ receiveEvent("onAPIRequestExecuted", function (data) {
 window.addEventListener("message", function(event) {
 	if (event.source !== window)
 		return;
-	console.log("DOG", event.data);
+//	console.log("DOG", event.data);
 	handleExtensionEvent(event.data);
 });
 

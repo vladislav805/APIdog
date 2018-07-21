@@ -1453,5 +1453,53 @@ var Mail = {
 		});
 
 		return false;
+	},
+
+	/**
+	 *
+	 * @param {int} eventId
+	 * @param {Message} data
+	 * @private
+	 */
+	__longPollGlobalListener: function(eventId, data) {
+		if (eventId !== LongPoll.event.MESSAGE_NEW) {
+			return;
+		}
+
+		var peerId = data.peer_id;
+
+		Mail.__playNotify();
+	},
+
+	/**
+	 * @var {HTMLAudioElement|null}
+	 */
+	__playerNotify: null,
+	__playNotify: function() {
+		console.log("__playNotify");
+		if (!isEnabled(Setting.SOUND_ON_MESSAGE)) {
+			return;
+		}
+
+		var audio = this.__playerNotify;
+
+		if (!audio) {
+			var format;
+			audio = this.__playerNotify = new Audio();
+			if (audio.canPlayType("audio/mpeg")) {
+				format = "mp3";
+			} else if (audio.canPlayType("audio/ogg")) {
+				format = "ogg";
+			} else {
+				return;
+			}
+			audio.src = "//static.apidog.ru/v6.3/notify." + format;
+		}
+
+		if (audio.src) {
+			audio.currentTime = 0;
+			//noinspection JSIgnoredPromiseFromCall
+			audio.play();
+		}
 	}
 };

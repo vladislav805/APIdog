@@ -131,6 +131,25 @@ var Site = {
 
 	SECTIONS: ["friends","messages","photos","videos","groups","notifications"],
 
+	/**
+	 * Основные события сайта на LongPoll
+	 * @param {int} eventId
+	 * @param {int|{userId: int, user: User}} data
+	 * @private
+	 */
+	__listenerLongPollData: function(eventId, data) {
+		switch (eventId) {
+			case LongPoll.event.COUNTER_MAIL_UPDATED:
+				q("[data-menu='messages']").dataset.count = String(data);
+				break;
+
+			case LongPoll.event.FRIEND_ONLINE:
+			case LongPoll.event.FRIEND_OFFLINE:
+
+				break;
+		}
+	},
+
 	setCounters: function(data) {
 		data = data || Site.counters || {};
 		Site.SECTIONS.forEach(function(name) {
@@ -673,6 +692,9 @@ var Site = {
 		return $.e("div", {"class": "msg-empty", html: text});
 	},
 
+	/**
+	 * @deprecated
+	 */
 	showNewNotifications: function (data) {
 		if (!data) return;
 		Local.add(data.profiles.concat(data.groups));
