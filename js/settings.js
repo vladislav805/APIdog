@@ -103,7 +103,7 @@ var Settings = {
 					})
 				},
 				{
-					bit: 8,
+					bit: Setting.ENABLED_LONGPOLL,
 					label: Lang.get("settings.param_longpoll"),
 					name: "longpoll",
 					type: "checkbox",
@@ -117,37 +117,37 @@ var Settings = {
 					}
 				},
 				{
-					bit: 64,
+					bit: Setting.SOUND_ON_MESSAGE,
 					label: Lang.get("settings.param_soundnotify"),
 					name: "soundnotify",
 					type: "checkbox"
 				},
 				{
-					bit: 32768,
+					bit: Setting.DIALOG_AS_VK,
 					label: Lang.get("settings.param_dialog_as_vk"),
 					name: "dialogasvk",
 					type: "checkbox"
 				},
 				{
-					bit: 2,
+					bit: Setting.AUTO_READ_DIALOG,
 					label: Lang.get("settings.param_autoread"),
 					name: "autoread",
 					type: "checkbox"
 				},
 				{
-					bit: 2048,
+					bit: Setting.SEND_TYPING,
 					label: Lang.get("settings.param_send_typing"),
 					name: "sendtypingevent",
 					type: "checkbox"
 				},
 				{
-					bit: 4096,
+					bit: Setting.MESSAGES_INSTEAD_DIALOGS,
 					label: Lang.get("settings.param_old_version_messages"),
 					name: "oldversionmessages",
 					type: "checkbox"
 				},
 				{
-					bit: 8192,
+					bit: Setting.SEND_ALTERNATIVE,
 					label: Lang.get("settings.param_send_by_ctrl_enter"),
 					name: "sendbyctrlenter",
 					type: "checkbox"
@@ -157,13 +157,13 @@ var Settings = {
 					label: Lang.get("settings.param_h_site")
 				},
 				{
-					bit: 1,
+					bit: Setting.ENABLED_ONLINE,
 					label: Lang.get("settings.param_online"),
 					name: "online",
 					type: "checkbox"
 				},
 				{
-					bit: 4,
+					bit: Setting.USING_PROXY,
 					label: Lang.get("settings.param_proxy"),
 					name: "proxy",
 					type: "checkbox",
@@ -185,13 +185,13 @@ var Settings = {
 					}
 				},*/
 				{
-					bit: 16,
+					bit: Setting.AVOID_VK_LINKS,
 					label: Lang.get("settings.param_edit_links"),
 					name: "editlinks",
 					type: "checkbox"
 				},
 				{
-					bit: 256,
+					bit: Setting.LEFT_NOTIFICATIONS_COUNTER,
 					label: "не сбрасывать счетчик ответов",
 					name: "notificationcountdontreset",
 					type: "checkbox"
@@ -207,31 +207,31 @@ var Settings = {
 					label: Lang.get("settings.param_h_interface")
 				},
 				{
-					bit: 32,
+					bit: Setting.IS_TOUCH,
 					label: Lang.get("settings.param_touch"),
 					name: "touch",
 					type: "checkbox"
 				},
 				{
-					bit: 128,
+					bit: Setting.FIXED_HEADER,
 					label: Lang.get("settings.param_fixed"),
 					name: "fixedhead",
 					type: "checkbox"
 				},
 				{
-					bit: 512,
+					bit: Setting.DOUBLE_CLICK_DISABLED,
 					label: Lang.get("settings.param_double_click"),
 					name: "dblclickdisabled",
 					type: "checkbox"
 				},
 				{
-					bit: 16384,
+					bit: Setting.DISABLE_IMAGES,
 					label: Lang.get("settings.param_disable_images"),
 					name: "disabledimages",
 					type: "checkbox"
 				},
 				{
-					bit: 65536,
+					bit: Setting.WARNING_ONLINE,
 					label: "выделять элементы сайта красной рамкой, которые выбивают онлайн",
 					name: "carefulelements",
 					type: "checkbox"
