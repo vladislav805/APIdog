@@ -115,6 +115,7 @@ var Audios = {
 
 	/**
 	 * Storage for audio albums
+	 * @deprecated
 	 */
 	albums: {},
 
@@ -178,9 +179,6 @@ var Audios = {
 			case "radio":
 				return Audios.page({ownerId: API.userId}).then(Audios.requestRadio).then(Audios.showRadio);
 
-			case "albums":
-				return Audios.page({ownerId: ownerId, search: true}).then(Audios.requestAlbums).then(Audios.showAlbums);
-
 			default:
 				return Audios.page({
 					ownerId: ownerId,
@@ -234,13 +232,12 @@ var Audios = {
 		tabs.push(["audio" + (param ? "?" + param : ""), Lang.get("audio.tabAll")]);
 		tabs.push(["audio?act=recommendations" + (param ? "&" + param : ""), Lang.get("audio.tabRecommendations")]);
 
-		mine && tabs.push(["audio?act=search", Lang.get("audio.tabSearch")]);
-		mine && tabs.push(["audio?act=popular", Lang.get("audio.tabPopular")]);
-		mine && tabs.push(["audio?act=broadcasts", Lang.get("audio.tabFriends")]);
-
-		tabs.push(["audio?act=albums" + (param ? "&" + param : ""), Lang.get("audio.tabAlbums")]);
-
-		mine && tabs.push(["audio?act=radio", Lang.get("audio.tabRadio")]);
+		if (mine) {
+			tabs.push(["audio?act=search", Lang.get("audio.tabSearch")]);
+			tabs.push(["audio?act=popular", Lang.get("audio.tabPopular")]);
+			tabs.push(["audio?act=broadcasts", Lang.get("audio.tabFriends")]);
+			tabs.push(["audio?act=radio", Lang.get("audio.tabRadio")]);
+		}
 
 		return Site.getTabPanel(tabs);
 	},
@@ -1242,46 +1239,6 @@ var Audios = {
 		});
 
 		meta.sl.setData(meta.data);
-	},
-
-	/**
-	 * Request for user's audio albums
-	 * @param {{sl: SmartList, ownerId: int, data: object?}} meta
-	 * @returns {{sl: SmartList, ownerId: int, data: {count: int, items: VKAudio[]}}|Promise}
-	 */
-	requestAlbums: function(meta) {
-		if (!Audios.albums[meta.ownerId]) {
-			return api("audio.getAlbums", {
-				count: 100,
-				owner_id: meta.ownerId,
-				v: Audios.getAPIVersion()
-			}).then(function (data) {
-				Audios.albums[meta.ownerId] = data.items;
-				meta.data = data.items;
-				return meta;
-			});
-		} else {
-			meta.data = Audios.albums[meta.ownerId];
-			return meta;
-		}
-	},
-
-	/**
-	 * Show user's audio albums
-	 * @param {{sl: SmartList, ownerId: int, data: {count: int, items: VKAudio[]}, list: HTMLElement}} meta
-	 */
-	showAlbums: function(meta) {
-		meta.sl.setGetItemListNode(function(album) {
-			return $.e("a", {
-				"class": "list-item",
-				href: "#audio?ownerId=" + album.owner_id + "&albumId=" + album.id,
-				html: album.title.safe()
-			});
-		});
-
-		meta.sl.setData({count: meta.data.length, items: meta.data});
-		meta.list.parentNode.insertBefore(Site.getPageHeader("Альбомы"), meta.list);
-		Site.setHeader("Альбомы");
 	},
 
 	/**
