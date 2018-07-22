@@ -1509,10 +1509,16 @@ var Audios = {
 	 * @param {VKAudio} audio
 	 */
 	getBitrate: function(audio) {
+		var showResult = function(t) {
+			new Snackbar({
+				text: t,
+				duration: 5000
+			}).show();
+		};
 		APIdogRequest("vk.getAudioBitrate", { audio: audio.owner_id + "_" + audio.id, accessToken: API.accessToken }).then(function(data) {
-			alert("Примерный битрейт: " + data.bitrate + "kbps");
+			showResult("Примерный битрейт: " + data.bitrate + "kbps; размер: " + data.size.bytes(1));
 		}).catch(function() {
-			alert("К сожалению, не получилось получить битрейт");
+			showResult("К сожалению, не получилось получить битрейт");
 		});
 	},
 

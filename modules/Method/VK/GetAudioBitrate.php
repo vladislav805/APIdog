@@ -36,7 +36,8 @@
 
 			$data = new VKRequest("audio.getById", [
 				"access_token" => $this->accessToken,
-				"audios" => $this->audio
+				"audios" => $this->audio,
+				"v" => 5.67
 			]);
 
 			$data = $data->send();
@@ -50,59 +51,43 @@
 			/** @var int $duration */
 			$duration = $data->duration;
 
-			$url = parse_url(explode("?", $data->url)[0]);
-
-			$host = $url["host"];
-			$path = $url["path"];
-			$fp = stream_socket_client($host . ":80", $errno, $errstr, 5); // 15.06.2016
-			if (!$fp) {
-				throw new APIdogException(ErrorCode::VK_AUDIO_BITRATE_SOCKET_ERROR);
-			} else {
-				stream_set_blocking($fp, false); // 19.05.2016
-				fputs($fp, "HEAD " . $path . " HTTP/1.0\nUser-Agent: " . VK_SHIT_USER_AGENT ."\nHOST: " . $host . "\n\n");
-
-				$x = "";
-
-				while (!feof($fp)) {
-					$x .= fgets($fp, 128);
-				}
-				fclose($fp);
-
-
-				preg_match_all("/Location: ([^$]+)/", $x, $location, PREG_SET_ORDER);
-
-				$location = isset($location[0]) ? $location[0][1] : $location;
-
-				if ($location) {
-					$host = $url["host"];
-					$path = $url["path"];
-					$fp = stream_socket_client($host . ":80", $errno, $errstr, 5); // 15.06.2016
-
-					stream_set_blocking($fp, false); // 19.05.2016
-					fputs($fp, "HEAD " . $path . " HTTP/1.0\nUser-Agent: " . VK_SHIT_USER_AGENT ."\nHOST: " . $host . "\n\n");
-
-					$x = "";
-
-					while (!feof($fp)) {
-						$x .= fgets($fp, 128);
-					}
-					fclose($fp);
-				}
-
-				preg_match_all("/Content-Length: ([0-9]+)/", $x, $size, PREG_SET_ORDER);
-
-				if (!sizeOf($size)) {
-					throw new APIdogException(ErrorCode::VK_AUDIO_BITRATE_NOT_CONTENT_SIZE);
-				}
-
-				$size = (int) $size[0][1];
-
-				return [
-					"size" => $size,
-					"bitrate" => (int) ($size / 128 / $duration)
-				];
+			if (!$data->url) {
+				throw new APIdogException(ErrorCode::VK_AUDIO_BITRATE_NOT_URL);
 			}
 
+			$ch = curl_init($data->url);
 
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_HEADER, 1);
+			curl_setopt($ch, CURLOPT_NOBODY, 1);
+			curl_setopt($ch, CURLOPT_USERAGENT, VK_SHIT_USER_AGENT);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 3);
+
+			$output = curl_exec($ch);
+
+			curl_close($ch);
+
+			$headers = [];
+			$data = explode("\n", $output);
+			$headers["status"] = trim(array_shift($data));
+
+			foreach ($data as $row) {
+				$middle = explode(":", $row);
+				if (sizeOf($middle) === 2) {
+					$headers[trim($middle[0])] = trim($middle[1]);
+				}
+			}
+
+			$size = (int) $headers["Content-Length"];
+
+
+			if (!$size) {
+				throw new APIdogException(ErrorCode::VK_AUDIO_BITRATE_NOT_CONTENT_SIZE);
+			}
+
+			return [
+				"size" => $size,
+				"bitrate" => (int) ($size * 8 / $duration / 1000)
+			];
 		}
 	}
