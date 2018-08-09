@@ -879,7 +879,7 @@ var Audios = {
 		Audios.miniPlayer.show();
 
 		var audioId = track.owner_id + "_" + track.id,
-			player = $.element("player");
+			player = Audios.getPlayer();
 
 		if (!track.url) {
 			Site.Alert({
