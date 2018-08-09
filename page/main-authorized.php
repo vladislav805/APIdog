@@ -3,6 +3,7 @@
 	use Method\Settings\Setting;
 	use Method\UI\l10n;
 
+	/** @noinspection PhpUnhandledExceptionInspection */
 	$db = new Connection(dbh, dbu, dbp, dbd);
 	$cn = new Controller($db);
 
@@ -14,21 +15,6 @@
 		header("Location: ./?page=logout");
 		exit;
 	}
-
-
-	/*if (isset($_SESSION["invite"])) {
-		if (hash_hmac("sha256", "q" . $cn->getSession()->getUserId() . "d", "apidog") !== $_SESSION["invite"]) {
-			print "Invite key was given to another account.";
-			exit;
-		}
-
-
-		$items = invite_open();
-		unset($items[$_SESSION["invite"]]);
-		invite_save($items);
-		unset($_SESSION["invite"]);
-	}*/
-
 
 	/** @var \Model\Settings $settings */
 	$settings = $cn->perform(new \Method\Settings\Get(null));
@@ -47,7 +33,7 @@
 	if ($settings->getThemeId()) {
 		try {
 			$jsObject["theme"] = $cn->perform(new \Method\Theme\GetById(["themeId" => $settings->getThemeId()]));
-		} catch (APIdogException $e) {
+		} /** @noinspection PhpRedundantCatchClauseInspection */ catch (APIdogException $e) {
 			var_dump("something wrong", $e);
 		}
 	}
@@ -112,7 +98,7 @@
 
 
 
-	<body id="main" class="head-player-button-play isTouch<?=($settings->getBitmask() & Setting::FIXED_POSITION_HEADER ? " header--fixed": "");?>">
+	<body id="main" class="head-player-button-play isTouch<?=($settings->getBitmask() & Setting::FIXED_POSITION_HEADER ? " header--fixed" : "");?>">
 
 		<div class="hidden loadScreen-wrap">
 			<div></div>
@@ -247,7 +233,7 @@
 					</aside>
 					<div id="birthdays"></div>
 					<div class="avmn-wrap">
-						<div class="avmn"><?=$l10n->menuAdvertisments;?></div>
+						<div class="avmn"><?=$l10n->menuAdvertisements;?></div>
 						<div id="MarketGidScriptRootC592365">
 							<div id="MarketGidPreloadC592365">
 								<a id="mg_add592365" href="http://usr.marketgid.com/demo/celevie-posetiteli/" target="_blank">
