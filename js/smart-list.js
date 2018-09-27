@@ -269,7 +269,7 @@ SmartList.state = {
  */
 SmartList.getDefaultItemListNode = function(item, options) {
 	options = options || {};
-	var link = item.link || "#" + item.screen_name, wrap, nImage, nAdd, nRemove, nContentWrap, nSubtitle;
+	var link = item.link || "#" + (item.screen_name || ("name" in item ? "club" : "id") + item.id), wrap, nImage, nAdd, nRemove, nContentWrap, nSubtitle;
 	wrap = $.e("div", {"class": "sl-item", append: [
 		$.e("a", {"class": "sl-photo-wrap", href: link, append: nImage = item.photo_50 ? $.e("img", {src: getURL(item.photo_50)}) : $.e("div", {"class": "sl-photo-icon"})}),
 		nContentWrap = $.e("a", {"class": "sl-content-wrap", href: link, append: $.e("div", {"class": "sl-content", html: item.title ? item.title.safe() : getName(item)})})
