@@ -369,5 +369,6 @@ function setCookie(key, value, days) {
 }
 
 window.addEventListener("load", function() {
+	window.localStorage.clear();
 	setTimeout(window.scrollTo.bind(window, 0, 1), 0);
 }, false);
