@@ -36,7 +36,7 @@ var Profile = {
 			userId = user.id,
 			isDeleted = user.deactivated,
 			isActive = !isDeleted,
-			isClosed = user.is_closed,
+			isClosed = user.is_closed && user.friend_status < 2,
 			bl = user.blacklisted,
 			thumb = user.crop_photo && user.crop_photo.photo && (user.crop_photo.photo.owner_id + "_" + user.crop_photo.photo.id) || user.photo_id;
 
@@ -81,7 +81,7 @@ var Profile = {
 			new DropDownMenu(Lang.get("general.actions"), Profile.getDisplayActions(user)).getNode()
 		));
 
-		if (isActive && !bl && !isClosed) {
+		if (API.userId === userId || (isActive && !bl && !isClosed)) {
 			nodeInfo.appendChild(Site.getPageHeader(
 				Lang.get("profiles.info"),
 				API.userId === userId
