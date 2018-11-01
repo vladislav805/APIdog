@@ -208,6 +208,11 @@
 		"Page blocked by administrator. Information not available.",
 		null
 	],
+	"profiles.profileClosed": [
+		"Это закрытый профиль<br>Чтобы смотреть записи, фотографии и другие материалы добавьте этого пользователя в друзья.",
+		"This is a private profile<br>Add this user to friend to get access for posts, photos and other materials.",
+		null
+	],
 	"profiles.infoMobilePhone":[
 		"Моб. телефон",
 		"Mobile",

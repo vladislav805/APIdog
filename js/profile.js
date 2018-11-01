@@ -36,6 +36,7 @@ var Profile = {
 			userId = user.id,
 			isDeleted = user.deactivated,
 			isActive = !isDeleted,
+			isClosed = user.is_closed,
 			bl = user.blacklisted,
 			thumb = user.crop_photo && user.crop_photo.photo && (user.crop_photo.photo.owner_id + "_" + user.crop_photo.photo.id) || user.photo_id;
 
@@ -80,7 +81,7 @@ var Profile = {
 			new DropDownMenu(Lang.get("general.actions"), Profile.getDisplayActions(user)).getNode()
 		));
 
-		if (isActive && !bl) {
+		if (isActive && !bl && !isClosed) {
 			nodeInfo.appendChild(Site.getPageHeader(
 				Lang.get("profiles.info"),
 				API.userId === userId
@@ -209,10 +210,10 @@ var Profile = {
 
 				isLink = typeof k.link === "string";
 
-				nodeMedia.appendChild(e(isLink ? "a" : "div", {
+				nodeMedia.appendChild(e(isLink && !isClosed ? "a" : "div", {
 					"class": "grid-links-item a",
 					href: isLink ? "#" + k.link : null,
-					onclick: !isLink ? k.link : null,
+					onclick: isLink || isClosed ? null : k.link,
 					append: [
 						k.count > 0
 							? e("strong", {
@@ -237,7 +238,7 @@ var Profile = {
 				wrap.appendChild(Wall.getNodeWall(userId, {
 					data: wall,
 					canPost: info.can_post,
-					extra:user.e
+					extra: user.e
 				}));
 			}
 
@@ -249,6 +250,9 @@ var Profile = {
 			}[isDeleted]));
 			wrap.appendChild(nodeInfo);
 
+		} else if (isClosed) {
+			nodeInfo.appendChild(Site.getEmptyField(Lang.get("profiles.profileClosed")));
+			wrap.appendChild(nodeInfo);
 		} else {
 
 			nodeInfo.appendChild(Site.getEmptyField(Lang.get("profiles.blocked").schema({
