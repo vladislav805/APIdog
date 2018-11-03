@@ -17,6 +17,9 @@ var Groups = {
 				break;
 
 			case "manage":
+				Groups.showManagePage(+Site.get("groupId"), Site.get("section"));
+				break;
+
 			case "stat":
 			case "blacklist":
 			case "requests":
@@ -509,9 +512,11 @@ var Groups = {
 			];
 
 			if (group.is_admin) {
-				links.push({link: "groups?act=manage&groupId=" + groupId, label: "Управление", count: -1});
-				links.push({link: "groups?act=blacklist&groupId=" + groupId, label: "Черный список", count: -1});
-				links.push({link: "groups?act=stat&groupId=" + groupId, label: "Статистика", count: -1});
+				links.push({
+					link: Groups.showAdminDialog.bind(Groups, group),
+					label: "Manage",
+					count: -1
+				});
 				if (group.r > 0) {
 					links.push({link: "groups?act=requests&groupId=" + groupId, label: "Заявки на вступление в группу", count: group.r});
 				}
@@ -541,6 +546,40 @@ var Groups = {
 
 		Site.setHeader(Lang.get("groups.type")[group.type]);
 		Site.append(wrap);
+	},
+
+	showAdminDialog: function(group) {
+		var w, modal = new Modal({
+			title: "Manage community",
+			content: w = $.e("div"),
+			footer: [
+				{
+					title: "Close",
+					onclick: function() {
+						this.close();
+					}
+				}
+			]
+		});
+		modal.show();
+
+		[
+			{label: "Info", link: "groups?act=manage&section=info&groupId=" + group.id},
+			{label: "Admins", link: "groups?act=manage&section=admins&groupId=" + group.id},
+			{label: "Blacklist", link: "groups?act=manage&section=blacklist&groupId=" + group.id},
+			{label: "Stat", link: "groups?act=manage&section=stat&groupId=" + group.id},
+		].forEach(function(item) {
+			var e = SmartList.getDefaultItemListNode({
+				title: item.label,
+				link: "#" + item.link,
+				icon: "",
+			});
+			e.addEventListener("click", function() {
+				this.close();
+			}.bind(modal));
+
+			w.appendChild(e);
+		});
 	},
 
 	getCover: function(group) {
@@ -1167,6 +1206,174 @@ var Groups = {
 		show: function(meta) {
 			meta.sl.setData(meta.data);
 		}
+	},
+
+	showManagePage: function(groupId, section) {
+		switch (section) {
+			case "admins": Groups.manage.admin.show(groupId); break;
+			default:
+				alert("Unknown section = " + section);
+		}
+	},
+
+	manage: {
+		admin: {
+			/**
+			 * @param {int} groupId
+			 */
+			show: function(groupId) {
+				var page = $.e("div"), sl, form;
+
+				sl = new SmartList({
+					data: {count: -1, items: []},
+					countPerPage: 100,
+					needSearchPanel: true,
+					getItemListNode: SmartList.getDefaultItemListNode,
+					optionsItemListCreator: {
+						textContentBold: true,
+
+						getSubtitle: function(user) {
+							return user.role;
+						},
+
+						remove: {
+							filter: function(user) {
+								return user.role !== "creator";
+							},
+
+							onClick: function(user) {
+								Groups.manage.admin.edit(groupId, user.id, user.role).then(function () {
+									sl.remove(user);
+								});
+							},
+
+							label: {
+								content: "Remove admin",
+								width: 130
+							}
+						}
+					},
+
+					filter: SmartList.getDefaultSearchFilter({
+						fields: ["first_name", "last_name"]
+					}),
+
+					onPageCreated: function() {
+						Site.initOnlineTooltips();
+					}
+				});
+
+				form = Site.createInlineForm({
+					name: "userId",
+					placeholder: Lang.get("settings.blacklist_field_placeholder"),
+					title: "Add",
+					onsubmit: function(event) {
+						event.preventDefault();
+						var form = this,
+							user = new URL(form.userId.value.trim());
+
+						user = (user.hostname === location.hostname ? user.hash.split("?")[0] : user.pathname).substring(1);
+
+						if (user) {
+							Groups.manage.admin.edit(groupId, user, "").then(function(data) {
+								if (data.now) {
+									sl.add(data.user);
+								} else {
+									sl.remove(data.user);
+								}
+							});
+						} else {
+							new Snackbar({
+								text: Lang.get("settings.error_enter_id")
+							}).show();
+						}
+						return false;
+					}
+				});
+
+				page.appendChild(Site.getPageHeader("Manage of admin' groups"));
+				page.appendChild(form);
+				page.appendChild(sl.getNode());
+
+				Site.setHeader("Manage of group", {link: "#group" + groupId});
+				Site.append(page);
+
+				api("groups.getMembers", {
+					group_id: groupId,
+					fields: "online,photo_50",
+					filter: "managers",
+					v: 5.88
+				}).then(function(res) {
+					sl.setData(res);
+				});
+			},
+
+			/**
+			 * @param {int} groupId
+			 * @param {int|string} userId
+			 * @param {string=} current
+			 * @returns {Promise<{user: User, result: int, now: boolean}>}
+			 */
+			edit: function(groupId, userId, current) {
+				return api("users.get", {
+					user_ids: userId,
+					fields: "photo_50,online,screen_name",
+					v: 5.88
+				}).then(function(user) {
+					user = user[0];
+					var e = $.e;
+
+					var selRole = e("select", {"class": "sf", name: "role", append: [
+							e("option", {value: "", html: "member"}),
+							e("option", {value: "moderator", html: "moderator"}),
+							e("option", {value: "editor", html: "editor"}),
+							e("option", {value: "administrator", html: "administrator"})
+						]});
+
+					var opts = ["", "moderator", "editor", "administrator"];
+
+					selRole.selectedIndex = opts.indexOf(current);
+
+					return new Promise(function(resolve) {
+						new Modal({
+							title: "Approve " + user.first_name.safe() + "  admin",
+							content: e("div", {append: [
+								e("p", {html: user.first_name.safe() + " will be promoted as:"}),
+								selRole
+							]}),
+							footer: [
+								{
+									name: "save",
+									title: "Save",
+									onclick: function() {
+										var newRole = selRole.options[selRole.selectedIndex].value;
+										api("groups.editManager", {
+											group_id: groupId,
+											user_id: user.id,
+											role: newRole
+										}).then(function(res) {
+											this.close();
+											resolve({
+												user: user,
+												result: res,
+												now: newRole !== ""
+											});
+										}.bind(this));
+									}
+								},
+								{
+									name: "cancel",
+									title: "Cancel",
+									onclick: function() {
+										this.close();
+									}
+								}
+							]
+						}).show();
+					});
+				});
+			}
+		},
 	},
 
 
