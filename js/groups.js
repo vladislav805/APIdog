@@ -1265,7 +1265,7 @@ var Groups = {
 
 				form = Site.createInlineForm({
 					name: "userId",
-					placeholder: Lang.get("settings.blacklist_field_placeholder"),
+					placeholder: "Place here link of member for add admin",
 					title: "Add",
 					onsubmit: function(event) {
 						event.preventDefault();
@@ -1295,7 +1295,7 @@ var Groups = {
 				page.appendChild(form);
 				page.appendChild(sl.getNode());
 
-				Site.setHeader("Manage of group", {link: "#group" + groupId});
+				Site.setHeader("Manage of group", {link: "club" + groupId});
 				Site.append(page);
 
 				api("groups.getMembers", {
