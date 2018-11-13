@@ -69,12 +69,19 @@ api.fx = {
 	 */
 	performProxy: function(om) {
 		var url = "//apidog.ru:4006/method/" + om.getMethod();
-		if (typeof window.fetch === "function") {
+		if (false && typeof window.fetch === "function") {
 			// TODO III
 		} else {
 			var xhr = new XMLHttpRequest();
 			xhr.open("POST", url);
-			xhr.send(om.getParams());
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					var json = JSON.parse(xhr.responseText);
+					om.notify(json);
+				}
+			};
+			xhr.send(httpBuildQuery(om.getParams()));
 		}
 	},
 
