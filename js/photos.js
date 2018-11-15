@@ -1167,6 +1167,20 @@ var Photos = {
 
 			menu = {};
 
+		menu.openOriginal = {
+			label: l("photo.viewActionShowOriginal"),
+			onclick: function() {
+				window.open(getURL(current.photo_2560 || current.photo_1280 || current.photo_807 || current.photo_604));
+			}
+		};
+
+		menu.openListSizes = {
+			label: l("photo.viewActionShowListSizes"),
+			onclick: function() {
+				Photos.downloadPhoto(ownerId, photoId, accessKey);
+			}
+		};
+
 		menu.share = {
 			label: l("photo.viewActionShare"),
 			onclick: function() {
