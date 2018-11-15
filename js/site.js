@@ -478,8 +478,9 @@ var Site = {
 						break;
 
 					default:
+						// {online: -8, online_mobile: -8, online_app: true}
 						title = "unknown (" + data.online_app + ")";
-						className = "other";
+						className = "app";
 				}
 			} else {
 				if (data.online_mobile) {
@@ -1054,7 +1055,7 @@ var Site = {
 				break;
 
 			default:
-				$.elements.addClass(elem, "online-other");
+				$.elements.addClass(elem, "online-app");
 		}
 
 		return elem;
