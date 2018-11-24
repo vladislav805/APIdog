@@ -513,14 +513,14 @@ var Settings = {
 		/**
 		 * Request to get banned users
 		 * @param data
-		 * @returns {Promise.<{count: int, items: User[]}>}
+		 * @returns {Promise.<{count: int, items: int[], profiles: User[], groups: User[]}>}
 		 */
 		load: function(data) {
 			return api("account.getBanned", {
 				count: 200,
 				fields: "photo_50,online,screen_name,last_seen",
 				offset: getOffset(),
-				v: 5.56
+				v: 5.91
 			}).then(function(res) {
 				return {list: data.list, data: res};
 			});
@@ -528,9 +528,13 @@ var Settings = {
 
 		/**
 		 * Show list of banned in smart list
-		 * @param {{list: SmartList, data: {count: int, items: User[]}}} data
+		 * @param {{list: SmartList, data: {count: int, items: User[], profiles: User[], groups: User[]}}} data
 		 */
 		show: function(data) {
+			Local.add(data.data.profiles.concat(data.data.groups));
+			data.data.items = data.data.items.map(function(item) {
+				return Local.data[item];
+			});
 			data.list.setData(data.data);
 		},
 
