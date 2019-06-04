@@ -790,7 +790,7 @@ var Video = {
 	videos: {},
 	getVideo: function (owner_id, video_id, access_key) {
 		Site.API("execute", {
-			code: ('var v=API.video.get({videos:"%o%_%v%%a%",extended:1,v:5.18}),p=v.profiles,g=v.groups;v=v.items[0];if(v==null){return{no:!0,v:v};};v.inAlbums=API.video.getAlbumsByVideo({owner_id:%o%,video_id:%v%});return{video:v,u:p+g,increment:API.video.incViewCounter({owner_id:%o%,video_id:%v%}),tags:API.video.getTags({owner_id:%o%,video_id:%v%,v:5.21})};')
+			code: ('var v=API.video.get({videos:"%o%_%v%%a%",extended:1,v:5.89}),p=v.profiles,g=v.groups;v=v.items[0];if(v==null){return{no:!0,v:v};};v.inAlbums=API.video.getAlbumsByVideo({owner_id:%o%,video_id:%v%});return{video:v,u:p+g,increment:API.video.incViewCounter({owner_id:%o%,video_id:%v%}),tags:API.video.getTags({owner_id:%o%,video_id:%v%,v:5.21})};')
 				.replace(/%o%/ig, owner_id)
 				.replace(/%g%/ig, -owner_id)
 				.replace(/%v%/ig, video_id)

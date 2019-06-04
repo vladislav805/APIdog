@@ -7,7 +7,7 @@
 function api(method, params) {
 	return new Promise(function(resolve, reject) {
 		var request = new api.fx.request(method, params || {});
-		
+
 		api.fx.perform(request.onResult(resolve).onError(reject));
 	});
 }
@@ -35,7 +35,7 @@ api.fx = {
 	},
 
 	/**
-	 * Executor for API requests 
+	 * Executor for API requests
 	 * @param {api.fx.request} om
 	 */
 	perform: function(om) {
@@ -44,7 +44,7 @@ api.fx = {
 		api.fx.sRequests[om.getRequestId()] = om;
 
 		if (!p.v) {
-			p.v = 4.99;
+			p.v = "5.10"; // was 4.99
 		}
 
 		p.lang = 0; // todo: send real language
@@ -116,9 +116,9 @@ api.fx = {
 			elem = document.createElement("script"),
 			query = "/method/" + om.getMethod() + "?" + url,
 			sig = md5(query);
-		
+
 		elem.type = "text/javascript";
-		
+
 		elem.addEventListener("load", function() {
 			$.elements.remove(elem);
 		});
