@@ -301,6 +301,9 @@ var Site = {
 			return Docs.explain(url);
 		if (reg.Analyzes.test(url))
 			return Analyzes.open();
+		if (reg.Search.test(url)) {
+			return Search.init();
+		}
 		for (var current in reg) {
 			if (reg[current].test(url)) {
 				var id = url.replace(new RegExp(current, "igm"), "");
