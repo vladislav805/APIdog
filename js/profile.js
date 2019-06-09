@@ -627,7 +627,7 @@ var Profile = {
 		modal.show(fromNodeAnimation);
 
 		api("execute",{
-			code:'var u=API.users.get({user_ids:Args.u,fields:Args.ff,v:5.8})[0],r=u.relatives@.id;if(u.relation_partner){r.push(u.relation_partner.id);}return{u:u,a:API.users.get({user_ids:r,fields:Args.fr})};',
+			code:'var u=API.users.get({user_ids:Args.u,fields:Args.ff,v:'+api.VERSION_LOWER+'})[0],r=u.relatives@.id;if(u.relation_partner){r.push(u.relation_partner.id);}return{u:u,a:API.users.get({user_ids:r,fields:Args.fr})};',
 			u: userId,
 			ff: "online,last_seen,timezone,contacts,sex,rate,connections,activities,interests,movies,tv,books,games,about,quotes,music,schools,relatives,relation,education,city,country,personal,home_town,first_name_gen,site,maiden_name",
 			fr: "sex,online,screen_name,first_name_ins,last_name_ins,first_name_acc,last_name_acc,first_name_abl,last_name_abl"
@@ -1015,7 +1015,7 @@ var Profile = {
 	 */
 	showLastActivity: function(userId) {
 		api("execute", {
-			code: "var u=API.users.get({user_ids:Args.u,fields:\"last_seen,sex,online\",v:5.28})[0],a,t=API.utils.getServerTime()-u.last_seen.time;if(!u)return 0;if(u.online_app)a=API.apps.get({app_id:u.online_app});return{u:u,t:t,a:a};",
+			code: "var u=API.users.get({user_ids:Args.u,fields:\"last_seen,sex,online\",v:"+api.VERSION_LOWER+"})[0],a,t=API.utils.getServerTime()-u.last_seen.time;if(!u)return 0;if(u.online_app)a=API.apps.get({app_id:u.online_app});return{u:u,t:t,a:a};",
 			u: userId
 		}).then(function(data) {
 			var user = data.u,

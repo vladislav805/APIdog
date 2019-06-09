@@ -520,7 +520,7 @@ var Settings = {
 				count: 200,
 				fields: "photo_50,online,screen_name,last_seen",
 				offset: getOffset(),
-				v: 5.91
+				v: api.VERSION_FRESH
 			}).then(function(res) {
 				return {list: data.list, data: res};
 			});
@@ -847,7 +847,7 @@ var Settings = {
 			var callee = Settings.getProfileEditForm;
 			Site.API("execute", {
 				code: "return{a:API.account.getProfileInfo(),s:API.account.getInfo(),b:API.account.getBalance(),u:API.users.get({v:5.27,fields:\"photo_200\"})};",
-				v: 5.94
+				v: api.VERSION_FRESH
 			}, function (data) {
 				data = Site.isResponse(data);
 				if (!data)

@@ -781,7 +781,7 @@ var Mail = {
 	 */
 	requestReadAll: function(readed) {
 		api("execute", {
-			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:5.16}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:parseInt(Args.r)+i};',
+			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:'+api.VERSION_LOWER+'}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:parseInt(Args.r)+i};',
 			r: readed || 0
 		}).then(function(data) {
 			if (data.n > 0) {
@@ -940,7 +940,7 @@ var Mail = {
 	 */
 	getMessageById: function(data) {
 		api("execute", {
-			code: 'var m=API.messages.getById({message_ids:Args.id,v:5.8}).items[0],i=(m.fwd_messages@.user_id);i.push(m.user_id);if(parseInt(Args.r)==1){API.messages.markAsRead({message_ids:m.id});};var u=API.users.get({user_ids:i,fields:Args.f,v:5.8});return{m:m,u:u};',
+			code: 'var m=API.messages.getById({message_ids:Args.id,v:'+api.VERSION_LOWER+'}).items[0],i=(m.fwd_messages@.user_id);i.push(m.user_id);if(parseInt(Args.r)==1){API.messages.markAsRead({message_ids:m.id});};var u=API.users.get({user_ids:i,fields:Args.f,v:5.8});return{m:m,u:u};',
 			id: data,
 			f: "photo_50,screen_name,online,can_write_private_message,first_name_gen,last_name_gen,sex",
 			r: isEnabled(Setting.AUTO_READ_DIALOG) ? 1 : 0

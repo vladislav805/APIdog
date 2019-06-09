@@ -1072,7 +1072,7 @@ var Wall = {
 			post_id: postId,
 			count: 50,
 			offset: offset,
-			v: 5.0
+			v: api.VERSION_LOWER
 		}).then(function(data) {
 			var parent = $.e("div");
 			parent.appendChild(Site.getTabPanel([

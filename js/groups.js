@@ -38,7 +38,7 @@ var Groups = {
 					user_id: userId,
 					extended: 1,
 					fields: "members_count,verified,city",
-					v: 5.19
+					v: api.VERSION_LOWER // TODO
 				}).then(function(data) {
 					Groups.showList(userId, data);
 				});
@@ -267,7 +267,7 @@ var Groups = {
 							description: _description,
 							type: _type,
 							subtype: _subtype,
-							v: 5.24
+							v: api.VERSION_LOWER
 						}, function (data) {
 							data = Site.isResponse(data);
 
@@ -919,10 +919,11 @@ var Groups = {
 
 	getRequests: function(screenName) {
 		api("execute", {
-			code: "var g=API.utils.resolveScreenName({screen_name:Args.s,v:5.28}),i;if(g.type!=\"group\")return{};i=g.object_id;return{i:i,g:API.groups.getById({group_id:i,v:5.28}),r:API.groups.getRequests({group_id:i,count:50,offset:parseInt(Args.o),fields:Args.f,v:5.28})};",
+			code: "var g=API.utils.resolveScreenName({screen_name:Args.s}),i;if(g.type!=\"group\")return{};i=g.object_id;return{i:i,g:API.groups.getById({group_id:i}),r:API.groups.getRequests({group_id:i,count:50,offset:parseInt(Args.o),fields:Args.f})};",
 			s: screenName,
 			o: getOffset(),
-			f:"photo_50,sex,screen_name"
+			f:"photo_50,sex,screen_name",
+			v: api.VERSION_LOWER
 		}).then(function(data) {
 			/** @var {{g, r}} data */
 			Local.add(data.g);
@@ -1385,7 +1386,7 @@ var Groups = {
 		 */
 		Request: function (screen_name, offset) {
 			Site.API("execute", {
-				code:'var g=API.groups.getById({group_id:"' + screen_name + '",v:5.14})[0],b=API.groups.getBanned({group_id:g.id,count:40,offset:' + offset + ',fields:"photo_rec,online,screen_name"});return [b,API.users.get({user_ids:b.items@.ban_info@.admin_id,fields:"sex"}),g];'
+				code:'var g=API.groups.getById({group_id:"' + screen_name + '",v:'+api.VERSION_LOWER+'})[0],b=API.groups.getBanned({group_id:g.id,count:40,offset:' + offset + ',fields:"photo_rec,online,screen_name"});return [b,API.users.get({user_ids:b.items@.ban_info@.admin_id,fields:"sex"}),g];'
 			}, function (data) {
 				var parent = document.createElement("div"),
 					list = document.createElement("div"),
@@ -1421,7 +1422,7 @@ var Groups = {
 						uid = uid[uid.length - 1].replace(/#/img, "").split("?")[0];
 // fast fix end
 						Site.API("execute",{
-							code: 'var uid=API.utils.resolveScreenName({screen_name:"' + uid + '",v: 5.14});if(uid.type!="user")return -1;else uid=uid.object_id;return [API.groups.banUser({user_id:uid,group_id:' + gid + ',reason:' + reason + ',comment:"' + comment /* there was addSlashes TODO: remove this fuck */ + '",comment_visible:' + comment_visible + ',end_date:' + end_date + '}),API.users.get({user_ids:uid,fields:"photo_rec,online,screen_name"})[0]];'
+							code: 'var uid=API.utils.resolveScreenName({screen_name:"' + uid + '",v:'+api.VERSION_LOWER+'});if(uid.type!="user")return -1;else uid=uid.object_id;return [API.groups.banUser({user_id:uid,group_id:' + gid + ',reason:' + reason + ',comment:"' + comment /* there was addSlashes TODO: remove this fuck */ + '",comment_visible:' + comment_visible + ',end_date:' + end_date + '}),API.users.get({user_ids:uid,fields:"photo_rec,online,screen_name"})[0]];'
 						}, function (data) {
 							data = Site.isResponse(data);
 							if(!data[0])

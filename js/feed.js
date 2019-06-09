@@ -715,7 +715,7 @@ var Feed = {
 				count: 25,
 				filters: "friend",
 				start_from: next,
-				v: 5.14
+				v: api.VERSION_LOWER
 			}, function (data) {
 				data = Site.isResponse(data);
 				Local.add(data.profiles.concat(data.groups));
@@ -729,7 +729,7 @@ var Feed = {
 	},
 	getBanned: function () {
 		Site.APIv5("newsfeed.getBanned", {
-			v: 5.14,
+			v: api.VERSION_LOWER,
 			extended: 1,
 			fields: "photo_50,first_name_dat,screen_name,online"
 		}, function (data) {
@@ -807,7 +807,7 @@ var Feed = {
 						owner_id: ownerId,
 						attachments: attachments,
 						from_group: fromGroup,
-						v: 5.29
+						v: api.VERSION_LOWER
 					};
 				switch (type)
 				{

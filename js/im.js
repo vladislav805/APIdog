@@ -327,7 +327,7 @@ var IM = {
 					api("messages.deleteDialog", {
 						count: 10000,
 						peer_id: peer.get(),
-						v: 5.39
+						v: api.VERSION_LOWER
 					}).then(function() {
 						Site.Alert({text: Lang.get("mail.deleted_dialog")});
 						window.location.hash = "#mail";
@@ -1566,7 +1566,7 @@ var IM = {
 		if (node)
 			node.appendChild($.e("img", {src: "\/\/static.apidog.ru\/im-attachload.gif"}))
 		Site.API("execute", {
-			code:'var msg=API.messages.getById({message_ids:%m%,v:5.18}).items[0];return{attachments:msg.attachments,forwarded:msg.fwd_messages,users:API.users.get({user_ids:msg.fwd_messages@.user_id+msg.fwd_messages@.fwd_messages@.user_id,fields:"photo_50,online,screen_name,sex"}),geo:msg.geo};'.replace(/%m%/ig, message_id)
+			code:'var msg=API.messages.getById({message_ids:%m%,v:'+api.VERSION_LOWER+'}).items[0];return{attachments:msg.attachments,forwarded:msg.fwd_messages,users:API.users.get({user_ids:msg.fwd_messages@.user_id+msg.fwd_messages@.fwd_messages@.user_id,fields:"photo_50,online,screen_name,sex"}),geo:msg.geo};'.replace(/%m%/ig, message_id)
 		}, function (data) {
 			data = Site.isResponse(data);
 			/*          IM.AttachmentsObj[message_id] = {

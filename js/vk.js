@@ -12,6 +12,17 @@ function api(method, params) {
 	});
 }
 
+api.VERSION_FRESH = "5.96";
+api.VERSION_LOWER = "5.26";
+api.VERSION_DEPRECATED_PRIVACY = "5.29"; // 5.30+ - new privacy
+api.VERSION_PEER_ID_SUPPORTED = "5.38"; // 5.38+ - peer_id in messages.*
+api.VERSION_DEPRECATED_DOCUMENT_PREVIEW = "5.43"; // 5.44+ - preview object
+api.VERSION_DEPRECATED_STICKER_FORMAT = "5.73"; // 5.74+ - new format
+api.VERSION_DEPRECATED_PHOTO_FORMAT = "5.76"; // 5.77+ - new photo format
+// 5.80+ - new methods for messages.* (conversation)
+// 5.85+ - new polls
+// 5.92+ - new comments tree
+
 api.fx = {
 
 	sRequests: [],

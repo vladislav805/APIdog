@@ -69,7 +69,7 @@ var SelectAttachments = {
 				question: title,
 				is_anonymous: +is_anonymous,
 				add_answers: items,
-				v: 5.0
+				v: api.VERSION_LOWER
 			}, function (data) {
 				if (data.response) {
 					data = data.response;

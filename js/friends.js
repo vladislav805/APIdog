@@ -36,7 +36,7 @@ var Friends = {
 					user_id: ownerId,
 					fields: Friends.DEFAULT_FIELDS,
 					order: "hints",
-					v: 5.8
+					v: api.VERSION_LOWER
 				}).then(function(data) {
 					Friends.showFriends(ownerId, data, true);
 				}).catch(function(error) {
@@ -210,7 +210,7 @@ var Friends = {
 	 */
 	getRequests: function() {
 		return api("execute", {
-			code: 'var f=API.friends.getRequests({extended:1,need_mutual:1,v:5.8,out:parseInt(Args.isOut)});return{requests:f,users:API.users.get({user_ids:f.items@.user_id,fields:Args.fields,v:5.8})};',
+			code: 'var f=API.friends.getRequests({extended:1,need_mutual:1,v:'+api.VERSION_LOWER+',out:parseInt(Args.isOut)});return{requests:f,users:API.users.get({user_ids:f.items@.user_id,fields:Args.fields,v:5.8})};',
 			isOut: Site.get("out") ? 1 : 0,
 			fields: "photo_50,city,bdate,screen_name,online,can_write_private_message,is_friend"
 		});
@@ -500,7 +500,7 @@ var Friends = {
 							user_ids.push(e[i].value);
 					return user_ids.join(",");
 				})(list.elements["items[]"], []);
-			Site.APIv5("friends.addList", {name: name, user_ids: user_ids, v: 5.11}, function (data) {
+			Site.APIv5("friends.addList", {name: name, user_ids: user_ids, v: api.VERSION_LOWER}, function (data) {
 				if ((data = Site.isResponse(data)) && data.list_id) {
 					Friends.friends[API.userId] = null;
 					Friends.Lists = null;
@@ -562,7 +562,7 @@ var Friends = {
 				{
 					fields: "photo_50,online,can_write_private_message,screen_name,sex",
 					order: "hints",
-					v: 5.8
+					v: api.VERSION_LOWER
 				},
 				function (data)
 				{

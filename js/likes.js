@@ -306,7 +306,7 @@ function share(type, ownerId, itemId, accessKey, callback, access, options) {
 			switch (+type) {
 				case APIDOG_SHARE_TARGET_TYPE_USER:
 					api("execute", {
-						code: "var m=API.messages.getDialogs({count:70,v:5.38}).items,i=0,l=m.length,d=[],c=[],u=[],g=[],o;while(i<l){o=m[i].message;d.push([o.user_id,o.chat_id]);if(o.user_id<0){g.push(-o.user_id);}else if(o.chat_id){c.push(o.chat_id);}else{u.push(o.user_id);};i=i+1;};return{dialogs:d,users:API.users.get({user_ids:u}),groups:API.groups.getById({group_ids:g}),chats:API.messages.getChat({chat_ids:c})};"
+						code: "var m=API.messages.getDialogs({count:70,v:5.38}).items,i=0,l=m.length,d=[],c=[],u=[],g=[],o;while(i<l){o=m[i].message;d.push([o.user_id,o.chat_id]);if(o.user_id<0){g.push(-o.user_id);}else if(o.chat_id){c.push(o.chat_id);}else{u.push(o.user_id);};i=i+1;};return{dialogs:d,users:API.users.get({user_ids:u}),groups:API.groups.getById({group_ids:g}),chats:API.messages.getChat({chat_ids:c})};" // LEGACY
 					}).then(function(result) {
 						var u = parseToIDObject(result.users),
 							g = parseToIDObject(result.groups),
@@ -329,7 +329,7 @@ function share(type, ownerId, itemId, accessKey, callback, access, options) {
 						filter: "editor",
 						fields: "members_count",
 						extended: 1,
-						v: 5.28
+						v: api.VERSION_LOWER
 					}).then(function(result) {
 						callback(result.items.map(function (i) {
 							return {value: i.id, html: i.name};

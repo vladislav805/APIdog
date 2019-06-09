@@ -1,5 +1,5 @@
 var Polls = {
-	
+
 	getAttachment: function(poll, id) {
 		var e = $.e;
 		return e("div", {"class": "attachments-poll", append: [
@@ -172,13 +172,14 @@ var Polls = {
 		Site.Loader();
 
 		api("execute", {
-			code: "var p,u,o=Args.o,p=Args.p,a=Args.a,i=Args.i;if(!Args.n){p=API.polls.getById({owner_id:o,poll_id:p,v:5.29});};u=API.polls.getVoters({owner_id:o,poll_id:p,answer_ids:a,fields:Args.q,offset:i,count:75,v:5.29,friends_only:f});return{p:p,u:u};",
+			code: "var p,u,o=Args.o,p=Args.p,a=Args.a,i=Args.i;if(!Args.n){p=API.polls.getById({owner_id:o,poll_id:p});};u=API.polls.getVoters({owner_id:o,poll_id:p,answer_ids:a,fields:Args.q,offset:i,count:75,friends_only:f});return{p:p,u:u};",
 			o: ownerId,
 			p: pollId,
 			a: answerId,
 			i: getOffset(),
 			f: onlyFriends,
-			q: "photo_50,online,screen_name"
+			q: "photo_50,online,screen_name",
+			v: api.VERSION_LOWER
 		}).then(function(data) {
 			if (data.p) {
 				Polls.polls[ownerId + "_" + pollId] = data.p;

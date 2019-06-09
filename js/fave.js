@@ -104,7 +104,7 @@ var Fave = {
 			if (Fave.groupCache) {
 				resolve(Fave.groupCache);
 			} else {
-				api("fave.getPages", {v: 5.94, type: "groups", count: 500, fields: "photo_50,screen_name"}).then(resolve);
+				api("fave.getPages", {v: api.VERSION_FRESH, type: "groups", count: 500, fields: "photo_50,screen_name"}).then(resolve);
 			}
 		});
 	},

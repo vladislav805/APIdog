@@ -108,7 +108,7 @@ var Search = {
 		var apiParams = {
 			count: Search.__COUNT_PER_REQUEST,
 			fields: "photo_50,online,screen_name,sex,can_write_private_message,verified",
-			v: 5.94
+			v: api.VERSION_FRESH
 		};
 
 		var params = Site.get();
@@ -457,7 +457,7 @@ var Search = {
 			limit: 8,
 			search_global: 1,
 			fields: "online,screen_name",
-			v: 5.94
+			v: api.VERSION_FRESH
 		}).then(Search.showHints.bind(Search));
 	},
 
