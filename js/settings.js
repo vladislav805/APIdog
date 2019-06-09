@@ -847,7 +847,7 @@ var Settings = {
 			var callee = Settings.getProfileEditForm;
 			Site.API("execute", {
 				code: "return{a:API.account.getProfileInfo(),s:API.account.getInfo(),b:API.account.getBalance(),u:API.users.get({v:5.27,fields:\"photo_200\"})};",
-				v: 4.9
+				v: 5.94
 			}, function (data) {
 				data = Site.isResponse(data);
 				if (!data)
