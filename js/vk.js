@@ -55,7 +55,7 @@ api.fx = {
 		api.fx.sRequests[om.getRequestId()] = om;
 
 		if (!p.v) {
-			p.v = "5.10"; // was 4.99
+			p.v = api.VERSION_LOWER; // was 4.99
 		}
 
 		p.lang = 0; // todo: send real language
