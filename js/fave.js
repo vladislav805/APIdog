@@ -2,11 +2,12 @@ var Fave = {
 
 	RequestPage: function () {
 		var offset = getOffset();
-		switch(Site.Get("section")) {
-			case "links":   return Fave.getLinks().then(Fave.showLinks); break;
-			case "posts":   return Fave.Posts(offset); break;
-			case "photos":  return Fave.Photos(offset);break;
-			case "videos":  return Fave.Videos(offset);break;
+		switch (Site.get("section")) {
+			case "links":   return Fave.getLinks().then(Fave.showLinks);
+			case "groups":   return Fave.getGroups().then(Fave.showGroups);
+			case "posts":   return Fave.Posts(offset);
+			case "photos":  return Fave.Photos(offset);
+			case "videos":  return Fave.Videos(offset);
 			case "users":
 			default:        return Fave.getUsers().then(Fave.showUsers);
 		}
@@ -15,6 +16,7 @@ var Fave = {
 	getTabs: function () {
 		return Site.getTabPanel([
 			["fave", "Люди"],
+			["fave?section=groups", "Группы"],
 			["fave?section=links", "Ссылки"],
 			["fave?section=posts", "Посты"],
 			["fave?section=photos" ,"Фото"],
@@ -89,6 +91,91 @@ var Fave = {
 	removeUser: function(userId) {
 		return api("fave.removeUser", { user_id: userId });
 	},
+
+
+	groupCache: null,
+
+	/**
+	 * Request to get favourites groups
+	 * @returns {Promise}
+	 */
+	getGroups: function() {
+		return new Promise(function(resolve) {
+			if (Fave.groupCache) {
+				resolve(Fave.groupCache);
+			} else {
+				api("fave.getPages", {v: 5.94, type: "groups", count: 500, fields: "photo_50,screen_name"}).then(resolve);
+			}
+		});
+	},
+
+	/**
+	 * Show favourites groups list
+	 * @param {{count: int, items: {group: User[]}}} data
+	 */
+	showGroups: function(data) {
+		Fave.groupCache = data;
+		console.log(data);
+		var parent = $.e("div"),
+			sl = new SmartList({
+				data: {
+					count: data.count,
+					items: data.items.map(function(item) {
+						return {
+							id: item.group.id,
+							name: item.group.name,
+							photo_50: item.group.photo_50
+						}
+					})
+				},
+				countPerPage: 50,
+				needSearchPanel: true,
+				getItemListNode: SmartList.getDefaultItemListNode,
+				optionsItemListCreator: {
+					textContentBold: true,
+
+					remove: {
+						onClick: function(group, node) {
+							node.style.opacity = .5;
+							Fave.removeGroup(group.id).then(function() {
+								sl.remove(group);
+							});
+						}
+					}
+				},
+
+				filter: SmartList.getDefaultSearchFilter({
+					fields: ["name"]
+				})
+			}),
+			count = data.count;
+
+		var __fuckingVkFavesGetPagesReturnFakeCount = 0;
+		window.onScrollCallback = function(event) {
+			if (++__fuckingVkFavesGetPagesReturnFakeCount >= 1000) {
+				window.onScrollCallback = null;
+				return;
+			}
+			event.needLoading && sl.showNext();
+		};
+
+		parent.appendChild(Fave.getTabs());
+		parent.appendChild(Site.getPageHeader("У Вас в закладках " + count + " " + $.textCase(count, ["сообщество","сообщества","сообществ"])));
+		parent.appendChild(sl.getNode());
+
+		Site.setHeader("Закладки");
+		Site.append(parent);
+	},
+
+	/**
+	 * Request to remove group from favourites
+	 * @param {int} userId
+	 * @returns {Promise}
+	 */
+	removeGroup: function(userId) {
+		//return api("fave.removeUser", { user_id: userId });
+	},
+
 
 	linkCache: null,
 
