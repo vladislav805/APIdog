@@ -49,6 +49,26 @@ Peer.prototype = {
 	}
 };
 
+Peer.from = function(obj) {
+	// same
+	if (obj instanceof Peer) {
+		return obj;
+	}
+
+	// conversation
+	if ("peer" in obj) {
+		return new Peer(obj.peer.id);
+	}
+
+	if ("peer_id" in obj) {
+		// new message object
+		return new Peer(obj.peer_id);
+	} else {
+		// legacy message object
+		return new Peer(obj.chat_id ? Peer.LIMIT + obj.chat_id : (obj.user_id || obj.from_id));
+	}
+};
+
 var IM = {
 
 	storage: {},

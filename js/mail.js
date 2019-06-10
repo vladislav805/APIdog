@@ -151,15 +151,15 @@ var Mail = {
 	 */
 	performCacheByMessages: function(ui) {
 		return api("execute", {
-			code: "var w=0,i=0,t=parseInt(Args.l),v=parseInt(Args.t),s=100,l=i+v*s,m=[],c=[],g;while(w<25){c=c+API.messages.search({q:Args.a,count:s,offset:i}).items;i=i+s;w=w+1;};return[c@.id,c@.chat_id,c@.user_id,c@.date];",
+			code: "var w=0,i=0,t=parseInt(Args.l),v=parseInt(Args.t),s=100,l=i+v*s,m=[],c=[],g;while(w<25){c=c+API.messages.search({q:Args.a,count:s,offset:i}).items;i=i+s;w=w+1;};return[c@.id,c@.peer_id,c@.from_id,c@.date];",
 			a: "*",
 			l: Peer.LIMIT,
 			t: 25,
-			v: 5.56
+			v: api.VERSION_FRESH
 		}).then(function(result) {
 			ui.progress.setValue(75);
 
-			var wasPeerId = [], data = [], m = [], c = [], u = [], d = [];
+			var wasPeerId = [], data = [], messageIds = [], peerIds = [], fromIds = [], dates = [];
 
 			for (var i = 0, l = result[0].length; i < l; ++i) {
 				data.push({id: result[0][i], chat: result[1][i], user: result[2][i], date: result[3][i]});
@@ -173,13 +173,13 @@ var Mail = {
 				}
 
 				wasPeerId.push(a.chat ? Peer.LIMIT + a.chat : a.user);
-				m.push(a.id);
-				c.push(a.chat);
-				u.push(a.user);
-				d.push(a.date);
+				messageIds.push(a.id);
+				peerIds.push(a.chat);
+				fromIds.push(a.user);
+				dates.push(a.date);
 			});
 
-			return [m, c, u, d];
+			return [messageIds, peerIds, fromIds, dates];
 		}).then(Mail.parseCacheMessagesFromAPI.bind(Mail, ui));
 	},
 
@@ -190,10 +190,25 @@ var Mail = {
 	 */
 	performCacheByDialogs: function(ui) {
 		return api("execute", {
-			code: "var i=0,t=parseInt(Args.l),v=parseInt(Args.t),s=200,l=i+v*s,m=[],c=[],g;while(i<l){c=c+API.messages.getDialogs({count:s,offset:i}).items;i=i+s;};return[c@.message@.id,c@.message@.chat_id,c@.message@.user_id,c@.message@.date];",
+			code: [
+"var i=0,t=parseInt(Args.l),v=parseInt(Args.t),s=200,l=i+v*s,m=[],c=[],g,q,w;",
+"while(i<l){",
+	"q=API.messages.getConversations({count:s,offset:i});",
+	"w=q.count;",
+	"c=c+q.items;",
+	"i=i+s;",
+"};",
+"return[",
+	"c@.last_message@.id,",
+	"c@.conversation@.peer@.id,",
+	"c@.last_message@.from_id,",
+	"c@.conversation@.date,",
+	"w",
+"];"
+].join(""),
 			l: Peer.LIMIT,
 			t: 25,
-			v: 5.56
+			v: api.VERSION_FRESH
 		}).then(Mail.parseCacheMessagesFromAPI.bind(Mail, ui));
 	},
 
@@ -220,16 +235,14 @@ var Mail = {
 	 */
 	addCacheStorage: function(messages) {
 		var d = Mail.mStorage, o = {};
-
+console.log("addCacheStorage:", messages);
 		d.forEach(function(i) { o[i[Mail.INDEX_PEER_ID]] = i; });
-
-//		console.log("was", d);
 
 		messages.sort(function(a, b) {
 			return a.id - b.id;
 		}).forEach(function(a) {
-			var peer = a.chat_id ? Peer.LIMIT + a.chat_id : a.user_id;
-			o[peer] = [a.id, a.date, peer];
+
+			o[a.peer_id] = [a.id, a.date, a.peer_id];
 		});
 
 //		console.log("now", o);
@@ -265,14 +278,14 @@ var Mail = {
 	getMessagesForDialogList: function(ui, offset) {
 		var chunk = Mail.getChunkCache(offset || 0, Mail.DEFAULT_COUNT);
 		return api("execute", {
-			code: "var i=Args.i,d=API.messages.getById({message_ids:i,preview_length:120}),u=API.users.get({user_ids:d.items@.user_id+d.items@.source_mid,fields:Args.f}),g=[],m;i=0;while(m=d.items[i]){if(m.user_id<0){g.push(-m.user_id);};i=i+1;};return{c:API.account.getCounters(),d:d,u:u,g:API.groups.getById({group_ids:g,fields:Args.f})};",
+			code: "return{c:API.account.getCounters(),d:API.messages.getById({message_ids:Args.i,preview_length:120,extended:1,fields:Args.f})};",
 			i: chunk.map(function(item) { return item[Mail.INDEX_MESSAGE_ID] }).join(","),
 			f: "photo_50,online,sex",
-			v: 5.56
+			v: api.VERSION_FRESH
 		}).then(function(result) {
 			Site.setCounters(result.c);
-			Local.add(result.u);
-			Local.add(result.g);
+			Local.add(result.d.profiles);
+			Local.add(result.d.groups);
 			ui && ui.progress.setValue(100);
 			ui && ui.modal.remove();
 			result.d.count = Mail.mStorage.length;
@@ -293,7 +306,7 @@ var Mail = {
 			f: "photo_50,online,sex",
 			o: offset,
 			c: Mail.DIALOGS_PER_PAGE,
-			v: 5.56
+			v: api.VERSION_FRESH
 		}).then(function(data) {
 			Site.setCounters(data.c);
 			Local.add(data.d.profiles.concat(data.d.groups));
@@ -394,7 +407,7 @@ var Mail = {
 		api("execute", {
 			code: "return API.messages.search({q:Args.a}).items[0].id;",
 			a: "*",
-			v: 5.56
+			v: api.VERSION_FRESH
 		}).then(function(lastRealId) {
 			var from = [];
 
@@ -403,7 +416,7 @@ var Mail = {
 			for (var i = lastLocalId; i <= lastRealId; ++i) {
 				from.push(i);
 			}
-//console.log("will be loaded: ", from);
+
 			return new Promise(function(resolve) {
 
 				if (!from.length) {
@@ -434,7 +447,12 @@ var Mail = {
 	/**
 	 */
 	loadChunkOfSyncCache: function(ids) {
-		return api("messages.getById", {message_ids: Array.isArray(ids) ? ids.join(",") : ids, v: 5.56});
+		return api("messages.getById", {
+			message_ids: Array.isArray(ids)
+				? ids.join(",")
+				: ids,
+			v: api.VERSION_FRESH
+		});
 	},
 
 	/**
@@ -454,7 +472,7 @@ var Mail = {
 	 * @param {Message} message
 	 */
 	updateDialogNode: function(message) {
-		var peer = new Peer(message.chat_id ? message.chat_id + Peer.LIMIT : message.user_id), node, text, parent;
+		var peer = Peer.from(message), node, text, parent;
 
 		if (!(node = q("[data-peer-id='" + peer.get() + "']"))) {
 			node = Mail.item(message);
@@ -466,7 +484,7 @@ var Mail = {
 			$.elements[!message.out ? "addClass" : "removeClass"](node, "dialogs-in");
 			$.elements[message.out ? "addClass" : "removeClass"](node, "dialogs-out");
 
-			text = message.body.replace(/\n{2,}/g, " ").replace(/\n/ig, " \\ ").safe();
+			text = message.text.replace(/\n{2,}/g, " ").replace(/\n/ig, " \\ ").safe();
 			text = text.length > 120 ? text.substring(0, 120) + ".." : text;
 			text = text.emoji();
 
@@ -500,7 +518,7 @@ var Mail = {
 			message = message.message;
 		}
 
-		peer = new Peer(message.chat_id ? Peer.LIMIT + message.chat_id : message.user_id);
+		peer = Peer.from(message);
 
 		if (options.conversations) {
 			var info = message.conversation,
@@ -513,11 +531,12 @@ var Mail = {
 				chat_id: info.peer.type === "chat" ? info.peer.local_id : null,
 				read_state: info.in_read === info.out_read,
 				title: info.chat_settings && info.chat_settings.title,
-				body: msg.text,
+				text: msg.text,
 				attachments: msg.attachments,
 				fwd_messages: msg.fwd_messages,
 				geo: msg.geo
 			};
+			message.from_id = message.user_id; // needed ?
 
 			if (info.peer.type === "chat" && info.chat_settings && info.chat_settings.photo_50) {
 				message.photo_50 = info.chat_settings.photo_50;
@@ -528,16 +547,16 @@ var Mail = {
 			unread = info.unread_count;
 		}
 
-		user = Local.data[message.user_id] || {last_name: "", first_name: ""};
+		user = Local.data[message.from_id] || {last_name: "", first_name: ""};
 
-		text = message.body.replace(/\n/g, " ").replace(/\n/ig, " \\ ").safe();
+		text = message.text.replace(/\n/g, " ").replace(/\n/ig, " \\ ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + ".." : text;
 		text = text.emoji();
 
 		if (options.highlight) {
 			text = text.replace(new RegExp("(" + options.highlight + ")", "igm"), "<span class='search-highlight'>$1<\/span>");
 		}
-
+console.log(message);
 		var date, link = e("a", {"class": "selectfix dialogs-item",
 			"data-peer-id": peer.get(),
 			"data-message-id": message.id,
@@ -556,7 +575,7 @@ var Mail = {
 				e("div", {"class": "dialogs-content", append: [
 					e("div", {"class": "dialogs-title", append: [
 						e("span", {"class": "tip", html: peer.isChat() ? Lang.get("mail.chat_noun") : ""}),
-						e("strong", {html: peer.isChat() ? message.title.safe().emoji() : getName(user)}),
+						e("strong", {html: peer.isChat() ? (message.title || "%_MESSAGE_TITLE_%").safe().emoji() : getName(user)}),
 					]}),
 					e("div", {"class": "dialogs-text", append: [
 						e("img", {"class": "dialogs-miniPhoto", src: getURL(Local.data[API.userId].photo_50)}),
@@ -781,8 +800,9 @@ var Mail = {
 	 */
 	requestReadAll: function(readed) {
 		api("execute", {
-			code: 'var m=API.messages.getDialogs({unread:1,count:19,v:'+api.VERSION_LOWER+'}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:parseInt(Args.r)+i};',
-			r: readed || 0
+			code: 'var m=API.messages.getDialogs({unread:1,count:19}),c=m.count,i=0,m=m.items,q;while(i<m.length){if(m[i].message.chat_id){q={peer_id:2000000000+m[i].message.chat_id};}else{q={peer_id:m[i].message.user_id};};API.messages.markAsRead(q);i=i+1;};return{n:c-19,r:parseInt(Args.r)+i};',
+			r: readed || 0,
+			v: api.VERSION_FRESH // TODO
 		}).then(function(data) {
 			if (data.n > 0) {
 				return Mail.requestReadAll(data.r);
@@ -1032,7 +1052,7 @@ var Mail = {
 			]})
 		]}));
 
-		var text = e("div",{"class": "n-f", html: Site.toHTML(data.body.safe()).emoji()});
+		var text = e("div",{"class": "n-f", html: Site.toHTML(data.text.safe()).emoji()});
 		text.style.whiteSpace = "";
 
 		parent.appendChild(e("div", {"class": "mail-content-item", append: [

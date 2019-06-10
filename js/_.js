@@ -125,6 +125,44 @@ if (Date.now() < 0) {
 
 	/**
 	 * @type {{
+	 *     peer: {
+	 *         id: int,
+	 *         type: string,
+	 *         local_id: int
+	 *     },
+	 *     in_read: int,
+	 *     out_read: int,
+	 *     unread_count: int,
+	 *     important: boolean,
+	 *     unanswered: boolean,
+	 *     push_settings: {
+	 *         disabled_until: int,
+	 *         disabled_forever: boolean,
+	 *         no_sound: boolean
+	 *     },
+	 *     can_write: {
+	 *         allowed: boolean,
+	 *         reason: int
+	 *     },
+	 *     chat_settings: {
+	 *         members_count: int,
+	 *         title: string,
+	 *         pinned_message: Message=,
+	 *         state: string,
+	 *         photo: {
+	 *             photo_50: string,
+	 *             photo_100: string,
+	 *             photo_200: string
+	 *         }=,
+	 *         active_ids: int[],
+	 *         is_group_channel: boolean
+	 *     }
+	 * }}
+	 */
+	var Conversation = {};
+
+	/**
+	 * @type {{
 	 *  id: int,
 	 *  title: string,
 	 *  left: boolean=,
@@ -138,17 +176,32 @@ if (Date.now() < 0) {
 	/**
 	 * @type {{
 	 *  id: int,
-	 *  chat_id: int,
-	 *  peer_id: int,
-	 *  user_id: int,
-	 *  title: string,
-	 *  body: string,
 	 *  date: int,
+	 *  peer_id: int,
+	 *  from_id: int,
+	 *  text: string,
+	 *  random_id: int,
 	 *  attachments: Attachment[]=,
-	 *  geo: string,
-	 *  fwd_messages: Message[]=,
-	 *  read_state: boolean,
 	 *  important: boolean,
+	 *  geo: GeoObject,
+	 *  payload: string,
+	 *  fwd_messages: Message[]=,
+	 *  reply_message: Message,
+	 *  action: {
+	 *      type: string,
+	 *      member_id: int,
+	 *      text: string=,
+	 *      email: string=,
+	 *      photo: {
+	 *          photo_50: string,
+	 *          photo_100: string,
+	 *          photo_200: string
+	 *      }
+	 *  }
+	 *
+	 *  chat_id: int,
+	 *  title: string,
+	 *  read_state: boolean,
 	 *  out: boolean,
 	 *  photo_50: string=,
 	 *  photo_100: string=,
@@ -165,11 +218,21 @@ if (Date.now() < 0) {
 	 * @type {{
 	 *  id: int,
 	 *  from_id: int,
-	 *  text: string,
-	 *  attachments: Attachment[],
 	 *  date: int,
+	 *  text: string,
 	 *  reply_to_user: int,
 	 *  reply_to_comment: int,
+	 *  attachments: Attachment[],
+	 *
+	 *  parents_stack: int[],
+	 *  thread: {
+	 *      count: int,
+	 *      items: Comment[],
+	 *      can_post: boolean,
+	 *      show_reply_button: boolean,
+	 *      groups_can_post: boolean
+	 *  },
+	 *
 	 *  can_edit: boolean,
 	 *  can_delete: boolean
 	 * }}
@@ -187,12 +250,39 @@ if (Date.now() < 0) {
 	var StickerPack = {};
 
 	/**
-	 * @type {{owner_id: int, id: int, title: string, size: int, ext: string, url: string, type: int, date: int, preview: {photo: object}=}}
+	 * @type {{
+	 *     id: int,
+	 *     owner_id: int,
+	 *     title: string,
+	 *     size: int,
+	 *     ext: string,
+	 *     url: string,
+	 *     date: int,
+	 *     type: int,
+	 *     preview: {
+	 *         photo: {
+	 *             sizes: PhotoSize[]
+	 *         }=,
+	 *         graffiti: PhotoSize=,
+	 *         audio_message: {
+	 *             duration: int,
+	 *             waveform: int[],
+	 *             link_ogg: string,
+	 *             link_mp3: string
+	 *         }=
+	 *     }=
+	 * }}
 	 */
 	var VkDocument = {};
 
 	/**
-	 * @type {{error_msg: string, error_code: int, captcha_img: string, captcha_sid: int, confirmation_text: string=}}
+	 * @type {{
+	 *     error_msg: string,
+	 *     error_code: int,
+	 *     captcha_img: string,
+	 *     captcha_sid: int,
+	 *     confirmation_text: string=
+	 * }}
 	 */
 	var VkError = {};
 
@@ -200,6 +290,27 @@ if (Date.now() < 0) {
 	 * @type {{themeId: int, title: string, changelog: string, fileCSS: string, date: int, installCount: int, authorId: int, isPrivate: boolean, isVerified: boolean, version: string}}
 	 */
 	var APIdogTheme = {};
+
+	/**
+	 * @type {{
+	 *     type: string,
+	 *     coordinates: {
+	 *         latitude: number,
+	 *         longitude: number
+	 *     },
+	 *     place: {
+	 *         id: int,
+	 *         title: string,
+	 *         latitude: number,
+	 *         longitude: number,
+	 *         created: int,
+	 *         icon: string,
+	 *         country: string,
+	 *         city: string
+	 *     }
+	 * }}
+	 */
+	var GeoObject = {};
 
 	/**
 	 * @type {{
@@ -240,6 +351,16 @@ if (Date.now() < 0) {
 
 	/**
 	 * @type {{
+	 *     type: string,
+	 *     src: string,
+	 *     width: int,
+	 *     height: int
+	 * }}
+	 */
+	var PhotoSize = {};
+
+	/**
+	 * @type {{
 	 *  id: int,
 	 *  owner_id: int,
 	 *  title: string,
@@ -268,6 +389,27 @@ if (Date.now() < 0) {
 	 * @type {{id: int, icon_150: string, title: string, published_date: int, members_count: int, section: string=, type: string=, banner_560: string, author_id: int=, author_group: int=}}
 	 */
 	var VKApp = {};
+
+	/**
+	 * @type {{
+	 *     url: string,
+	 *     title: string,
+	 *     caption: string,
+	 *     description: string,
+	 *     photo: Photo=,
+	 *     product: *=,
+	 *     button: {
+	 *         title: string,
+	 *         action: {
+	 *             type: string,
+	 *             url: string
+	 *         }
+	 *     }=,
+	 *     preview_page: string,
+	 *     preview_url: string
+	 * }}
+	 */
+	var VKLink = {};
 
 	/**
 	 * @type {{stationId: int, title: string, frequency: real, streams: RadioStream[], cityId: int, cityName: string=, canResolveTrack: boolean, domain: string, _city}}
