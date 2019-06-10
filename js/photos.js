@@ -4,12 +4,20 @@ function VKPhoto (p) {
 	this.photoId = p.id;
 	this.albumId = p.album_id;
 
-	this.photo75 = p.photo_75;
-	this.photo130 = p.photo_130;
-	this.photo604 = p.photo_604;
-	this.photo807 = p.photo_807;
-	this.photo1280 = p.photo_1280;
-	this.photo2560 = p.photo_2560;
+	if ("sizes" in p) {
+		p.sizes.forEach(function(item) {
+			if (item.type in VKPhoto.__assocKeys) {
+				p["photo" + VKPhoto.__assocKeys[item.type]] = item.src;
+			}
+		});
+	} else {
+		this.photo75 = p.photo_75;
+		this.photo130 = p.photo_130;
+		this.photo604 = p.photo_604;
+		this.photo807 = p.photo_807;
+		this.photo1280 = p.photo_1280;
+		this.photo2560 = p.photo_2560;
+	}
 
 	this.width = p.width;
 	this.height = p.height;
@@ -31,6 +39,10 @@ function VKPhoto (p) {
 
 	this.canRepost = !!p.can_repost;
 }
+
+VKPhoto.__assocKeys = {
+	s: 75, m: 130, x: 604, y: 807, z: 1280, w: 2560
+};
 
 VKPhoto.prototype = {
 
