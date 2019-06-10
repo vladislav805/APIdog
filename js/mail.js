@@ -235,7 +235,7 @@ var Mail = {
 	 */
 	addCacheStorage: function(messages) {
 		var d = Mail.mStorage, o = {};
-console.log("addCacheStorage:", messages);
+
 		d.forEach(function(i) { o[i[Mail.INDEX_PEER_ID]] = i; });
 
 		messages.sort(function(a, b) {
@@ -244,8 +244,6 @@ console.log("addCacheStorage:", messages);
 
 			o[a.peer_id] = [a.id, a.date, a.peer_id];
 		});
-
-//		console.log("now", o);
 
 		Mail.mStorage = Object.values(o).sort(function(a, b) {
 			return b[Mail.INDEX_MESSAGE_ID] - a[Mail.INDEX_MESSAGE_ID];
@@ -278,7 +276,7 @@ console.log("addCacheStorage:", messages);
 	getMessagesForDialogList: function(ui, offset) {
 		var chunk = Mail.getChunkCache(offset || 0, Mail.DEFAULT_COUNT);
 		return api("execute", {
-			code: "return{c:API.account.getCounters(),d:API.messages.getById({message_ids:Args.i,preview_length:120,extended:1,fields:Args.f})};",
+			code: "var m=API.messages.getById({message_ids:Args.i,preview_length:120,extended:1,fields:Args.f});m.conversations=API.messages.getConversationsById({peer_ids:m.items@.peer_id}).items;return{c:API.account.getCounters(),d:m};",
 			i: chunk.map(function(item) { return item[Mail.INDEX_MESSAGE_ID] }).join(","),
 			f: "photo_50,online,sex",
 			v: api.VERSION_FRESH
@@ -286,6 +284,15 @@ console.log("addCacheStorage:", messages);
 			Site.setCounters(result.c);
 			Local.add(result.d.profiles);
 			Local.add(result.d.groups);
+
+			result.d.conversations.forEach(function(conversation) {
+				Mail.__conversations[conversation.peer.id] = conversation;
+			});
+
+			result.d.items.forEach(function(message) {
+				message.conversation = Mail.__conversations[message.peer_id];
+			});
+
 			ui && ui.progress.setValue(100);
 			ui && ui.modal.remove();
 			result.d.count = Mail.mStorage.length;
@@ -430,8 +437,9 @@ console.log("addCacheStorage:", messages);
 						Mail.loadChunkOfSyncCache(queue[current].compact()).then(function(result) {
 							messages = messages.concat(result.items);
 							queue[++current] ? setTimeout(load, 350) : resolve(messages);
-						}).catch(function (error) {
+						}).catch(function(error) {
 							Site.Alert({text: "error while syncing, json: " + JSON.stringify(error)});
+							console.error(error);
 						});
 					};
 
@@ -444,14 +452,29 @@ console.log("addCacheStorage:", messages);
 		});
 	},
 
+	__conversations: {},
+
 	/**
 	 */
 	loadChunkOfSyncCache: function(ids) {
-		return api("messages.getById", {
-			message_ids: Array.isArray(ids)
-				? ids.join(",")
-				: ids,
+		return api("execute", {
+			code: "var m=API.messages.getById({message_ids:Args.i,extended:1});m.conversations=API.messages.getConversationsById({peer_ids:m.items@.peer_id}).items;return m;",
+			i: Array.isArray(ids) ? ids.join(",") : ids,
 			v: api.VERSION_FRESH
+		}).then(function(res) {
+//console.log(res)
+			Local.add(res.profiles);
+			Local.add(res.groups);
+
+			res.conversations.forEach(function(conversation) {
+				Mail.__conversations[conversation.peer.id] = conversation;
+			});
+
+			res.items.forEach(function(message) {
+				message.conversation = Mail.__conversations[message.peer_id];
+			});
+
+			return res;
 		});
 	},
 
@@ -478,15 +501,21 @@ console.log("addCacheStorage:", messages);
 			node = Mail.item(message);
 			parent = $.element("_mail-wrap");
 		} else {
-
-			$.elements[!message.out && !message.read_state ? "addClass" : "removeClass"](node, "dialogs-item-new");
-			$.elements[message.out && !message.read_state ? "removeClass" : "addClass"](node, "dialogs-readed");
 			$.elements[!message.out ? "addClass" : "removeClass"](node, "dialogs-in");
 			$.elements[message.out ? "addClass" : "removeClass"](node, "dialogs-out");
 
 			text = message.text.replace(/\n{2,}/g, " ").replace(/\n/ig, " \\ ").safe();
 			text = text.length > 120 ? text.substring(0, 120) + ".." : text;
 			text = text.emoji();
+
+			if ("conversation" in message && message.conversation.chat_settings) {
+				node.querySelector(".dialogs-title strong").textContent = message.conversation.chat_settings.title || "%_MESSAGE_TITLE_%";
+
+				var read = message.conversation.in_read === message.conversation.out_read;
+
+				$.elements[!message.out && !read ? "addClass" : "removeClass"](node, "dialogs-item-new");
+				$.elements[message.out && !read ? "removeClass" : "addClass"](node, "dialogs-readed");
+			}
 
 			node.querySelector(".dialogs-rawText").innerHTML = !message.action ? text : IM.getStringActionFromSystemVKMessage(message);
 			node.querySelector(".dialogs-attachments").textContent = Mail.getStringAttachments(message);
@@ -527,7 +556,7 @@ console.log("addCacheStorage:", messages);
 				id: msg.id,
 				date: msg.date,
 				out: msg.out,
-				user_id: info.peer.type === "chat" ? msg.from_id : msg.peer_id,
+				from_id: info.peer.type === "chat" ? msg.from_id : msg.peer_id,
 				chat_id: info.peer.type === "chat" ? info.peer.local_id : null,
 				read_state: info.in_read === info.out_read,
 				title: info.chat_settings && info.chat_settings.title,
@@ -536,7 +565,6 @@ console.log("addCacheStorage:", messages);
 				fwd_messages: msg.fwd_messages,
 				geo: msg.geo
 			};
-			message.from_id = message.user_id; // needed ?
 
 			if (info.peer.type === "chat" && info.chat_settings && info.chat_settings.photo_50) {
 				message.photo_50 = info.chat_settings.photo_50;
@@ -545,6 +573,10 @@ console.log("addCacheStorage:", messages);
 			}
 
 			unread = info.unread_count;
+		}
+
+		if (message.conversation) {
+			unread = message.conversation.unread_count;
 		}
 
 		user = Local.data[message.from_id] || {last_name: "", first_name: ""};
@@ -556,7 +588,8 @@ console.log("addCacheStorage:", messages);
 		if (options.highlight) {
 			text = text.replace(new RegExp("(" + options.highlight + ")", "igm"), "<span class='search-highlight'>$1<\/span>");
 		}
-console.log(message);
+
+
 		var date, link = e("a", {"class": "selectfix dialogs-item",
 			"data-peer-id": peer.get(),
 			"data-message-id": message.id,
@@ -575,7 +608,7 @@ console.log(message);
 				e("div", {"class": "dialogs-content", append: [
 					e("div", {"class": "dialogs-title", append: [
 						e("span", {"class": "tip", html: peer.isChat() ? Lang.get("mail.chat_noun") : ""}),
-						e("strong", {html: peer.isChat() ? (message.title || "%_MESSAGE_TITLE_%").safe().emoji() : getName(user)}),
+						e("strong", {html: peer.isChat() ? (message.conversation && message.conversation && message.conversation.chat_settings.title || "%_MESSAGE_TITLE_%").safe().emoji() : getName(user)}),
 					]}),
 					e("div", {"class": "dialogs-text", append: [
 						e("img", {"class": "dialogs-miniPhoto", src: getURL(Local.data[API.userId].photo_50)}),
@@ -583,7 +616,7 @@ console.log(message);
 							e("div", {"class": "dialogs-rawText", html: [
 
 								user && peer.isChat()
-									? user.first_name.safe() + " " + user.last_name[0] + ".: "
+									? user.first_name.safe() + " " + user.last_name.substring(0, 1) + ".: "
 									: "",
 
 								!message.action
@@ -608,7 +641,7 @@ console.log(message);
 					? "Исходящее"
 					: "Входящее",
 
-				message.read_state
+				message.in_read === message.out_read
 					? "прочитано"
 					: "не прочитано"
 			].join(", "),
@@ -624,7 +657,7 @@ console.log(message);
 		}
 
 		if (!message.out) {
-			if (!message.read_state) {
+			if (message.in_read !== message.out_read && unread > 0) {
 				$.elements.addClass(link, "dialogs-item-new");
 			}
 
@@ -633,7 +666,7 @@ console.log(message);
 			$.elements.addClass(link, "dialogs-out");
 		}
 
-		if (message.read_state) {
+		if (message.in_read === message.out_read) {
 			$.elements.addClass(link, "dialogs-readed");
 		}
 
@@ -839,16 +872,28 @@ console.log(message);
 			],
 			offset = getOffset();
 		api("execute", {
-			code: "var m=API.%METHOD%({q:Args.q,preview_length:110,count:parseInt(Args.c),v:5.63,offset:Args.o%FILTER,extended:1});return{m:m,a:API.account.getCounters()};".replace("%FILTER", params[type]).replace("%METHOD%", type === Mail.TYPE.IMPORTANT ? "messages.get" : "messages.search"),
+			code: "var m=API.%METHOD%({q:Args.q,preview_length:110,count:parseInt(Args.c),offset:Args.o%FILTER,extended:1});m.conversations=API.messages.getConversationsById({peer_ids:m.items@.peer_id}).items;return{m:m,a:API.account.getCounters()};"
+				.replace("%FILTER", params[type])
+				.replace("%METHOD%", type === Mail.TYPE.IMPORTANT ? "messages.get" : "messages.search"),
 			o: offset,
 			q: "*",
 			c: Mail.DEFAULT_COUNT,
-			f: "photo_50,online,screen_name,sex"
+			f: "photo_50,online,screen_name,sex",
+			v: api.VERSION_FRESH
 		}).then(function(data) {
-			Site.setCounters(data["a"]);
-			Local.add(data["m"]["profiles"]);
-			Local.add(data["m"]["groups"]);
-			Mail.showListMessages(data["m"], {list: list, type: type, offset: offset});
+			Site.setCounters(data.a);
+			Local.add(data.m.profiles);
+			Local.add(data.m.groups);
+
+			data.m.conversations.forEach(function(conversation) {
+				Mail.__conversations[conversation.peer.id] = conversation;
+			});
+
+			data.m.items.forEach(function(message) {
+				message.conversation = Mail.__conversations[message.peer_id];
+			});
+
+			Mail.showListMessages(data.m, {list: list, type: type, offset: offset});
 		});
 	},
 

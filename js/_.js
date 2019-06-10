@@ -156,7 +156,16 @@ if (Date.now() < 0) {
 	 *         }=,
 	 *         active_ids: int[],
 	 *         is_group_channel: boolean
-	 *     }
+	 *     },
+	 *     acl: {
+	 *	       can_change_info: boolean,
+	 *	       can_change_invite_link: boolean,
+	 *	       can_change_pin: boolean,
+	 *	       can_invite: boolean,
+	 *	       can_promote_users: boolean,
+	 *	       can_see_invite_link: boolean,
+	 *	       can_moderate: boolean
+	 *	   }
 	 * }}
 	 */
 	var Conversation = {};
