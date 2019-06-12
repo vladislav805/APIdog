@@ -243,7 +243,7 @@ var Site = {
 			Apps:       /^apps$/ig,
 			Polls:      /^poll(-?\d+)_(\d+)$/ig,
 			Dev:		/^dev(\/([A-Za-z0-9._]+))?$/ig,
-			Analyzes:	/^analyzes(\/([A-Za-z]+)(\/(-?\d+))?)?$/ig
+			Instruments:/^instruments$/ig
 		};
 
 		if (/^([^\/]+)\/([^?]+)/img.test(url)) {
@@ -251,7 +251,6 @@ var Site = {
 			switch (r[1]) {
 				case "dev": return Dev.explain(r[2]);
 				case "stickers": return Settings.store.getItem(r[2]);
-				case "analyzes": return Analyzes.open.apply(window, r[2].split("/"));
 				case "images": return window.location.href = "//vk.com/" + url;
 				default: return Feed.searchByOwner(r[1], r[2], getOffset());
 			}
@@ -299,10 +298,11 @@ var Site = {
 			return Pages.explain(url);
 		if (reg.Docs.test(url))
 			return Docs.explain(url);
-		if (reg.Analyzes.test(url))
-			return Analyzes.open();
 		if (reg.Search.test(url)) {
 			return Search.init();
+		}
+		if (reg.Instruments.test(url)) {
+			return Instruments.showList();
 		}
 		for (var current in reg) {
 			if (reg[current].test(url)) {

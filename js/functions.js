@@ -1989,14 +1989,6 @@ var Pidor = {
 	}
 };
 
-var Analyzes = {
-	open: function (name, ownerId) {
-		includeScripts(["/utilites.js"], function() {
-			Analyzes.open(name, ownerId);
-		});
-	}
-};
-
 var eelid = 0;
 function sendEvent(method, data, callback) {
 	if (callback) {

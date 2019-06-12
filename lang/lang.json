@@ -1456,7 +1456,7 @@
 	"mail.actionReadAll":["Отметить всё прочитанным","Mark as read all",null],
 	"mail.actionSwitch2messages":["Переключить режим: сообщения","Switch mode: messages",null],
 	"mail.actionSwitch2dialogs":["Переключить режим: диалоги","Switch mode: dialogs",null],
-	"mail.actionUtilites":["Утилиты","Utilites",null],
+	"mail.actionInstruments":["Инструменты","Instruments",null],
 	"mail.actionCreateChat":["Создать чат","Create chat",null],
 	"mail.actionClearCache":["Очистить кэш диалогов","Clear cache dialogs",null],
 	"mail.actionRefreshCache":["Синхронизировать кэш","Sync cache now",null],

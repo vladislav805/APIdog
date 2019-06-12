@@ -787,14 +787,12 @@ var Mail = {
 			}
 		};
 
-		p["utils"] = {
-			label: Lang.get("mail.actionUtilites"),
-			isDisabled: true,
+		p["instruments"] = {
+			label: Lang.get("mail.actionInstruments") + " (dev)",
 			onclick: function() {
-				alert("not implemented yet!");
+				window.location.href = "#instruments";
 			}
 		};
-
 
 		p["mode"] = {
 			label: Lang.get(Mail.version ? "mail.actionSwitch2messages" : "mail.actionSwitch2dialogs"),

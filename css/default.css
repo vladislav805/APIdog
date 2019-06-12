@@ -1896,20 +1896,25 @@ strong span {
 	font-style: italic
 }
 
-.mail-ts {
+.analyzer-table {
 	width: 100%
 }
 
-.mail-ts,
-.mail-ts td {
+.analyzer-table,
+.analyzer-table td {
 	border-collapse: collapse
 }
 
-.mail-tsrn,
+.analyzer-dialogs-name,
 .mail-tsrt,
 .mail-tsrv {
 	padding: 3px 6px;
 	border: 1px solid #66768F
+}
+
+.analyzer-dialogs-name {
+	text-align: right;
+	max-width: 50px
 }
 
 .mail-tsrv {
@@ -1917,10 +1922,9 @@ strong span {
 	white-space: nowrap
 }
 
-.mail-tsrn {
-	text-align: right;
-	max-width: 50px
-}
+
+
+
 
 .mail-analyzer {
 	max-width: 350px;
