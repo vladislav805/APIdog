@@ -579,7 +579,9 @@ var Mail = {
 			unread = message.conversation.unread_count;
 		}
 
-		user = Local.data[message.from_id] || {last_name: "", first_name: ""};
+		var fromId = peer.isUser() ? peer.getId() : message.from_id;
+
+		user = Local.data[fromId] || {last_name: "", first_name: ""};
 
 		text = message.text.replace(/\n/g, " ").replace(/\n/ig, " \\ ").safe();
 		text = text.length > 120 ? text.substring(0, 120) + ".." : text;
