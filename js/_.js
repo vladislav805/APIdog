@@ -484,6 +484,9 @@ if (Date.now() < 0) {
 		Object: {
 			forEach: function(array, callback) {},
 			toQueryString: function(obj) {}
+		},
+		Array: {
+			insert: function(dst, src) {}
 		}
 	};
 

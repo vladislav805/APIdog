@@ -3,11 +3,14 @@ var Instruments = {
 	showList: function() {
 
 		var items = [
-			{ title: "Анализатор диалогов", click: this.dialogs }
+			{ id: 1, title: "Анализатор диалогов", click: this.dialogs },
+			{ id: 2, title: "Анализатор одного диалога", click: this.selectDialog.bind(this, this.dialog) },
+			{ id: 9, title: "Скачать диалог", click: this.selectDialog.bind(this, this.createArchive) },
+			{ id: 10, title: "Открыть сохраненный диалог", click: this.showFormOpenArchive },
 		];
 
 		var sl = new SmartList({
-			data: {count: 0, items: items},
+			data: {count: items.length, items: items},
 			countPerPage: 50,
 			getItemListNode: function(item) {
 				return $.e("div", {"class": "sl-item sl-content-bold a", onclick: item.click.bind(Instruments), append: [
@@ -16,8 +19,6 @@ var Instruments = {
 				]})
 			}
 		});
-
-
 
 		Site.setHeader("Инструменты");
 		Site.append($.e("div", {append: [
@@ -190,8 +191,8 @@ var Instruments = {
 								html: (peer.isGroup() ? "group" : (peer.isChat() ? "chat" : "id")) + peer.getId()
 							})
 						}),
-						e("td", {"class": "mail-tsrv", html: formatNumber(item[1])}),
-						e("td", {"class": "mail-tsrv", html: percent(item[1])})
+						e("td", {"class": "analyzer-table-value", html: formatNumber(item[1])}),
+						e("td", {"class": "analyzer-table-value", html: percent(item[1])})
 					]
 				});
 			};
@@ -277,5 +278,581 @@ var Instruments = {
 
 		getPeerIds().then(countAll).then(show);
 	},
+
+	/**
+	 * CENSOR
+	 */
+	__censoredWords: null,
+
+	__getCensoredWords: function() {
+		var self = this;
+		return this.__censoredWords
+			? Promise.resolve(this.__censoredWords)
+			: fetch("/assets/censored_words.json").then(function(res) {
+				return self.__censoredWords = res.json();
+			});
+	},
+
+	/**
+	 * SELECT DIALOG
+	 */
+	selectDialog: function(onSelect) {
+		var e = $.e,
+			list = e("div"),
+			modal = new Modal({
+				title: "Выберите диалог для анализа",
+				content: getLoader(),
+				footer: [
+					{
+						name: "cancel",
+						title: Lang.get("general.cancel"),
+						onclick: function () {
+							this.close();
+						}
+					}
+				]
+			}).setPadding(false).show();
+
+		api("messages.getConversations", {
+			fields: "photo_50,online,sex",
+			count: 100,
+			extended: 1,
+			offset: 0,
+			preview_length: 1,
+			v: api.VERSION_FRESH,
+		}).then(function(data) {
+			Local.add(data.profiles);
+			Local.add(data.groups);
+
+			return data.items;
+		}).then(function(items) {
+
+			var callback = function(peerId, info) {
+				onSelect(peerId, info);
+				modal.close();
+			};
+
+			items.forEach(function(item) {
+				var peerId = item.conversation.peer.id;
+
+				var tmp, info;
+				if (item.conversation.peer.type === "chat") {
+					tmp = item.conversation.chat_settings;
+					info = {
+						id: peerId,
+						name: tmp.title,
+						photo_50: tmp.photo_50 || "about:blank"
+					};
+				} else {
+					tmp = Local.data[peerId];
+					info = tmp;
+					info.id = peerId;
+				}
+
+				list.appendChild(Templates.getListItemUserRow(info, {
+					simpleBlock: true,
+					onClick: callback.bind(null, peerId, info)
+				}));
+			});
+
+			modal.setContent(list);
+		});
+	},
+
+	/**
+	 * LOADER DIALOG CONTENT
+	 */
+	loadDialogContent: function(peerId, modal) {
+
+		var countMessagesInDialog = -1;
+
+		var isStoppedByUser = false;
+
+		var loadChunkOfMessages = function(offset, resolve) {
+			if (offset === false || isStoppedByUser) {
+				return;
+			}
+
+			modal.status.textContent = "Загрузка сообщений... [" + formatNumber(offset) + "-" + formatNumber(Math.min(offset + 5000, countMessagesInDialog)) +" / " + formatNumber(countMessagesInDialog) + "]";
+
+			modal.progress.setValue(offset);
+
+			var code = "var p=parseInt(Args.p),o=parseInt(Args.o),s=parseInt(Args.s),m=parseInt(Args.m),r=[],i=0;while(i<m){r=r+(API.messages.getHistory({peer_id:p,offset:o+i*s,count:200}).items);i=i+1;};return r;";
+
+			api("execute", {
+				p: peerId,
+				o: offset,
+				s: 200,
+				m: 25,
+				v: api.VERSION_FRESH,
+				code: code
+			}).then(function(data) {
+				var isFull = saveMessages(data);
+				if (!isFull) {
+					setTimeout(function() {
+						loadChunkOfMessages(offset + data.length, resolve);
+					}, 300);
+				} else {
+					resolve(store);
+				}
+			});
+		};
+
+		var store = [];
+
+		var saveMessages = function(messages) {
+			messages.forEach(function(chunk) {
+				Sugar.Array.insert(store, chunk);
+			});
+
+			return store.length === countMessagesInDialog;
+		};
+
+		modal.status.textContent = "Получение количества сообщений в диалоге...";
+		modal.progress.setMax(10).setMin(0).setValue(1);
+
+		return api("execute", {
+			code: "return API.messages.getHistory({peer_id:parseInt(Args.p),count:1}).count;",
+			p: peerId,
+			v: api.VERSION_FRESH
+		}).then(function(count) {
+			countMessagesInDialog = count;
+
+			modal.progress.setValue(10);
+			modal.status.textContent = "Получено количество сообщений в диалоге: " + count;
+
+			return new Promise(function(resolve) {
+				setTimeout(function() {
+					modal.progress.setMax(count).setValue(0);
+					loadChunkOfMessages(0, resolve);
+				}, 350);
+			});
+		});
+	},
+
+
+	/**
+	 * Dialog analyzer
+	 * @param {int} peerId
+	 * @param {User|Chat} peerInfo
+	 */
+
+	dialog: function(peerId, peerInfo) {
+		var modal = new Modal({
+			title: "Анализатор диалога",
+			width: 450,
+			content: "",
+			footer: [
+				{
+					name: "cancel",
+					title: Lang.get("general.cancel"),
+					onclick: function () {
+						this.close();
+					}
+				}
+			]
+		});
+
+		modal.status = $.e("span", {"class": "tip"});
+		modal.progress = new ProgressBar(0, 100);
+
+		modal.setContent($.e("div", {append: [modal.status, modal.progress.getNode()]}));
+
+		modal.show();
+
+		var censoredWords = [];
+
+
+		var RE_trimmer = RegExp("[()\\[\\]{}<>\\s,.:;'\"_\\/\\\\|?\\*+!@#$%^=~—¯-]+", "igm");
+		var RE_spaces = RegExp("\\s{2,}", "gm");
+
+		var ignoredWords = ["не", "а", "я", "с", "и", "в", "у", "то", "как", "по", "о", "к", "или", "на", "но", "что", "кто", "http", "https", "a", "of", "i", "it", "is"];
+
+		var labels = {
+			messages: "Сообщений от ...",
+			words: "Слов в сообщениях от ...",
+			abuseWords: "Использование мата (количество слов)",
+			photo: "Фотографии",
+			video: "Видеозаписи",
+			audio: "Аудиозаписи",
+			doc: "Документы",
+			link: "Ссылки",
+			audio_message: "Голосовые сообщения",
+			sticker: "Стикеры",
+			graffiti: "Граффити",
+			wall: "Посты",
+			poll: "Опросы"
+		};
+
+		var statsShowAsUser = ["messages", "words", "abuseWords", "photo", "video", "audio", "doc", "sticker", "link", "audio_message", "graffiti", "post", "poll"]; // TODO надо ли?
+
+		var stats = {};
+		var words = {};
+
+		Sugar.Object.keys(labels).map(function (key) {
+			stats[key] = {};
+		});
+
+		var inc = function (obj, key) {
+			if (!(key in obj)) {
+				obj[key] = 0;
+			}
+			++obj[key];
+		};
+
+		var addRow = function (table, label, value) {
+			table.appendChild($.e("tr", {
+				append: [
+					$.e("td", {"class": "analyzer-dialog-name", html: label}),
+					$.e("td", {"class": "analyzer-table-value", html: value})
+				]
+			}));
+		};
+
+		var addRowUser = function (table, userId, value, all) {
+			var user = userId ? Local.data[userId] : {name: "всего"};
+
+			addRow(
+				table,
+				user ? getName(user) : "user_" + userId,
+				formatNumber(value) + " (" + (value / all * 100).toFixed(2) + "%)"
+			);
+		};
+
+		var handleMessage = function (m, i) {
+			!(i % 100) && modal.progress.setValue(i);
+
+			inc(stats.messages, m.from_id);
+
+			if ("text" in m) {
+				m.text.replace(RE_trimmer, " ")
+				 .replace(RE_spaces, "")
+				 .split(" ")
+				 .forEach(function (word) {
+					 word = word.trim().toLowerCase();
+
+					 if (!word || ~ignoredWords.indexOf(word)) {
+						 return;
+					 }
+
+					 inc(stats.words, m.from_id);
+					 inc(words, word);
+
+					 if (~censoredWords.indexOf(word)) {
+						 inc(stats.abuseWords, m.from_id);
+					 }
+				 });
+			} else {
+				console.log("NO TEXT", m);
+			}
+
+			m.attachments && m.attachments.forEach(function (a) {
+				if (a.type in stats) {
+					if (a.type === "doc" && "preview" in a.doc && !("photo" in a.doc.preview)) {
+						var key = "audio_message" in a.doc.preview
+							? "audio_message" : "graffiti";
+						inc(stats[key], m.from_id);
+						return;
+					}
+
+					inc(stats[a.type], m.from_id);
+				}
+			});
+		};
+
+		var a = Sugar.Object.map(words, function (value, key) {
+			return {word: key, value: value};
+		});
+
+		var topWords = Sugar.Object.values(a);
+
+		topWords.sort(function (a, b) {
+			return b.value - a.value;
+		});
+		console.log(words, topWords);
+
+		Instruments.__getCensoredWords().then(function (words) {
+			censoredWords = words;
+		});
+
+		Instruments.loadDialogContent(peerId, modal).then(function (messages) {
+			modal.status.textContent = "Обработка сообщений...";
+			messages.forEach(handleMessage);
+
+			return stats;
+		}).then(function (stats) {
+			var table = $.e("table", {"class": "analyzer-table sizefix"});
+
+			for (var key in stats) {
+				if (!stats.hasOwnProperty(key)) {
+					continue;
+				}
+
+				var all = Sugar.Object.sum(stats[key]);
+
+				if (!all) {
+					continue;
+				}
+
+				table.appendChild($.e("tr", {
+					"class": "analyzer-header",
+					append: $.e("td", {
+						colspan: 2,
+						html: key in labels ? labels[key] : key
+					})
+				}));
+
+				addRow(table, "всего", all);
+
+				var items = [];
+				for (var userId in stats[key]) {
+					if (!stats[key].hasOwnProperty(userId)) {
+						continue;
+					}
+
+					items.push({userId: userId, value: stats[key][userId]});
+				}
+
+				items.sort(function (a, b) {
+					return b.value - a.value;
+				});
+
+				items.forEach(function (item) {
+					if (~statsShowAsUser.indexOf(key)) {
+						addRowUser(table, item.userId, item.value, all);
+					} else {
+						addRow(table, item.userId, item.value);
+					}
+				})
+			}
+
+			table.appendChild($.e("tr", {
+				"class": "analyzer-header",
+				append: $.e("td", {
+					colspan: 2,
+					html: "Топ 100 самых используемых слов"
+				})
+			}));
+
+			topWords.forEach(function (item) {
+				addRow(table, item.word, item.value);
+			});
+
+
+			modal.setContent($.e("div", {append: table})).setPadding(false);
+		});
+	},
+
+	/**
+	 * @param {int} peerId
+	 * @param {User|{id: int, name: string, photo_50: string}} peerInfo
+	 */
+	createArchive: function(peerId, peerInfo) {
+		var modal = new Modal({
+			title: "Сохранение диалога",
+			width: 450,
+			content: "",
+			footer: [
+				{
+					name: "cancel",
+					title: Lang.get("general.cancel"),
+					onclick: function() {
+						this.close();
+					}
+				}
+			]
+		});
+
+		modal.status = $.e("span", {"class": "tip"});
+		modal.progress = new ProgressBar(0, 100);
+
+		modal.setContent($.e("div", {append: [ modal.status, modal.progress.getNode() ]}));
+
+		modal.show();
+
+		var getSizes = function(sizes) {
+			var assoc = {};
+			for (var i = 0; i < sizes.length; ++i) {
+				assoc[sizes[i].type] = sizes[i].url;
+			}
+			return assoc;
+		};
+
+		var processAttachments = function(msg) {
+			if (msg.attachments) {
+				if (msg.attachments.length) {
+					msg.attachments = msg.attachments.map(function(a) {
+						switch (a.type) {
+							case "photo":
+								var o = getSizes(a.photo.sizes);
+								delete a.photo.sizes;
+								a.photo.src_thumb = o.o || o.m || o.s;
+								a.photo.src_max = o.w || o.z || o.y || o.x;
+								break;
+
+							case "audio":
+								delete a.audio.url;
+								delete a.audio.is_licensed;
+								delete a.audio.is_hq;
+								delete a.audio.ads;
+								delete a.audio.access_key;
+								delete a.audio.track_code;
+								delete a.audio.is_explicit;
+								delete a.audio.main_artists;
+								delete a.audio.featured_artists;
+								break;
+						}
+						return a;
+					});
+				} else {
+					delete msg.attachments;
+				}
+			}
+		};
+
+		Instruments.loadDialogContent(peerId, modal).then(function(messages) {
+			modal.status.textContent = "Обработка...";
+
+			messages.forEach(function(msg) {
+				delete msg.important;
+				delete msg.peer_id;
+				delete msg.conversation_message_id;
+				delete msg.is_hidden;
+				delete msg.random_id;
+
+				msg.cmid = msg.conversation_message_id;
+				delete msg.conversation_message_id;
+
+				if (msg.fwd_messages) {
+					if (!msg.fwd_messages.length) {
+						delete msg.fwd_messages;
+					} else {
+						msg.fwd_messages.forEach(function(m) {
+							processAttachments(m);
+						})
+					}
+				}
+
+				processAttachments(msg);
+			});
+
+			var blob = new Blob(["\ufeff", JSON.stringify({
+				meta: {
+					v: "2.0",
+					peer: peerId,
+					ownerId: API.userId,
+					owner: { name: peerInfo.name, firstName: peerInfo.first_name, lastName: peerInfo.last_name},
+					d: getUnixTime(),
+				},
+				data: messages
+			})], {
+				type: "application/json;charset=utf-8"
+			});
+
+			modal.setContent("Готово").closeAfter(5000);
+
+			saveAs(blob, "dialog" + peerId + ".v2.json");
+		});
+	},
+
+
+	showFormOpenArchive: function() {
+
+		var openFile = function(fileNode) {
+			var file = fileNode.files[0];
+
+			if (!file) {
+				return alert("Вы не выбрали файл");
+			}
+
+			var fr = new FileReader();
+			fr.onerror = function(event) {
+				console.error("Instruments.showFormOpenArchive@openFile", event);
+				alert("Произошла ошибка чтения файла.\n\n" + event.toString());
+			};
+
+			fr.onload = function(event) {
+				return Instruments.openArchive(fr.result);
+			};
+
+			fr.readAsText(file);
+		};
+
+		var form = $.e("form", {
+			"class": "sf-wrap",
+			onsubmit: function (event) {
+				event.preventDefault();
+				openFile(this.file);
+				return false;
+			},
+			append: [
+				$.e("p", {html: "Выберите файл .json, который Вы сохранили с помощью инструментов APIdog. Поддерживается на данный момент только архивы версии 2.0 и выше."}),
+				Site.createFileChooserButton("file", {fullWidth: true, required: true}),
+				$.e("input", {type: "submit", value: "Открыть"})
+			]
+		});
+
+		Site.append(form);
+	},
+
+	openArchive: function(data) {
+
+		var items = $.e("div");
+		var peer;
+
+		var check = function(resolve) {
+			if (!data) {
+				throw new ReferenceError("No data");
+			}
+
+			data = JSON.parse(data);
+
+			console.log(data);
+
+			if (!("meta" in data)) {
+				throw new ReferenceError("No meta info");
+			}
+
+			peer = new Peer(data.meta.peer);
+
+			if (!("v" in data.meta) || data.meta.v < 2.0) {
+				throw new TypeError("Not supported version");
+			}
+
+
+			/**
+			 * "peer":407912003,"ownerId":203384908,"owner":{"firstName":"Алексей","lastName":"Калинин"}
+			 */
+
+			resolve(data = data.data);
+		};
+
+		var offset = 0;
+		var STEP = 50;
+
+		var busy = false;
+
+		var showChunk = function() {
+
+			var arg = {peer: peer};
+			for (var limit = offset + STEP ; offset < limit; ++offset) {
+				items.appendChild(IM.item(data[offset], arg));
+			}
+
+			busy = false;
+		};
+
+		window.onScrollCallback = function (event) {
+			if (!busy && event.needLoading) {
+				busy = true;
+				showChunk();
+			}
+		};
+
+		new Promise(check).then(showChunk);
+
+		Site.append(items);
+	}
+
 
 };

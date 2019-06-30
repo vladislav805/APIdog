@@ -410,7 +410,7 @@ function getFrameDocument(frame) {
 
 /**
  * Get full name of user
- * @param {object} u
+ * @param {User} u
  * @returns {string}
  */
 function getName(u) {

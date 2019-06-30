@@ -1148,7 +1148,7 @@ var IM = {
 								return false;
 							}
 						}),
-						e("span", {"class": "n-f", html: Site.toHTML(i.body).emoji()}),
+						e("span", {"class": "n-f", html: Site.toHTML(i.body || i.text || "").emoji()}),
 						!isSending ? e("div", {id: "msg-attach" + i.id, append: IM.getAttachments(i.attachments, i.id)}) : "",
 						IM.forwardedMessages(i.fwd_messages),
 						i.geo ? IM.getMap(i.geo, {map: true, mail: true}) : null
@@ -1221,8 +1221,8 @@ var IM = {
 			init = Local.data[i.from_id || i.user_id] || du,
 			action = Local.data[i.action_mid] || du,
 			l = Lang.get,
-			act,
-			basis;
+			act = [],
+			basis = "unknown event = " + i.action;
 		switch (i.action) {
 			case "chat_kick_user":
 				basis = l("im.message_action_kick_source");
@@ -1489,12 +1489,12 @@ var IM = {
 		p = httpBuildQuery(p);
 
 		var e = $.e;
-
+console.log(o);
 		p = e(!o.n ? "a" : "div", {
 			"class": "imdialog-attachment-item-photo-wrap",
 			href: "#photo" + o.owner_id + "_" + o.id + (p ? "?" + p : ""),
 			"data-photoid": o.owner_id + "_" + o.id,
-			append: e("img", {"class": "__dynamic_photo imdialog-attachment-item-photo", src: getURL(o.photo_604)})
+			append: e("img", {"class": "__dynamic_photo imdialog-attachment-item-photo", src: getURL(o.photo_604 || o.src_thumb)})
 		});
 
 		return p;
@@ -1622,8 +1622,8 @@ var IM = {
 		item.appendChild($.e("div", {"class": "im-fwd-right", append: [
 			$.e("a", {"class": "bold _im_link_" + user_id, href: "#" + (user ? user.screen_name : "id" + user_id), html: (user ? user.first_name + " " + user.last_name + Site.isOnline(user) : "DELETED DELETED")}),
 			$.e("span", {"class": "im-date-fwd", html: $.getDate(message.date)}),
-			$.e("div", {"class": "im-text", html: !message.action ? Site.toHTML(message.body).emoji() : IM.getStringActionFromSystemVKMessage(message) }),
-			IM.getAttachments(message.attachments, parseInt(new Date() / 1000)),
+			$.e("div", {"class": "im-text", html: !message.action ? Site.toHTML(message.body || message.text || "").emoji() : IM.getStringActionFromSystemVKMessage(message) }),
+			IM.getAttachments(message.attachments, getUnixTime()),
 			IM.forwardedMessages(message.fwd_messages),
 			message.geo ? IM.getMap(message.geo, {map: true, mail: true}) : null
 		]}));

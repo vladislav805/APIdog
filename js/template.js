@@ -45,7 +45,7 @@ var Templates = {
 		var e = $.e,
 			a = options.action,
 			isFull = !a || options.full,
-			link = "#" + (user.screen_name || "id" + (user.id || user.uid));
+			link = "#" + (user.screen_name || "id" + user.id);
 console.log(user);
 		return e(isFull ? "a" : "div", {
 			"class": "miniProfile-item",
@@ -70,11 +70,19 @@ console.log(user);
 		});
 	},
 
-	getListItemUserRow: function(u, e) {
-		e = $.e;
-		return e("a", {
-			"class": "listItem",
-			href: "#" + (u.screen_name || (u.name ? "club" + u.id : "id" + u.id)),
+	/**
+	 *
+	 * @param {User|{id: int, name: string, photo_50: string=}} u
+	 * @param {{simpleBlock: boolean=, onClick: function=}} options
+	 * @returns {HTMLElement|Node}
+	 */
+	getListItemUserRow: function(u, options) {
+		options = options || {};
+		var e = $.e;
+		return e(options.simpleBlock ? "div" : "a", {
+			"class": "listItem a",
+			href: options.simpleBlock ? "" : "#" + (u.screen_name || (u.name ? "club" + u.id : "id" + u.id)),
+			onclick: options.simpleBlock && options.onClick ? options.onClick : null,
 			append: [
 				e("img", {"class": "listItem-left", src: getURL(u.photo_100 || u.photo_50)}),
 				e("div", {"class": "listItem-right", html: getName(u)})

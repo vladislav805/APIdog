@@ -1902,24 +1902,35 @@ strong span {
 
 .analyzer-table,
 .analyzer-table td {
-	border-collapse: collapse
+	border-collapse: collapse;
+}
+
+.analyzer-header td {
+	padding: 3px 10px 0;
+	font-size: 16px;
+	line-height: 25px;
 }
 
 .analyzer-dialogs-name,
+.analyzer-dialog-name,
 .mail-tsrt,
-.mail-tsrv {
+.analyzer-table-value {
 	padding: 3px 6px;
-	border: 1px solid #66768F
+	border: 1px solid #66768F;
 }
 
 .analyzer-dialogs-name {
 	text-align: right;
-	max-width: 50px
+	max-width: 50px;
 }
 
-.mail-tsrv {
+.analyzer-dialog-name {
+	padding-left: 24px;
+}
+
+.analyzer-table-value {
 	text-align: center;
-	white-space: nowrap
+	white-space: nowrap;
 }
 
 
