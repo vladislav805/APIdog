@@ -10,6 +10,7 @@
  * |         v1.3.2 / 21 july 2017             |
  * |         v1.3.3 / 01 september 2017        |
  * |         v1.3.4 / 12 july 2018             |
+ * |         v1.3.5 / 04 july 2019             |
  * +-------------------------------------------+
  */
 
@@ -242,7 +243,7 @@ window.$ = {
 				return null;
 			}
 			var nodes = node.children;
-			for (var i = nodes.length - 1, item; item = nodes[i]; --i) {
+			for (var i = nodes.length - 1, item; (item = nodes[i]); --i) {
 				node.removeChild(item);
 			}
 			return node;
@@ -264,7 +265,7 @@ window.$ = {
 		var set = function(name, value, days) {
 			var expiresDate = new Date();
 			expiresDate.setDate(expiresDate.getDate() + days);
-			value = encodeURIComponent(value) + ((expiresDate === null) ? "" : "; expires=" + expiresDate.toUTCString());
+			value = encodeURIComponent(value) + "; expires=" + expiresDate.toUTCString();
 			document.cookie = name + "=" + value;
 			return true;
 		};
@@ -335,37 +336,15 @@ window.$ = {
 
 		// refactored 13.01.2016
 		add: function(node, event, callback){
-			if (window.addEventListener) {
-				node.addEventListener(event, callback);
-				return;
-			}
-
-			//noinspection JSUnresolvedVariable
-			if (node.attachEvent) {
-				node.attachEvent("on" + event, callback);
-			} else {
-				node["on" + event] = callback;
-			}
+			node.addEventListener(event, callback);
 		},
 
 		// refactored 13.01.2016
 		remove: function(node, event, callback) {
-			if (node.removeEventListener) {
-				node.removeEventListener(event, callback);
-				return;
-			}
-
-			//noinspection JSUnresolvedVariable
-			if (node.detachEvent) {
-				node.detachEvent("on" + event, callback);
-			} else {
-				node["on" + event] = null;
-			}
+			node.removeEventListener(event, callback);
 		},
 
 		cancel: function(e) {
-			e = e || window.event;
-
 			if (!e) {
 				return false;
 			}
@@ -399,22 +378,6 @@ window.$ = {
 	textCase: function(number, titles) {
 		number = Math.abs(number);
 		return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? number % 10 : 5]];
-	},
-
-	/**
-	 * @deprecated
-	 * @param needle
-	 * @param haystack
-	 * @param index
-	 * @returns {*}
-	 */
-	inArray: function(needle, haystack, index) {
-		for (var key in haystack) {
-			if (haystack.hasOwnProperty(key) && haystack[key] === needle) {
-				return index ? key : true;
-			}
-		}
-		return index ? -1 : false;
 	}
 };
 
@@ -424,6 +387,6 @@ window.$ = {
  * @param {object=} attrs
  * @returns {HTMLElement|Node}
  */
-$.e = function(tag, attrs) { return $.elements.create(tag, attrs) };
+$.e = $.elements.create;
 $.getStyle = $.elements.getStyle;
 $.getPosition = $.elements.getPosition;
