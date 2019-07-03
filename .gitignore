@@ -10,3 +10,9 @@
 /lang/*.json
 !/lang/keys.json
 !/lang/lang.json
+/lib/sortable.js
+/lib/jszip.min.js
+/lib/hammer.js
+/lib/slider.js
+/lib/saveAs.js
+/lib/sugar.min.js

@@ -650,19 +650,26 @@ function parse(data, fx) {
 	});
 }
 
-function includeScripts(scripts, onLoad) {
-	if (!Array.isArray(scripts))
+function includeScripts(scripts) {
+	if (!Array.isArray(scripts)) {
 		scripts = [scripts];
+	}
 
-	var loaded = 0, all = scripts.length, e = $.e, head = getHead();
-	scripts.forEach(function (script) {
-		head.appendChild(e("script", {
-			src: script,
-			onload: function() {
-				$.elements.remove(this);
-				++loaded === all && onLoad();
-			}
-		}));
+	var loaded = 0;
+	var all = scripts.length;
+	var e = $.e;
+	var head = getHead();
+
+	return new Promise(function(resolve) {
+		scripts.forEach(function(script) {
+			head.appendChild(e("script", {
+				src: script,
+				onload: function() {
+					$.elements.remove(this);
+					++loaded === all && resolve();
+				}
+			}));
+		});
 	});
 }
 

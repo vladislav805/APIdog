@@ -5,6 +5,8 @@ var Instruments = {
 		var items = [
 			{ id: 1, title: "Анализатор диалогов", click: this.dialogs },
 			{ id: 2, title: "Анализатор одного диалога", click: this.selectDialog.bind(this, this.dialog) },
+
+			{ id: 8, title: "Скачать альбом", click: this.downloadAlbum.bind(this, null) },
 			{ id: 9, title: "Скачать диалог", click: this.selectDialog.bind(this, this.createArchive) },
 			{ id: 10, title: "Открыть сохраненный диалог", click: this.showFormOpenArchive },
 		];
@@ -852,6 +854,144 @@ var Instruments = {
 		new Promise(check).then(showChunk);
 
 		Site.append(items);
+	},
+
+	downloadAlbum: function(url) {
+
+		var modal;
+		var status = $.e("span", {});
+		var progress = new ProgressBar(0, 1);
+
+		var createAssocPhotoSizesObject = function(sizes) {
+			return sizes.reduce(function(obj, curr) {
+				obj[curr.type] = curr.url;
+				return obj;
+			}, {});
+		};
+
+		var getMaxSizePhoto = function(sizes) {
+			var s = createAssocPhotoSizesObject(sizes);
+			return s.w || s.z || s.y || s.x;
+		};
+
+		var getAlbumContents = function(ownerId, albumId) {
+			status.textContent = "Получаю содержимое альбома...";
+			return api("execute", {
+				code: "var o=parseInt(Args.o),a=parseInt(Args.a),m=parseInt(Args.m),i=0,d=[],c=1,q;while(i<25&&d.length<c){q=API.photos.get({owner_id:o,album_id:a,count:m,offset:i*m});c=q.count;d=d+q.items@.sizes;i=i+1;};return d;",
+				o: ownerId,
+				a: albumId,
+				m: 1000,
+				v: api.VERSION_FRESH
+			}).then(function(photos) {
+				status.textContent = "Обработка прямых ссылок...";
+				progress.setValue(1);
+				return photos.map(getMaxSizePhoto);
+			});
+		};
+
+		var fetchAllPhotos = function(urls) {
+
+			var photos = [];
+
+			var curr = 0;
+
+			status.textContent = "Скачивание фотографий...";
+			progress.setValue(0).setMax(urls.length);
+
+			var downloadPhoto = function(onload) {
+				fetch(urls[curr]).then(function(result) {
+					return result.blob();
+				}).then(function(blob) {
+					photos.push(blob);
+					progress.setValue(curr);
+					setTimeout(onload, 50);
+				});
+			};
+
+			return new Promise(function(resolve) {
+
+
+				var onDone = function() {
+					resolve(photos);
+				};
+
+				var onLoaded = function() {
+					curr++;
+					if (curr < urls.length) {
+						downloadPhoto(onLoaded)
+					} else {
+						onDone();
+					}
+				};
+
+				downloadPhoto(onLoaded);
+
+			});
+		};
+
+		var makeZip = function(photos) {
+			status.textContent = "Создание архива...";
+
+			var zip = new JSZip;
+
+			photos.forEach(function(photo, i) {
+				!(i % 20) && progress.setValue(i);
+				zip.file((i + 1) + ".jpg", photo);
+			});
+
+			status.textContent = "Генерация архива...";
+			progress.setMax(1).setValue(0);
+
+			zip.generateAsync({ type: "blob" }).then(function(content) {
+				saveAs(content, "photos.zip");
+				status.textContent = "Готово";
+				progress.setValue(1);
+				modal.closeAfter(5000);
+			});
+		};
+
+		var process = function(url) {
+			var regex = /album(-?\d+)_(\d+)/ig;
+
+			var ids = regex.exec(url);
+
+			if (!ids) {
+				alert("Не могу спарсить ownerId и albumId.");
+				return;
+			}
+
+			var ownerId = +ids[1];
+			var albumId = +ids[2];
+
+			if (!ownerId || !albumId) {
+				alert("Не могу спарсить ownerId и albumId.");
+				return;
+			}
+
+			includeScripts(["/lib/jszip.min.js"])
+				.then(getAlbumContents.bind(null, ownerId, albumId))
+				.then(fetchAllPhotos)
+				.then(makeZip);
+		};
+
+		if (!url) {
+			url = prompt("Введите/вставьте ниже ссылку на альбом", "");
+		}
+
+		if (!url || !url.trim()) {
+			alert("Не вставлена ссылка");
+			return;
+		}
+
+		process(url);
+
+		modal = new Modal({
+			title: "Скачать альбом",
+			content: $.e("div", {append: [status, progress.getNode()]}),
+			unclosableByBlock: true
+		});
+
+		modal.show();
 	}
 
 
