@@ -108,7 +108,7 @@
 				<div class="loadScreen-label">Starting...</div>
 			</div>
 			<div class="loadScreen-footer">
-				<p>APIdog v6.4.6 early access [build <?=APIDOG_BUILD;?>] &copy; 2012&ndash;2018</p>
+				<p>APIdog v6.4.6 early access [build <?=APIDOG_BUILD;?>] &copy; 2012&ndash;2020</p>
 				<p>Владислав Велюга, Антон Карпович, Александр Ткачук, Оксана Эриксон, Надя Иванова</p>
 			</div>
 		</div>
@@ -227,7 +227,7 @@
 						<a href="?page=plus" target="_blank" id="_link_ext">APIdog Plus</a>
 						<a href="?page=logout" onclick="return confirm('<?=$l10n->menuLogoutConfirmation;?>')"><?=$l10n->menuLogout;?></a>
 						<div class="footer">
-							<div class="tip" style="font-size: x-small;">APIdog v<?=APIDOG_VERSION;?> / b<?=APIDOG_BUILD;?> &copy; 2012&ndash;2018</div>
+							<div class="tip" style="font-size: x-small;">APIdog v<?=APIDOG_VERSION;?> / b<?=APIDOG_BUILD;?> &copy; 2012&ndash;2020</div>
 						</div>
 						<a href="?page=updates#<?=APIDOG_BUILD;?>" target="_blank" class="cglg">Обновления</a>
 					</aside>
